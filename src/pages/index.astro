@@ -33,6 +33,14 @@ const tags = getTagSummaries(posts, projects).slice(0, 8);
 			<div class="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
 				<div class="surface-card float-panel rounded-[2.75rem] p-8 sm:p-10">
 					<div class="relative space-y-8">
+						<div class="flex flex-wrap gap-3">
+							<span class="rounded-full bg-[rgba(242,133,94,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-accent-strong)]">
+								Research Notes
+							</span>
+							<span class="rounded-full bg-[rgba(45,106,142,0.10)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ocean)]">
+								Static Portfolio
+							</span>
+						</div>
 						<div class="space-y-4">
 							<p class="font-display text-sm font-bold uppercase tracking-[0.24em] text-[color:var(--color-accent-strong)]">
 								{siteConfig.hero.kicker}
@@ -64,6 +72,12 @@ const tags = getTagSummaries(posts, projects).slice(0, 8);
 							>
 								认识我
 							</a>
+							<a
+								href={withBase('/search/')}
+								class="inline-flex items-center justify-center rounded-full border border-[rgba(45,106,142,0.18)] bg-[rgba(45,106,142,0.08)] px-6 py-3 text-sm font-semibold text-[color:var(--color-ocean)] transition hover:bg-[rgba(45,106,142,0.14)]"
+							>
+								站内搜索
+							</a>
 						</div>
 
 						<div class="grid gap-4 sm:grid-cols-3">
@@ -84,7 +98,7 @@ const tags = getTagSummaries(posts, projects).slice(0, 8);
 				</div>
 
 				<div class="space-y-6">
-					<div class="surface-card float-panel rounded-[2.5rem] p-7">
+					<div class="surface-card float-panel -rotate-[1deg] rounded-[2.5rem] p-7">
 						<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
 							研究焦点
 						</p>
@@ -97,7 +111,7 @@ const tags = getTagSummaries(posts, projects).slice(0, 8);
 						</div>
 					</div>
 
-					<div class="surface-card float-panel rounded-[2.5rem] p-7">
+					<div class="surface-card float-panel rotate-[1deg] rounded-[2.5rem] p-7">
 						<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
 							最新动态入口
 						</p>
@@ -114,6 +128,17 @@ const tags = getTagSummaries(posts, projects).slice(0, 8);
 								</li>
 							))}
 						</ul>
+					</div>
+					<div class="surface-card float-panel rounded-[2.25rem] border-dashed p-6">
+						<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-ocean)]">
+							Now Building
+						</p>
+						<p class="mt-3 font-display text-2xl font-bold text-[color:var(--color-ink)]">
+							把博客、项目和实验记录组织成一个长期更新的研究界面。
+						</p>
+						<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">
+							这一版优先保证内容结构、搜索、评论和 GitHub Pages 部署链路都稳定可持续。
+						</p>
 					</div>
 				</div>
 			</div>
