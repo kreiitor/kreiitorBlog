@@ -1,46 +1,56 @@
-# Astro Starter Kit: Basics
+# AI4SE Blog Site
 
-```sh
-npm create astro@latest -- --template basics
+个人博客与论文展示站，基于 `Astro + Tailwind CSS + Astro Content Collections + Pagefind + Giscus`。
+
+## 本地运行
+
+```powershell
+cd E:\Code\ai4program
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+默认访问 [http://localhost:4321](http://localhost:4321)。
 
-## 🚀 Project Structure
+## 构建
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+```powershell
+npm run check
+npm run build
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 评论功能
 
-## 🧞 Commands
+站点已经接入 `Giscus`，但要让评论真正显示，还需要你在 GitHub 做一次配置。
 
-All commands are run from the root of the project, from a terminal:
+1. 到仓库开启 `Discussions`
+2. 打开 [Giscus 配置页](https://giscus.app/zh-CN)
+3. 选择仓库 `kreiitor/kreiitorBlog`
+4. 生成以下参数并写入项目根目录的 `.env`
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+可直接复制 `.env.example`：
 
-## 👀 Want to learn more?
+```bash
+cp .env.example .env
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+需要填写的关键项：
+
+- `PUBLIC_GISCUS_REPO_ID`
+- `PUBLIC_GISCUS_CATEGORY_ID`
+
+填好后重新运行：
+
+```powershell
+npm run dev
+```
+
+或者重新部署到 GitHub Pages，文章详情页就会显示评论区。
+
+## 部署
+
+仓库内已经包含 GitHub Pages Actions 工作流：
+
+- [deploy.yml](/E:/Code/ai4program/.github/workflows/deploy.yml)
+
+推送到 `main` 或 `master` 后会自动触发部署。仓库的 `Settings -> Pages -> Source` 需要设为 `GitHub Actions`。
