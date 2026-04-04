@@ -10,31 +10,33 @@ const groups = getArchiveGroups(posts);
 ---
 
 <BaseLayout title="归档" description="按年份归档浏览全部博客文章。">
-	<section class="page-shell pt-12">
-		<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
-			<h1 class="font-display text-4xl font-bold text-[color:var(--color-ink)]">归档</h1>
-			<p class="mt-4 text-base leading-8 text-[color:var(--color-ink-soft)]">
-				按照发布时间归档文章，方便后续扩写后保持时间轴清晰。
-			</p>
-		</div>
-	</section>
-
-	<section class="page-shell mt-8 space-y-6">
-		{groups.map((group) => (
-			<div class="surface-card rounded-[2rem] p-6 sm:p-8">
-				<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">{group.year}</h2>
-				<ul class="mt-6 space-y-4">
-					{group.items.map((post) => (
-						<li class="rounded-[1.5rem] bg-white/80 p-5">
-							<p class="text-sm text-[color:var(--color-ink-soft)]">{formatYearMonth(post.data.pubDate)}</p>
-							<a href={withBase(`/blog/${post.id}/`)} class="mt-2 block font-display text-2xl font-bold text-[color:var(--color-ink)] hover:text-[color:var(--color-accent-strong)]">
-								{post.data.title}
-							</a>
-							<p class="mt-2 text-sm leading-7 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
-						</li>
-					))}
-				</ul>
+	<div data-pagefind-ignore>
+		<section class="page-shell pt-12">
+			<div class="surface-card float-panel rounded-[2.75rem] p-8 sm:p-10">
+				<h1 class="font-display text-4xl font-bold text-[color:var(--color-ink)]">归档</h1>
+				<p class="mt-4 max-w-3xl text-base leading-8 text-[color:var(--color-ink-soft)]">
+					按发布时间归档文章，方便在内容逐渐增多后仍然保持清晰的时间线。
+				</p>
 			</div>
-		))}
-	</section>
+		</section>
+
+		<section class="page-shell mt-8 space-y-6">
+			{groups.map((group) => (
+				<div class="surface-card float-panel rounded-[2rem] p-6 sm:p-8">
+					<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">{group.year}</h2>
+					<ul class="mt-6 space-y-4">
+						{group.items.map((post) => (
+							<li class="rounded-[1.5rem] bg-white/80 p-5">
+								<p class="text-sm text-[color:var(--color-ink-soft)]">{formatYearMonth(post.data.pubDate)}</p>
+								<a href={withBase(`/blog/${post.id}/`)} class="mt-2 block font-display text-2xl font-bold text-[color:var(--color-ink)] hover:text-[color:var(--color-accent-strong)]">
+									{post.data.title}
+								</a>
+								<p class="mt-2 text-sm leading-7 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
+							</li>
+						))}
+					</ul>
+				</div>
+			))}
+		</section>
+	</div>
 </BaseLayout>

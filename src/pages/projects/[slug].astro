@@ -25,7 +25,7 @@ const { Content } = await render(project);
 			&larr; 返回项目页
 		</a>
 		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-			<article class="space-y-8">
+			<article data-pagefind-body class="space-y-8">
 				<header class="surface-card rounded-[2.5rem] p-8 sm:p-10">
 					<span data-pagefind-meta="type" class="hidden">项目页面</span>
 					<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
@@ -60,7 +60,7 @@ const { Content } = await render(project);
 				</div>
 			</article>
 
-			<aside class="space-y-6">
+			<aside data-pagefind-ignore class="space-y-6">
 				<div class="surface-card rounded-[2rem] p-6">
 					<h2 class="font-display text-2xl font-bold text-[color:var(--color-ink)]">项目链接</h2>
 					<div class="mt-5 flex flex-col gap-3 text-sm font-semibold text-[color:var(--color-ocean)]">

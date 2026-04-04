@@ -70,7 +70,7 @@ const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), sit
 		</div>
 		<div class="relative">
 			<SiteHeader currentPath={currentPath} />
-			<main data-pagefind-body class="pb-20">
+			<main class="pb-20">
 				<slot />
 			</main>
 			<SiteFooter />

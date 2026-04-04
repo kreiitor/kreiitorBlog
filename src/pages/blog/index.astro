@@ -15,6 +15,7 @@ const tags = getTagSummaries(posts, projects);
 ---
 
 <BaseLayout title="博客" description="按文章、标签、归档和静态搜索浏览博客内容。">
+	<div data-pagefind-ignore>
 	<section class="page-shell pt-12">
 		<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
 			<SectionHeading
@@ -70,4 +71,5 @@ const tags = getTagSummaries(posts, projects);
 			</div>
 		</aside>
 	</section>
+	</div>
 </BaseLayout>
