@@ -3,11 +3,11 @@ export const siteConfig = {
 	tagline: '个人博客与论文展示站',
 	description:
 		'围绕 AI for Software Engineering、程序分析与实验复现记录，持续整理研究笔记、项目摘要与技术文章。',
-	author: '你的名字',
+	author: 'kreiitor',
 	role: '软件工程智能化方向研究者',
 	location: '武汉，中国',
 	siteUrl: 'https://kreiitor.github.io/kreiitorBlog',
-	email: 'you@example.com',
+	email: 'kreiitor@foxmail.com',
 	avatar: '/avatar.svg',
 	hero: {
 		kicker: 'AI for Software Engineering',
@@ -18,8 +18,7 @@ export const siteConfig = {
 	},
 	socialLinks: [
 		{ label: 'GitHub', href: 'https://github.com/kreiitor' },
-		{ label: 'Google Scholar', href: 'https://scholar.google.com/' },
-		{ label: 'Email', href: 'mailto:you@example.com' },
+		{ label: 'Email', href: 'mailto:kreiitor@foxmail.com' },
 	],
 	giscus: {
 		repo: '',
