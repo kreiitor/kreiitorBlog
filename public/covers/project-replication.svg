@@ -1,0 +1,9 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" rx="36" fill="#FFFDF8"/>
+  <circle cx="998" cy="132" r="126" fill="#F2855E" fill-opacity="0.18"/>
+  <circle cx="160" cy="602" r="172" fill="#2D6A8E" fill-opacity="0.14"/>
+  <rect x="148" y="128" width="904" height="466" rx="32" fill="#F7F4EE" stroke="#14213D" stroke-opacity="0.1"/>
+  <text x="188" y="220" fill="#DD5A2B" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">REPLICATION WORKBENCH</text>
+  <text x="188" y="312" fill="#14213D" font-family="Space Grotesk, sans-serif" font-size="66" font-weight="700">Paper Replication</text>
+  <text x="188" y="390" fill="#4F5D75" font-family="'Noto Sans SC', sans-serif" font-size="30">把环境、步骤和差异分析沉淀成统一入口</text>
+</svg>

@@ -1,0 +1,47 @@
+---
+import type { PostEntry } from '../utils/content';
+import { formatDate } from '../utils/date';
+import { getReadingTime } from '../utils/content';
+import { withBase } from '../utils/url';
+import TagLink from './TagLink.astro';
+
+interface Props {
+	post: PostEntry;
+	featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+---
+
+<article class:list={['surface-card group flex h-full flex-col overflow-hidden rounded-[2rem]', featured && 'md:col-span-2 xl:col-span-1']}>
+	{post.data.cover && (
+		<a href={withBase(`/blog/${post.id}/`)} class="block overflow-hidden">
+			<img
+				src={withBase(post.data.cover)}
+				alt={post.data.title}
+				class="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+				loading="lazy"
+			/>
+		</a>
+	)}
+	<div class="flex h-full flex-col gap-5 p-6">
+		<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
+			<time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+			<span>·</span>
+			<span>{getReadingTime(post)} 分钟阅读</span>
+		</div>
+		<div class="space-y-3">
+			<h3 class="font-display text-2xl font-bold tracking-tight text-[color:var(--color-ink)]">
+				<a href={withBase(`/blog/${post.id}/`)} class="transition group-hover:text-[color:var(--color-accent-strong)]">
+					{post.data.title}
+				</a>
+			</h3>
+			<p class="text-sm leading-7 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
+		</div>
+		<div class="mt-auto flex flex-wrap gap-2">
+			{post.data.tags.map((tag) => (
+				<TagLink tag={tag} />
+			))}
+		</div>
+	</div>
+</article>

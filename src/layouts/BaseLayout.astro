@@ -1,0 +1,79 @@
+---
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { siteConfig } from '../data/site';
+import '../styles/global.css';
+import { stripBase, withBase } from '../utils/url';
+
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+	type?: 'website' | 'article';
+	noIndex?: boolean;
+	publishedTime?: Date;
+	updatedTime?: Date;
+	tags?: string[];
+}
+
+const {
+	title = siteConfig.title,
+	description = siteConfig.description,
+	image = '/social-card.svg',
+	type = 'website',
+	noIndex = false,
+	publishedTime,
+	updatedTime,
+	tags = [],
+} = Astro.props;
+
+const pageTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.title}`;
+const currentPath = stripBase(Astro.url.pathname);
+const siteUrl = Astro.site ?? new URL(siteConfig.siteUrl);
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), siteUrl).toString();
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#f7f4ee" />
+		{tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
+		{noIndex && <meta name="robots" content="noindex, nofollow" />}
+		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+		<link rel="icon" href={withBase('/favicon.ico')} />
+		<link rel="canonical" href={canonicalUrl} />
+		<title>{pageTitle}</title>
+
+		<meta property="og:site_name" content={siteConfig.title} />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content={type} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:image" content={imageUrl} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={imageUrl} />
+		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+		{updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
+	</head>
+	<body class="relative overflow-x-hidden">
+		<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+			<div class="absolute left-[-8rem] top-12 h-64 w-64 rounded-full bg-[rgba(242,133,94,0.15)] blur-3xl"></div>
+			<div class="absolute right-[-6rem] top-48 h-72 w-72 rounded-full bg-[rgba(45,106,142,0.14)] blur-3xl"></div>
+			<div class="absolute bottom-[-8rem] left-1/3 h-72 w-72 rounded-full bg-[rgba(216,239,228,0.85)] blur-3xl"></div>
+		</div>
+		<div class="relative">
+			<SiteHeader currentPath={currentPath} />
+			<main data-pagefind-body class="pb-20">
+				<slot />
+			</main>
+			<SiteFooter />
+		</div>
+	</body>
+</html>

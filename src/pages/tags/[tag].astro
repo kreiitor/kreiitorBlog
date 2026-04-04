@@ -1,0 +1,62 @@
+---
+import { getCollection } from 'astro:content';
+import PostCard from '../../components/PostCard.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getTagIndex } from '../../utils/content';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('posts');
+	const projects = await getCollection('projects');
+	const tagIndex = getTagIndex(posts, projects);
+
+	return [...tagIndex.entries()].map(([tag, value]) => ({
+		params: { tag },
+		props: {
+			tag,
+			posts: value.posts,
+			projects: value.projects,
+		},
+	}));
+}
+
+const { tag, posts, projects } = Astro.props;
+---
+
+<BaseLayout title={`标签：${tag}`} description={`浏览与 ${tag} 相关的博客文章和项目条目。`}>
+	<section class="page-shell pt-12">
+		<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+			<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
+				Tag
+			</p>
+			<h1 class="mt-4 font-display text-4xl font-bold text-[color:var(--color-ink)]">#{tag}</h1>
+			<p class="mt-4 text-base leading-8 text-[color:var(--color-ink-soft)]">
+				共收录 {posts.length} 篇文章、{projects.length} 个项目。
+			</p>
+		</div>
+	</section>
+
+	<section class="page-shell mt-8 space-y-6">
+		{posts.length > 0 && (
+			<div class="space-y-6">
+				<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">相关文章</h2>
+				<div class="section-grid">
+					{posts.map((post) => (
+						<PostCard post={post} />
+					))}
+				</div>
+			</div>
+		)}
+
+		{projects.length > 0 && (
+			<div class="space-y-6">
+				<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">相关项目</h2>
+				<div class="section-grid">
+					{projects.map((project) => (
+						<ProjectCard project={project} />
+					))}
+				</div>
+			</div>
+		)}
+	</section>
+</BaseLayout>
