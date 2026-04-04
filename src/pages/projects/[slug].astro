@@ -22,11 +22,12 @@ const { Content } = await render(project);
 <BaseLayout title={project.data.title} description={project.data.summary} image={project.data.cover ?? '/social-card.svg'}>
 	<section class="page-shell pt-12">
 		<a href={withBase('/projects/')} class="text-sm font-semibold text-[color:var(--color-ocean)] hover:text-[color:var(--color-accent-strong)]">
-			← 返回项目页
+			&larr; 返回项目页
 		</a>
 		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
 			<article class="space-y-8">
 				<header class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<span data-pagefind-meta="type" class="hidden">项目页面</span>
 					<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
 						<span class="rounded-full bg-[rgba(242,133,94,0.12)] px-3 py-1 font-semibold text-[color:var(--color-accent-strong)]">
 							{project.data.status}

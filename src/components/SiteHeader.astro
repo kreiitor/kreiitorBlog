@@ -42,6 +42,14 @@ const { currentPath } = Astro.props;
 					</a>
 				);
 			})}
+			<a
+				href={withBase('/search/')}
+				class="inline-flex items-center rounded-full border border-[color:var(--color-line)] bg-white/80 px-4 py-2 text-[color:var(--color-ink)] transition hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
+				aria-label="打开站内搜索"
+				title="搜索"
+			>
+				<span class="font-semibold">搜索</span>
+			</a>
 		</nav>
 	</div>
 </header>

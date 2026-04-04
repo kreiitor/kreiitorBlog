@@ -3,8 +3,11 @@ import SearchPanel from '../components/SearchPanel.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="搜索" description="使用 Pagefind 进行本地静态搜索。">
+<BaseLayout title="搜索" description="使用 Pagefind 进行站内静态搜索。">
 	<section class="page-shell pt-12">
-		<SearchPanel />
+		<SearchPanel
+			title="正式搜索页"
+			description="这里会搜索博客文章、项目页面和站内正文内容，并把查询保留在地址栏里，方便分享搜索结果。"
+		/>
 	</section>
 </BaseLayout>
