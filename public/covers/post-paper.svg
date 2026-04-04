@@ -1,0 +1,9 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" rx="36" fill="#FFFDF8"/>
+  <circle cx="1014" cy="630" r="214" fill="#D8EFE4"/>
+  <circle cx="188" cy="126" r="118" fill="#F2855E" fill-opacity="0.18"/>
+  <rect x="114" y="112" width="652" height="496" rx="28" fill="#F7F4EE" stroke="#14213D" stroke-opacity="0.1"/>
+  <text x="154" y="206" fill="#DD5A2B" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">READING NOTES</text>
+  <text x="154" y="304" fill="#14213D" font-family="Space Grotesk, sans-serif" font-size="64" font-weight="700">Paper to Thesis</text>
+  <text x="154" y="382" fill="#4F5D75" font-family="'Noto Sans SC', sans-serif" font-size="30">让论文阅读笔记可以直接服务后续写作</text>
+</svg>

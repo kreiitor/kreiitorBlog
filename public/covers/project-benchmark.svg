@@ -1,0 +1,8 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" rx="36" fill="#14213D"/>
+  <circle cx="962" cy="604" r="198" fill="#D8EFE4"/>
+  <rect x="112" y="118" width="748" height="482" rx="32" fill="#FFFDF8" fill-opacity="0.08" stroke="#FFFDF8" stroke-opacity="0.16"/>
+  <text x="154" y="220" fill="#F2855E" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">PROJECT STATUS</text>
+  <text x="154" y="312" fill="#FFFDF8" font-family="Space Grotesk, sans-serif" font-size="64" font-weight="700">Issue Localization</text>
+  <text x="154" y="390" fill="#D8EFE4" font-family="'Noto Sans SC', sans-serif" font-size="30">软件工程任务上的实验基线整理与展示</text>
+</svg>

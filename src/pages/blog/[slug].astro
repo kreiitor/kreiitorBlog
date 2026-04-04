@@ -1,0 +1,102 @@
+---
+import { getCollection, render } from 'astro:content';
+import GiscusComments from '../../components/GiscusComments.astro';
+import TagLink from '../../components/TagLink.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, getReadingTime } from '../../utils/content';
+import { formatDate } from '../../utils/date';
+import { withBase } from '../../utils/url';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('posts');
+
+	return getPublishedPosts(posts).map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const tocHeadings = headings.filter((heading) => heading.depth <= 2);
+---
+
+<BaseLayout
+	title={post.data.title}
+	description={post.data.description}
+	image={post.data.cover ?? '/social-card.svg'}
+	type="article"
+	publishedTime={post.data.pubDate}
+	updatedTime={post.data.updatedDate}
+	tags={post.data.tags}
+>
+	<section class="page-shell pt-12">
+		<a href={withBase('/blog/')} class="text-sm font-semibold text-[color:var(--color-ocean)] hover:text-[color:var(--color-accent-strong)]">
+			&larr; 返回博客
+		</a>
+		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+			<article class="space-y-8">
+				<header class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
+						<time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+						<span>·</span>
+						<span>{getReadingTime(post)} 分钟阅读</span>
+						{post.data.updatedDate && (
+							<>
+								<span>·</span>
+								<span>更新于 {formatDate(post.data.updatedDate)}</span>
+							</>
+						)}
+					</div>
+					<h1 data-pagefind-meta="title" class="mt-4 font-display text-4xl font-bold tracking-tight text-[color:var(--color-ink)] sm:text-5xl">
+						{post.data.title}
+					</h1>
+					<p class="mt-4 max-w-3xl text-lg leading-8 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
+					<div class="mt-6 flex flex-wrap gap-2">
+						{post.data.tags.map((tag) => (
+							<TagLink tag={tag} />
+						))}
+					</div>
+				</header>
+
+				{post.data.cover && (
+					<img
+						src={withBase(post.data.cover)}
+						alt={post.data.title}
+						class="surface-card h-[24rem] w-full rounded-[2.5rem] object-cover"
+					/>
+				)}
+
+				<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<div class="rich-content">
+						<Content />
+					</div>
+				</div>
+
+				<GiscusComments />
+			</article>
+
+			<aside class="space-y-6">
+				<div class="surface-card rounded-[2rem] p-6">
+					<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
+						On This Page
+					</p>
+					<h2 class="mt-3 font-display text-2xl font-bold text-[color:var(--color-ink)]">文章目录</h2>
+					{tocHeadings.length > 0 ? (
+						<ul class="mt-5 space-y-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">
+							{tocHeadings.map((heading) => (
+								<li>
+									<a href={`#${heading.slug}`} class="hover:text-[color:var(--color-accent-strong)]">
+										{heading.text}
+									</a>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="mt-5 text-sm leading-7 text-[color:var(--color-ink-soft)]">这篇文章没有生成目录。</p>
+					)}
+				</div>
+			</aside>
+		</div>
+	</section>
+</BaseLayout>

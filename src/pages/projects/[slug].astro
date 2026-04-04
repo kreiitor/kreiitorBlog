@@ -1,0 +1,85 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TagLink from '../../components/TagLink.astro';
+import { getProjects } from '../../utils/content';
+import { formatDate } from '../../utils/date';
+import { withBase } from '../../utils/url';
+
+export async function getStaticPaths() {
+	const projects = await getCollection('projects');
+
+	return getProjects(projects).map((project) => ({
+		params: { slug: project.id },
+		props: { project },
+	}));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<BaseLayout title={project.data.title} description={project.data.summary} image={project.data.cover ?? '/social-card.svg'}>
+	<section class="page-shell pt-12">
+		<a href={withBase('/projects/')} class="text-sm font-semibold text-[color:var(--color-ocean)] hover:text-[color:var(--color-accent-strong)]">
+			← 返回项目页
+		</a>
+		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+			<article class="space-y-8">
+				<header class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
+						<span class="rounded-full bg-[rgba(242,133,94,0.12)] px-3 py-1 font-semibold text-[color:var(--color-accent-strong)]">
+							{project.data.status}
+						</span>
+						<time datetime={project.data.pubDate.toISOString()}>{formatDate(project.data.pubDate)}</time>
+					</div>
+					<h1 data-pagefind-meta="title" class="mt-4 font-display text-4xl font-bold tracking-tight text-[color:var(--color-ink)] sm:text-5xl">
+						{project.data.title}
+					</h1>
+					<p class="mt-4 max-w-3xl text-lg leading-8 text-[color:var(--color-ink-soft)]">{project.data.summary}</p>
+					<div class="mt-6 flex flex-wrap gap-2">
+						{project.data.tags.map((tag) => (
+							<TagLink tag={tag} />
+						))}
+					</div>
+				</header>
+
+				{project.data.cover && (
+					<img
+						src={withBase(project.data.cover)}
+						alt={project.data.title}
+						class="surface-card h-[24rem] w-full rounded-[2.5rem] object-cover"
+					/>
+				)}
+
+				<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<div class="rich-content">
+						<Content />
+					</div>
+				</div>
+			</article>
+
+			<aside class="space-y-6">
+				<div class="surface-card rounded-[2rem] p-6">
+					<h2 class="font-display text-2xl font-bold text-[color:var(--color-ink)]">项目链接</h2>
+					<div class="mt-5 flex flex-col gap-3 text-sm font-semibold text-[color:var(--color-ocean)]">
+						{project.data.repoUrl ? (
+							<a href={project.data.repoUrl} target="_blank" rel="noreferrer" class="hover:text-[color:var(--color-accent-strong)]">
+								查看仓库
+							</a>
+						) : (
+							<p class="text-[color:var(--color-ink-soft)]">仓库链接待补充</p>
+						)}
+						{project.data.demoUrl ? (
+							<a href={project.data.demoUrl} target="_blank" rel="noreferrer" class="hover:text-[color:var(--color-accent-strong)]">
+								查看演示
+							</a>
+						) : (
+							<p class="text-[color:var(--color-ink-soft)]">演示链接待补充</p>
+						)}
+					</div>
+				</div>
+			</aside>
+		</div>
+	</section>
+</BaseLayout>

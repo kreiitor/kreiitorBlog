@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import ProjectCard from '../../components/ProjectCard.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getProjects } from '../../utils/content';
+
+const projects = getProjects(await getCollection('projects'));
+---
+
+<BaseLayout title="项目" description="展示论文、实验与工具型项目条目。">
+	<section class="page-shell pt-12">
+		<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+			<SectionHeading
+				kicker="Projects"
+				title="项目页"
+				description="这里的内容独立于博客，适合展示论文摘要、实验进展、工具原型或阶段性成果。"
+			/>
+		</div>
+	</section>
+
+	<section class="page-shell mt-8">
+		<div class="section-grid">
+			{projects.map((project) => (
+				<ProjectCard project={project} />
+			))}
+		</div>
+	</section>
+</BaseLayout>

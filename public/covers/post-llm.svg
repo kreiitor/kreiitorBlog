@@ -1,0 +1,9 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" rx="36" fill="#14213D"/>
+  <circle cx="1022" cy="122" r="122" fill="#F2855E" fill-opacity="0.92"/>
+  <circle cx="280" cy="642" r="186" fill="#2D6A8E"/>
+  <path d="M112 188C112 144.922 146.922 110 190 110H640C683.078 110 718 144.922 718 188V494C718 537.078 683.078 572 640 572H190C146.922 572 112 537.078 112 494V188Z" fill="#FFFDF8" fill-opacity="0.08" stroke="#FFFDF8" stroke-opacity="0.18"/>
+  <text x="146" y="254" fill="#F2855E" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">EXPERIMENT PIPELINE</text>
+  <text x="146" y="340" fill="#FFFDF8" font-family="Space Grotesk, sans-serif" font-size="60" font-weight="700">LLM Evaluation</text>
+  <text x="146" y="410" fill="#D8EFE4" font-family="'Noto Sans SC', sans-serif" font-size="30">从任务定义到结果记录的可持续结构</text>
+</svg>
