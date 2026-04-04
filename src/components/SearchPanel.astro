@@ -1,5 +1,17 @@
 ---
 const baseUrl = import.meta.env.BASE_URL;
+
+interface Props {
+	title?: string;
+	description?: string;
+	compact?: boolean;
+}
+
+const {
+	title = '站内搜索',
+	description = '基于 Pagefind 的静态搜索，兼容 GitHub Pages，无需额外后端服务。',
+	compact = false,
+} = Astro.props;
 ---
 
 <section class="surface-card rounded-[2rem] p-6 sm:p-8">
@@ -7,22 +19,38 @@ const baseUrl = import.meta.env.BASE_URL;
 		<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
 			Search
 		</p>
-		<h2 class="font-display text-3xl font-bold tracking-tight text-[color:var(--color-ink)]">本地静态搜索</h2>
-		<p class="max-w-2xl text-sm leading-7 text-[color:var(--color-ink-soft)]">
-			搜索由 Pagefind 生成静态索引，兼容 GitHub Pages，无需后端服务。输入标题、标签或摘要关键词即可检索。
-		</p>
+		<h2 class:list={['font-display font-bold tracking-tight text-[color:var(--color-ink)]', compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl']}>
+			{title}
+		</h2>
+		<p class="max-w-2xl text-sm leading-7 text-[color:var(--color-ink-soft)]">{description}</p>
 	</div>
 
 	<div class="mt-6 space-y-5" data-search-root>
-		<label class="block">
-			<span class="mb-2 block text-sm font-semibold text-[color:var(--color-ink)]">搜索关键词</span>
-			<input
-				data-search-input
-				type="search"
-				placeholder="例如：LLM、实验复现、程序分析"
-				class="w-full rounded-2xl border border-[color:var(--color-line)] bg-white/80 px-4 py-3 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-accent)]"
-			/>
-		</label>
+		<form class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" data-search-form>
+			<label class="block">
+				<span class="mb-2 block text-sm font-semibold text-[color:var(--color-ink)]">搜索关键词</span>
+				<input
+					data-search-input
+					type="search"
+					name="q"
+					placeholder="例如：算法学习、实验复现、程序分析"
+					class="w-full rounded-2xl border border-[color:var(--color-line)] bg-white/80 px-4 py-3 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-accent)]"
+				/>
+			</label>
+			<button
+				type="submit"
+				class="inline-flex h-[50px] items-center justify-center rounded-2xl bg-[color:var(--color-ink)] px-5 text-sm font-semibold text-white transition hover:bg-[color:var(--color-accent-strong)]"
+			>
+				搜索
+			</button>
+		</form>
+
+		<div class="flex flex-wrap gap-2 text-xs text-[color:var(--color-ink-soft)]">
+			<span class="rounded-full bg-white/70 px-3 py-1">支持标题、摘要与正文关键词</span>
+			<span class="rounded-full bg-white/70 px-3 py-1">索引在构建时自动生成</span>
+			<span class="rounded-full bg-white/70 px-3 py-1">适用于 GitHub Pages</span>
+		</div>
+
 		<p data-search-status class="text-sm leading-7 text-[color:var(--color-ink-soft)]">
 			输入至少 2 个字符开始搜索。
 		</p>
@@ -34,11 +62,38 @@ const baseUrl = import.meta.env.BASE_URL;
 	const root = document.querySelector('[data-search-root]');
 
 	if (root instanceof HTMLElement) {
+		const form = root.querySelector('[data-search-form]');
 		const input = root.querySelector('[data-search-input]');
 		const status = root.querySelector('[data-search-status]');
 		const results = root.querySelector('[data-search-results]');
+		const searchParams = new URLSearchParams(window.location.search);
+		const initialQuery = searchParams.get('q')?.trim() ?? '';
 		let pagefind;
 		let timer;
+
+		const setStatus = (message) => {
+			if (status instanceof HTMLElement) {
+				status.textContent = message;
+			}
+		};
+
+		const updateUrl = (value) => {
+			const nextUrl = new URL(window.location.href);
+			if (value) {
+				nextUrl.searchParams.set('q', value);
+			} else {
+				nextUrl.searchParams.delete('q');
+			}
+			window.history.replaceState({}, '', nextUrl);
+		};
+
+		const escapeHtml = (value) =>
+			value
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;')
+				.replaceAll("'", '&#39;');
 
 		const renderResults = async (items) => {
 			if (!(results instanceof HTMLElement)) return;
@@ -52,13 +107,20 @@ const baseUrl = import.meta.env.BASE_URL;
 
 			for (const item of items) {
 				const data = await item.data();
+				const type = escapeHtml(data.meta?.type ?? '内容');
+				const title = escapeHtml(data.meta?.title ?? data.url);
+				const excerpt = data.excerpt ?? '';
 				const article = document.createElement('article');
-				article.className =
-					'surface-card rounded-[1.5rem] border border-[color:var(--color-line)] bg-white/80 p-5';
+				article.className = 'surface-card rounded-[1.5rem] border border-[color:var(--color-line)] bg-white/80 p-5';
 				article.innerHTML = `
-					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">${data.meta?.type ?? 'Content'}</p>
-					<h3 class="mt-2 font-display text-xl font-bold text-[color:var(--color-ink)]"><a href="${data.url}" class="hover:text-[color:var(--color-accent-strong)]">${data.meta?.title ?? data.url}</a></h3>
-					<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">${data.excerpt}</p>
+					<div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
+						<span>${type}</span>
+						<span class="text-[color:var(--color-ink-soft)] normal-case tracking-normal">${data.url}</span>
+					</div>
+					<h3 class="mt-2 font-display text-xl font-bold text-[color:var(--color-ink)]">
+						<a href="${data.url}" class="hover:text-[color:var(--color-accent-strong)]">${title}</a>
+					</h3>
+					<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">${excerpt}</p>
 				`;
 				results.append(article);
 			}
@@ -69,47 +131,56 @@ const baseUrl = import.meta.env.BASE_URL;
 
 			try {
 				pagefind = await import(`${baseUrl}pagefind/pagefind.js`);
-				await pagefind.options({ excerptLength: 18 });
+				await pagefind.options({ excerptLength: 20 });
 				return pagefind;
 			} catch (error) {
-				if (status instanceof HTMLElement) {
-					status.textContent = '搜索索引会在执行 build 后生成；开发模式下如果尚未构建，搜索结果会暂时不可用。';
-				}
+				setStatus('搜索索引会在执行 build 后生成；如果你在开发模式下尚未构建，搜索结果会暂时不可用。');
 				return null;
 			}
 		};
 
-		input?.addEventListener('input', () => {
-			const value = input.value.trim();
-			window.clearTimeout(timer);
+		const runSearch = async (value) => {
+			const query = value.trim();
+			updateUrl(query);
 
-			if (value.length < 2) {
-				if (status instanceof HTMLElement) {
-					status.textContent = '输入至少 2 个字符开始搜索。';
-				}
+			if (query.length < 2) {
+				setStatus('输入至少 2 个字符开始搜索。');
 				if (results instanceof HTMLElement) {
 					results.innerHTML = '';
 				}
 				return;
 			}
 
-			timer = window.setTimeout(async () => {
-				const engine = await loadPagefind();
+			const engine = await loadPagefind();
+			if (!engine) return;
 
-				if (!engine) return;
-				if (status instanceof HTMLElement) {
-					status.textContent = `正在搜索 “${value}”…`;
-				}
+			setStatus(`正在搜索 “${query}”…`);
+			const response = await engine.search(query);
+			const items = response?.results ?? [];
+			setStatus(`找到 ${items.length} 条结果。`);
+			await renderResults(items);
+		};
 
-				const response = await engine.search(value, { filters: {}, sort: {} });
-				const items = response?.results ?? [];
+		if (input instanceof HTMLInputElement) {
+			input.value = initialQuery;
 
-				if (status instanceof HTMLElement) {
-					status.textContent = `找到 ${items.length} 条结果。`;
-				}
+			input.addEventListener('input', () => {
+				window.clearTimeout(timer);
+				timer = window.setTimeout(() => {
+					void runSearch(input.value);
+				}, 180);
+			});
+		}
 
-				await renderResults(items);
-			}, 180);
+		form?.addEventListener('submit', (event) => {
+			event.preventDefault();
+			if (input instanceof HTMLInputElement) {
+				void runSearch(input.value);
+			}
 		});
+
+		if (initialQuery.length >= 2 && input instanceof HTMLInputElement) {
+			void runSearch(input.value);
+		}
 	}
 </script>

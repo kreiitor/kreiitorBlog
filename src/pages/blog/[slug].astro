@@ -37,6 +37,7 @@ const tocHeadings = headings.filter((heading) => heading.depth <= 2);
 		<div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
 			<article class="space-y-8">
 				<header class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+					<span data-pagefind-meta="type" class="hidden">博客文章</span>
 					<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
 						<time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
 						<span>·</span>
