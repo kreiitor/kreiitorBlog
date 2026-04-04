@@ -2,7 +2,7 @@ export const siteConfig = {
 	title: 'AI4SE 研究札记',
 	tagline: '个人博客与论文展示站',
 	description:
-		'围绕 AI for Software Engineering、程序分析与实验复现记录，持续整理研究笔记、项目摘要与技术文章。',
+		'围绕 AI for Software Engineering、程序分析与实验复现，持续整理研究笔记、项目摘要与技术文章。',
 	author: 'kreiitor',
 	role: '软件工程智能化方向研究者',
 	location: '武汉，中国',
@@ -13,25 +13,13 @@ export const siteConfig = {
 		kicker: 'AI for Software Engineering',
 		title: '把论文、实验和博客写进同一条长期创作路径',
 		description:
-			'这里展示我的研究兴趣、项目进展和技术写作。第一版聚焦于可持续更新的静态站结构，方便后续逐篇替换为真实论文与实验内容。',
+			'这里展示我的研究兴趣、项目进展和技术写作。站点以静态内容为基础，但希望在观感和浏览路径上更像一份持续生长的研究作品集。',
 		highlights: ['LLM 在软件工程中的应用', '实验设计与复现实践', '技术写作与知识沉淀'],
 	},
 	socialLinks: [
 		{ label: 'GitHub', href: 'https://github.com/kreiitor' },
 		{ label: 'Email', href: 'mailto:kreiitor@foxmail.com' },
 	],
-	giscus: {
-		repo: '',
-		repoId: '',
-		category: '',
-		categoryId: '',
-		mapping: 'pathname',
-		strict: '0',
-		reactionsEnabled: '1',
-		emitMetadata: '0',
-		inputPosition: 'top',
-		lang: 'zh-CN',
-	},
 };
 
 export const navLinks = [
