@@ -1,5 +1,6 @@
 ---
 const baseUrl = import.meta.env.BASE_URL;
+const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
 interface Props {
 	title?: string;
@@ -58,7 +59,7 @@ const {
 	</div>
 </section>
 
-<script is:inline define:vars={{ baseUrl }}>
+<script is:inline define:vars={{ normalizedBaseUrl }}>
 	const root = document.querySelector('[data-search-root]');
 
 	if (root instanceof HTMLElement) {
@@ -115,7 +116,6 @@ const {
 				article.innerHTML = `
 					<div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
 						<span>${type}</span>
-						<span class="text-[color:var(--color-ink-soft)] normal-case tracking-normal">${data.url}</span>
 					</div>
 					<h3 class="mt-2 font-display text-xl font-bold text-[color:var(--color-ink)]">
 						<a href="${data.url}" class="hover:text-[color:var(--color-accent-strong)]">${title}</a>
@@ -130,11 +130,12 @@ const {
 			if (pagefind) return pagefind;
 
 			try {
-				pagefind = await import(`${baseUrl}pagefind/pagefind.js`);
+				const pagefindUrl = `${normalizedBaseUrl}pagefind/pagefind.js`;
+				pagefind = await import(pagefindUrl);
 				await pagefind.options({ excerptLength: 20 });
 				return pagefind;
 			} catch (error) {
-				setStatus('搜索索引会在执行 build 后生成；如果你在开发模式下尚未构建，搜索结果会暂时不可用。');
+				setStatus('搜索资源加载失败。请稍后刷新页面重试；如果问题持续存在，说明本次部署尚未完成。');
 				return null;
 			}
 		};

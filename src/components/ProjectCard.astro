@@ -11,7 +11,7 @@ interface Props {
 const { project } = Astro.props;
 ---
 
-<article class="surface-card group flex h-full flex-col overflow-hidden rounded-[2rem]">
+<article class="surface-card group flex h-full flex-col overflow-hidden rounded-[2rem] hover:rotate-[0.25deg]">
 	{project.data.cover && (
 		<a href={withBase(`/projects/${project.id}/`)} class="block overflow-hidden">
 			<img
@@ -22,7 +22,8 @@ const { project } = Astro.props;
 			/>
 		</a>
 	)}
-	<div class="flex h-full flex-col gap-5 p-6">
+	<div class="relative flex h-full flex-col gap-5 p-6">
+		<div class="pointer-events-none absolute bottom-4 right-4 h-20 w-20 rounded-full bg-[rgba(45,106,142,0.10)] blur-2xl"></div>
 		<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
 			<span class="rounded-full bg-[rgba(242,133,94,0.12)] px-3 py-1 font-semibold text-[color:var(--color-accent-strong)]">
 				{project.data.status}

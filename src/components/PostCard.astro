@@ -13,7 +13,7 @@ interface Props {
 const { post, featured = false } = Astro.props;
 ---
 
-<article class:list={['surface-card group flex h-full flex-col overflow-hidden rounded-[2rem]', featured && 'md:col-span-2 xl:col-span-1']}>
+<article class:list={['surface-card group flex h-full flex-col overflow-hidden rounded-[2rem] hover:-rotate-[0.35deg]', featured && 'md:col-span-2 xl:col-span-1']}>
 	{post.data.cover && (
 		<a href={withBase(`/blog/${post.id}/`)} class="block overflow-hidden">
 			<img
@@ -24,7 +24,8 @@ const { post, featured = false } = Astro.props;
 			/>
 		</a>
 	)}
-	<div class="flex h-full flex-col gap-5 p-6">
+	<div class="relative flex h-full flex-col gap-5 p-6">
+		<div class="pointer-events-none absolute right-4 top-4 h-20 w-20 rounded-full bg-[rgba(242,133,94,0.08)] blur-2xl"></div>
 		<div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-ink-soft)]">
 			<time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
 			<span>·</span>
