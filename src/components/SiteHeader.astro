@@ -9,10 +9,10 @@ interface Props {
 const { currentPath } = Astro.props;
 ---
 
-<header class="sticky top-0 z-40 border-b border-[color:var(--color-line)] bg-[rgba(247,244,238,0.78)] backdrop-blur-xl">
+<header class="sticky top-0 z-40 border-b border-[color:var(--color-line)] bg-[rgba(247,244,238,0.82)] backdrop-blur-xl">
 	<div class="page-shell grid gap-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
-		<a href={withBase('/')} class="flex items-center gap-3 text-sm text-[color:var(--color-ink-soft)] transition hover:text-[color:var(--color-ink)]">
-			<div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[color:var(--color-ink)] font-display text-base font-bold tracking-[0.18em] text-white">
+		<a href={withBase('/')} class="group flex items-center gap-3 text-sm text-[color:var(--color-ink-soft)] transition hover:text-[color:var(--color-ink)]">
+			<div class="flex h-11 w-11 items-center justify-center rounded-[1.35rem] bg-[color:var(--color-ink)] font-display text-base font-bold tracking-[0.18em] text-white shadow-lg shadow-[rgba(20,33,61,0.18)] transition group-hover:-translate-y-0.5">
 				AI
 			</div>
 			<div>

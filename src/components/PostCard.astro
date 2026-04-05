@@ -1,7 +1,7 @@
 ---
 import type { PostEntry } from '../utils/content';
-import { formatDate } from '../utils/date';
 import { getReadingTime } from '../utils/content';
+import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
 
@@ -39,10 +39,18 @@ const { post, featured = false } = Astro.props;
 			</h3>
 			<p class="text-sm leading-7 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
 		</div>
-		<div class="mt-auto flex flex-wrap gap-2">
-			{post.data.tags.map((tag) => (
-				<TagLink tag={tag} />
-			))}
+		<div class="mt-auto flex items-center justify-between gap-4">
+			<div class="flex flex-wrap gap-2">
+				{post.data.tags.map((tag) => (
+					<TagLink tag={tag} />
+				))}
+			</div>
+			<a
+				href={withBase(`/blog/${post.id}/`)}
+				class="shrink-0 rounded-full bg-[rgba(20,33,61,0.06)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-ink)] transition group-hover:bg-[rgba(242,133,94,0.14)] group-hover:text-[color:var(--color-accent-strong)]"
+			>
+				继续阅读
+			</a>
 		</div>
 	</div>
 </article>

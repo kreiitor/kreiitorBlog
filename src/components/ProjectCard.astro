@@ -38,10 +38,18 @@ const { project } = Astro.props;
 			</h3>
 			<p class="text-sm leading-7 text-[color:var(--color-ink-soft)]">{project.data.summary}</p>
 		</div>
-		<div class="mt-auto flex flex-wrap gap-2">
-			{project.data.tags.map((tag) => (
-				<TagLink tag={tag} />
-			))}
+		<div class="mt-auto flex items-center justify-between gap-4">
+			<div class="flex flex-wrap gap-2">
+				{project.data.tags.map((tag) => (
+					<TagLink tag={tag} />
+				))}
+			</div>
+			<a
+				href={withBase(`/projects/${project.id}/`)}
+				class="shrink-0 rounded-full bg-[rgba(45,106,142,0.10)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-ocean)] transition group-hover:bg-[rgba(45,106,142,0.18)]"
+			>
+				查看详情
+			</a>
 		</div>
 	</div>
 </article>
