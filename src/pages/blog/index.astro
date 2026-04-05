@@ -16,60 +16,60 @@ const tags = getTagSummaries(posts, projects);
 
 <BaseLayout title="博客" description="按文章、标签、归档和静态搜索浏览博客内容。">
 	<div data-pagefind-ignore>
-	<section class="page-shell pt-12">
-		<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
-			<SectionHeading
-				kicker="Blog"
-				title="博客列表"
-				description="这里聚合全部文章，并提供标签导航、归档入口和正式站内搜索。"
-			/>
-			<div class="mt-6 flex flex-wrap gap-3">
-				<a
-					href={withBase('/archive/')}
-					class="rounded-full border border-[color:var(--color-line)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
-				>
-					打开归档
-				</a>
-				<a
-					href={withBase('/search/')}
-					class="rounded-full border border-[color:var(--color-line)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
-				>
-					进入搜索页
-				</a>
-			</div>
-		</div>
-	</section>
-
-	<section class="page-shell mt-8">
-		<SearchPanel
-			compact={true}
-			title="快速搜索"
-			description="先在博客页快速检索，想要分享搜索结果时可以进入独立搜索页。"
-		/>
-	</section>
-
-	<section class="page-shell mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-		<div class="space-y-6">
-			{publishedPosts.map((post) => (
-				<PostCard post={post} />
-			))}
-		</div>
-
-		<aside class="space-y-6">
-			<div class="surface-card rounded-[2rem] p-6">
-				<h2 class="font-display text-2xl font-bold text-[color:var(--color-ink)]">标签导航</h2>
-				<div class="mt-5 flex flex-wrap gap-2">
-					{tags.map((item) => (
-						<div class="rounded-[1.25rem] bg-white/80 px-3 py-2">
-							<div class="flex items-center gap-2">
-								<TagLink tag={item.tag} />
-								<span class="text-xs text-[color:var(--color-ink-soft)]">{item.count}</span>
-							</div>
-						</div>
-					))}
+		<section class="page-shell pt-12">
+			<div class="surface-card rounded-[2.5rem] p-8 sm:p-10">
+				<SectionHeading
+					kicker="Blog"
+					title="博客列表"
+					description="这里聚合全部文章，并提供标签导航、归档入口和正式站内搜索。"
+				/>
+				<div class="mt-6 flex flex-wrap gap-3">
+					<a
+						href={withBase('/archive/')}
+						class="rounded-full border border-[color:var(--color-line)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
+					>
+						打开归档
+					</a>
+					<a
+						href={withBase('/search/')}
+						class="rounded-full border border-[color:var(--color-line)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
+					>
+						进入搜索页
+					</a>
 				</div>
 			</div>
-		</aside>
-	</section>
+		</section>
+
+		<section class="page-shell mt-8">
+			<SearchPanel
+				compact={true}
+				title="快速搜索"
+				description="先在博客页快速检索，想要分享搜索结果时可以进入独立搜索页。"
+			/>
+		</section>
+
+		<section class="page-shell mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+			<div class="space-y-6">
+				{publishedPosts.map((post) => (
+					<PostCard post={post} />
+				))}
+			</div>
+
+			<aside class="space-y-6">
+				<div class="surface-card rounded-[2rem] p-6">
+					<h2 class="font-display text-2xl font-bold text-[color:var(--color-ink)]">标签导航</h2>
+					<div class="mt-5 flex flex-wrap gap-2">
+						{tags.map((item) => (
+							<div class="rounded-[1.25rem] bg-white/80 px-3 py-2">
+								<div class="flex items-center gap-2">
+									<TagLink tag={item.tag} />
+									<span class="text-xs text-[color:var(--color-ink-soft)]">{item.count}</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</aside>
+		</section>
 	</div>
 </BaseLayout>
