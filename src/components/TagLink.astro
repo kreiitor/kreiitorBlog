@@ -10,7 +10,7 @@ const { tag } = Astro.props;
 
 <a
 	href={withBase(`/tags/${encodeURIComponent(tag)}/`)}
-	class="inline-flex items-center rounded-full bg-[rgba(20,33,61,0.06)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-[color:var(--color-ocean)] transition hover:bg-[rgba(45,106,142,0.14)]"
+	class="zen-tag"
 >
-	#{tag}
+	{tag}
 </a>

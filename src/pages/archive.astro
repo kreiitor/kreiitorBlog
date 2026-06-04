@@ -11,30 +11,30 @@ const groups = getArchiveGroups(posts);
 
 <BaseLayout title="归档" description="按年份归档浏览全部博客文章。">
 	<div data-pagefind-ignore>
-		<section class="page-shell pt-12">
-			<div class="surface-card float-panel rounded-[2.75rem] p-8 sm:p-10">
-				<h1 class="font-display text-4xl font-bold text-[color:var(--color-ink)]">归档</h1>
-				<p class="mt-4 max-w-3xl text-base leading-8 text-[color:var(--color-ink-soft)]">
-					按发布时间归档文章，方便在内容逐渐增多后仍然保持清晰的时间线。
+		<section class="page-shell pt-16 sm:pt-20" data-zen-reveal>
+			<div class="max-w-2xl space-y-4">
+				<p class="zen-kicker">Archive</p>
+				<h1 class="font-display text-3xl font-semibold text-[color:var(--color-ink)] sm:text-4xl">归档</h1>
+				<p class="text-[0.9375rem] leading-7 text-[color:var(--color-ink-soft)]">
+					按时间线浏览全部文章。
 				</p>
 			</div>
 		</section>
 
-		<section class="page-shell mt-8 space-y-6">
+		<section class="page-shell mt-12 space-y-10">
 			{groups.map((group) => (
-				<div class="surface-card float-panel rounded-[2rem] p-6 sm:p-8">
-					<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">{group.year}</h2>
-					<ul class="mt-6 space-y-4">
+				<div data-zen-reveal>
+					<h2 class="font-display text-2xl font-semibold text-[color:var(--color-ink)]">{group.year}</h2>
+					<div class="mt-6 space-y-3">
 						{group.items.map((post) => (
-							<li class="rounded-[1.5rem] bg-white/80 p-5">
-								<p class="text-sm text-[color:var(--color-ink-soft)]">{formatYearMonth(post.data.pubDate)}</p>
-								<a href={withBase(`/blog/${post.id}/`)} class="mt-2 block font-display text-2xl font-bold text-[color:var(--color-ink)] hover:text-[color:var(--color-accent-strong)]">
+							<a href={withBase(`/blog/${post.id}/`)} class="group block rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-surface)] p-4 transition hover:border-[color:var(--color-line-strong)] hover:shadow-[var(--shadow-whisper)]">
+								<p class="text-xs text-[color:var(--color-ink-muted)]">{formatYearMonth(post.data.pubDate)}</p>
+								<p class="mt-1.5 text-sm font-medium text-[color:var(--color-ink)] transition group-hover:text-[color:var(--color-accent-strong)]">
 									{post.data.title}
-								</a>
-								<p class="mt-2 text-sm leading-7 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
-							</li>
+								</p>
+							</a>
 						))}
-					</ul>
+					</div>
 				</div>
 			))}
 		</section>

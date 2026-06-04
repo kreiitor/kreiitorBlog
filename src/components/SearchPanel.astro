@@ -15,44 +15,38 @@ const {
 } = Astro.props;
 ---
 
-<section class="surface-card rounded-[2rem] p-6 sm:p-8">
+<section class="zen-card-flat p-5 sm:p-6">
 	<div class="space-y-3">
-		<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
-			Search
-		</p>
-		<h2 class:list={['font-display font-bold tracking-tight text-[color:var(--color-ink)]', compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl']}>
+		<p class="zen-kicker">Search</p>
+		<h2 class:list={['font-display font-semibold text-[color:var(--color-ink)]', compact ? 'text-xl' : 'text-2xl']}>
 			{title}
 		</h2>
 		<p class="max-w-2xl text-sm leading-7 text-[color:var(--color-ink-soft)]">{description}</p>
 	</div>
 
-	<div class="mt-6 space-y-5" data-search-root>
-		<form class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" data-search-form>
-			<label class="block">
-				<span class="mb-2 block text-sm font-semibold text-[color:var(--color-ink)]">搜索关键词</span>
-				<input
-					data-search-input
-					type="search"
-					name="q"
-					placeholder="例如：算法学习、实验复现、程序分析"
-					class="w-full rounded-2xl border border-[color:var(--color-line)] bg-white/80 px-4 py-3 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-accent)]"
-				/>
-			</label>
+	<div class="mt-6 space-y-4" data-search-root>
+		<form class="flex gap-2.5" data-search-form>
+			<input
+				data-search-input
+				type="search"
+				name="q"
+				placeholder="观自在..."
+				class="zen-input flex-1"
+			/>
 			<button
 				type="submit"
-				class="inline-flex h-[50px] items-center justify-center rounded-2xl bg-[color:var(--color-ink)] px-5 text-sm font-semibold text-white transition hover:bg-[color:var(--color-accent-strong)]"
+				class="zen-btn zen-btn-primary shrink-0"
 			>
 				搜索
 			</button>
 		</form>
 
-		<div class="flex flex-wrap gap-2 text-xs text-[color:var(--color-ink-soft)]">
-			<span class="rounded-full bg-white/70 px-3 py-1">支持标题、摘要与正文关键词</span>
-			<span class="rounded-full bg-white/70 px-3 py-1">索引在构建时自动生成</span>
-			<span class="rounded-full bg-white/70 px-3 py-1">适用于 GitHub Pages</span>
+		<div class="flex flex-wrap gap-2 text-xs text-[color:var(--color-ink-muted)]">
+			<span class="rounded-full bg-[color:var(--color-paper)] px-2.5 py-1">标题 + 摘要 + 正文</span>
+			<span class="rounded-full bg-[color:var(--color-paper)] px-2.5 py-1">构建时自动生成索引</span>
 		</div>
 
-		<p data-search-status class="text-sm leading-7 text-[color:var(--color-ink-soft)]">
+		<p data-search-status class="text-sm leading-7 text-[color:var(--color-ink-muted)]">
 			输入至少 2 个字符开始搜索。
 		</p>
 		<div data-search-results class="grid gap-4"></div>
@@ -102,7 +96,7 @@ const {
 
 			if (!items.length) {
 				results.innerHTML =
-					'<div class="rounded-[1.5rem] border border-dashed border-[color:var(--color-line)] bg-white/70 p-5 text-sm text-[color:var(--color-ink-soft)]">没有找到匹配内容，试试换一个更具体或更宽泛的关键词。</div>';
+					'<div class="zen-card-flat border-dashed p-5 text-sm text-[color:var(--color-ink-muted)]">没有找到匹配内容，试试换一个关键词。</div>';
 				return;
 			}
 
@@ -112,15 +106,13 @@ const {
 				const title = escapeHtml(data.meta?.title ?? data.url);
 				const excerpt = data.excerpt ?? '';
 				const article = document.createElement('article');
-				article.className = 'surface-card rounded-[1.5rem] border border-[color:var(--color-line)] bg-white/80 p-5';
+				article.className = 'zen-card-flat p-4 transition hover:shadow-[var(--shadow-soft)]';
 				article.innerHTML = `
-					<div class="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
-						<span>${type}</span>
-					</div>
-					<h3 class="mt-2 font-display text-xl font-bold text-[color:var(--color-ink)]">
+					<p class="zen-kicker">${type}</p>
+					<h3 class="mt-2 font-display text-base font-semibold text-[color:var(--color-ink)]">
 						<a href="${data.url}" class="hover:text-[color:var(--color-accent-strong)]">${title}</a>
 					</h3>
-					<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">${excerpt}</p>
+					<p class="mt-2 text-sm leading-7 text-[color:var(--color-ink-soft)]">${excerpt}</p>
 				`;
 				results.append(article);
 			}
@@ -135,7 +127,7 @@ const {
 				await pagefind.options({ excerptLength: 20 });
 				return pagefind;
 			} catch (error) {
-				setStatus('搜索资源加载失败。请稍后刷新页面重试；如果问题持续存在，说明本次部署尚未完成。');
+				setStatus('搜索资源加载失败，请刷新页面重试。');
 				return null;
 			}
 		};
@@ -155,7 +147,7 @@ const {
 			const engine = await loadPagefind();
 			if (!engine) return;
 
-			setStatus(`正在搜索 “${query}”…`);
+			setStatus(`正在搜索 "${query}"...`);
 			const response = await engine.search(query);
 			const items = response?.results ?? [];
 			setStatus(`找到 ${items.length} 条结果。`);

@@ -6,25 +6,24 @@ import { withBase } from '../utils/url';
 
 <BaseLayout title="关于" description="个人简介、研究兴趣与站点维护说明。">
 	<div data-pagefind-ignore>
-		<section class="page-shell pt-12">
-			<div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-				<div class="surface-card float-panel rounded-[2.75rem] p-8 sm:p-10">
-					<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
-						About
-					</p>
-					<h1 class="mt-4 font-display text-4xl font-bold tracking-tight text-[color:var(--color-ink)] sm:text-5xl">
+		<!-- Profile -->
+		<section class="page-shell pt-16 sm:pt-20" data-zen-reveal>
+			<div class="grid gap-10 lg:grid-cols-[1fr_280px] lg:items-start">
+				<div class="space-y-6">
+					<p class="zen-kicker">About</p>
+					<h1 class="font-display text-3xl font-semibold text-[color:var(--color-ink)] sm:text-4xl">
 						{siteConfig.author}
 					</h1>
-					<p class="mt-4 max-w-3xl text-lg leading-8 text-[color:var(--color-ink-soft)]">
+					<p class="max-w-2xl text-base leading-8 text-[color:var(--color-ink-soft)]">
 						{siteConfig.role}，目前以中文写作为主，持续整理研究问题、论文思路和工程实验过程。
 					</p>
-					<div class="mt-8 flex flex-wrap gap-3">
+					<div class="flex flex-wrap gap-2.5">
 						{siteConfig.socialLinks.map((link) => (
 							<a
 								href={link.href}
 								target="_blank"
 								rel="noreferrer"
-								class="rounded-full border border-[color:var(--color-line)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
+								class="zen-btn zen-btn-secondary text-xs"
 							>
 								{link.label}
 							</a>
@@ -32,25 +31,29 @@ import { withBase } from '../utils/url';
 					</div>
 				</div>
 
-				<div class="surface-card float-panel flex flex-col items-start rounded-[2.75rem] p-8">
-					<img src={withBase(siteConfig.avatar)} alt={siteConfig.author} class="h-24 w-24 rounded-[1.75rem] object-cover" />
-					<p class="mt-6 font-display text-2xl font-bold text-[color:var(--color-ink)]">{siteConfig.location}</p>
-					<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-						品牌信息、头像、论文题目和社交链接都集中在
-						<code class="rounded bg-[rgba(20,33,61,0.06)] px-1.5 py-1 text-xs">src/data/site.ts</code>
-						里，后续替换内容时不需要重写页面结构。
+				<div class="zen-card-flat p-5">
+					<img src={withBase(siteConfig.avatar)} alt={siteConfig.author} class="h-20 w-20 rounded-2xl object-cover" />
+					<p class="mt-5 font-display text-lg font-semibold text-[color:var(--color-ink)]">{siteConfig.location}</p>
+					<p class="mt-2 text-sm leading-7 text-[color:var(--color-ink-soft)]">
+						品牌信息集中在
+						<code class="rounded bg-[color:var(--color-paper-warm)] px-1 py-0.5 text-xs text-[color:var(--color-accent-strong)]">src/data/site.ts</code>
+						，修改内容无需重写页面结构。
 					</p>
 				</div>
 			</div>
 		</section>
 
-		<section class="page-shell mt-8 grid gap-6 md:grid-cols-3">
+		<!-- Sections -->
+		<section class="page-shell mt-16 grid gap-5 md:grid-cols-3" data-zen-reveal>
 			{aboutSections.map((section) => (
-				<div class="surface-card float-panel rounded-[2.25rem] p-6">
-					<h2 class="font-display text-2xl font-bold text-[color:var(--color-ink)]">{section.title}</h2>
-					<ul class="mt-5 space-y-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">
+				<div class="zen-card-flat p-5">
+					<h2 class="font-display text-lg font-semibold text-[color:var(--color-ink)]">{section.title}</h2>
+					<ul class="mt-4 space-y-2.5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
 						{section.items.map((item) => (
-							<li>{item}</li>
+							<li class="flex items-start gap-2">
+								<span class="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-[color:var(--color-accent)]"></span>
+								{item}
+							</li>
 						))}
 					</ul>
 				</div>

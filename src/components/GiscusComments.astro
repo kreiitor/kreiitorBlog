@@ -2,37 +2,32 @@
 import { giscusConfig, isGiscusConfigured } from '../utils/giscus';
 ---
 
-<section class="surface-card rounded-[2rem] p-6 sm:p-8">
+<section class="zen-card-flat p-5 sm:p-6">
 	<div class="mb-6 space-y-2">
-		<p class="font-display text-sm font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-strong)]">
-			Comments
-		</p>
-		<h2 class="font-display text-3xl font-bold text-[color:var(--color-ink)]">讨论与反馈</h2>
+		<p class="zen-kicker">Comments</p>
+		<h2 class="font-display text-xl font-semibold text-[color:var(--color-ink)]">讨论与反馈</h2>
 		<p class="text-sm leading-7 text-[color:var(--color-ink-soft)]">
-			欢迎围绕文章里的问题、思路和实现细节继续交流。评论仅在文章详情页显示。
+			欢迎围绕文章里的问题、思路和实现细节继续交流。
 		</p>
 	</div>
 
 	{isGiscusConfigured ? (
 		<div id="giscus-container"></div>
 	) : (
-		<div class="space-y-4 rounded-[1.5rem] border border-dashed border-[color:var(--color-line)] bg-white/70 p-5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-			<p>评论系统代码已经接入，但当前还没有填入 Giscus 所需的 GitHub Discussions 参数。</p>
+		<div class="space-y-3 rounded-xl border border-dashed border-[color:var(--color-line)] bg-[color:var(--color-paper)] p-5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
+			<p>评论系统已接入，但当前还没有填入 Giscus 所需的 GitHub Discussions 参数。</p>
 			<p>
 				先在 GitHub 仓库里开启 <strong>Discussions</strong>，再去
 				<a
 					href="https://giscus.app/zh-CN"
 					target="_blank"
 					rel="noreferrer"
-					class="font-semibold text-[color:var(--color-ocean)] hover:text-[color:var(--color-accent-strong)]"
+					class="font-medium text-[color:var(--color-accent-strong)] hover:underline"
 				>
 					Giscus 配置页
 				</a>
-				生成参数，把它们填进项目根目录的 <code class="rounded bg-[rgba(20,33,61,0.06)] px-1.5 py-1 text-xs">.env</code>。
-			</p>
-			<p>
-				参考模板：
-				<code class="rounded bg-[rgba(20,33,61,0.06)] px-1.5 py-1 text-xs">.env.example</code>
+				生成参数，填入项目根目录的
+				<code class="rounded bg-[color:var(--color-paper-warm)] px-1 py-0.5 text-xs text-[color:var(--color-accent-strong)]">.env</code>。
 			</p>
 		</div>
 	)}

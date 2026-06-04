@@ -9,19 +9,20 @@ interface Props {
 const { currentPath } = Astro.props;
 ---
 
-<header class="sticky top-0 z-40 border-b border-[color:var(--color-line)] bg-[rgba(247,244,238,0.82)] backdrop-blur-xl">
-	<div class="page-shell grid gap-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
-		<a href={withBase('/')} class="group flex items-center gap-3 text-sm text-[color:var(--color-ink-soft)] transition hover:text-[color:var(--color-ink)]">
-			<div class="flex h-11 w-11 items-center justify-center rounded-[1.35rem] bg-[color:var(--color-ink)] font-display text-base font-bold tracking-[0.18em] text-white shadow-lg shadow-[rgba(20,33,61,0.18)] transition group-hover:-translate-y-0.5">
+<header class="sticky top-0 z-40 border-b border-[color:var(--color-line)] bg-[rgba(250,247,242,0.82)] backdrop-blur-xl backdrop-saturate-[180%]">
+	<div class="page-shell flex h-14 items-center justify-between gap-4">
+		<!-- Logo -->
+		<a href={withBase('/')} class="group flex items-center gap-2.5 transition hover:opacity-80">
+			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--color-ink)] font-display text-[0.65rem] font-semibold tracking-wider text-[color:var(--color-paper)] transition group-hover:bg-[color:var(--color-accent-strong)]">
 				AI
 			</div>
-			<div>
-				<p class="font-display text-base font-bold text-[color:var(--color-ink)]">{siteConfig.title}</p>
-				<p>{siteConfig.tagline}</p>
-			</div>
+			<span class="hidden font-display text-base font-semibold text-[color:var(--color-ink)] sm:block">
+				{siteConfig.title}
+			</span>
 		</a>
 
-		<nav class="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink-soft)] lg:justify-center">
+		<!-- Navigation -->
+		<nav class="flex items-center gap-1">
 			{navLinks.map((item) => {
 				const active =
 					item.href === '/'
@@ -32,10 +33,10 @@ const { currentPath } = Astro.props;
 					<a
 						href={withBase(item.href)}
 						class:list={[
-							'rounded-full px-4 py-2 transition',
+							'relative rounded-full px-3.5 py-1.5 text-[0.8125rem] font-medium transition-all duration-200',
 							active
-								? 'bg-[color:var(--color-ink)] text-white shadow-lg'
-								: 'hover:bg-white/80 hover:text-[color:var(--color-ink)]',
+								? 'bg-[color:var(--color-ink)] text-[color:var(--color-paper)]'
+								: 'text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] hover:bg-[rgba(44,40,37,0.04)]',
 						]}
 					>
 						{item.label}
@@ -44,19 +45,17 @@ const { currentPath } = Astro.props;
 			})}
 		</nav>
 
-		<div class="flex items-center lg:justify-end">
-			<a
-				href={withBase('/search/')}
-				class="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-line)] bg-white/85 px-4 py-2 text-[color:var(--color-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent-strong)]"
-				aria-label="打开站内搜索"
-				title="搜索"
-			>
-				<svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2">
-					<circle cx="11" cy="11" r="7"></circle>
-					<path d="m20 20-3.5-3.5"></path>
-				</svg>
-				<span class="font-semibold">搜索</span>
-			</a>
-		</div>
+		<!-- Search -->
+		<a
+			href={withBase('/search/')}
+			class="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-ink-soft)] transition hover:bg-[rgba(44,40,37,0.04)] hover:text-[color:var(--color-ink)]"
+			aria-label="搜索"
+			title="搜索"
+		>
+			<svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+				<circle cx="11" cy="11" r="7"></circle>
+				<path d="m20 20-3.5-3.5"></path>
+			</svg>
+		</a>
 	</div>
 </header>
