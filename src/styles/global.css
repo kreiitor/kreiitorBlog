@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @theme {
- --font-sans: 'DM Sans','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
- --font-display: 'Noto Serif SC','Songti SC','SimSun',serif;
- --font-editorial: 'DM Serif Display',Georgia,serif;
- --font-mono: 'SFMono-Regular',Consolas,monospace;
+ --font-sans: 'DM Sans','Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+ --font-display: 'Source Serif 4','Noto Serif SC','Songti SC','SimSun',Georgia,serif;
+ --font-reading: 'Source Serif 4','Noto Serif SC','Songti SC','SimSun',Georgia,serif;
+ --font-editorial: 'Source Serif 4',Georgia,serif;
+ --font-mono: 'IBM Plex Mono','SFMono-Regular',Consolas,'Noto Sans SC',monospace;
  --color-paper: #f8f9f5; --color-paper-warm: #eef0e7; --color-paper-cool: #e8ece2;
  --color-surface: #fdfefa; --color-surface-soft: #f3f5ee; --color-surface-hover: #edf1e7;
  --color-ink: #26392e; --color-ink-soft: #657065; --color-ink-muted: #757e72;
@@ -15,7 +15,7 @@
 @layer base {
  :root { color-scheme: light; --ease-smooth: cubic-bezier(.2,.7,.2,1); }
  html { background: var(--color-paper); scroll-behavior: smooth; scroll-padding-top: 110px; -webkit-font-smoothing: antialiased; }
- body { min-width: 320px; color: var(--color-ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.75; }
+ body { min-width: 320px; color: var(--color-ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.75; font-optical-sizing: auto; }
  h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.5; text-wrap: pretty; }
  a { color: inherit; text-decoration: none; transition: color .2s,background .2s; }
  button,input { font: inherit; } button { cursor: pointer; } img { max-width: 100%; }
@@ -64,7 +64,8 @@
  .card-description { font-size: 13px; line-height: 1.9; color: var(--color-ink-soft); }
  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 8px; }
  .card-arrow { font-size: 20px; color: var(--color-accent); }
- .rich-content { font-size: 16px; line-height: 2; overflow-wrap: anywhere; }
+ .rich-content { font-family: var(--font-reading); font-size: 17px; font-weight: 400; line-height: 2; letter-spacing: .01em; overflow-wrap: anywhere; }
+ .rich-content strong { font-weight: 600; }
  .rich-content > * + * { margin-top: 1.5em; }
  .rich-content h2 { font-size: 26px; margin-top: 2.3em; padding-bottom: 12px; border-bottom: 1px solid var(--color-line); }
  .rich-content h3 { font-size: 21px; margin-top: 1.9em; }
@@ -76,9 +77,10 @@
  .rich-content li > ul,.rich-content li > ol { margin-top: .5em; }
  .rich-content li::marker { color: var(--color-accent); }
  .rich-content blockquote { border-left: 3px solid var(--color-accent); background: var(--color-paper-warm); padding: 18px 24px; color: var(--color-ink-soft); }
- .rich-content code { font-family: var(--font-mono); font-size: .85em; background: var(--color-paper-warm); padding: 3px 5px; border-radius: 3px; }
- .rich-content pre { max-width: 100%; overflow: auto; border: 1px solid var(--color-line); border-radius: 6px; padding: 24px; line-height: 1.8; font-size: 13px; }
- .rich-content pre code { padding: 0; background: transparent; }
+ .rich-content code { font-family: var(--font-mono); font-size: .82em; letter-spacing: 0; background: var(--color-paper-warm); color: var(--color-ink); padding: 2px 5px; border: 1px solid var(--color-line); border-radius: 3px; }
+ .rich-content pre { position: relative; max-width: 100%; overflow: auto; border: 1px solid var(--color-line); border-radius: 6px; padding: 52px 24px 22px; background: var(--color-paper-warm); color: var(--color-ink); font-family: var(--font-mono); line-height: 1.85; font-size: 13px; letter-spacing: 0; tab-size: 2; scrollbar-color: var(--color-line-strong) var(--color-paper-warm); scrollbar-width: thin; }
+ .rich-content pre[data-language]::before { content: attr(data-language); position: absolute; top: 15px; left: 24px; font-family: var(--font-sans); font-size: 10px; line-height: 24px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--color-ink-soft); }
+ .rich-content pre code { padding: 0; border: 0; background: transparent; color: inherit; font-size: inherit; }
  .rich-content table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 13px; }
  .rich-content th,.rich-content td { padding: 12px 16px; border: 1px solid var(--color-line); min-width: 100px; }
  .rich-content th { background: var(--color-paper-warm); }
@@ -127,9 +129,10 @@
  .editorial-section { margin-top: 54px; }
  .page-intro { padding-top: 42px; }
  .card-cover { aspect-ratio: 2.1; }
- .rich-content { font-size: 15px; }
+ .rich-content { font-size: 16px; }
  .rich-content h2 { font-size: 23px; }
- .rich-content pre { padding: 16px; }
+ .rich-content pre { padding: 52px 16px 18px; font-size: 12px; }
+ .rich-content pre[data-language]::before { left: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
  html { scroll-behavior: auto; }

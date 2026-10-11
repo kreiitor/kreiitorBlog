@@ -6,6 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { baseLinks } from './src/utils/rehype-base-links.mjs';
 import { unified } from '@astrojs/markdown-remark';
+import { journalCodeTheme } from './src/styles/code-theme.mjs';
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const base =
@@ -19,6 +20,7 @@ export default defineConfig({
 	devToolbar: { enabled: false },
 	integrations: [sitemap()],
 	markdown: {
+		shikiConfig: { theme: journalCodeTheme, langAlias: { gitignore: 'text' } },
 		processor: unified({
 			remarkPlugins: [remarkMath],
 			rehypePlugins: [[rehypeKatex, { strict: 'ignore', throwOnError: false }], baseLinks(base)],

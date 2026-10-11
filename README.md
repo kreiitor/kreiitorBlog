@@ -62,6 +62,8 @@ cover: /covers/post-math.svg
 
 SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字体提供系统中文字体回退；远程字体不可用时仍可正常阅读。
 
+标题与阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 思源黑体，代码使用 IBM Plex Mono。字体层级与字号在 `src/styles/global.css` 中统一维护；代码高亮的浅色纸感主题位于 `src/styles/code-theme.mjs`。
+
 ## 评论
 
 复制 `.env.example` 为 `.env`，配置 Giscus 仓库和分类 ID。没有配置评论时，文章页显示邮件交流入口。GitHub Pages 构建使用的环境变量需要在工作流中配置；本地 `.env` 不应提交。
