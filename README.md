@@ -60,9 +60,11 @@ cover: /covers/post-math.svg
 - 支持 `$...$` 行内公式与 `$$...$$` 公式块。
 - Markdown 中以 `/` 开头的内部链接自动适配部署子目录。
 
-SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字体提供系统中文字体回退；远程字体不可用时仍可正常阅读。
+SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字体通过 Fontsource 随网站构建部署，按字符范围按需加载；系统中文字体作为最终回退，不需要连接 Google Fonts。
 
 标题与阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 思源黑体，代码使用 IBM Plex Mono。字体层级与字号在 `src/styles/global.css` 中统一维护；代码高亮的浅色纸感主题位于 `src/styles/code-theme.mjs`。
+
+字体的 SIL Open Font License 原文保留在 `public/fonts/licenses/`。
 
 ## 评论
 
