@@ -1,15 +1,15 @@
 ---
 title: "Google 高级搜索技巧"
-description: "整理 31 条 Google 高级搜索语法，覆盖精确匹配、范围限定、页面元素定位和内置工具四大类，适合日常信息检索与研究工作长期参考。"
+description: "整理 31 条 Google 高级搜索技巧，涵盖精确搜索、范围限定、页面元素定位和内置工具四类，适合日常信息检索与研究工作长期参考。"
 pubDate: 2026-05-27
+updatedDate: 2026-10-11
 tags:
-  - 搜索
-  - 效率
-  - 技巧
-draft: false
+  - "搜索"
+  - "效率"
+  - "技巧"
+category: knowledge
+cover: /covers/post-tools.svg
 ---
-
-# Google 高级搜索技巧（31 条）
 
 ## 这篇文档解决什么问题
 

@@ -1,15 +1,15 @@
 ---
-title: uv 包管理工具实践哲学与完整使用流程
-description: 详细讲解 uv 的核心实践哲学、完整使用流程、与其他工具的对比，以及在实际项目中的应用。uv 是现代 Python 开发的最佳选择，速度快、配置简单、完全兼容 Python 生态。
+title: "uv 包管理工具实践哲学与完整使用流程"
+description: "详细讲解 uv 的核心实践哲学、完整使用流程、与其他工具的对比，以及在实际项目中的应用。uv 是现代 Python 开发的最佳选择，速度快、配置简单、完全兼容 Python 生态。"
 pubDate: 2026-06-02
+updatedDate: 2026-10-11
 tags:
-  - Python
-  - uv
-  - 工具
-draft: false
+  - "Python"
+  - "uv"
+  - "工具"
+category: knowledge
+cover: /covers/post-tools.svg
 ---
-
-# uv 包管理工具实践哲学与完整使用流程
 
 ## 这份文档适合什么场景
 
@@ -75,11 +75,11 @@ uv 的哲学来自 Node.js 的成功经验，核心是 **"项目隔离 + 依赖�
 
 ### 3. 快速执行
 
-| 工具 | 安装 numpy 的时间 |
-|------|-----------------|
-| pip | 30 秒 |
-| conda | 2 分钟 |
-| uv | 1 秒 |
+| 工具    | 安装 numpy 的时间 |
+| ----- | ------------ |
+| pip   | 30 秒         |
+| conda | 2 分钟         |
+| uv    | 1 秒          |
 
 ### 4. 零配置
 
@@ -184,6 +184,18 @@ uv add numpy pandas  # 添加你的依赖
 ### Q3: .venv 文件夹很大，可以删除吗？
 
 可以。uv sync 会重新创建。
+
+---
+
+## uv 的使用哲学总结
+
+```
+新项目 → uv init
+添加功能 → uv add 包名
+开发测试 → uv run python 脚本
+分享代码 → 提交 pyproject.toml + uv.lock
+别人使用 → uv sync + uv run
+```
 
 ---
 

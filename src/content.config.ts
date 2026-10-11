@@ -14,6 +14,9 @@ const posts = defineCollection({
 		cover: z.string().optional(),
 		readingTime: z.number().int().positive().optional(),
 		featured: z.boolean().optional(),
+		category: z.enum(['writing', 'knowledge', 'course']).default('writing'),
+		series: z.string().optional(),
+		order: z.number().int().optional(),
 	}),
 });
 

@@ -2,41 +2,18 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getArchiveGroups } from '../utils/content';
-import { formatYearMonth } from '../utils/date';
+import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
-
-const posts = await getCollection('posts');
-const groups = getArchiveGroups(posts);
+const groups=getArchiveGroups(await getCollection('posts'));
 ---
-
-<BaseLayout title="归档" description="按年份归档浏览全部博客文章。">
-	<div data-pagefind-ignore>
-		<section class="page-shell pt-16 sm:pt-20" data-zen-reveal>
-			<div class="max-w-2xl space-y-4">
-				<p class="zen-kicker">Archive</p>
-				<h1 class="font-display text-3xl font-semibold text-[color:var(--color-ink)] sm:text-4xl">归档</h1>
-				<p class="text-[0.9375rem] leading-7 text-[color:var(--color-ink-soft)]">
-					按时间线浏览全部文章。
-				</p>
-			</div>
-		</section>
-
-		<section class="page-shell mt-12 space-y-10">
-			{groups.map((group) => (
-				<div data-zen-reveal>
-					<h2 class="font-display text-2xl font-semibold text-[color:var(--color-ink)]">{group.year}</h2>
-					<div class="mt-6 space-y-3">
-						{group.items.map((post) => (
-							<a href={withBase(`/blog/${post.id}/`)} class="group block rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-surface)] p-4 transition hover:border-[color:var(--color-line-strong)] hover:shadow-[var(--shadow-whisper)]">
-								<p class="text-xs text-[color:var(--color-ink-muted)]">{formatYearMonth(post.data.pubDate)}</p>
-								<p class="mt-1.5 text-sm font-medium text-[color:var(--color-ink)] transition group-hover:text-[color:var(--color-accent-strong)]">
-									{post.data.title}
-								</p>
-							</a>
-						))}
-					</div>
-				</div>
-			))}
-		</section>
-	</div>
+<BaseLayout title="时间归档" description="沿着时间线浏览所有研究札记和学习记录。">
+ <div data-pagefind-ignore><section class="page-shell page-intro"><p class="eyebrow">THE ARCHIVE / A TRAIL OF THOUGHTS</p><h1>时间，留下了这些。</h1><p>思考不是突然发生的。沿着时间线，看看那些逐渐积累的痕迹。</p></section><section class="page-shell archive-list">{groups.map(group => <div class="archive-year"><div><h2>{group.year}</h2><p>{group.items.length} 篇札记</p></div><div>{group.items.map(post => <a href={withBase(`/blog/${post.id}/`)} class="archive-row"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><h3>{post.data.title}</h3><span aria-hidden="true">↗</span></a>)}</div></div>)}</section></div>
 </BaseLayout>
+<style>
+ .archive-list { margin-top: 35px; } .archive-year { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 35px; margin-bottom: 50px; }
+ .archive-year h2 { font-family: var(--font-editorial); font-size: 48px; font-weight: 400; } .archive-year > div > p { font-size: 11px; color: var(--color-ink-muted); }
+ .archive-row { display: grid; grid-template-columns: 110px minmax(0,1fr) 15px; gap: 20px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--color-line); }
+ .archive-row time { font-size: 10px; color: var(--color-ink-muted); } .archive-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; }
+ .archive-row span { color: var(--color-accent); } .archive-row:hover h3 { color: var(--color-accent); }
+ @media (max-width: 700px) { .archive-year { grid-template-columns: 1fr; gap: 12px; } .archive-row { grid-template-columns: 85px minmax(0,1fr) 12px; gap: 10px; } }
+</style>

@@ -1,6 +1,6 @@
 export const siteConfig = {
-	title: 'AI4SE 研究札记',
-	tagline: '个人博客与论文展示站',
+	title: 'kreiitor · 研究札记',
+	tagline: '思考有迹，探索不止',
 	description:
 		'围绕 AI for Software Engineering、程序分析与实验复现，持续整理研究笔记、项目摘要与技术文章。',
 	author: 'kreiitor',
@@ -25,6 +25,7 @@ export const siteConfig = {
 export const navLinks = [
 	{ label: '首页', href: '/' },
 	{ label: '博客', href: '/blog/' },
+	{ label: '学习', href: '/notes/' },
 	{ label: '项目', href: '/projects/' },
 	{ label: '关于', href: '/about/' },
 ];

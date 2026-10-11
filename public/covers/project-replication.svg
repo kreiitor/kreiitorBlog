@@ -1,9 +1,1 @@
-<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="720" rx="36" fill="#FFFDF8"/>
-  <circle cx="998" cy="132" r="126" fill="#F2855E" fill-opacity="0.18"/>
-  <circle cx="160" cy="602" r="172" fill="#2D6A8E" fill-opacity="0.14"/>
-  <rect x="148" y="128" width="904" height="466" rx="32" fill="#F7F4EE" stroke="#14213D" stroke-opacity="0.1"/>
-  <text x="188" y="220" fill="#DD5A2B" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">REPLICATION WORKBENCH</text>
-  <text x="188" y="312" fill="#14213D" font-family="Space Grotesk, sans-serif" font-size="66" font-weight="700">Paper Replication</text>
-  <text x="188" y="390" fill="#4F5D75" font-family="'Noto Sans SC', sans-serif" font-size="30">把环境、步骤和差异分析沉淀成统一入口</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" fill="none" color="#75664a"><rect width="800" height="420" fill="#e9e5dc"/><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="currentColor" stroke-width=".6" opacity=".13"/></pattern></defs><rect width="800" height="420" fill="url(#grid)"/><g stroke="#b9ac91" fill="#f9f7ef"><rect x="256" y="84" width="284" height="70" rx="5"/><rect x="256" y="183" width="284" height="70" rx="5"/><rect x="256" y="282" width="284" height="70" rx="5"/></g><path d="M400 154v29m0 70v29" stroke="#a1906d" stroke-width="2"/><g fill="#a1906d"><circle cx="287" cy="119" r="9"/><circle cx="287" cy="218" r="9"/><circle cx="287" cy="317" r="9"/></g><path d="M314 112h174m-174 13h134M314 211h174m-174 13h134M314 310h174m-174 13h134" stroke="#c4b89e" stroke-width="3"/><path d="M564 118h25v199h-25" stroke="#a1906d" stroke-dasharray="4 4"/><text x="35" y="390" font-family="sans-serif" font-size="9" letter-spacing="2" fill="#75664a" opacity=".7">WORKBENCH / REPRODUCE &amp; REFINE</text><path d="M741 370h24m-12-12v24" stroke="#75664a" opacity=".5"/></svg>

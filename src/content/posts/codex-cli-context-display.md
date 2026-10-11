@@ -7,9 +7,8 @@ tags:
   - AI
   - CLI
 draft: false
+category: knowledge
 ---
-
-# Codex CLI上下文显示实践
 
 ## 这个方案解决什么问题
 

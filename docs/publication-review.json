@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-11",
+  "processed": 23,
+  "added": 12,
+  "updated": 11,
+  "withheld": 1,
+  "files": [
+    {
+      "file": "fods-overview.md",
+      "action": "added",
+      "redactions": {
+        "machine_paths": 1
+      }
+    },
+    {
+      "file": "fods-linear-models.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-statistical-error.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-approximation-error.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-optimization-error.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-minimax-supervised-learning.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-representation-learning.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-generative-learning-llm.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-linear-algebra-calculus-convexity.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-probability-concentration.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "fods-exercises.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "career-planning-learning-roadmap.md",
+      "action": "updated",
+      "redactions": {
+        "credential_tokens": 1
+      }
+    },
+    {
+      "file": "browser-video-focus-fix.md",
+      "action": "updated",
+      "redactions": {}
+    },
+    {
+      "file": "algorithm-career-roadmap.md",
+      "action": "updated",
+      "redactions": {}
+    },
+    {
+      "file": "english-reading-best-practices.md",
+      "action": "updated",
+      "redactions": {}
+    },
+    {
+      "file": "ai-assisted-literature-review.md",
+      "action": "updated",
+      "redactions": {}
+    },
+    {
+      "file": "ssh-cli-agent-guide.md",
+      "action": "updated",
+      "redactions": {
+        "home_paths": 1,
+        "email_examples": 4,
+        "server_addresses": 3,
+        "secret_printing": 1
+      }
+    },
+    {
+      "file": "ai-infra-learning-resources.md",
+      "action": "added",
+      "redactions": {}
+    },
+    {
+      "file": "codex-cli-isolation-guide.md",
+      "action": "updated",
+      "redactions": {
+        "server_paths": 9,
+        "provider_endpoints": 3,
+        "provider_names": 8,
+        "server_usernames": 2
+      }
+    },
+    {
+      "file": "git-github-setup-guide.md",
+      "action": "updated",
+      "redactions": {
+        "machine_paths": 3,
+        "email_examples": 6
+      }
+    },
+    {
+      "file": "google-advanced-search-tips.md",
+      "action": "updated",
+      "redactions": {}
+    },
+    {
+      "file": "powershell-encoding-ai-workflow.md",
+      "action": "updated",
+      "redactions": {
+        "machine_paths": 10
+      }
+    },
+    {
+      "file": "uv-package-manager-guide.md",
+      "action": "updated",
+      "redactions": {}
+    }
+  ]
+}

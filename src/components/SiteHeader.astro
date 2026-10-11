@@ -1,61 +1,76 @@
 ---
 import { navLinks, siteConfig } from '../data/site';
 import { withBase } from '../utils/url';
-
-interface Props {
-	currentPath: string;
-}
-
+interface Props { currentPath: string; }
 const { currentPath } = Astro.props;
+const active = (href: string) => href === '/' ? currentPath === '/' : currentPath.startsWith(href);
 ---
-
-<header class="sticky top-0 z-40 border-b border-[color:var(--color-line)] bg-[rgba(250,247,242,0.82)] backdrop-blur-xl backdrop-saturate-[180%]">
-	<div class="page-shell flex h-14 items-center justify-between gap-4">
-		<!-- Logo -->
-		<a href={withBase('/')} class="group flex items-center gap-2.5 transition hover:opacity-80">
-			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--color-ink)] font-display text-[0.65rem] font-semibold tracking-wider text-[color:var(--color-paper)] transition group-hover:bg-[color:var(--color-accent-strong)]">
-				AI
-			</div>
-			<span class="hidden font-display text-base font-semibold text-[color:var(--color-ink)] sm:block">
-				{siteConfig.title}
-			</span>
-		</a>
-
-		<!-- Navigation -->
-		<nav class="flex items-center gap-1">
-			{navLinks.map((item) => {
-				const active =
-					item.href === '/'
-						? currentPath === '/'
-						: currentPath.startsWith(item.href.replace(/\/$/, ''));
-
-				return (
-					<a
-						href={withBase(item.href)}
-						class:list={[
-							'relative rounded-full px-3.5 py-1.5 text-[0.8125rem] font-medium transition-all duration-200',
-							active
-								? 'bg-[color:var(--color-ink)] text-[color:var(--color-paper)]'
-								: 'text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] hover:bg-[rgba(44,40,37,0.04)]',
-						]}
-					>
-						{item.label}
-					</a>
-				);
-			})}
-		</nav>
-
-		<!-- Search -->
-		<a
-			href={withBase('/search/')}
-			class="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-ink-soft)] transition hover:bg-[rgba(44,40,37,0.04)] hover:text-[color:var(--color-ink)]"
-			aria-label="搜索"
-			title="搜索"
-		>
-			<svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-[1.8]">
-				<circle cx="11" cy="11" r="7"></circle>
-				<path d="m20 20-3.5-3.5"></path>
-			</svg>
-		</a>
-	</div>
+<header class="site-header">
+ <div class="page-shell header-inner">
+  <a href={withBase('/')} class="brand" aria-label={`${siteConfig.author} 研究札记，首页`}>
+   <span class="brand-mark" aria-hidden="true">k<span>.</span></span>
+   <span class="brand-name">kreiitor<span class="brand-subtitle">研究札记 / FIELD NOTES</span></span>
+  </a>
+  <nav class="desktop-nav" aria-label="主导航">
+   {navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}
+  </nav>
+  <div class="header-actions">
+   <a href={withBase('/search/')} class="header-search" aria-label="搜索文章" data-search-link>
+    <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+    <span>搜索</span><kbd>⌘ K</kbd>
+   </a>
+   <a href={siteConfig.socialLinks[0].href} class="header-github" target="_blank" rel="noreferrer" aria-label="GitHub 主页">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+   </a>
+   <details class="mobile-menu">
+    <summary aria-label="展开导航"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
+    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}<span aria-hidden="true">↗</span></a>)}<a href={withBase('/archive/')}>文章归档<span aria-hidden="true">↗</span></a></nav>
+   </details>
+  </div>
+ </div>
 </header>
+<script>
+ const searchLink = document.querySelector<HTMLAnchorElement>('[data-search-link]');
+ const shortcut = searchLink?.querySelector('kbd');
+ if (shortcut && !/Mac|iPhone|iPad/.test(navigator.userAgent)) shortcut.textContent = 'Ctrl K';
+ document.addEventListener('keydown', event => {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && searchLink) {
+   event.preventDefault(); window.location.href = searchLink.href;
+  }
+  if (event.key === 'Escape') document.querySelector<HTMLDetailsElement>('.mobile-menu')?.removeAttribute('open');
+ });
+ document.addEventListener('click', event => {
+  const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu');
+  if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+ });
+</script>
+<style>
+ .site-header { position: sticky; top: 0; z-index: 40; background: #f8f9f5ed; backdrop-filter: blur(16px); border-bottom: 1px solid var(--color-line); }
+ .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
+ .brand { display: flex; gap: 12px; align-items: center; }
+ .brand-mark { font-family: var(--font-editorial); font-size: 38px; line-height: 1; letter-spacing: -5px; padding-right: 5px; }
+ .brand-mark span { color: var(--color-accent); }
+ .brand-name { font-size: 20px; font-weight: 600; letter-spacing: -.05em; line-height: 1.2; }
+ .brand-subtitle { display: block; margin-top: 7px; font-size: 8px; font-weight: 400; letter-spacing: .12em; }
+ .desktop-nav { display: flex; gap: 34px; align-items: center; }
+ .desktop-nav a { position: relative; padding: 32px 0; font-size: 13px; color: var(--color-ink-soft); }
+ .desktop-nav a[aria-current] { color: var(--color-ink); }
+ .desktop-nav a[aria-current]::after { content: ''; position: absolute; bottom: 22px; left: calc(50% - 2px); height: 4px; width: 4px; border-radius: 50%; background: var(--color-accent); }
+ .header-actions { display: flex; align-items: center; gap: 20px; }
+ .header-search { display: flex; gap: 10px; align-items: center; font-size: 11px; color: var(--color-ink-soft); }
+ kbd { font-family: var(--font-sans); font-size: 9px; border: 1px solid var(--color-line); border-radius: 3px; padding: 1px 5px; }
+ .header-github { border-left: 1px solid var(--color-line); padding-left: 20px; }
+ .mobile-menu { display: none; }
+ @media (max-width: 700px) {
+  .header-inner { height: 74px; gap: 16px; }
+  .brand-name { font-size: 18px; } .brand-mark { font-size: 34px; }
+  .desktop-nav,.header-search span,kbd,.header-github { display: none; }
+  .header-search { padding: 10px; } .header-actions { gap: 8px; }
+  .mobile-menu { display: block; }
+  .mobile-menu summary { display: flex; padding: 10px; cursor: pointer; list-style: none; }
+  .mobile-menu summary::-webkit-details-marker { display: none; }
+  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; padding: 15px 24px 24px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); }
+  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; }
+  .mobile-menu nav a[aria-current] { color: var(--color-accent); }
+ }
+</style>

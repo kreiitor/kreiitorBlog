@@ -1,15 +1,15 @@
 ---
 title: "Git 仓库初始化与 GitHub 连接教程"
-description: "从本地初始化 Git 仓库到连接 GitHub 的完整教程，涵盖提交、分支管理、远程连接和常见问题排查。"
+description: "从本地初始化 Git 仓库，到连接 GitHub 并完成日常提交、拉取、分支管理和问题排查的一份实用教程。"
 pubDate: 2026-05-25
+updatedDate: 2026-10-11
 tags:
-  - Git
-  - GitHub
-  - 教程
-draft: false
+  - "Git"
+  - "GitHub"
+  - "教程"
+category: knowledge
+cover: /covers/post-tools.svg
 ---
-
-# Git仓库初始化与GitHub连接教程
 
 ## 这份文档适合什么场景
 
@@ -45,10 +45,10 @@ fatal: not a git repository (or any of the parent directories): .git
 ### 1. 进入项目目录
 
 ```powershell
-cd E:\Code\your-project
+cd C:/Projects/example
 ```
 
-请把 `E:\Code\your-project` 替换成你的实际项目目录。
+请把 `C:/Projects/example` 替换成你的实际项目目录。
 
 ### 2. 初始化仓库
 
@@ -81,8 +81,8 @@ No commits yet
 如果这是你第一次使用 Git，建议先配置用户名和邮箱。提交记录会使用这两个信息。
 
 ```powershell
-git config --global user.name "your-username"
-git config --global user.email "your-email@example.com"
+git config --global user.name "你的名字"
+git config --global user.email "user@example.com"
 ```
 
 检查配置：
@@ -180,13 +180,13 @@ git branch -M main
 `HTTPS`
 
 ```text
-https://github.com/your-username/your-repo.git
+https://github.com/你的用户名/你的仓库名.git
 ```
 
 `SSH`
 
 ```text
-git@github.com:your-username/your-repo.git
+git@github.com:你的用户名/你的仓库名.git
 ```
 
 如果你刚开始使用 Git，`HTTPS` 更容易上手。  
@@ -195,7 +195,7 @@ git@github.com:your-username/your-repo.git
 ### 3. 添加远程仓库
 
 ```powershell
-git remote add origin https://github.com/your-username/your-repo.git
+git remote add origin https://github.com/你的用户名/你的仓库名.git
 ```
 
 检查是否绑定成功：
@@ -260,7 +260,7 @@ git push -u origin main
 常见流程：
 
 ```powershell
-ssh-keygen -t ed25519 -C "your-email@example.com"
+ssh-keygen -t ed25519 -C "user@example.com"
 ```
 
 然后把公钥内容添加到 GitHub 的 SSH Keys 设置里，再测试连接：
@@ -272,7 +272,7 @@ ssh -T git@github.com
 之后绑定远程仓库：
 
 ```powershell
-git remote add origin git@github.com:your-username/your-repo.git
+git remote add origin git@github.com:你的用户名/你的仓库名.git
 ```
 
 ---
@@ -368,13 +368,13 @@ git remote -v
 ### 修改远程仓库地址
 
 ```powershell
-git remote set-url origin https://github.com/your-username/your-repo.git
+git remote set-url origin https://github.com/你的用户名/你的仓库名.git
 ```
 
 ### 克隆仓库
 
 ```powershell
-git clone https://github.com/your-username/your-repo.git
+git clone https://github.com/你的用户名/你的仓库名.git
 ```
 
 ### 撤销工作区修改
@@ -497,7 +497,7 @@ git push origin main
 - 使用 Personal Access Token
 - 或改用 SSH
 
-### 6. AI 工具总说"当前仓库不是 git 仓库"
+### 6. AI 工具总说“当前仓库不是 git 仓库”
 
 通常是这几类原因：
 
@@ -566,14 +566,14 @@ git switch -c experiment/ai-refactor
 如果你只想要一套最短命令，可以直接照着执行：
 
 ```powershell
-cd E:\Code\your-project
+cd C:/Projects/example
 git init
-git config user.name "your-username"
-git config user.email "your-email@example.com"
+git config user.name "你的名字"
+git config user.email "user@example.com"
 git add .
 git commit -m "chore: initial commit"
 git branch -M main
-git remote add origin https://github.com/your-username/your-repo.git
+git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
 ```
 

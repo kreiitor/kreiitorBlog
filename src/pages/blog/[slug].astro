@@ -3,107 +3,50 @@ import { getCollection, render } from 'astro:content';
 import GiscusComments from '../../components/GiscusComments.astro';
 import TagLink from '../../components/TagLink.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, getReadingTime } from '../../utils/content';
+import ReadingTools from '../../components/ReadingTools.astro';
+import MathLabel from '../../components/MathLabel.astro';
+import { getPublishedPosts, getReadingTime, getHeadingLabels } from '../../utils/content';
 import { formatDate } from '../../utils/date';
 import { withBase } from '../../utils/url';
-
 export async function getStaticPaths() {
-	const posts = await getCollection('posts');
-
-	return getPublishedPosts(posts).map((post) => ({
-		params: { slug: post.id },
-		props: { post },
-	}));
+ return getPublishedPosts(await getCollection('posts')).map(post => ({ params:{slug:post.id}, props:{post} }));
 }
-
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const tocHeadings = headings.filter((heading) => heading.depth <= 2);
+const sourceLabels = getHeadingLabels(post.body ?? '');
+const tocHeadings = headings.filter(heading => heading.depth <= 2).map((heading,index) => ({ ...heading, text: sourceLabels[index] ?? heading.text }));
+const series = post.data.series ? getPublishedPosts(await getCollection('posts')).filter(item => item.data.series === post.data.series).sort((a,b) => (a.data.order ?? 0)-(b.data.order ?? 0)) : [];
+const index = series.findIndex(item => item.id === post.id);
+const previous = series[index-1];
+const next = series[index+1];
 ---
-
-<BaseLayout
-	title={post.data.title}
-	description={post.data.description}
-	image={post.data.cover ?? '/social-card.svg'}
-	type="article"
-	publishedTime={post.data.pubDate}
-	updatedTime={post.data.updatedDate}
-	tags={post.data.tags}
->
-	<section class="page-shell pt-12 sm:pt-16">
-		<!-- Back link -->
-		<a href={withBase('/blog/')} class="zen-btn zen-btn-ghost text-xs mb-8 inline-flex">
-			<svg aria-hidden="true" viewBox="0 0 20 20" class="h-3.5 w-3.5 fill-none stroke-current stroke-[1.8]">
-				<path d="M13 4l-6 6 6 6" />
-			</svg>
-			返回博客
-		</a>
-
-		<div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_220px]">
-			<article data-pagefind-body class="space-y-8">
-				<!-- Article Header -->
-				<header class="space-y-5" data-zen-reveal>
-					<span data-pagefind-meta="type" class="hidden">博客文章</span>
-					<div class="flex items-center gap-2.5 text-xs text-[color:var(--color-ink-muted)]">
-						<time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-						<span class="h-0.5 w-0.5 rounded-full bg-[color:var(--color-ink-muted)]"></span>
-						<span>{getReadingTime(post)} min read</span>
-						{post.data.updatedDate && (
-							<>
-								<span class="h-0.5 w-0.5 rounded-full bg-[color:var(--color-ink-muted)]"></span>
-								<span>更新于 {formatDate(post.data.updatedDate)}</span>
-							</>
-						)}
-					</div>
-					<h1 data-pagefind-meta="title" class="font-display text-3xl font-semibold leading-tight text-[color:var(--color-ink)] sm:text-4xl">
-						{post.data.title}
-					</h1>
-					<p class="max-w-2xl text-base leading-8 text-[color:var(--color-ink-soft)]">{post.data.description}</p>
-					<div class="flex flex-wrap gap-1.5">
-						{post.data.tags.map((tag) => (
-							<TagLink tag={tag} />
-						))}
-					</div>
-				</header>
-
-				<!-- Cover Image -->
-				{post.data.cover && (
-					<img
-						src={withBase(post.data.cover)}
-						alt={post.data.title}
-						class="h-72 w-full rounded-2xl object-cover"
-					/>
-				)}
-
-				<!-- Article Body -->
-				<div class="zen-card p-6 sm:p-8" data-zen-reveal>
-					<div class="rich-content">
-						<Content />
-					</div>
-				</div>
-
-				<GiscusComments />
-			</article>
-
-			<!-- Sidebar TOC -->
-			<aside data-pagefind-ignore class="hidden lg:block" data-zen-reveal>
-				<div class="sticky top-20 zen-card-flat p-5">
-					<p class="zen-kicker">目录</p>
-					{tocHeadings.length > 0 ? (
-						<ul class="mt-4 space-y-2.5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-							{tocHeadings.map((heading) => (
-								<li>
-									<a href={`#${heading.slug}`} class="transition hover:text-[color:var(--color-accent-strong)]">
-										{heading.text}
-									</a>
-								</li>
-							))}
-						</ul>
-					) : (
-						<p class="mt-4 text-sm text-[color:var(--color-ink-muted)]">暂无目录</p>
-					)}
-				</div>
-			</aside>
-		</div>
-	</section>
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.cover ?? '/social-card.svg'} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags}>
+ <ReadingTools/>
+ <section class="page-shell pt-10 sm:pt-14">
+  <a href={withBase(post.data.series ? '/notes/' : '/blog/')} class="text-link back-link">← {post.data.series ? '返回学习专题' : '返回全部札记'}</a>
+  <div class="article-layout">
+   <article data-pagefind-body data-reading-article>
+    <header class="article-header">
+     <span data-pagefind-meta="type" class="hidden">{post.data.category === 'course' ? '课程精讲' : '博客文章'}</span>
+     <p class="eyebrow">{post.data.series ? `FOUNDATIONS OF DATA SCIENCE / ${String((post.data.order ?? 0)+1).padStart(2,'0')}` : 'FIELD NOTES / '+post.data.tags[0]}</p>
+     <h1 data-pagefind-meta="title">{post.data.title}</h1>
+     <p class="article-summary">{post.data.description}</p>
+     <div class="card-meta"><span>kreiitor</span><span>·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <span>· 更新于 {formatDate(post.data.updatedDate)}</span>}</div>
+     <div class="mt-5 flex flex-wrap gap-2">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
+    </header>
+    <details class="mobile-toc"><summary>本篇目录 · {tocHeadings.length} 个章节</summary><nav aria-label="移动端文章目录">{tocHeadings.map(heading => <a href={`#${heading.slug}`}><MathLabel text={heading.text}/></a>)}</nav></details>
+    {post.data.cover && <img src={withBase(post.data.cover)} alt="" class="article-cover mt-8" width="800" height="420"/>}
+    <div class="rich-content article-body"><Content/></div>
+    {series.length > 0 && <nav class="chapter-nav" data-pagefind-ignore aria-label="相邻章节"><div>{previous && <a href={withBase(`/blog/${previous.id}/`)}><span>← 上一章</span><strong>{previous.data.title}</strong></a>}</div><div>{next && <a href={withBase(`/blog/${next.id}/`)}><span>下一章 →</span><strong>{next.data.title}</strong></a>}</div></nav>}
+    <div data-pagefind-ignore><GiscusComments/></div>
+   </article>
+   <aside data-pagefind-ignore><nav class="article-toc" aria-label="文章目录"><p class="eyebrow mb-4">ON THIS PAGE / 本篇目录</p>{tocHeadings.map(heading => <a href={`#${heading.slug}`} data-toc-link><MathLabel text={heading.text}/></a>)}{series.length > 0 && <a href={withBase('/notes/')} class="mt-6">查看完整学习路径 ↗</a>}</nav></aside>
+  </div>
+ </section>
 </BaseLayout>
+<style>
+ .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; border-block: 1px solid var(--color-line); padding: 24px 0; margin-bottom: 36px; }
+ .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
+ .chapter-nav strong { font-weight: 500; font-size: 14px; } .chapter-nav span { color: var(--color-ink-muted); font-size: 10px; }
+ .chapter-nav > div:last-child { text-align: right; }
+</style>

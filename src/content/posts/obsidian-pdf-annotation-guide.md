@@ -7,9 +7,8 @@ tags:
   - PDF
   - 工具
 draft: false
+category: knowledge
 ---
-
-# Obsidian PDF 阅读与批注最佳实践
 
 ## 这篇文档解决什么问题
 

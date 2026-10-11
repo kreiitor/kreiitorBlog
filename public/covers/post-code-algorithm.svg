@@ -1,9 +1,1 @@
-<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="720" rx="36" fill="#14213D"/>
-  <circle cx="1026" cy="132" r="132" fill="#F2855E" fill-opacity="0.9"/>
-  <circle cx="184" cy="604" r="176" fill="#D8EFE4" fill-opacity="0.88"/>
-  <rect x="122" y="118" width="824" height="484" rx="32" fill="#FFFDF8" fill-opacity="0.08" stroke="#FFFDF8" stroke-opacity="0.16"/>
-  <text x="164" y="214" fill="#F2855E" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">CODE ALGORITHM</text>
-  <text x="164" y="308" fill="#FFFDF8" font-family="Space Grotesk, sans-serif" font-size="66" font-weight="700">Practice as Asset</text>
-  <text x="164" y="388" fill="#D8EFE4" font-family="'Noto Sans SC', sans-serif" font-size="30">从算法练习仓库走向长期可维护的学习系统</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" fill="none" color="#4d663d"><rect width="800" height="420" fill="#e8eddf"/><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="currentColor" stroke-width=".6" opacity=".13"/></pattern></defs><rect width="800" height="420" fill="url(#grid)"/><g stroke="#9aac86" stroke-width="1.4"><path d="M185 230 310 133l140 63 160-85M310 133l30 155 110-92 90 113M185 230l155 58 200 21 90-75M450 196l-4 126"/></g><g fill="#f9faf3" stroke="#66814d" stroke-width="2"><circle cx="185" cy="230" r="21"/><circle cx="310" cy="133" r="23"/><circle cx="450" cy="196" r="32"/><circle cx="610" cy="111" r="17"/><circle cx="340" cy="288" r="17"/><circle cx="540" cy="309" r="23"/><circle cx="630" cy="234" r="13"/></g><g fill="#66814d"><circle cx="450" cy="196" r="13"/><circle cx="310" cy="133" r="7"/><circle cx="540" cy="309" r="7"/></g><path d="M145 338h490" stroke="#9aac86" stroke-dasharray="3 5"/><text x="35" y="390" font-family="sans-serif" font-size="9" letter-spacing="2" fill="#4d663d" opacity=".7">ALGORITHMS / LONG-TERM THINKING</text><path d="M741 370h24m-12-12v24" stroke="#4d663d" opacity=".5"/></svg>

@@ -41,6 +41,26 @@ export function getReadingTime(post: PostEntry) {
 	return post.data.readingTime ?? estimateReadingTime(post.body ?? '');
 }
 
+/** Preserve readable TOC labels before KaTeX adds visual and accessibility copies. */
+export function getHeadingLabels(markdown: string, maxDepth = 2) {
+	const labels: string[] = [];
+	let fence: string | undefined;
+	for (const line of markdown.split('\n')) {
+		const marker = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+		if (marker) {
+			if (!fence) fence = marker[1][0];
+			else if (fence === marker[1][0]) fence = undefined;
+			continue;
+		}
+		if (fence) continue;
+		const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)(?:\s+#+)?\s*$/);
+		if (heading && heading[1].length <= maxDepth) {
+			labels.push(heading[2].replace(/\[([^\]]+)\]\([^)]*\)/g, '$1'));
+		}
+	}
+	return labels;
+}
+
 export function getTagIndex(posts: PostEntry[], projects: ProjectEntry[]) {
 	const index = new Map<string, { posts: PostEntry[]; projects: ProjectEntry[] }>();
 

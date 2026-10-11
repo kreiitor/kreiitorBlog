@@ -1,15 +1,15 @@
 ---
 title: "Codex CLI 当前目录隔离与中转服务配置指南"
-description: "在共享服务器环境中通过 CODEX_HOME 实现 Codex CLI 项目级配置隔离，并配置中转服务与 API key 安全启动。"
+description: "记录在 Linux 远程服务器的共享环境中，如何通过项目内 .codex-home 隔离 Codex CLI 的配置、认证、日志与会话，并使用中转服务 base_url 和 API key 启动 Codex，避免读取同门或外部目录的 ~/.codex 配置。"
 pubDate: 2026-05-20
+updatedDate: 2026-10-11
 tags:
-  - 工具
-  - AI
-  - CLI
-draft: false
+  - "工具"
+  - "AI"
+  - "CLI"
+category: knowledge
+cover: /covers/post-tools.svg
 ---
-
-# Codex CLI当前目录隔离与中转服务配置指南
 
 ## 这篇文档解决什么问题
 
@@ -47,7 +47,7 @@ codex
 推荐结构是：
 
 ```text
-/path/to/your/data
+/srv/project
 ├── .codex-home/
 │   ├── config.toml
 │   ├── sessions/
@@ -73,7 +73,7 @@ codex
 进入项目目录：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 ```
 
 创建隔离目录：
@@ -94,12 +94,12 @@ chmod 700 .codex-home
 
 ```bash
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "my-proxy"
+model_provider = "custom_provider"
 model = "gpt-5-codex"
 
-[model_providers.my-proxy]
-name = "my-proxy"
-base_url = "https://your-proxy.example.com/v1"
+[model_providers.custom_provider]
+name = "custom_provider"
+base_url = "https://api.example.com/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -111,9 +111,9 @@ chmod 600 .codex-home/config.toml
 
 | 配置项 | 含义 |
 | --- | --- |
-| `model_provider = "my-proxy"` | 让 Codex 使用名为 `my-proxy` 的 provider |
+| `model_provider = "custom_provider"` | 让 Codex 使用名为 `custom_provider` 的 provider |
 | `model = "gpt-5-codex"` | 默认模型名，可按中转服务支持情况修改 |
-| `base_url = "https://your-proxy.example.com/v1"` | 中转服务地址 |
+| `base_url = "https://api.example.com/v1"` | 中转服务地址 |
 | `env_key = "OPENAI_API_KEY"` | 从环境变量 `OPENAI_API_KEY` 读取 API key |
 | `wire_api = "responses"` | 使用 Responses API 格式 |
 
@@ -162,7 +162,7 @@ codex
 启动：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 ./run-codex.sh
 ```
 
@@ -171,7 +171,7 @@ cd /path/to/your/data
 ```text
 OpenAI Codex
 model:     gpt-5-codex
-directory: /path/to/your/data
+directory: /srv/project
 ```
 
 并且能够正常对话，说明中转服务路径可用。
@@ -250,7 +250,7 @@ codex
 如果不用脚本，必须先设置：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex
@@ -340,8 +340,8 @@ ls -l run-codex.sh .codex-home/config.toml
 期望类似：
 
 ```text
--rw------- 1 user group 303 Jun  2 11:29 .codex-home/config.toml
--rwx------ 1 user group 207 Jun  2 11:28 run-codex.sh
+-rw------- 1 user user 303 Jun  2 11:29 .codex-home/config.toml
+-rwx------ 1 user user 207 Jun  2 11:28 run-codex.sh
 ```
 
 含义：
@@ -366,7 +366,7 @@ ls -l run-codex.sh .codex-home/config.toml
 那么原来的 `.codex` 可以检查后删除：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 ls -la .codex
 ```
 
@@ -392,18 +392,18 @@ rm -rf .codex
 下面是一套从零开始的完整命令。执行前把 API key 占位符替换成自己的密钥。
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 
 mkdir -p .codex-home
 chmod 700 .codex-home
 
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "my-proxy"
+model_provider = "custom_provider"
 model = "gpt-5-codex"
 
-[model_providers.my-proxy]
-name = "my-proxy"
-base_url = "https://your-proxy.example.com/v1"
+[model_providers.custom_provider]
+name = "custom_provider"
+base_url = "https://api.example.com/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -434,7 +434,7 @@ chmod 700 run-codex.sh
 检查 Codex home：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 CODEX_HOME="$PWD/.codex-home" codex login status
 ls -la .codex-home
 ```
@@ -448,7 +448,7 @@ ls -l run-codex.sh .codex-home/config.toml
 临时绕过脚本启动：
 
 ```bash
-cd /path/to/your/data
+cd /srv/project
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex

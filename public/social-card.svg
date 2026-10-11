@@ -1,11 +1,1 @@
-<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" rx="36" fill="#F7F4EE"/>
-  <circle cx="193" cy="130" r="140" fill="#F2855E" fill-opacity="0.16"/>
-  <circle cx="986" cy="114" r="126" fill="#2D6A8E" fill-opacity="0.12"/>
-  <circle cx="891" cy="535" r="176" fill="#D8EFE4"/>
-  <rect x="72" y="72" width="1056" height="486" rx="32" fill="#FFFDF8" stroke="#14213D" stroke-opacity="0.1"/>
-  <text x="96" y="180" fill="#DD5A2B" font-family="Space Grotesk, sans-serif" font-size="30" font-weight="700" letter-spacing="6">AI FOR SOFTWARE ENGINEERING</text>
-  <text x="96" y="290" fill="#14213D" font-family="Space Grotesk, sans-serif" font-size="72" font-weight="700">AI4SE 研究札记</text>
-  <text x="96" y="366" fill="#4F5D75" font-family="'Noto Sans SC', sans-serif" font-size="30">个人博客 + 论文展示 + 项目沉淀</text>
-  <text x="96" y="452" fill="#2D6A8E" font-family="'Noto Sans SC', sans-serif" font-size="28">Astro / Markdown / GitHub Pages / Giscus / Pagefind</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f8f9f5"/><rect x="780" width="420" height="630" fill="#e9eedf"/><g stroke="#a8b996" fill="none"><circle cx="970" cy="310" r="154"/><ellipse cx="970" cy="310" rx="194" ry="90" transform="rotate(-35 970 310)"/></g><text x="84" y="116" fill="#657a43" font-family="sans-serif" font-size="17" letter-spacing="4">KREIITOR / FIELD NOTES</text><text x="80" y="272" fill="#26392e" font-family="Georgia,serif" font-size="74">Stay curious.</text><text x="80" y="367" fill="#657a43" font-family="Georgia,serif" font-size="74" font-style="italic">Keep building.</text><text x="84" y="477" fill="#657065" font-family="sans-serif" font-size="21">AI for Software Engineering · Research · Learning</text><path d="M84 540h640" stroke="#dce2d6"/><text x="84" y="574" fill="#657065" font-family="sans-serif" font-size="14">kreiitor.github.io/kreiitorBlog</text><text x="929" y="355" fill="#425c30" font-family="Georgia,serif" font-size="140">k</text><circle cx="1032" cy="361" r="11" fill="#657a43"/></svg>

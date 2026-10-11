@@ -1,9 +1,1 @@
-<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="720" rx="36" fill="#FFFDF8"/>
-  <circle cx="1014" cy="630" r="214" fill="#D8EFE4"/>
-  <circle cx="188" cy="126" r="118" fill="#F2855E" fill-opacity="0.18"/>
-  <rect x="114" y="112" width="652" height="496" rx="28" fill="#F7F4EE" stroke="#14213D" stroke-opacity="0.1"/>
-  <text x="154" y="206" fill="#DD5A2B" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">READING NOTES</text>
-  <text x="154" y="304" fill="#14213D" font-family="Space Grotesk, sans-serif" font-size="64" font-weight="700">Paper to Thesis</text>
-  <text x="154" y="382" fill="#4F5D75" font-family="'Noto Sans SC', sans-serif" font-size="30">让论文阅读笔记可以直接服务后续写作</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" fill="none" color="#50696b"><rect width="800" height="420" fill="#e5e9e8"/><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="currentColor" stroke-width=".6" opacity=".13"/></pattern></defs><rect width="800" height="420" fill="url(#grid)"/><g transform="rotate(9 420 216)"><rect x="288" y="82" width="242" height="275" rx="5" fill="#ced8d4" stroke="#9baea8"/></g><g transform="rotate(-8 395 216)"><rect x="272" y="76" width="242" height="275" rx="5" fill="#f8f9f2" stroke="#9baea8"/><path d="M300 112h80m-80 14h182M300 190h182m-182 15h172m-172 15h175m-175 15h114M300 266h182m-182 15h172m-172 15h136" stroke="#bbc9c1" stroke-width="3"/><circle cx="443" cy="153" r="16" stroke="#839b8e"/><path d="m329 152 13-9 15 14 19-7" stroke="#839b8e" stroke-width="2"/></g><path d="M566 128h46m-23-23v46M177 295h38m-19-19v38" stroke="#90a69c" stroke-width="1.5"/><text x="35" y="390" font-family="sans-serif" font-size="9" letter-spacing="2" fill="#50696b" opacity=".7">READING / CONNECTING IDEAS</text><path d="M741 370h24m-12-12v24" stroke="#50696b" opacity=".5"/></svg>

@@ -2,15 +2,15 @@
 title: "远程服务器 SSH 连接与 CLI AI 代理使用指南"
 description: "系统整理远程服务器 SSH 连接最佳实践、tmux 持久化会话、VS Code Remote 工作流、SSH 密钥管理，以及 opencode、codex、claude-code 等 CLI AI 代理在远程服务器上的使用方案和安全配置。"
 pubDate: 2026-06-04
+updatedDate: 2026-10-11
 tags:
-  - SSH
-  - CLI
-  - AI
-  - 工具
-draft: false
+  - "SSH"
+  - "CLI"
+  - "AI"
+  - "工具"
+category: knowledge
+cover: /covers/post-tools.svg
 ---
-
-# 远程服务器SSH连接与CLI AI代理使用指南
 
 ## 这篇文档解决什么问题
 
@@ -98,7 +98,7 @@ Host prod-web
 # GPU 开发服务器（非标准端口）
 # ═══════════════════════════════════════════
 Host gpu-dev
-    HostName 192.168.1.100
+    HostName 192.0.2.10
     User developer
     Port 2222
     IdentityFile ~/.ssh/id_ed25519_dev
@@ -117,7 +117,7 @@ Host bastion
 # 通过跳板机访问的内网服务器
 # ═══════════════════════════════════════════
 Host db-internal
-    HostName 10.0.1.50
+    HostName 192.0.2.10
     User postgres
     IdentityFile ~/.ssh/id_ed25519_prod
     ProxyJump bastion
@@ -184,10 +184,10 @@ Ed25519 是现代标准：更快、更安全、密钥更短。
 
 ```bash
 # Ed25519（推荐）
-ssh-keygen -t ed25519 -C "你的邮箱@example.com" -f ~/.ssh/id_ed25519
+ssh-keygen -t ed25519 -C "user@example.com" -f ~/.ssh/id_ed25519
 
 # RSA 4096（仅用于不支持 Ed25519 的老系统）
-ssh-keygen -t rsa -b 4096 -C "你的邮箱@example.com" -f ~/.ssh/id_rsa_4096
+ssh-keygen -t rsa -b 4096 -C "user@example.com" -f ~/.ssh/id_rsa_4096
 ```
 
 **密钥类型对比**：
@@ -205,7 +205,7 @@ ssh-keygen -t rsa -b 4096 -C "你的邮箱@example.com" -f ~/.ssh/id_rsa_4096
 
 ```bash
 # 生成时设置密码（交互式提示）
-ssh-keygen -t ed25519 -C "your@email.com"
+ssh-keygen -t ed25519 -C "user@example.com"
 
 # 为已有密钥添加或修改密码
 ssh-keygen -p -f ~/.ssh/id_ed25519
@@ -464,7 +464,7 @@ tmux attach -t work
 
 ```ssh-config
 Host gpu-dev
-    HostName 192.168.1.100
+    HostName 192.0.2.10
     User developer
     LocalForward 8888 localhost:8888
     LocalForward 6006 localhost:6006
@@ -535,7 +535,7 @@ scp -r local_dir/ user@server:/remote/dir/
 scp user@server:/remote/file.txt ./local/
 
 # 使用 SSH config 别名（省去完整地址）
-scp file.txt gpu-dev:/home/developer/data/
+scp file.txt gpu-dev:/home/user/data/
 
 # 压缩传输（文本文件效果好）
 scp -C large_log.txt user@server:/tmp/
@@ -978,7 +978,7 @@ which python
 
 ### 8.6 API 密钥报错 "Invalid API key"
 
-- 检查环境变量是否设置：`echo $ANTHROPIC_API_KEY`
+- 检查环境变量是否设置：`test -n "$ANTHROPIC_API_KEY" && echo "configured"`
 - 如果用了 restricted 文件，检查文件权限：`ls -la ~/.secrets/`
 - OpenCode 配置中变量替换格式是 `{env:VAR_NAME}`（注意大括号和冒号）
 
@@ -1003,7 +1003,7 @@ which python
 
 ```bash
 # 1. 生成密钥
-ssh-keygen -t ed25519 -C "your@email.com"
+ssh-keygen -t ed25519 -C "user@example.com"
 ssh-add ~/.ssh/id_ed25519
 
 # 2. 部署公钥

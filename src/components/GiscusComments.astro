@@ -1,61 +1,16 @@
 ---
 import { giscusConfig, isGiscusConfigured } from '../utils/giscus';
+import { siteConfig } from '../data/site';
 ---
-
-<section class="zen-card-flat p-5 sm:p-6">
-	<div class="mb-6 space-y-2">
-		<p class="zen-kicker">Comments</p>
-		<h2 class="font-display text-xl font-semibold text-[color:var(--color-ink)]">讨论与反馈</h2>
-		<p class="text-sm leading-7 text-[color:var(--color-ink-soft)]">
-			欢迎围绕文章里的问题、思路和实现细节继续交流。
-		</p>
-	</div>
-
-	{isGiscusConfigured ? (
-		<div id="giscus-container"></div>
-	) : (
-		<div class="space-y-3 rounded-xl border border-dashed border-[color:var(--color-line)] bg-[color:var(--color-paper)] p-5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-			<p>评论系统已接入，但当前还没有填入 Giscus 所需的 GitHub Discussions 参数。</p>
-			<p>
-				先在 GitHub 仓库里开启 <strong>Discussions</strong>，再去
-				<a
-					href="https://giscus.app/zh-CN"
-					target="_blank"
-					rel="noreferrer"
-					class="font-medium text-[color:var(--color-accent-strong)] hover:underline"
-				>
-					Giscus 配置页
-				</a>
-				生成参数，填入项目根目录的
-				<code class="rounded bg-[color:var(--color-paper-warm)] px-1 py-0.5 text-xs text-[color:var(--color-accent-strong)]">.env</code>。
-			</p>
-		</div>
-	)}
+<section class="zen-card-flat p-6 sm:p-8">
+ <p class="eyebrow">CONTINUE THE CONVERSATION</p><h2 class="mt-3 text-xl">讨论与反馈</h2><p class="mt-3 text-sm text-[color:var(--color-ink-soft)]">欢迎围绕文章里的问题、思路和实现细节继续交流。</p>
+ {isGiscusConfigured ? <div id="giscus-container" class="mt-6"></div> : <a href={`mailto:${siteConfig.email}`} class="text-link mt-5">通过邮件交流 ↗</a>}
 </section>
-
-{
-	isGiscusConfigured && (
-		<script is:inline define:vars={{ giscusConfig }}>
-			const host = document.getElementById('giscus-container');
-
-			if (host && !host.querySelector('script')) {
-				const script = document.createElement('script');
-				script.src = 'https://giscus.app/client.js';
-				script.async = true;
-				script.crossOrigin = 'anonymous';
-				script.setAttribute('data-repo', giscusConfig.repo);
-				script.setAttribute('data-repo-id', giscusConfig.repoId);
-				script.setAttribute('data-category', giscusConfig.category);
-				script.setAttribute('data-category-id', giscusConfig.categoryId);
-				script.setAttribute('data-mapping', giscusConfig.mapping);
-				script.setAttribute('data-strict', giscusConfig.strict);
-				script.setAttribute('data-reactions-enabled', giscusConfig.reactionsEnabled);
-				script.setAttribute('data-emit-metadata', giscusConfig.emitMetadata);
-				script.setAttribute('data-input-position', giscusConfig.inputPosition);
-				script.setAttribute('data-theme', 'light');
-				script.setAttribute('data-lang', giscusConfig.lang);
-				host.append(script);
-			}
-		</script>
-	)
-}
+{isGiscusConfigured && <script is:inline define:vars={{ giscusConfig }}>
+ const host=document.getElementById('giscus-container');
+ if(host && !host.querySelector('script')) {
+  const script=document.createElement('script');script.src='https://giscus.app/client.js';script.async=true;script.crossOrigin='anonymous';
+  const attributes={'repo':giscusConfig.repo,'repo-id':giscusConfig.repoId,'category':giscusConfig.category,'category-id':giscusConfig.categoryId,'mapping':giscusConfig.mapping,'strict':giscusConfig.strict,'reactions-enabled':giscusConfig.reactionsEnabled,'emit-metadata':giscusConfig.emitMetadata,'input-position':giscusConfig.inputPosition,'theme':'light','lang':giscusConfig.lang};
+  Object.entries(attributes).forEach(([key,value])=>script.setAttribute('data-'+key,value));host.append(script);
+ }
+</script>}

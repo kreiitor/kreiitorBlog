@@ -1,8 +1,1 @@
-<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="720" rx="36" fill="#14213D"/>
-  <circle cx="962" cy="604" r="198" fill="#D8EFE4"/>
-  <rect x="112" y="118" width="748" height="482" rx="32" fill="#FFFDF8" fill-opacity="0.08" stroke="#FFFDF8" stroke-opacity="0.16"/>
-  <text x="154" y="220" fill="#F2855E" font-family="Space Grotesk, sans-serif" font-size="28" font-weight="700" letter-spacing="5">PROJECT STATUS</text>
-  <text x="154" y="312" fill="#FFFDF8" font-family="Space Grotesk, sans-serif" font-size="64" font-weight="700">Issue Localization</text>
-  <text x="154" y="390" fill="#D8EFE4" font-family="'Noto Sans SC', sans-serif" font-size="30">软件工程任务上的实验基线整理与展示</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" fill="none" color="#4b6639"><rect width="800" height="420" fill="#e3e9d9"/><defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0v32" fill="none" stroke="currentColor" stroke-width=".6" opacity=".13"/></pattern></defs><rect width="800" height="420" fill="url(#grid)"/><circle cx="400" cy="210" r="123" stroke="#b7c5a3"/><circle cx="400" cy="210" r="92" stroke="#b7c5a3" stroke-dasharray="3 5"/><circle cx="400" cy="210" r="58" stroke="#b7c5a3"/><path d="M245 210h310M400 55v310" stroke="#b7c5a3"/><path d="m400 102 95 101-59 98-111-23-31-138Z" fill="#698548" fill-opacity=".18" stroke="#698548" stroke-width="2"/><g fill="#698548"><circle cx="400" cy="102" r="5"/><circle cx="495" cy="203" r="5"/><circle cx="436" cy="301" r="5"/><circle cx="325" cy="278" r="5"/><circle cx="294" cy="140" r="5"/></g><text x="35" y="390" font-family="sans-serif" font-size="9" letter-spacing="2" fill="#4b6639" opacity=".7">BENCHMARK / MEASURE &amp; LEARN</text><path d="M741 370h24m-12-12v24" stroke="#4b6639" opacity=".5"/></svg>

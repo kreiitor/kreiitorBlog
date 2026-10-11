@@ -1,34 +1,15 @@
 ---
 import SearchPanel from '../components/SearchPanel.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../utils/url';
 ---
-
-<BaseLayout title="搜索" description="使用 Pagefind 进行站内静态搜索。">
-	<section data-pagefind-ignore class="page-shell pt-16 sm:pt-20">
-		<div class="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_280px]">
-			<div data-zen-reveal>
-				<SearchPanel
-					title="站内搜索"
-					description="搜索博客文章、项目页面和正文内容。"
-				/>
-			</div>
-
-			<aside class="space-y-5" data-zen-reveal>
-				<div class="zen-card-flat p-5">
-					<p class="zen-kicker">Tips</p>
-					<ul class="mt-4 space-y-2.5 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-						<li>优先尝试主题词，如"算法学习""实验复现"</li>
-						<li>结果太少可以减少限定词</li>
-						<li>换更具体的技术名词缩小范围</li>
-					</ul>
-				</div>
-				<div class="zen-card-flat p-5">
-					<p class="zen-kicker">索引范围</p>
-					<p class="mt-3 text-sm leading-7 text-[color:var(--color-ink-soft)]">
-						当前索引覆盖文章详情页和项目详情页，导航页、归档页和标签页不参与搜索。
-					</p>
-				</div>
-			</aside>
-		</div>
-	</section>
+<BaseLayout title="站内搜索" description="搜索研究札记、课程精讲与项目记录。" noIndex>
+ <section data-pagefind-ignore class="page-shell search-layout"><SearchPanel/><aside><p class="eyebrow">A DIFFERENT WAY TO EXPLORE</p><h2>也可以，<br/>随意翻翻。</h2><p>有时候，下一个好问题<br/>藏在你没有搜索的地方。</p><a href={withBase('/notes/')} class="text-link">沿着学习路径阅读 ↗</a><a href={withBase('/archive/')} class="text-link">从时间归档开始 ↗</a><a href={withBase('/projects/')} class="text-link">看看研究项目 ↗</a></aside></section>
 </BaseLayout>
+<style>
+ .search-layout { padding-top: 70px; display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 85px; min-height: 530px; }
+ aside { margin-top: 8px; padding: 28px; border-left: 1px solid var(--color-line); } aside h2 { margin-top: 18px; font-size: 26px; line-height: 1.7; }
+ aside p:not(.eyebrow) { margin-top: 18px; color: var(--color-ink-soft); font-size: 12px; line-height: 2; } aside a { display: flex; margin-top: 20px; font-size: 11px; }
+ @media (max-width: 900px) { .search-layout { gap: 35px; grid-template-columns: minmax(0,1fr) 230px; } }
+ @media (max-width: 700px) { .search-layout { padding-top: 40px; grid-template-columns: 1fr; gap: 30px; } aside { border-left: 0; border-top: 1px solid var(--color-line); padding: 25px 0 0; } }
+</style>

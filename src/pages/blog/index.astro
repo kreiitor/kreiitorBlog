@@ -1,61 +1,49 @@
 ---
 import { getCollection } from 'astro:content';
 import PostCard from '../../components/PostCard.astro';
-import SearchPanel from '../../components/SearchPanel.astro';
-import TagLink from '../../components/TagLink.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, getTagSummaries } from '../../utils/content';
+import { getPublishedPosts } from '../../utils/content';
 import { withBase } from '../../utils/url';
-
-const posts = await getCollection('posts');
-const projects = await getCollection('projects');
-const publishedPosts = getPublishedPosts(posts);
-const tags = getTagSummaries(posts, projects);
+const posts = getPublishedPosts(await getCollection('posts'));
+const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'研究与思考' },{ key:'knowledge', label:'AI 知识库' },{ key:'course', label:'课程精讲' }];
 ---
-
-<BaseLayout title="博客" description="按文章、标签、归档和静态搜索浏览博客内容。">
-	<div data-pagefind-ignore>
-		<!-- Header -->
-		<section class="page-shell pt-16 sm:pt-20" data-zen-reveal>
-			<div class="max-w-2xl space-y-4">
-				<p class="zen-kicker">Blog</p>
-				<h1 class="font-display text-3xl font-semibold text-[color:var(--color-ink)] sm:text-4xl">博客</h1>
-				<p class="text-[0.9375rem] leading-7 text-[color:var(--color-ink-soft)]">
-					全部文章、标签导航与站内搜索。
-				</p>
-				<div class="flex flex-wrap gap-2.5 pt-2">
-					<a href={withBase('/archive/')} class="zen-btn zen-btn-secondary text-xs">归档</a>
-					<a href={withBase('/search/')} class="zen-btn zen-btn-secondary text-xs">搜索页</a>
-				</div>
-			</div>
-		</section>
-
-		<!-- Search -->
-		<section class="page-shell mt-12" data-zen-reveal>
-			<SearchPanel compact={true} title="搜索文章" description="输入关键词搜索标题、摘要与正文。" />
-		</section>
-
-		<!-- Posts + Sidebar -->
-		<section class="page-shell mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px]">
-			<div class="grid gap-5 sm:grid-cols-2">
-				{publishedPosts.map((post) => (
-					<PostCard post={post} />
-				))}
-			</div>
-
-			<aside class="space-y-6" data-zen-reveal>
-				<div class="zen-card-flat p-5">
-					<h2 class="font-display text-base font-semibold text-[color:var(--color-ink)]">标签</h2>
-					<div class="mt-4 flex flex-wrap gap-1.5">
-						{tags.map((item) => (
-							<div class="flex items-center gap-1.5">
-								<TagLink tag={item.tag} />
-								<span class="text-[0.6875rem] text-[color:var(--color-ink-muted)]">{item.count}</span>
-							</div>
-						))}
-					</div>
-				</div>
-			</aside>
-		</section>
-	</div>
+<BaseLayout title="博客" description="研究与思考、AI 知识库和数据科学课程精讲。">
+ <div data-pagefind-ignore>
+  <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>这是一份持续积累、随时可以翻开的研究札记。</p></section>
+  <section class="page-shell blog-content">
+   <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? posts.length : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 ↗</a></div>
+   <p class="filter-status" data-filter-status aria-live="polite">共 {posts.length} 篇札记 · 按时间排列</p>
+   <div class="section-grid" data-post-grid>{posts.map(post => <div data-category={post.data.category}><PostCard post={post}/></div>)}</div>
+   <noscript><p class="mt-6 text-sm">全部文章已在下方展示；也可通过<a href={withBase('/notes/')}>学习专题</a>或<a href={withBase('/archive/')}>时间归档</a>浏览。</p></noscript>
+  </section>
+ </div>
 </BaseLayout>
+<script>
+ const buttons = document.querySelectorAll<HTMLButtonElement>('[data-category-filter]');
+ const cards = document.querySelectorAll<HTMLElement>('[data-category]');
+ const status = document.querySelector('[data-filter-status]');
+ function filter(category: string) {
+  let count = 0;
+  for (const card of cards) { card.hidden = category !== 'all' && card.dataset.category !== category; if (!card.hidden) count++; }
+  for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset.categoryFilter === category));
+  if (status) status.textContent = `共 ${count} 篇札记 · 按时间排列`;
+ }
+ buttons.forEach(button => button.addEventListener('click', () => {
+  const category = button.dataset.categoryFilter ?? 'all'; filter(category);
+  const url = new URL(location.href); if (category === 'all') url.searchParams.delete('category'); else url.searchParams.set('category',category);
+  history.replaceState(null,'',url);
+ }));
+ const initial = new URLSearchParams(location.search).get('category');
+ if (initial && Array.from(buttons).some(button => button.dataset.categoryFilter === initial)) filter(initial);
+</script>
+<style>
+ .blog-content { padding-top: 30px; }
+ .blog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+ .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+ .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid transparent; padding: 9px 13px; border-radius: 4px; font-size: 12px; color: var(--color-ink-soft); }
+ .filter-tabs button[aria-pressed="true"] { color: var(--color-paper); background: var(--color-ink); }
+ .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-line); background: var(--color-accent-soft); }
+ .filter-tabs span { opacity: .7; font-size: 9px; }
+ .filter-status { font-size: 10px; color: var(--color-ink-muted); margin: 24px 0; }
+ @media (max-width: 600px) { .blog-toolbar { align-items: start; } .blog-toolbar > a { font-size: 10px; padding-top: 10px; } .filter-tabs { gap: 3px; } .filter-tabs button { padding: 8px 10px; font-size: 11px; } }
+</style>

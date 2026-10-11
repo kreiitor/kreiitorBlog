@@ -1,93 +1,16 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection,render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import ReadingTools from '../../components/ReadingTools.astro';
 import TagLink from '../../components/TagLink.astro';
 import { getProjects } from '../../utils/content';
 import { formatDate } from '../../utils/date';
 import { withBase } from '../../utils/url';
-
-export async function getStaticPaths() {
-	const projects = await getCollection('projects');
-
-	return getProjects(projects).map((project) => ({
-		params: { slug: project.id },
-		props: { project },
-	}));
-}
-
-const { project } = Astro.props;
-const { Content } = await render(project);
+export async function getStaticPaths() { return getProjects(await getCollection('projects')).map(project=>({params:{slug:project.id},props:{project}})); }
+const { project }=Astro.props;
+const { Content }=await render(project);
 ---
-
 <BaseLayout title={project.data.title} description={project.data.summary} image={project.data.cover ?? '/social-card.svg'}>
-	<section class="page-shell pt-12 sm:pt-16">
-		<!-- Back -->
-		<a href={withBase('/projects/')} class="zen-btn zen-btn-ghost text-xs mb-8 inline-flex">
-			<svg aria-hidden="true" viewBox="0 0 20 20" class="h-3.5 w-3.5 fill-none stroke-current stroke-[1.8]">
-				<path d="M13 4l-6 6 6 6" />
-			</svg>
-			返回项目
-		</a>
-
-		<div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_220px]">
-			<article data-pagefind-body class="space-y-8">
-				<header class="space-y-5" data-zen-reveal>
-					<span data-pagefind-meta="type" class="hidden">项目页面</span>
-					<div class="flex items-center gap-2.5 text-xs">
-						<span class="rounded-full bg-[color:var(--color-accent-soft)] px-2.5 py-0.5 font-medium text-[color:var(--color-accent-strong)]">
-							{project.data.status}
-						</span>
-						<span class="text-[color:var(--color-ink-muted)]">
-							<time datetime={project.data.pubDate.toISOString()}>{formatDate(project.data.pubDate)}</time>
-						</span>
-					</div>
-					<h1 data-pagefind-meta="title" class="font-display text-3xl font-semibold leading-tight text-[color:var(--color-ink)] sm:text-4xl">
-						{project.data.title}
-					</h1>
-					<p class="max-w-2xl text-base leading-8 text-[color:var(--color-ink-soft)]">{project.data.summary}</p>
-					<div class="flex flex-wrap gap-1.5">
-						{project.data.tags.map((tag) => (
-							<TagLink tag={tag} />
-						))}
-					</div>
-				</header>
-
-				{project.data.cover && (
-					<img
-						src={withBase(project.data.cover)}
-						alt={project.data.title}
-						class="h-72 w-full rounded-2xl object-cover"
-					/>
-				)}
-
-				<div class="zen-card p-6 sm:p-8" data-zen-reveal>
-					<div class="rich-content">
-						<Content />
-					</div>
-				</div>
-			</article>
-
-			<aside data-pagefind-ignore class="hidden lg:block" data-zen-reveal>
-				<div class="sticky top-20 zen-card-flat p-5">
-					<h2 class="font-display text-base font-semibold text-[color:var(--color-ink)]">项目链接</h2>
-					<div class="mt-4 flex flex-col gap-2.5 text-sm">
-						{project.data.repoUrl ? (
-							<a href={project.data.repoUrl} target="_blank" rel="noreferrer" class="text-[color:var(--color-ink-soft)] transition hover:text-[color:var(--color-accent-strong)]">
-								查看仓库 &rarr;
-							</a>
-						) : (
-							<p class="text-[color:var(--color-ink-muted)]">仓库链接待补充</p>
-						)}
-						{project.data.demoUrl ? (
-							<a href={project.data.demoUrl} target="_blank" rel="noreferrer" class="text-[color:var(--color-ink-soft)] transition hover:text-[color:var(--color-accent-strong)]">
-								查看演示 &rarr;
-							</a>
-						) : (
-							<p class="text-[color:var(--color-ink-muted)]">演示链接待补充</p>
-						)}
-					</div>
-				</div>
-			</aside>
-		</div>
-	</section>
+ <ReadingTools/>
+ <section class="page-shell pt-10 sm:pt-14"><a href={withBase('/projects/')} class="text-link back-link">← 返回研究项目</a><div class="article-layout"><article data-pagefind-body data-reading-article><header class="article-header"><span data-pagefind-meta="type" class="hidden">研究项目</span><p class="eyebrow">RESEARCH & PRACTICE / {project.data.status}</p><h1 data-pagefind-meta="title">{project.data.title}</h1><p class="article-summary">{project.data.summary}</p><div class="card-meta"><span>kreiitor</span><span>·</span><time datetime={project.data.pubDate.toISOString()}>{formatDate(project.data.pubDate)}</time></div><div class="mt-5 flex flex-wrap gap-2">{project.data.tags.map(tag=><TagLink tag={tag}/>)}</div></header>{project.data.cover && <img src={withBase(project.data.cover)} alt="" class="article-cover mt-8" width="800" height="420"/>}<div class="rich-content article-body"><Content/></div></article><aside data-pagefind-ignore><div class="article-toc"><p class="eyebrow mb-4">PROJECT LINKS</p>{project.data.repoUrl && <a href={project.data.repoUrl} target="_blank" rel="noreferrer">GitHub 仓库 ↗</a>}{project.data.demoUrl && <a href={project.data.demoUrl} target="_blank" rel="noreferrer">在线演示 ↗</a>}<a href={withBase('/projects/')}>全部研究项目 ↗</a></div></aside></div></section>
 </BaseLayout>

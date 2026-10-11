@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../utils/url';
+---
+<BaseLayout title="页面未找到" noIndex>
+ <section class="page-shell page-intro"><p class="eyebrow">404 / AN UNWRITTEN PAGE</p><h1>这一页，还没有写下。</h1><p>你访问的页面可能已移动，或者暂时未公开。<br/>从札记首页重新出发，也许会遇到一个新问题。</p><div class="flex gap-4 mt-8"><a href={withBase('/')} class="zen-btn zen-btn-primary">回到首页 ↗</a><a href={withBase('/search/')} class="zen-btn zen-btn-secondary">搜索札记</a></div></section>
+</BaseLayout>

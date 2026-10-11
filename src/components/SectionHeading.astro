@@ -1,36 +1,8 @@
 ---
-interface Props {
-	kicker?: string;
-	title: string;
-	description?: string;
-	linkHref?: string;
-	linkLabel?: string;
-}
-
+interface Props { kicker?: string; title: string; description?: string; linkHref?: string; linkLabel?: string; }
 const { kicker, title, description, linkHref, linkLabel } = Astro.props;
 ---
-
-<div class="space-y-4">
-	<div class="max-w-2xl space-y-3">
-		{kicker && (
-			<p class="zen-kicker">{kicker}</p>
-		)}
-		<h2 class="font-display text-2xl font-semibold tracking-tight text-[color:var(--color-ink)] sm:text-3xl">
-			{title}
-		</h2>
-		{description && (
-			<p class="text-[0.9375rem] leading-7 text-[color:var(--color-ink-soft)]">{description}</p>
-		)}
-	</div>
-	{linkHref && linkLabel && (
-		<a
-			href={linkHref}
-			class="zen-btn zen-btn-ghost text-sm"
-		>
-			{linkLabel}
-			<svg aria-hidden="true" viewBox="0 0 20 20" class="h-3.5 w-3.5 fill-none stroke-current stroke-[1.8]">
-				<path d="M7 4l6 6-6 6" />
-			</svg>
-		</a>
-	)}
+<div class="section-heading">
+ <div>{kicker && <p class="eyebrow">{kicker}</p>}<h2>{title}</h2>{description && <p class="section-description">{description}</p>}</div>
+ {linkHref && linkLabel && <a href={linkHref} class="text-link">{linkLabel}<span aria-hidden="true">↗</span></a>}
 </div>

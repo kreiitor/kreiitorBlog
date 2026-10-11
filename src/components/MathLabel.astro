@@ -1,0 +1,25 @@
+---
+import katex from 'katex';
+
+interface Props { text: string }
+const { text } = Astro.props;
+const pattern = /(?<!\\)\$([^$\n]+?)(?<!\\)\$|\\\((.+?)\\\)/g;
+const segments: { text?: string; html?: string }[] = [];
+let cursor = 0;
+for (const match of text.matchAll(pattern)) {
+ const index = match.index ?? 0;
+ segments.push({ text: text.slice(cursor, index).replace(/[*`]/g, '') });
+ segments.push({ html: katex.renderToString(match[1] ?? match[2], {
+  displayMode: false, output: 'htmlAndMathml', strict: 'ignore', trust: false,
+  throwOnError: false,
+ }) });
+ cursor = index + match[0].length;
+}
+segments.push({ text: text.slice(cursor).replace(/[*`]/g, '') });
+---
+{segments.map(segment => segment.html ? <span class="toc-math" set:html={segment.html}/> : segment.text)}
+<style>
+ .toc-math { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; vertical-align: middle; padding-block: 3px; margin-block: -3px; }
+ .toc-math::-webkit-scrollbar { display: none; }
+ .toc-math :global(.katex) { font-size: 1em; }
+</style>
