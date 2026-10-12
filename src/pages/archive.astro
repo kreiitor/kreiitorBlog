@@ -11,9 +11,12 @@ const groups=getArchiveGroups(await getCollection('posts'));
 </BaseLayout>
 <style>
  .archive-list { margin-top: 35px; } .archive-year { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 35px; margin-bottom: 50px; }
- .archive-year h2 { font-family: var(--font-editorial); font-size: 48px; font-weight: 400; } .archive-year > div > p { font-size: 11px; color: var(--color-ink-muted); }
- .archive-row { display: grid; grid-template-columns: 110px minmax(0,1fr) 15px; gap: 20px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--color-line); }
- .archive-row time { font-size: 10px; color: var(--color-ink-muted); } .archive-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; }
- .archive-row span { color: var(--color-accent); } .archive-row:hover h3 { color: var(--color-accent); }
- @media (max-width: 700px) { .archive-year { grid-template-columns: 1fr; gap: 12px; } .archive-row { grid-template-columns: 85px minmax(0,1fr) 12px; gap: 10px; } }
+ .archive-year h2 { font-family: var(--font-editorial); font-size: 48px; font-weight: 400; color: var(--color-accent-strong); } .archive-year > div > p { font-size: 11px; color: var(--color-ink-muted); }
+ .archive-row { display: grid; grid-template-columns: 110px minmax(0,1fr) 15px; gap: 20px; align-items: center; padding: 20px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-line); border-radius: 8px; transition: background-color .2s var(--ease-smooth); }
+ .archive-row:hover { background: var(--color-surface-hover); }
+ .archive-row time { font-size: 10px; color: var(--color-ink-muted); } .archive-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; transition: color .2s var(--ease-smooth); }
+ .archive-row span { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
+ .archive-row:hover h3 { color: var(--color-accent); }
+ .archive-row:hover span { transform: translate(3px,-3px); }
+ @media (max-width: 700px) { .archive-year { grid-template-columns: 1fr; gap: 12px; } .archive-row { grid-template-columns: 85px minmax(0,1fr) 12px; gap: 10px; padding: 16px 8px; margin-inline: -8px; } }
 </style>

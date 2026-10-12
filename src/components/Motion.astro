@@ -4,41 +4,56 @@
  const header = document.querySelector<HTMLElement>('.site-header');
  const topLink = document.querySelector<HTMLAnchorElement>('[data-back-to-top]');
  const art = document.querySelector<HTMLElement>('.hero-visual');
+ const revealTargets = document.querySelectorAll('.section-heading,.post-card,.project-card,.learning-invitation,.garden-aside,.course-intro,.chapter-row');
  let framePending = false;
+ let lastScrolled: boolean | null = null;
+ let lastVisible: boolean | null = null;
  function updateScroll() {
   framePending = false;
   const y = window.scrollY;
-  if (header) header.dataset.scrolled = String(y > 20);
+  if (header) {
+   const scrolled = y > 20;
+   if (scrolled !== lastScrolled) { lastScrolled = scrolled; header.dataset.scrolled = String(scrolled); }
+  }
   if (topLink) {
    const visible = y > 650;
-   topLink.dataset.visible = String(visible);
-   topLink.setAttribute('aria-hidden', String(!visible));
-   topLink.tabIndex = visible ? 0 : -1;
+   if (visible !== lastVisible) {
+    lastVisible = visible;
+    topLink.dataset.visible = String(visible);
+    topLink.setAttribute('aria-hidden', String(!visible));
+    topLink.tabIndex = visible ? 0 : -1;
+   }
   }
   if (art) art.style.translate = preference.matches || innerWidth < 700 ? '0 0' : `0 ${-Math.min(12,y*.035)}px`;
  }
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
  window.addEventListener('scroll',schedule,{passive:true});
- window.addEventListener('resize',schedule);
+ window.addEventListener('resize',schedule,{passive:true});
  preference.addEventListener('change',updateScroll);
  updateScroll();
- if (!preference.matches && 'IntersectionObserver' in window) {
+ if (!preference.matches && 'IntersectionObserver' in window && revealTargets.length) {
+  const staggerCache = new Map();
   const observer = new IntersectionObserver(entries => {
    for (const entry of entries) {
     if (!entry.isIntersecting) continue;
     if (preference.matches) { observer.unobserve(entry.target); continue; }
-    const element = entry.target as HTMLElement;
-    const stagger = element.matches('.post-card,.project-card') ? Array.from(element.parentElement?.children ?? []).indexOf(element)%3*55 : 0;
-    element.animate([{opacity:.15,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:600,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)'});
+    const element = entry.target;
+    let stagger = staggerCache.get(element);
+    if (stagger === undefined) {
+     stagger = element.matches('.post-card,.project-card') ? Array.from(element.parentElement?.children ?? []).indexOf(element)%3*55 : 0;
+     staggerCache.set(element, stagger);
+    }
+    element.animate([{opacity:.15,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:600,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
     observer.unobserve(element);
+    staggerCache.delete(element);
    }
   },{threshold:.07,rootMargin:'0px 0px -16px 0px'});
-  document.querySelectorAll('.section-heading,.post-card,.project-card,.learning-invitation,.garden-aside,.course-intro,.chapter-row').forEach(element => observer.observe(element));
+  revealTargets.forEach(element => observer.observe(element));
  }
 </script>
 <style is:global>
  .site-header[data-scrolled="true"] { box-shadow: 0 5px 22px #26392e08; }
- .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid var(--color-line-strong); border-radius: 6px; background: var(--color-paper); color: var(--color-accent-strong); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity .25s,visibility .25s,translate .25s,background .2s; }
+ .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid var(--color-line-strong); border-radius: 8px; background: var(--color-paper); color: var(--color-accent-strong); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity .25s var(--ease-smooth),visibility .25s var(--ease-smooth),translate .25s var(--ease-out-expo),background-color .2s var(--ease-smooth); }
  .back-to-top[data-visible="true"] { opacity: 1; visibility: visible; translate: 0 0; }
  .back-to-top:hover { background: var(--color-accent-soft); }
  @view-transition { navigation: auto; }

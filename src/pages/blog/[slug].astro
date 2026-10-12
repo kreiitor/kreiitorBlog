@@ -27,7 +27,7 @@ const next = series[index+1];
   <div class="article-layout">
    <article data-pagefind-body data-reading-article>
     <header class="article-header">
-     <span data-pagefind-meta="type" class="hidden">{post.data.category === 'course' ? '课程精讲' : '博客文章'}</span>
+     <span data-pagefind-meta="type" class="sr-only">{post.data.category === 'course' ? '课程精讲' : '博客文章'}</span>
      <p class="eyebrow">{post.data.series ? `FOUNDATIONS OF DATA SCIENCE / ${String((post.data.order ?? 0)+1).padStart(2,'0')}` : 'FIELD NOTES / '+post.data.tags[0]}</p>
      <h1 data-pagefind-meta="title">{post.data.title}</h1>
      <p class="article-summary">{post.data.description}</p>

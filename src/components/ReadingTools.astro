@@ -2,27 +2,33 @@
 <script>
  const article = document.querySelector<HTMLElement>('[data-reading-article]');
  const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
+ const body = article?.querySelector<HTMLElement>('.article-body');
  const headings = Array.from(document.querySelectorAll<HTMLElement>('.rich-content h1[id],.rich-content h2[id]'));
  const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
  let queued = false;
  function update() {
   queued = false;
-  if (!article || !progress) return;
-  const body = article.querySelector<HTMLElement>('.article-body');
-  if (!body) return;
+  if (!progress || !body) return;
   const rect = body.getBoundingClientRect();
   const fraction = Math.max(0,Math.min(1,(window.innerHeight-rect.top)/(rect.height)));
   progress.style.transform = `scaleX(${fraction})`;
   progress.setAttribute('aria-valuenow',String(Math.round(fraction*100)));
-  const current = headings.filter(heading => heading.getBoundingClientRect().top <= 150).at(-1);
-  links.forEach(link => {
-   if (current && decodeURIComponent(link.hash.slice(1)) === current.id) link.setAttribute('aria-current','location');
-   else link.removeAttribute('aria-current');
-  });
+  if (headings.length && links.length) {
+   const threshold = 150;
+   let current = null;
+   for (const heading of headings) {
+    if (heading.getBoundingClientRect().top <= threshold) current = heading;
+    else break;
+   }
+   links.forEach(link => {
+    if (current && decodeURIComponent(link.hash.slice(1)) === current.id) link.setAttribute('aria-current','location');
+    else link.removeAttribute('aria-current');
+   });
+  }
  }
  function schedule() { if (!queued) { queued = true; requestAnimationFrame(update); } }
- window.addEventListener('scroll',schedule,{passive:true}); window.addEventListener('resize',schedule); update();
- document.querySelectorAll<HTMLElement>('.rich-content pre').forEach(pre => {
+ window.addEventListener('scroll',schedule,{passive:true}); window.addEventListener('resize',schedule,{passive:true}); update();
+ document.querySelectorAll('.rich-content pre').forEach(pre => {
   const code = pre.querySelector('code'); if (!code) return;
   const button = document.createElement('button'); button.type = 'button'; button.className = 'code-copy'; button.textContent = '复制'; button.setAttribute('aria-label','复制代码');
   button.addEventListener('click',async () => {
@@ -48,7 +54,7 @@
   }
  }
  document.fonts.ready.then(updateMathRegions);
- window.addEventListener('resize', updateMathRegions);
+ window.addEventListener('resize', updateMathRegions,{passive:true});
 </script>
 <style is:global>
  .rich-content .katex { font-size: 1.04em; max-width: 100%; display: inline-block; vertical-align: middle; overflow-x: auto; overflow-y: hidden; }
@@ -56,7 +62,7 @@
  .rich-content .katex-display > .katex { white-space: nowrap; display: block; max-width: none; overflow: visible; }
  .rich-content .katex, .rich-content .katex-display { scrollbar-width: none; }
  .rich-content .katex::-webkit-scrollbar, .rich-content .katex-display::-webkit-scrollbar { display: none; }
- .rich-content [aria-label="数学公式，可横向滚动"]:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 3px; }
- .code-copy { position: absolute; top: 12px; right: 12px; min-height: 30px; padding: 3px 11px; font-family: var(--font-sans); font-size: 11px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 4px; color: var(--color-ink-soft); background: var(--color-paper); transition: color .2s,background .2s; }
- .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
+ .rich-content [aria-label="数学公式，可横向滚动"]:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
+ .code-copy { position: absolute; top: 12px; right: 12px; min-height: 30px; padding: 3px 11px; font-family: var(--font-sans); font-size: 11px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 5px; color: var(--color-ink-soft); background: var(--color-paper); transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth),border-color .2s var(--ease-smooth); }
+ .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
 </style>

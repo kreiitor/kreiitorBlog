@@ -53,11 +53,13 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .brand-name { font-size: 20px; font-weight: 600; letter-spacing: -.05em; line-height: 1.2; }
  .brand-subtitle { display: block; margin-top: 7px; font-size: 8px; font-weight: 400; letter-spacing: .12em; }
  .desktop-nav { display: flex; gap: 34px; align-items: center; }
- .desktop-nav a { position: relative; padding: 32px 0; font-size: 13px; color: var(--color-ink-soft); }
- .desktop-nav a[aria-current] { color: var(--color-ink); }
+ .desktop-nav a { position: relative; padding: 32px 0; font-size: 13px; color: var(--color-ink-soft); transition: color .2s var(--ease-smooth); }
+ .desktop-nav a:hover { color: var(--color-accent-strong); }
+ .desktop-nav a[aria-current] { color: var(--color-ink); font-weight: 500; }
  .desktop-nav a[aria-current]::after { content: ''; position: absolute; bottom: 22px; left: calc(50% - 2px); height: 4px; width: 4px; border-radius: 50%; background: var(--color-accent); }
  .header-actions { display: flex; align-items: center; gap: 20px; }
- .header-search { display: flex; gap: 10px; align-items: center; font-size: 11px; color: var(--color-ink-soft); }
+ .header-search { display: flex; gap: 10px; align-items: center; font-size: 11px; color: var(--color-ink-soft); padding: 8px 10px; margin: -8px -10px; border-radius: 6px; transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth); }
+ .header-search:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
  kbd { font-family: var(--font-sans); font-size: 9px; border: 1px solid var(--color-line); border-radius: 3px; padding: 1px 5px; }
  .header-github { border-left: 1px solid var(--color-line); padding-left: 20px; }
  .mobile-menu { display: none; }
@@ -67,10 +69,13 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   .desktop-nav,.header-search span,kbd,.header-github { display: none; }
   .header-search { padding: 10px; } .header-actions { gap: 8px; }
   .mobile-menu { display: block; }
-  .mobile-menu summary { display: flex; padding: 10px; cursor: pointer; list-style: none; }
+  .mobile-menu summary { display: flex; padding: 10px; cursor: pointer; list-style: none; border-radius: 6px; transition: background-color .2s var(--ease-smooth); }
+  .mobile-menu summary:hover { background: var(--color-accent-soft); }
   .mobile-menu summary::-webkit-details-marker { display: none; }
-  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; padding: 15px 24px 24px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); }
-  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; }
+  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; padding: 15px 24px 24px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
+  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; transition: color .2s var(--ease-smooth),padding-left .2s var(--ease-out-expo); }
+  .mobile-menu nav a:hover { color: var(--color-accent-strong); padding-left: 6px; }
   .mobile-menu nav a[aria-current] { color: var(--color-accent); }
  }
+ @keyframes menuSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 </style>

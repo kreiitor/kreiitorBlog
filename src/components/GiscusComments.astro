@@ -2,10 +2,14 @@
 import { giscusConfig, isGiscusConfigured } from '../utils/giscus';
 import { siteConfig } from '../data/site';
 ---
-<section class="zen-card-flat p-6 sm:p-8">
+<section class="zen-card-flat comments-panel">
  <p class="eyebrow">CONTINUE THE CONVERSATION</p><h2 class="mt-3 text-xl">讨论与反馈</h2><p class="mt-3 text-sm text-[color:var(--color-ink-soft)]">欢迎围绕文章里的问题、思路和实现细节继续交流。</p>
  {isGiscusConfigured ? <div id="giscus-container" class="mt-6"></div> : <a href={`mailto:${siteConfig.email}`} class="text-link mt-5">通过邮件交流 ↗</a>}
 </section>
+<style>
+ .comments-panel { padding: 28px; }
+ @media (max-width: 600px) { .comments-panel { padding: 22px; } }
+</style>
 {isGiscusConfigured && <script is:inline define:vars={{ giscusConfig }}>
  const host=document.getElementById('giscus-container');
  if(host && !host.querySelector('script')) {

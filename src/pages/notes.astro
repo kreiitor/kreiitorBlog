@@ -13,14 +13,14 @@ const knowledge = posts.filter(post => post.data.category === 'knowledge');
   <section class="page-shell page-intro"><p class="eyebrow">THE LEARNING GARDEN / STRUCTURED NOTES</p><h1>把知识，连成一片。</h1><p>沿着一条主线读下去，让孤立的概念彼此相连。<br/>这里收录系统课程、数学推导，以及日常工程实践。</p></section>
   <section class="page-shell learning-layout">
    <aside class="course-intro"><p class="eyebrow">01 / COURSE NOTES</p><span class="course-emblem" aria-hidden="true">ƒ</span><h2>数据科学基础</h2><p class="course-english">Foundations of<br/>Data Science</p><p class="course-description">从线性模型出发，穿过统计学习、表示学习与生成模型。以直觉带路，用完整推导把概念讲清楚。</p><div class="course-facts"><span>{course.length} 个章节</span><span>含数学附录与习题</span></div><a href={withBase(`/blog/${course[0]?.id ?? 'fods-overview'}/`)} class="zen-btn zen-btn-primary">从课程地图开始 ↗</a><p class="source-note">基于 Yuling Jiao 的 FODS 讲义整理的个人学习笔记，保留来源说明与讲义页码。</p></aside>
-   <div class="chapter-list"><p class="eyebrow chapter-label">CONTENTS / 按章节阅读</p>{course.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span aria-hidden="true">↗</span></a>)}</div>
+   <div class="chapter-list"><p class="eyebrow chapter-label">CONTENTS / 按章节阅读</p>{course.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-arrow" aria-hidden="true">↗</span></a>)}</div>
   </section>
   <section class="page-shell editorial-section"><div class="section-heading"><div><p class="eyebrow">02 / PRACTICAL KNOWLEDGE</p><h2>AI 工程知识库</h2><p class="section-description">工具链、阅读方法与学习路线，随用随查。</p></div><a href={withBase('/blog/?category=knowledge')} class="text-link">查看全部 ↗</a></div><div class="section-grid">{knowledge.slice(0,6).map(post => <PostCard post={post}/>)}</div></section>
  </div>
 </BaseLayout>
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 40px; align-items: start; }
- .course-intro { padding: 30px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-paper-warm); position: sticky; top: 118px; }
+ .course-intro { padding: 32px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper-warm); position: sticky; top: 118px; }
  .course-emblem { font-family: var(--font-editorial); font-size: 100px; line-height: 1.1; color: var(--color-accent); display: block; margin-top: 25px; }
  .course-intro h2 { font-size: 25px; margin-top: 10px; }
  .course-english { font-family: var(--font-editorial); font-size: 24px; line-height: 1.35; color: var(--color-accent); margin-top: 10px; }
@@ -29,11 +29,14 @@ const knowledge = posts.filter(post => post.data.category === 'knowledge');
  .course-intro .zen-btn { width: 100%; }
  .source-note { margin-top: 23px; font-size: 10px; line-height: 1.9; color: var(--color-ink-muted); }
  .chapter-label { padding-bottom: 18px; border-bottom: 1px solid var(--color-line); }
- .chapter-row { padding: 23px 0; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; }
+ .chapter-row { padding: 22px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 8px; transition: background-color .2s var(--ease-smooth); }
+ .chapter-row:hover { background: var(--color-surface-hover); }
  .chapter-number { font-family: var(--font-editorial); font-size: 24px; color: var(--color-accent); line-height: 1.4; }
- .chapter-row h3 { font-family: var(--font-sans); font-size: 14px; font-weight: 500; }
+ .chapter-row h3 { font-family: var(--font-sans); font-size: 14px; font-weight: 500; transition: color .2s var(--ease-smooth); }
  .chapter-row p { margin-top: 7px; font-size: 11px; line-height: 1.9; color: var(--color-ink-soft); }
- .chapter-row > span:last-child { color: var(--color-accent); } .chapter-row:hover h3 { color: var(--color-accent); }
- @media (max-width: 900px) { .learning-layout { grid-template-columns: 260px minmax(0,1fr); gap: 30px; } .course-intro { padding: 23px; } }
- @media (max-width: 700px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } .course-emblem { font-size: 65px; margin-top: 15px; } .course-english br { display: none; } }
+ .chapter-row .chapter-arrow { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
+ .chapter-row:hover h3 { color: var(--color-accent); }
+ .chapter-row:hover .chapter-arrow { transform: translate(3px,-3px); }
+ @media (max-width: 900px) { .learning-layout { grid-template-columns: 260px minmax(0,1fr); gap: 30px; } .course-intro { padding: 24px; } }
+ @media (max-width: 700px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } .course-emblem { font-size: 65px; margin-top: 15px; } .course-english br { display: none; } .chapter-row { padding: 18px 8px; margin-inline: -8px; grid-template-columns: 30px minmax(0,1fr) 12px; gap: 12px; } .chapter-number { font-size: 20px; } }
 </style>
