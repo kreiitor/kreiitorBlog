@@ -1,0 +1,66 @@
+{
+  "googleFontsRevision": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
+  "weightRange": [
+    400,
+    600
+  ],
+  "titleGlyphCount": 897,
+  "files": {
+    "noto-serif-sc-titles.woff2": {
+      "bytes": 274056,
+      "sha256": "b8a7bc69e105279939f70f4672875d8bb4c07810eafba2ce94e7cf89f34b570b"
+    },
+    "noto-sans-sc-titles.woff2": {
+      "bytes": 213620,
+      "sha256": "74ac693fa6a12ff347a87be3ca709f7dad2196c197d85ecbfa95d00044e14fe5"
+    },
+    "source-serif-4-cyrillic-ext-standard-normal.woff2": {
+      "bytes": 29216,
+      "sha256": "7dd2abd0a0fe63e4cc60088ce899214a47492f357a8a846744e653714af62d2c"
+    },
+    "source-serif-4-cyrillic-standard-normal.woff2": {
+      "bytes": 60616,
+      "sha256": "75494b9e6f53e94fc4d4090fe0196cfb15dcb9d19f3d3d935d5099fc557d02f0"
+    },
+    "source-serif-4-greek-standard-normal.woff2": {
+      "bytes": 32444,
+      "sha256": "45629da6cb4d79e2e5f46453271678585e65d6271bc6a668ddb6ee3b65b25b3e"
+    },
+    "source-serif-4-vietnamese-standard-normal.woff2": {
+      "bytes": 20164,
+      "sha256": "bffc96e6261deadd13562575d1676a422ff2fe5599de03b0adfbfe0751caae2c"
+    },
+    "source-serif-4-latin-ext-standard-normal.woff2": {
+      "bytes": 66496,
+      "sha256": "45ffd43c514754c196bb039ac751440620f3f8924977a39fc2d7e4688f51e62e"
+    },
+    "source-serif-4-latin-standard-normal.woff2": {
+      "bytes": 79452,
+      "sha256": "88246eec50a35ba1d73381b40dc70c1cb4d830757f0b1e1214f41f435e03d481"
+    },
+    "source-serif-4-cyrillic-ext-standard-italic.woff2": {
+      "bytes": 30408,
+      "sha256": "77ecd7d4d942d623f6cfb597c55623e0c040d4d5f36a0f3a9af8451808740251"
+    },
+    "source-serif-4-cyrillic-standard-italic.woff2": {
+      "bytes": 59176,
+      "sha256": "cc1acdaa50631d7f856b6bc3f73af524a071fefc9adf95ca6cdb60bef70f43e0"
+    },
+    "source-serif-4-greek-standard-italic.woff2": {
+      "bytes": 33968,
+      "sha256": "6d5073b90c582948627317ea32a0c10eac21fbd4757338aa80eb099fe4aa7579"
+    },
+    "source-serif-4-vietnamese-standard-italic.woff2": {
+      "bytes": 21968,
+      "sha256": "4f4e12d14a8f984ee929d0118894b895b499049aeea8efcc3d5697fe5340ac8f"
+    },
+    "source-serif-4-latin-ext-standard-italic.woff2": {
+      "bytes": 72504,
+      "sha256": "967a826aa5181a5a54e31133e5cc818a2b5a390d6152d4422c6d42399dbaf2e8"
+    },
+    "source-serif-4-latin-standard-italic.woff2": {
+      "bytes": 84480,
+      "sha256": "5ed4eccb19773c47f01bb4c7cf3d2f12e45b2cc072180f0debfa53241917f176"
+    }
+  }
+}

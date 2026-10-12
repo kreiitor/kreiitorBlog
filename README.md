@@ -66,6 +66,8 @@ SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字�
 
 字体的 SIL Open Font License 原文保留在 `public/fonts/licenses/`。
 
+首屏中文合并子集、Source Serif 4 字重裁剪与预加载维护方式见 `docs/FONTS.md`。
+
 ## 评论
 
 复制 `.env.example` 为 `.env`，配置 Giscus 仓库和分类 ID。没有配置评论时，文章页显示邮件交流入口。GitHub Pages 构建使用的环境变量需要在工作流中配置；本地 `.env` 不应提交。

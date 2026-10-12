@@ -6,7 +6,7 @@ export const siteConfig = {
 	author: 'kreiitor',
 	role: '软件工程智能化方向研究者',
 	location: '武汉，中国',
-	siteUrl: 'https://kreiitor.github.io',
+	siteUrl: 'https://kreiitor.github.io/kreiitorBlog',
 	email: 'kreiitor@foxmail.com',
 	avatar: '/avatar.svg',
 	hero: {

@@ -11,9 +11,11 @@ import { journalCodeTheme } from './src/styles/code-theme.mjs';
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const base =
 	process.env.BASE_PATH ?? (process.env.GITHUB_ACTIONS && repositoryName ? `/${repositoryName}` : '/');
+// Configure the deployment origin and subdirectory separately.
+const site = process.env.SITE_URL ?? 'https://kreiitor.github.io';
 
 export default defineConfig({
-	site: process.env.SITE_URL ?? 'https://kreiitor.github.io',
+	site,
 	base,
 	output: 'static',
 	trailingSlash: 'always',

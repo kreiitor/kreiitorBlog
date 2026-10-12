@@ -5,7 +5,7 @@ export const journalCodeTheme = {
  name: 'research-paper',
  type: 'light',
  colors: {
-  'editor.background': '#eef0e7',
+  'editor.background': '#ecefe5',
   'editor.foreground': '#344539',
  },
  tokenColors: [

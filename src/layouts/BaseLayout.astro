@@ -6,8 +6,9 @@ import { siteConfig } from '../data/site';
 import '@fontsource-variable/dm-sans/standard.css';
 import '@fontsource-variable/noto-sans-sc';
 import '@fontsource-variable/noto-serif-sc';
-import '@fontsource-variable/source-serif-4/standard.css';
-import '@fontsource-variable/source-serif-4/standard-italic.css';
+import '../styles/fonts.css';
+import serifTitlesUrl from '../assets/fonts/noto-serif-sc-titles.woff2?url';
+import sourceSerifUrl from '../assets/fonts/source-serif-4-latin-standard-normal.woff2?url';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
 import '@fontsource/ibm-plex-mono/latin-400-italic.css';
@@ -56,6 +57,9 @@ const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), sit
 		{noIndex && <meta name="robots" content="noindex, nofollow" />}
 		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
 		<link rel="canonical" href={canonicalUrl} />
+		<!-- Vite resolves these to the same hashed assets used by the font-face rules. -->
+		<link rel="preload" as="font" type="font/woff2" href={serifTitlesUrl} crossorigin="anonymous" />
+		<link rel="preload" as="font" type="font/woff2" href={sourceSerifUrl} crossorigin="anonymous" />
 		<title>{pageTitle}</title>
 
 		<meta property="og:site_name" content={siteConfig.title} />

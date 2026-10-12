@@ -1,15 +1,15 @@
 @import "tailwindcss";
 @theme {
- --font-sans: 'DM Sans Variable','Noto Sans SC Variable','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
- --font-display: 'Source Serif 4 Variable','Noto Serif SC Variable','Songti SC','SimSun',Georgia,serif;
- --font-reading: 'Source Serif 4 Variable','Noto Serif SC Variable','Songti SC','SimSun',Georgia,serif;
+ --font-sans: 'DM Sans Variable','Noto Sans SC Titles','Noto Sans SC Variable','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+ --font-display: 'Source Serif 4 Variable','Noto Serif SC Titles','Noto Serif SC Variable','Songti SC','SimSun',Georgia,serif;
+ --font-reading: 'Source Serif 4 Variable','Noto Serif SC Titles','Noto Serif SC Variable','Songti SC','SimSun',Georgia,serif;
  --font-editorial: 'Source Serif 4 Variable',Georgia,serif;
  --font-mono: 'IBM Plex Mono','SFMono-Regular',Consolas,'Noto Sans SC Variable',monospace;
- --color-paper: #f8f9f5; --color-paper-warm: #eef0e7; --color-paper-cool: #e8ece2;
+ --color-paper: #f8f9f5; --color-paper-warm: #ecefe5; --color-paper-cool: #e8ece2;
  --color-surface: #fdfefa; --color-surface-soft: #f3f5ee; --color-surface-hover: #edf1e7;
- --color-ink: #26392e; --color-ink-soft: #657065; --color-ink-muted: #8a9486;
+ --color-ink: #26392e; --color-ink-soft: #5a665a; --color-ink-muted: #8a9486;
  --color-line: #dce2d6; --color-line-strong: #b3bfac;
- --color-accent: #5c7340; --color-accent-strong: #3e5529; --color-accent-soft: #e9eedf;
+ --color-accent: #55703c; --color-accent-strong: #3e5529; --color-accent-soft: #e9eedf;
  --shadow-whisper: 0 2px 8px #26392e03; --shadow-soft: 0 12px 30px #26392e0a;
 }
 @layer base {
