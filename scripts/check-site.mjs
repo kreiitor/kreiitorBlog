@@ -37,12 +37,7 @@ for(const [file,page]of pages){
   try{if((await stat(target)).isDirectory())target=path.join(target,'index.html');await stat(target);}catch{failures.push(`${relative}: missing ${ref}`);continue;}
   if(url.hash&&pages.has(target)){
    let fragment;try{fragment=decodeURIComponent(url.hash.slice(1));}catch{continue;}
-   if(!pages.get(target).ids.has(fragment)){
-    // Original full-article fragment URLs are forwarded to their static reading part.
-    const legacy=pages.get(target).html.match(/(?:var|const) legacyAnchors = (\{[\s\S]*?\});/);
-    let redirects={};try{redirects=JSON.parse(legacy?.[1]??'{}');}catch{}
-    if(!redirects[fragment])failures.push(`${relative}: missing anchor ${ref}`);
-   }
+   if(!pages.get(target).ids.has(fragment))failures.push(`${relative}: missing anchor ${ref}`);
   }
  }
 }

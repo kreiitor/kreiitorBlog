@@ -29,17 +29,20 @@ test('Full-text results still find phrases absent from the title catalog',async(
  await expect(page.locator('.search-result').first()).toBeVisible();
  await expect(page.locator('.search-result h2 a').first()).toHaveAttribute('href',/fods-/);
 });
-test('Long-form reading retains formulas, one page heading and legacy deep links',async({page})=>{
+test('Long-form reading renders the whole article on one page with working anchors',async({page})=>{
  await page.goto('blog/fods-linear-algebra-calculus-convexity/');
  await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('.katex-error')).toHaveCount(0);
  expect(await page.locator('.rich-content math').count()).toBeGreaterThan(0);
- const link=page.locator('.article-toc a[data-part]').filter({hasText:/./});
- const targets=await link.evaluateAll(nodes=>nodes.filter(n=>Number(n.dataset.part)>1).map(n=>n.href));
- expect(targets.length).toBeGreaterThan(0);
- const destination=new URL(targets[0]);
- await page.goto(`blog/fods-linear-algebra-calculus-convexity/${destination.hash}`);
- await expect(page).toHaveURL(destination.href);
+ await expect(page.locator('.reading-parts,[data-reading-select]')).toHaveCount(0);
+ const ids=await page.locator('.article-body h2[id]').evaluateAll(nodes=>nodes.map(node=>node.id));
+ expect(ids.length).toBeGreaterThan(12);
+ const hashes=await page.locator('.article-toc a[data-toc-link]').evaluateAll(nodes=>nodes.map(node=>decodeURIComponent(node.hash.slice(1))));
+ expect(hashes).toEqual(ids);
+ const pathname=new URL(page.url()).pathname;
+ await page.goto(`blog/fods-linear-algebra-calculus-convexity/#${encodeURIComponent(ids.at(-1))}`);
+ await expect.poll(()=>new URL(page.url()).pathname).toBe(pathname);
  await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('.katex-error')).toHaveCount(0);
+ await expect(page.locator('.article-body h2[id]').last()).toBeInViewport();
 });
 test('Configured project actions have a mobile-safe location and placeholder URLs are absent',async({page})=>{
  await page.goto('projects/paper-replication-workbench/');
