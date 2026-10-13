@@ -1,6 +1,6 @@
 // One-off importer: converts the two book-note folders into site posts + series entries.
 // Usage: node scripts/import-notes.mjs
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const SRC = {
@@ -8,7 +8,7 @@ const SRC = {
 		dir: 'E:/Code/dsh_code/学习笔记/深入理解AI-Agent-设计原理与工程实践',
 		series: 'ai-agent',
 		slug: 'ai-agent',
-		cover: '/covers/post-llm.svg',
+		cover: '/covers/series-ai-agent.svg',
 		pub: '2026-10-05',
 		tags: ['AI Agent', '学习笔记', 'LLM', '读书笔记'],
 		chapters: [
@@ -31,7 +31,7 @@ const SRC = {
 		dir: 'E:/Code/dsh_code/学习笔记/深入理解AI-Infra-量化分析与系统设计',
 		series: 'ai-infra',
 		slug: 'ai-infra',
-		cover: '/covers/post-llm.svg',
+		cover: '/covers/series-ai-infra.svg',
 		pub: '2026-10-10',
 		tags: ['AI Infra', '学习笔记', '系统设计', '读书笔记'],
 		chapters: [
@@ -61,7 +61,7 @@ const seriesMeta = {
 title: AI Agent 设计原理与工程实践
 englishTitle: Understanding AI Agents
 description: 以「Agent = LLM + 上下文 + 工具」为骨架，逐章精读李博杰的《深入理解AI Agent》：从上下文工程、工具与记忆，到评估、后训练与多 Agent 协作。
-emblem: A
+emblem: ⌘
 order: 1
 facts: 对应原书 313 页 · 12 篇笔记
 sourceNote: 个人学习笔记，基于李博杰《深入理解AI Agent：设计原理与工程实践》（v2.0 · 2026-09）整理，保留原书印刷页码引用，仅作学习交流。
@@ -71,7 +71,7 @@ sourceNote: 个人学习笔记，基于李博杰《深入理解AI Agent：设计
 title: AI Infra 量化分析与系统设计
 englishTitle: Understanding AI Infrastructure
 description: 「先数量级估算、再从约束推导设计」：逐章精读李博杰的《深入理解AI Infra》，从模型架构到加速器、网络、推理优化与训练系统。
-emblem: I
+emblem: ⚙
 order: 2
 facts: 对应原书 536 页 · 13 篇笔记
 sourceNote: 个人学习笔记，基于李博杰《深入理解AI Infra：量化分析与系统设计》（v1.0 · 2026-10）整理，保留原书印刷页码引用，仅作学习交流。
@@ -85,7 +85,9 @@ for (const key of Object.keys(SRC)) {
 	const cfg = SRC[key];
 	await writeFile(path.join(outSeries, `${cfg.series}.md`), seriesMeta[key], 'utf8');
 	for (const [file, slugPart, title, desc, order] of cfg.chapters) {
-		const body = await readFile(path.join(cfg.dir, file), 'utf8');
+		const raw = await readFile(path.join(cfg.dir, file), 'utf8');
+		// Sources are CRLF on Windows; the site keeps LF so diffs stay content-only.
+		const body = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
 		const frontmatter = [
 			'---',
 			`title: "${escYaml(title)}"`,
