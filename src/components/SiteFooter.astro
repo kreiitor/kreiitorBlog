@@ -11,7 +11,7 @@ import { withBase } from '../utils/url';
     <div><p class="eyebrow">CONNECT</p>{siteConfig.socialLinks.map(link => <a href={link.href} target="_blank" rel="noreferrer">{link.label} ↗</a>)}<a href={withBase('/rss.xml')}>RSS 订阅 ↗</a></div>
    </div>
   </div>
-  <div class="footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.author} · 研究札记</p><p>思考有迹，探索不止。<span class="footer-dot" aria-hidden="true"></span>武汉，中国</p><a href="#main-content" class="text-link">回到顶部 ↑</a></div>
+  <div class="footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.author} · 研究札记</p><p>思考有迹，探索不止。<span class="footer-dot" aria-hidden="true"></span>武汉，中国</p><a href={`mailto:${siteConfig.email}`} class="text-link">{siteConfig.email}</a><a href="#main-content" class="text-link">回到顶部 ↑</a></div>
  </div>
 </footer>
 <style>
