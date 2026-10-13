@@ -17,6 +17,23 @@ const posts = defineCollection({
 		category: z.enum(['writing', 'knowledge', 'course']).default('writing'),
 		series: z.string().optional(),
 		order: z.number().int().optional(),
+	}).superRefine((post, ctx) => {
+		if (post.category === 'course' && (!post.series || post.order === undefined)) {
+			ctx.addIssue({ code: 'custom', message: '学习章节必须填写 series 和 order。' });
+		}
+	}),
+});
+
+const series = defineCollection({
+	loader: glob({ pattern: '[^_]*.md', base: './src/content/series' }),
+	schema: z.object({
+		title: z.string(),
+		description: z.string(),
+		englishTitle: z.string().optional(),
+		emblem: z.string().default('↳'),
+		order: z.number().int().default(0),
+		facts: z.string().optional(),
+		sourceNote: z.string().optional(),
 	}),
 });
 
@@ -35,4 +52,4 @@ const projects = defineCollection({
 	}),
 });
 
-export const collections = { posts, projects };
+export const collections = { posts, projects, series };

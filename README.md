@@ -35,7 +35,7 @@ npm run preview
 
 ## 内容维护
 
-文章位于 `src/content/posts/`，项目位于 `src/content/projects/`。身份与联系方式集中在 `src/data/site.ts`。
+文章位于 `src/content/posts/`，学习系列资料位于 `src/content/series/`，项目位于 `src/content/projects/`。身份与联系方式集中在 `src/data/site.ts`。随笔、Agent / Infra 学习系列与项目的完整添加示例见 [内容维护指南](docs/CONTENT.md)。
 
 文章示例：
 
@@ -54,7 +54,7 @@ cover: /covers/post-math.svg
 ```
 
 - `category`：`writing`（默认）、`knowledge` 或 `course`。
-- `series` 与 `order`：用于课程目录、上一章和下一章。
+- `series` 对应 `src/content/series/` 中的文件名；`order` 决定同系列阅读顺序。学习章节必须填写这两个字段。
 - `draft: true`：不生成详情页，不进入搜索、RSS、归档与标签。
 - `featured: true`：进入首页精选。
 - 支持 `$...$` 行内公式与 `$$...$$` 公式块。

@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content';
 import PostCard from '../components/PostCard.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import SeriesCard from '../components/SeriesCard.astro';
+import { getLearningSeries } from '../utils/series';
 import SectionHeading from '../components/SectionHeading.astro';
 import ResearchArt from '../components/ResearchArt.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -17,6 +19,7 @@ const featuredPosts = getFeaturedPosts(posts,3);
 const featuredProjects = getFeaturedProjects(projects,2);
 const allTags = getTagSummaries(posts,projects);
 const tags = allTags.slice(0,8);
+const learningSeries = getLearningSeries(await getCollection('series'), posts);
 ---
 <BaseLayout>
  <div data-pagefind-ignore>
@@ -43,12 +46,14 @@ const tags = allTags.slice(0,8);
    <SectionHeading kicker="02 / RESEARCH & PRACTICE" title="让想法落地" description="论文复现、实验平台，以及正在打磨的工具。" linkHref={withBase('/projects/')} linkLabel="浏览研究项目"/>
    <div class="project-grid">{featuredProjects.map(project => <ProjectCard project={project}/>)}</div>
   </section>
-  <section class="page-shell learning-invitation">
-   <span class="learning-symbol" aria-hidden="true">ƒ</span><div><p class="eyebrow">THE LEARNING GARDEN</p><h2>从数学直觉，走向模型背后的原理。</h2><p>数据科学基础 · 11 个章节 · 完整推导与学习路径</p></div><a href={withBase('/notes/')} class="text-link">翻开课程精讲 ↗</a>
+  <section class="page-shell editorial-section">
+   <SectionHeading kicker="03 / STRUCTURED LEARNING" title="成体系的学习笔记" description="沿着一条主线，把概念、推导与实践连起来。" linkHref={withBase('/notes/')} linkLabel="全部学习专题"/>
+   <div class="series-grid">{learningSeries.slice(0,3).map(item => <SeriesCard series={item}/>)}</div>
+   {learningSeries.length === 0 && <p class="section-description">学习笔记正在整理中。</p>}
   </section>
   <section class="page-shell editorial-section lower-grid">
    <div>
-    <SectionHeading kicker="03 / RECENT NOTES" title="最近写下" linkHref={withBase('/archive/')} linkLabel="时间归档"/>
+    <SectionHeading kicker="04 / RECENT NOTES" title="最近写下" linkHref={withBase('/archive/')} linkLabel="时间归档"/>
     <div class="recent-list">{publishedPosts.slice(0,5).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><span class="recent-arrow" aria-hidden="true">↗</span></a>)}</div>
    </div>
    <aside class="garden-aside">
@@ -80,11 +85,6 @@ const tags = allTags.slice(0,8);
  .journal-counts { display: flex; gap: 25px; font-size: 10px; color: var(--color-ink-soft); }
  .journal-counts strong { font-family: var(--font-editorial); font-size: 18px; font-weight: 400; color: var(--color-ink); margin-right: 6px; }
  .project-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; margin-top: 28px; }
- .learning-invitation { display: flex; gap: 28px; align-items: center; border-block: 1px solid var(--color-line); margin-top: 65px; padding-block: 28px; }
- .learning-symbol { font-family: var(--font-editorial); color: var(--color-accent); font-size: 60px; line-height: 1; }
- .learning-invitation h2 { font-size: 19px; font-weight: 500; margin-top: 8px; }
- .learning-invitation p:last-child { font-size: 11px; color: var(--color-ink-soft); margin-top: 8px; }
- .learning-invitation > a { margin-left: auto; }
  .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 65px; }
  .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
  .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-line-strong); }
@@ -100,5 +100,4 @@ const tags = allTags.slice(0,8);
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
  @media (max-width: 900px) { .hero-copy h1 { font-size: 33px; } .hero-caption { align-items: start; flex-direction: column; gap: 8px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { grid-template-columns: 1fr; } }
  @media (max-width: 700px) { .home-hero { grid-template-columns: 1fr; padding-block: 42px 30px; gap: 35px; } .hero-copy h1 { font-size: clamp(31px,6.7vw,46px); margin-top: 20px; } .hero-english { font-size: 16px; } .hero-caption { flex-direction: row; gap: 16px; margin-top: 28px; } .hero-visual { max-width: 460px; width: 100%; margin-inline: auto; } .journal-strip { flex-wrap: wrap; gap: 14px; } .journal-counts { justify-content: space-between; width: 100%; } .lower-grid { grid-template-columns: 1fr; gap: 35px; } .desktop-break { display: none; } }
- @media (max-width: 600px) { .learning-invitation { gap: 16px; flex-wrap: wrap; margin-top: 44px; } .learning-invitation h2 { font-size: 15px; } .learning-invitation > div { flex: 1; } .learning-invitation > a { margin-left: 48px; font-size: 11px; } .learning-symbol { font-size: 44px; } }
 </style>

@@ -1,0 +1,27 @@
+---
+import type { LearningSeries } from '../utils/series';
+import { withBase } from '../utils/url';
+interface Props { series: LearningSeries; }
+const { series } = Astro.props;
+const { entry, chapters } = series;
+---
+<a href={withBase(`/notes/${entry.id}/`)} class="zen-card series-card">
+ <div class="series-heading"><span class="series-emblem" aria-hidden="true">{entry.data.emblem}</span><div><p class="eyebrow">{entry.data.englishTitle ?? 'STRUCTURED LEARNING'}</p><h3>{entry.data.title}</h3></div><span class="series-arrow" aria-hidden="true">↗</span></div>
+ <p class="series-description">{entry.data.description}</p>
+ <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
+</a>
+<style>
+ .series-card { display: flex; flex-direction: column; padding: 30px; transition: border-color .2s var(--ease-smooth),background-color .2s var(--ease-smooth); }
+ .series-card:hover { border-color: var(--color-line-strong); background: var(--color-surface-soft); }
+ .series-heading { display: flex; align-items: center; gap: 20px; }
+ .series-heading > div { min-width: 0; }
+ .series-heading .eyebrow { font-size: 9px; letter-spacing: .1em; overflow-wrap: anywhere; }
+ .series-heading h3 { margin-top: 9px; font-size: 25px; }
+ .series-emblem { font-family: var(--font-editorial); font-size: 46px; color: var(--color-accent); line-height: 1; }
+ .series-arrow { margin-left: auto; align-self: start; color: var(--color-accent); transition: transform .2s var(--ease-smooth); }
+ .series-card:hover .series-arrow { transform: translate(3px,-3px); }
+ .series-description { color: var(--color-ink-soft); font-size: 13px; line-height: 2; margin: 22px 0; max-width: 65ch; }
+ .series-bottom { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--color-line); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-size: 11px; color: var(--color-ink-soft); }
+ .series-bottom > span:last-child { color: var(--color-accent-strong); }
+ @media (max-width: 600px) { .series-card { padding: 24px; } .series-heading { gap: 14px; } .series-heading h3 { font-size: 22px; } }
+</style>

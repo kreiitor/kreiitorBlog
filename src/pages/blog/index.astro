@@ -5,9 +5,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPublishedPosts } from '../../utils/content';
 import { withBase } from '../../utils/url';
 const posts = getPublishedPosts(await getCollection('posts'));
-const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'研究与思考' },{ key:'knowledge', label:'AI 知识库' },{ key:'course', label:'课程精讲' }];
+const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'研究与思考' },{ key:'knowledge', label:'知识笔记' },{ key:'course', label:'系列学习' }];
 ---
-<BaseLayout title="博客" description="研究与思考、AI 知识库和数据科学课程精讲。">
+<BaseLayout title="博客" description="研究与思考、实践知识与成体系的学习笔记。">
  <div data-pagefind-ignore>
   <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>这是一份持续积累、随时可以翻开的研究札记。</p></section>
   <section class="page-shell blog-content">
