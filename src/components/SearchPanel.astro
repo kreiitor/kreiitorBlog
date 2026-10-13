@@ -1,80 +1,126 @@
 ---
-const baseUrl = import.meta.env.BASE_URL;
-const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-interface Props { title?: string; description?: string; compact?: boolean; }
+interface Props { title?: string; description?: string; }
 const { title='寻找一条线索。', description='从标题、摘要与正文中，找到你想读的内容。' } = Astro.props;
 ---
 <section class="search-panel">
  <p class="eyebrow">SEARCH THE JOURNAL</p><h1>{title}</h1><p class="search-description">{description}</p>
  <div data-search-root>
-  <form class="search-form" data-search-form role="search">
-   <label class="sr-only" for="journal-query">搜索关键词</label>
-   <input id="journal-query" data-search-input type="search" name="q" placeholder="试试：线性模型、LLM、论文阅读…" class="zen-input" autocomplete="off"/>
-   <button type="submit" class="zen-btn zen-btn-primary">搜索 ↗</button>
-  </form>
+  <form class="search-form" data-search-form role="search"><label class="sr-only" for="journal-query">搜索关键词</label><input id="journal-query" data-search-input type="search" name="q" placeholder="线性模型、LLM、论文阅读…" class="zen-input" autocomplete="off" aria-controls="search-results"/><button type="submit" class="zen-btn zen-btn-primary">搜索 ↗</button></form>
   <div class="search-suggestions"><span>试着搜索</span>{['线性模型','LLM','论文阅读','Python'].map(query => <button type="button" data-query={query}>{query}</button>)}</div>
   <p data-search-status class="search-status" role="status" aria-live="polite">输入至少 2 个字符开始搜索。</p>
-  <div data-search-results class="search-results"></div>
+  <div data-search-results class="search-results" id="search-results"></div>
+  <button type="button" data-search-more class="zen-btn zen-btn-secondary more-results" hidden>查看更多结果 ↓</button>
  </div>
 </section>
-<script is:inline define:vars={{ normalizedBaseUrl }}>
- const root = document.querySelector('[data-search-root]');
- if (root instanceof HTMLElement) {
-  const form = root.querySelector('[data-search-form]');
-  const input = root.querySelector('[data-search-input]');
-  const status = root.querySelector('[data-search-status]');
-  const results = root.querySelector('[data-search-results]');
-  let enginePromise, timer, generation = 0;
-  const setStatus = message => { if (status) status.textContent = message; };
-  const escape = text => String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-  async function runSearch(value) {
-   const request = ++generation;
-   const query = value.trim();
-   const url = new URL(location.href); if (query) url.searchParams.set('q',query); else url.searchParams.delete('q'); history.replaceState(null,'',url);
-   results.replaceChildren();
-   if (query.length < 2) { setStatus('输入至少 2 个字符开始搜索。'); return; }
-   setStatus(`正在寻找「${query}」…`);
-   try {
-    if (!enginePromise) enginePromise = import(`${normalizedBaseUrl}pagefind/pagefind.js`).then(async engine => { await engine.options({excerptLength:30,baseUrl:normalizedBaseUrl}); return engine; });
-    const engine = await enginePromise;
-    const response = await engine.search(query);
-    const items = response?.results ?? [];
-    const data = await Promise.all(items.slice(0,30).map(item => item.data()));
-    if (request !== generation) return;
-    setStatus(items.length ? `找到 ${items.length} 条结果${items.length > 30 ? '，展示前 30 条' : ''}。` : '没有找到匹配内容，试试换一个关键词。');
-    const fragment = document.createDocumentFragment();
-    for (const item of data) {
-     const article = document.createElement('article'); article.className = 'search-result';
-     const excerpt = escape(item.excerpt ?? '').replaceAll('&lt;mark&gt;','<mark>').replaceAll('&lt;/mark&gt;','</mark>');
-     article.innerHTML = `<p class="eyebrow">${escape(item.meta?.type ?? '札记')}</p><h2><a href="${escape(item.url)}">${escape(item.meta?.title ?? item.url)} <span aria-hidden="true">↗</span></a></h2><p>${excerpt}</p>`;
-     fragment.append(article);
-    }
-    results.replaceChildren(fragment);
-   } catch {
-    enginePromise = undefined;
-    if (request === generation) setStatus('搜索暂时无法加载，请稍后重试；也可以从文章归档浏览。');
+<script>
+ import { rankSearchEntries, titleMatchScore } from '../utils/search.mjs';
+ interface Entry { slug:string; title:string; description:string; type:string; url:string; }
+ const root = document.querySelector<HTMLElement>('[data-search-root]');
+ const input = root?.querySelector<HTMLInputElement>('[data-search-input]');
+ const form = root?.querySelector<HTMLFormElement>('[data-search-form]');
+ const status = root?.querySelector<HTMLElement>('[data-search-status]');
+ const results = root?.querySelector<HTMLElement>('[data-search-results]');
+ const more = root?.querySelector<HTMLButtonElement>('[data-search-more]');
+ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+ let enginePromise:Promise<any> | undefined, catalogPromise:Promise<Entry[]> | undefined;
+ let generation = 0, timer:ReturnType<typeof setTimeout>, query = '', limit = 12, cursor = 0;
+ let hits:any[] = [], entries = new Map<string,Entry>(), catalog = new Map<string,Entry>();
+ let loadingMore = false;
+ const setStatus = (message:string) => { if (status) status.textContent = message; };
+ function highlight(element:HTMLElement, text:string, term:string) {
+  const start = text.toLocaleLowerCase().indexOf(term.toLocaleLowerCase());
+  if (start < 0) { element.textContent = text; return; }
+  element.append(document.createTextNode(text.slice(0,start)));
+  const mark = document.createElement('mark'); mark.textContent = text.slice(start,start+term.length); element.append(mark,document.createTextNode(text.slice(start+term.length)));
+ }
+ function renderResults() {
+  if (!results || !more) return;
+  const ranked = rankSearchEntries(Array.from(entries.values()),query) as Entry[];
+  const fragment = document.createDocumentFragment();
+  for (const item of ranked.slice(0,limit)) {
+   const article = document.createElement('article'); article.className = 'search-result';
+   const type = document.createElement('p'); type.className = 'eyebrow'; type.textContent = item.type;
+   const heading = document.createElement('h2'); const link = document.createElement('a'); link.href = item.url; highlight(link,item.title,query); heading.append(link);
+   const summary = document.createElement('p'); summary.textContent = item.description;
+   article.append(type,heading,summary); fragment.append(article);
+  }
+  results.replaceChildren(fragment);
+  more.hidden = ranked.length <= limit && cursor >= hits.length;
+  more.disabled = false;
+  setStatus(ranked.length ? `已找到 ${ranked.length} 条结果${cursor < hits.length ? '，可继续查看更多' : ''} · 显示 ${Math.min(limit,ranked.length)} 条。` : '没有找到匹配内容，试试换一个关键词。');
+ }
+ async function collect(request:number) {
+  while (entries.size < limit && cursor < hits.length) {
+   const chunk = hits.slice(cursor,cursor+12);
+   const data = await Promise.all(chunk.map(hit => hit.data()));
+   if (request !== generation) return;
+   cursor += chunk.length;
+   for (const item of data) {
+    const slug = item.meta?.slug;
+    const known = catalog.get(slug);
+    if (!known || entries.has(slug)) continue;
+    entries.set(slug,{ ...known, url:item.url || known.url });
    }
   }
-  if (input instanceof HTMLInputElement) {
-   input.value = new URLSearchParams(location.search).get('q') ?? '';
-   input.addEventListener('input',() => { clearTimeout(timer); ++generation; timer = setTimeout(() => runSearch(input.value),220); });
-   form.addEventListener('submit',event => { event.preventDefault(); clearTimeout(timer); runSearch(input.value); });
-   document.querySelectorAll('[data-query]').forEach(button => button.addEventListener('click',() => { clearTimeout(timer); input.value = button.dataset.query; input.focus(); runSearch(input.value); }));
-   if (input.value.trim().length >= 2) runSearch(input.value);
+ }
+ async function runSearch(value:string) {
+  const request = ++generation;
+  query = value.trim(); limit = 12; cursor = 0; hits = []; entries = new Map();
+  const url = new URL(location.href); if (query) url.searchParams.set('q',query); else url.searchParams.delete('q'); url.searchParams.delete('focus'); history.replaceState(null,'',url);
+  if (query.length < 2) { results?.replaceChildren(); if (more) more.hidden = true; setStatus('输入至少 2 个字符开始搜索。'); return; }
+  setStatus(`正在寻找「${query}」…`); if (more) more.hidden = true;
+  try {
+   catalogPromise ??= fetch(`${base}search-catalog.json`).then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); });
+   enginePromise ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async engine => { await engine.options({ excerptLength:40, baseUrl:base }); return engine; });
+   const [engine, data] = await Promise.all([enginePromise,catalogPromise]);
+   const response = await engine.search(query);
+   if (request !== generation) return;
+   catalog = new Map(data.map((entry:Entry) => [entry.slug,entry]));
+   entries = new Map(data.filter((entry:Entry) => titleMatchScore(entry.title,query) > 0).map((entry:Entry) => [entry.slug,entry]));
+   hits = response?.results ?? [];
+   await collect(request);
+   if (request === generation) renderResults();
+  } catch {
+   if (request !== generation) return;
+   enginePromise = undefined; catalogPromise = undefined;
+   setStatus('搜索暂时无法加载，请稍后重试；也可以从文章归档浏览。');
   }
+ }
+ if (input && form) {
+  const params = new URLSearchParams(location.search);
+  input.value = params.get('q') ?? '';
+  if (params.has('focus') || window.innerWidth > 700) input.focus();
+  if (params.has('focus')) { const url = new URL(location.href); url.searchParams.delete('focus'); history.replaceState(null,'',url); }
+  input.addEventListener('input',() => { clearTimeout(timer); ++generation; timer = setTimeout(() => runSearch(input.value),220); });
+  form.addEventListener('submit',event => { event.preventDefault(); clearTimeout(timer); runSearch(input.value); });
+  root?.querySelectorAll<HTMLButtonElement>('[data-query]').forEach(button => button.addEventListener('click',() => { clearTimeout(timer); input.value = button.dataset.query ?? ''; input.focus(); runSearch(input.value); }));
+  root?.addEventListener('keydown',event => {
+   if (event.key === 'Escape') { event.preventDefault(); clearTimeout(timer); input.value = ''; runSearch(''); input.focus(); }
+   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const links = Array.from(results?.querySelectorAll<HTMLAnchorElement>('h2 a') ?? []);
+    if (!links.length) return;
+    event.preventDefault(); const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+    const target = event.key === 'ArrowDown' ? (index + 1) % links.length : (index < 0 ? links.length - 1 : (index - 1 + links.length) % links.length);
+    links[target].focus();
+   }
+  });
+  more?.addEventListener('click',async () => { if (loadingMore) return; loadingMore = true; const request = generation; limit += 12; more.disabled = true; try { await collect(request); if (request === generation) renderResults(); } catch { if (request === generation) setStatus('更多结果暂时无法加载，请重试。'); } finally { loadingMore = false; more.disabled = false; } });
+  if (input.value.trim().length >= 2) runSearch(input.value);
  }
 </script>
 <style is:global>
  .search-panel h1 { font-size: clamp(32px,4vw,46px); margin-top: 14px; }
- .search-description { margin-top: 16px; color: var(--color-ink-soft); font-size: 14px; }
- .search-form { display: flex; gap: 10px; margin-top: 35px; } .search-form button { flex-shrink: 0; }
- .search-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; font-size: 10px; color: var(--color-ink-soft); }
- .search-suggestions button { border: 1px solid var(--color-line); border-radius: 4px; padding: 3px 9px; }
+ .search-description { margin-top: 16px; color: var(--color-ink-soft); font-size: 15px; }
+ .search-form { display: flex; gap: 10px; margin-top: 30px; } .search-form button { flex-shrink: 0; }
+ .search-form input { font-size: 16px; }
+ .search-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--color-ink-soft); }
+ .search-suggestions button { min-height: 36px; border: 1px solid var(--color-line); border-radius: 4px; padding: 5px 10px; }
  .search-suggestions button:hover { background: var(--color-accent-soft); }
- .search-status { border-top: 1px solid var(--color-line); margin-top: 30px; padding-top: 22px; font-size: 12px; color: var(--color-ink-soft); }
- .search-result { padding: 25px 0; border-bottom: 1px solid var(--color-line); }
- .search-result h2 { margin-top: 9px; font-size: 20px; } .search-result h2 span { font-family: var(--font-sans); font-size: 14px; color: var(--color-accent); }
- .search-result > p:last-child { color: var(--color-ink-soft); font-size: 12px; line-height: 2; margin-top: 13px; }
+ .search-status { border-top: 1px solid var(--color-line); margin-top: 28px; padding-top: 20px; font-size: 13px; color: var(--color-ink-soft); }
+ .search-result { padding: 24px 0; border-bottom: 1px solid var(--color-line); }
+ .search-result h2 { margin-top: 8px; font-size: 21px; line-height: 1.8; }
+ .search-result > p:last-child { color: var(--color-ink-soft); font-size: 14px; line-height: 1.9; margin-top: 10px; }
  .search-result mark { color: var(--color-accent-strong); background: var(--color-accent-soft); border-radius: 2px; padding-inline: 2px; }
- @media (max-width: 600px) { .search-form button { padding-inline: 14px; } .search-form input { font-size: 12px; } }
+ .more-results { margin-top: 28px; }
+ @media (max-width: 600px) { .search-form button { padding-inline: 14px; } .search-result h2 { font-size: 20px; } }
 </style>

@@ -1,0 +1,26 @@
+---
+import type { PostEntry } from '../utils/content';
+import { getReadingTime } from '../utils/content';
+import { formatDate } from '../utils/date';
+import { withBase } from '../utils/url';
+interface Props { posts: PostEntry[]; interactive?: boolean; }
+const { posts, interactive = false } = Astro.props;
+const initial = new Set(posts.filter(post => !post.data.series).slice(0,12).map(post => post.id));
+const labels = { writing: '研究与思考', knowledge: '知识笔记', course: '系列学习' };
+---
+<div class="post-list" data-post-list>
+ {posts.map(post => <a class="post-row" href={withBase(`/blog/${post.id}/`)} data-post-row data-category={post.data.category} data-series={post.data.series ?? ''} hidden={interactive && !initial.has(post.id)}>
+  <div><div class="row-meta"><span class="row-category">{labels[post.data.category]}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h3>{post.data.title}</h3><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true">↗</span>
+ </a>)}
+</div>
+<style>
+ .post-row { display: grid; grid-template-columns: minmax(0,1fr) 32px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
+ .row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 12px; color: var(--color-ink-soft); }
+ .row-category { color: var(--color-accent-strong); }
+ .post-row h3 { margin-top: 10px; font-size: 21px; line-height: 1.7; transition: color .2s var(--ease-smooth); }
+ .row-description { max-width: 78ch; margin-top: 8px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+ .row-arrow { color: var(--color-accent); font-size: 24px; transition: transform .25s var(--ease-out-expo); }
+ .post-row:hover h3 { color: var(--color-accent-strong); }
+ .post-row:hover .row-arrow { transform: translate(3px,-3px); }
+ @media (max-width: 600px) { .post-row { gap: 14px; padding: 22px 0; grid-template-columns: minmax(0,1fr) 20px; } .post-row h3 { font-size: 19px; } .row-meta { gap: 8px 12px; } }
+</style>

@@ -3,17 +3,8 @@ import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Motion from '../components/Motion.astro';
 import { siteConfig } from '../data/site';
-import '@fontsource-variable/dm-sans/standard.css';
-import '@fontsource-variable/noto-sans-sc';
-import '@fontsource-variable/noto-serif-sc';
 import '../styles/fonts.css';
-import serifTitlesUrl from '../assets/fonts/noto-serif-sc-titles.woff2?url';
-import sourceSerifUrl from '../assets/fonts/source-serif-4-latin-standard-normal.woff2?url';
-import '@fontsource/ibm-plex-mono/latin-400.css';
-import '@fontsource/ibm-plex-mono/latin-500.css';
-import '@fontsource/ibm-plex-mono/latin-400-italic.css';
 import '../styles/global.css';
-import 'katex/dist/katex.min.css';
 import { stripBase, withBase } from '../utils/url';
 
 interface Props {
@@ -26,25 +17,28 @@ interface Props {
 	updatedTime?: Date;
 	tags?: string[];
 	searchWeight?: number;
+	canonicalPath?: string;
 }
 
 const {
 	title = siteConfig.title,
 	description = siteConfig.description,
-	image = '/social-card.svg',
+	image = '/social-card.png',
 	type = 'website',
 	noIndex = false,
 	publishedTime,
 	updatedTime,
 	tags = [],
 	searchWeight,
+	canonicalPath,
 } = Astro.props;
 
 const pageTitle = title === siteConfig.title ? title : `${title} — ${siteConfig.title}`;
 const currentPath = stripBase(Astro.url.pathname);
 const siteUrl = Astro.site ?? new URL(siteConfig.siteUrl);
-const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
-const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), siteUrl).toString();
+const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl).toString();
+const shareImage = image.startsWith('/') ? image.replace(/\.svg$/, '.png') : image;
+const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(shareImage), siteUrl).toString();
 ---
 
 <!doctype html>
@@ -54,14 +48,12 @@ const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), sit
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<meta name="author" content={siteConfig.author} />
 		<meta name="theme-color" content="#f8f9f5" />
 		{tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
 		{noIndex && <meta name="robots" content="noindex, nofollow" />}
 		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
 		<link rel="canonical" href={canonicalUrl} />
-		<!-- Vite resolves these to the same hashed assets used by the font-face rules. -->
-		<link rel="preload" as="font" type="font/woff2" href={serifTitlesUrl} crossorigin="anonymous" />
-		<link rel="preload" as="font" type="font/woff2" href={sourceSerifUrl} crossorigin="anonymous" />
 		<title>{pageTitle}</title>
 
 		<meta property="og:site_name" content={siteConfig.title} />
@@ -70,14 +62,17 @@ const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), sit
 		<meta property="og:type" content={type} />
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:image" content={imageUrl} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={pageTitle} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={imageUrl} />
 		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 		{updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
+		{tags.map(tag => <meta property="article:tag" content={tag} />)}
 	</head>
-	<body>
+	<body id="top">
 		<a href="#main-content" class="skip-link">跳到主要内容</a>
 		<div class="relative">
 			<SiteHeader currentPath={currentPath} />

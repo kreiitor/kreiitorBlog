@@ -1,16 +1,19 @@
 ---
 import { getCollection } from 'astro:content';
-import PostCard from '../../components/PostCard.astro';
+import PostList from '../../components/PostList.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getTagIndex } from '../../utils/content';
+import { tagAliases } from '../../utils/tags';
 import { withBase } from '../../utils/url';
 export async function getStaticPaths() {
- const tagIndex=getTagIndex(await getCollection('posts'),await getCollection('projects'));
- return [...tagIndex.entries()].map(([tag,value])=>({params:{tag},props:{tag,posts:value.posts,projects:value.projects}}));
+ const index = getTagIndex(await getCollection('posts'),await getCollection('projects'));
+ const primary = [...index.entries()].map(([tag,value]) => ({ params:{ tag },props:{ tag, ...value } }));
+ const aliases = Object.entries(tagAliases).filter(([,tag]) => index.has(tag)).map(([alias,tag]) => ({ params:{ tag:alias }, props:{ tag,...index.get(tag)! } }));
+ return [...primary,...aliases];
 }
-const { tag,posts,projects }=Astro.props;
+const { tag, posts, projects } = Astro.props;
 ---
-<BaseLayout title={`话题：${tag}`} description={`关于 ${tag} 的研究札记、学习记录与项目。`}>
- <div data-pagefind-ignore><section class="page-shell page-intro"><a href={withBase('/blog/')} class="text-link mb-6">← 全部札记</a><p class="eyebrow">FOLLOW A THREAD / TOPIC</p><h1>#{tag}</h1><p>这个话题下，留下了 {posts.length} 篇札记、{projects.length} 个项目。</p></section><section class="page-shell mt-10 space-y-12">{posts.length>0 && <div class="section-grid">{posts.map(post=><PostCard post={post}/>)}</div>}{projects.length>0 && <div><h2 class="text-xl mb-6">相关项目</h2><div class="grid gap-6 lg:grid-cols-2">{projects.map(project=><ProjectCard project={project}/>)}</div></div>}</section></div>
+<BaseLayout title={`话题：${tag}`} description={`关于 ${tag} 的研究札记、学习记录与项目。`} canonicalPath={withBase(`/tags/${encodeURIComponent(tag)}/`)}>
+ <div data-pagefind-ignore><section class="page-shell page-intro"><a href={withBase('/tags/')} class="text-link mb-6">← 全部话题</a><p class="eyebrow">FOLLOW A THREAD / TOPIC</p><h1>{tag}</h1><p>这个话题下，留下了 {posts.length} 篇札记、{projects.length} 个项目。</p></section><section class="page-shell mt-10 space-y-12">{posts.length > 0 && <PostList posts={posts}/>} {projects.length > 0 && <div><h2 class="text-xl mb-6">相关项目</h2><div class="grid gap-6 lg:grid-cols-2">{projects.map(project => <ProjectCard project={project}/>)}</div></div>}</section></div>
 </BaseLayout>

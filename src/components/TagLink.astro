@@ -1,16 +1,18 @@
 ---
 import { withBase } from '../utils/url';
+import { canonicalTag } from '../utils/tags';
 
 interface Props {
 	tag: string;
 }
 
 const { tag } = Astro.props;
+const label = canonicalTag(tag);
 ---
 
 <a
-	href={withBase(`/tags/${encodeURIComponent(tag)}/`)}
+	href={withBase(`/tags/${encodeURIComponent(label)}/`)}
 	class="zen-tag"
 >
-	{tag}
+	{label}
 </a>

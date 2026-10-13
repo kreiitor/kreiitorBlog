@@ -1,68 +1,95 @@
-<div class="reading-progress" data-reading-progress role="progressbar" aria-label="文章阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+<div class="reading-progress" data-reading-progress role="progressbar" aria-label="本节阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+<span class="sr-only" data-copy-status role="status" aria-live="polite"></span>
 <script>
  const article = document.querySelector<HTMLElement>('[data-reading-article]');
- const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
  const body = article?.querySelector<HTMLElement>('.article-body');
- const headings = Array.from(document.querySelectorAll<HTMLElement>('.rich-content h1[id],.rich-content h2[id]'));
- const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
- let queued = false;
- function update() {
-  queued = false;
-  if (!progress || !body) return;
+ const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
+ const headings = Array.from(document.querySelectorAll<HTMLElement>('.article-body h2[id]'));
+ const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
+ let start = 0, height = 1, offsets: { id: string; y: number }[] = [];
+ let scrollQueued = false, measureQueued = false;
+ function measure() {
+  measureQueued = false;
+  if (!body) return;
+  const y = window.scrollY;
   const rect = body.getBoundingClientRect();
-  const fraction = Math.max(0,Math.min(1,(window.innerHeight-rect.top)/(rect.height)));
+  start = rect.top + y;
+  height = Math.max(1, rect.height);
+  offsets = headings.map(h => ({ id: h.id, y: h.getBoundingClientRect().top + y }));
+  update();
+ }
+ function update() {
+  scrollQueued = false;
+  if (!progress || !body) return;
+  const y = window.scrollY;
+  const fraction = Math.max(0, Math.min(1, (y + window.innerHeight - start) / height));
+  const current = offsets.filter(h => h.y <= y + 150).at(-1)?.id;
   progress.style.transform = `scaleX(${fraction})`;
-  progress.setAttribute('aria-valuenow',String(Math.round(fraction*100)));
-  if (headings.length && links.length) {
-   const threshold = 150;
-   let current = null;
-   for (const heading of headings) {
-    if (heading.getBoundingClientRect().top <= threshold) current = heading;
-    else break;
-   }
-   links.forEach(link => {
-    if (current && decodeURIComponent(link.hash.slice(1)) === current.id) link.setAttribute('aria-current','location');
-    else link.removeAttribute('aria-current');
-   });
+  progress.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
+  for (const link of links) {
+   let id;
+   try { id = decodeURIComponent(link.hash.slice(1)); } catch { continue; }
+   if (id === current) link.setAttribute('aria-current','location');
+   else link.removeAttribute('aria-current');
   }
  }
- function schedule() { if (!queued) { queued = true; requestAnimationFrame(update); } }
- window.addEventListener('scroll',schedule,{passive:true}); window.addEventListener('resize',schedule,{passive:true}); update();
+ function scheduleScroll() { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(update); } }
+ function scheduleMeasure() { if (!measureQueued) { measureQueued = true; requestAnimationFrame(measure); } }
+ window.addEventListener('scroll', scheduleScroll, { passive: true });
+ window.addEventListener('resize', scheduleMeasure, { passive: true });
+ document.fonts.ready.then(scheduleMeasure);
+ if (article && 'ResizeObserver' in window) new ResizeObserver(scheduleMeasure).observe(article);
+ scheduleMeasure();
+
+ const live = document.querySelector<HTMLElement>('[data-copy-status]');
  document.querySelectorAll('.rich-content pre').forEach(pre => {
   const code = pre.querySelector('code'); if (!code) return;
-  const button = document.createElement('button'); button.type = 'button'; button.className = 'code-copy'; button.textContent = '复制'; button.setAttribute('aria-label','复制代码');
-  button.addEventListener('click',async () => {
-   try { await navigator.clipboard.writeText(code.textContent ?? ''); button.textContent = '已复制'; }
-   catch { button.textContent = '请手动复制'; }
-   window.setTimeout(() => { button.textContent = '复制'; },2000);
+  const button = document.createElement('button');
+  button.type = 'button'; button.className = 'code-copy'; button.textContent = '复制'; button.setAttribute('aria-label','复制代码');
+  button.addEventListener('click', async () => {
+   if (live) live.textContent = '';
+   try { await navigator.clipboard.writeText(code.textContent ?? ''); button.textContent = '已复制'; if (live) live.textContent = '代码已复制'; }
+   catch { button.textContent = '请手动复制'; if (live) live.textContent = '复制未成功，请手动选择代码'; }
+   window.setTimeout(() => { button.textContent = '复制'; }, 2000);
   });
   pre.classList.add('has-copy-button'); pre.append(button);
  });
- const mathRegions = Array.from(document.querySelectorAll<HTMLElement>('.rich-content .katex-display, .rich-content .katex')).filter(element => !element.matches('.katex-display .katex'));
- function updateMathRegions() {
-  for (const element of mathRegions) {
-   const overflowing = element.scrollWidth > element.clientWidth + 1;
-   if (overflowing) {
-    element.tabIndex = 0;
-    element.setAttribute('role', 'region');
-    element.setAttribute('aria-label', '数学公式，可横向滚动');
-   } else {
-    element.removeAttribute('tabindex');
-    element.removeAttribute('role');
-    element.removeAttribute('aria-label');
+
+ const regions = Array.from(document.querySelectorAll<HTMLElement>('.rich-content .katex-display, .rich-content .katex')).filter(e => !e.matches('.katex-display .katex'));
+ const visible = new Set<HTMLElement>();
+ let mathQueued = false;
+ function measureMath() {
+  mathQueued = false;
+  const measured = Array.from(visible, element => ({ element, overflow: element.scrollWidth > element.clientWidth + 1 }));
+  for (const { element, overflow } of measured) {
+   element.classList.toggle('is-overflowing', overflow);
+   element.tabIndex = overflow ? 0 : -1;
+   if (overflow) { element.setAttribute('role','region'); element.setAttribute('aria-label','数学公式，左右滑动查看完整内容'); }
+   else { element.removeAttribute('role'); element.removeAttribute('aria-label'); element.removeAttribute('tabindex'); }
+   if (element.matches('.katex-display')) {
+    const hint = element.nextElementSibling?.matches('.math-scroll-hint') ? element.nextElementSibling : null;
+    if (overflow && !hint) { const label = document.createElement('span'); label.className = 'math-scroll-hint'; label.textContent = '↔ 左右滑动查看完整公式'; element.after(label); }
+    if (!overflow && hint) hint.remove();
    }
   }
  }
- document.fonts.ready.then(updateMathRegions);
- window.addEventListener('resize', updateMathRegions,{passive:true});
+ function scheduleMath() { if (!mathQueued) { mathQueued = true; requestAnimationFrame(measureMath); } }
+ if ('IntersectionObserver' in window) {
+  const observer = new IntersectionObserver(entries => {
+   for (const entry of entries) { if (entry.isIntersecting) visible.add(entry.target as HTMLElement); else visible.delete(entry.target as HTMLElement); }
+   scheduleMath();
+  }, { rootMargin: '400px' });
+  regions.forEach(element => observer.observe(element));
+ } else { regions.forEach(element => visible.add(element)); scheduleMath(); }
+ document.fonts.ready.then(scheduleMath);
+ window.addEventListener('resize', scheduleMath, { passive: true });
 </script>
 <style is:global>
- .rich-content .katex { font-size: 1.04em; max-width: 100%; display: inline-block; vertical-align: middle; overflow-x: auto; overflow-y: hidden; }
- .rich-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: 10px 4px; max-width: 100%; }
+ .rich-content .katex { font-size: 1.04em; max-width: 100%; display: inline-block; vertical-align: middle; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+ .rich-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: 12px 4px; max-width: 100%; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
  .rich-content .katex-display > .katex { white-space: nowrap; display: block; max-width: none; overflow: visible; }
- .rich-content .katex, .rich-content .katex-display { scrollbar-width: none; }
- .rich-content .katex::-webkit-scrollbar, .rich-content .katex-display::-webkit-scrollbar { display: none; }
- .rich-content [aria-label="数学公式，可横向滚动"]:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
- .code-copy { position: absolute; top: 12px; right: 12px; min-height: 30px; padding: 3px 11px; font-family: var(--font-sans); font-size: 11px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 5px; color: var(--color-ink-soft); background: var(--color-paper); transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth),border-color .2s var(--ease-smooth); }
+ .rich-content .is-overflowing:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
+ .rich-content .math-scroll-hint { display: block; margin-top: 4px !important; text-align: right; font-family: var(--font-sans); font-size: var(--text-caption); line-height: 1.6; color: var(--color-ink-soft); }
+ .code-copy { position: absolute; top: 10px; right: 12px; min-height: 34px; padding: 4px 12px; font-family: var(--font-sans); font-size: 12px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 5px; color: var(--color-ink-soft); background: var(--color-paper); }
  .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
 </style>

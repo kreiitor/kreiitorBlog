@@ -9,7 +9,7 @@ import { withBase } from '../utils/url';
 <style>
  .search-layout { padding-top: 70px; display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 85px; min-height: 530px; }
  aside { margin-top: 8px; padding: 28px; border-left: 1px solid var(--color-line); } aside h2 { margin-top: 18px; font-size: 26px; line-height: 1.7; }
- aside p:not(.eyebrow) { margin-top: 18px; color: var(--color-ink-soft); font-size: 12px; line-height: 2; } aside a { display: flex; margin-top: 20px; font-size: 11px; }
+ aside p:not(.eyebrow) { margin-top: 18px; color: var(--color-ink-soft); font-size: 12px; line-height: 2; } aside a { display: flex; margin-top: 20px; font-size: var(--text-caption); }
  @media (max-width: 900px) { .search-layout { gap: 35px; grid-template-columns: minmax(0,1fr) 230px; } }
- @media (max-width: 700px) { .search-layout { padding-top: 40px; grid-template-columns: 1fr; gap: 30px; } aside { border-left: 0; border-top: 1px solid var(--color-line); padding: 25px 0 0; } }
+ @media (max-width: 700px) { .search-layout { padding-top: 36px; grid-template-columns: 1fr; gap: 30px; } aside { display: none; } }
 </style>

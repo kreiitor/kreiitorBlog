@@ -1,0 +1,91 @@
+---
+import type { PostEntry } from '../utils/content';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ReadingTools from './ReadingTools.astro';
+import GiscusComments from './GiscusComments.astro';
+import MathLabel from './MathLabel.astro';
+import TagLink from './TagLink.astro';
+import { getHeadingLabels, getReadingTime } from '../utils/content';
+import { getLearningSeries } from '../utils/series';
+import { getReadingParts, readingPath } from '../utils/reading.mjs';
+import { formatDate } from '../utils/date';
+import { withBase } from '../utils/url';
+import 'katex/dist/katex.min.css';
+import '../styles/code-fonts.css';
+interface Props { post: PostEntry; partNumber?: number; }
+const { post, partNumber = 1 } = Astro.props;
+const { parts, headings, allHeadings } = await getReadingParts(post, import.meta.env.BASE_URL);
+const part = parts[partNumber - 1];
+const sourceLabels = getHeadingLabels(post.body ?? '');
+const toc = headings.map((heading, i) => ({ ...heading, text: sourceLabels[i] ?? heading.text, href: withBase(readingPath(post.id, heading.part)) + '#' + heading.slug }));
+const group = post.data.series ? getLearningSeries(await getCollection('series'), await getCollection('posts')).find(item => item.entry.id === post.data.series) : undefined;
+const seriesHref = group ? `/notes/${group.entry.id}/` : '/blog/';
+const chapterIndex = group?.chapters.findIndex(item => item.id === post.id) ?? -1;
+const previousChapter = group?.chapters[chapterIndex - 1];
+const nextChapter = group?.chapters[chapterIndex + 1];
+const previousPart = parts[partNumber - 2];
+const nextPart = parts[partNumber];
+const previous = previousPart ? { href: previousPart.path, title: previousPart.title || post.data.title, label: '上一节' } : previousChapter ? { href: `/blog/${previousChapter.id}/`, title: previousChapter.data.title, label: '上一章' } : undefined;
+const next = nextPart ? { href: nextPart.path, title: nextPart.title || post.data.title, label: '下一节' } : nextChapter ? { href: `/blog/${nextChapter.id}/`, title: nextChapter.data.title, label: '下一章' } : undefined;
+const legacyAnchors = Object.fromEntries(allHeadings.filter(h => h.part !== partNumber).map(h => [h.slug, withBase(readingPath(post.id, h.part)) + '#' + h.slug]));
+---
+<BaseLayout title={partNumber > 1 ? `${post.data.title} · ${partNumber}/${parts.length}` : post.data.title} description={post.data.description} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1}>
+ <ReadingTools/>
+ <section class="page-shell reading-shell">
+  <a href={withBase(seriesHref)} class="text-link back-link">← {group ? group.entry.data.title : '全部札记'}</a>
+  <div class="article-layout">
+   <article data-pagefind-body data-reading-article data-article-slug={post.id} data-article-title={post.data.title} data-article-description={post.data.description} data-article-type={post.data.category === 'course' ? '学习笔记' : '博客文章'} data-pagefind-meta="slug[data-article-slug], title[data-article-title], description[data-article-description], type[data-article-type]">
+    <header class:list={['article-header', {'article-continuation': partNumber > 1}]} data-pagefind-ignore={partNumber > 1 || undefined}>
+     <span data-pagefind-meta="type" class="sr-only">{post.data.category === 'course' ? '学习笔记' : '博客文章'}</span>
+     <p class="eyebrow">{group ? `${group.entry.data.englishTitle ?? group.entry.data.title} / ${String(chapterIndex + 1).padStart(2,'0')}` : 'FIELD NOTES'}</p>
+     <h1 data-pagefind-meta="title" data-pagefind-weight="8">{post.data.title}</h1>
+     <p class="article-summary" data-pagefind-meta="description">{post.data.description}</p>
+     <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <span>· 更新于 {formatDate(post.data.updatedDate)}</span>}</div>
+     <div class="article-tags">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
+    </header>
+    {parts.length > 1 && <nav class="reading-parts" data-pagefind-ignore aria-label="分节阅读"><span>分节阅读 <strong>{String(partNumber).padStart(2,'0')} / {String(parts.length).padStart(2,'0')}</strong></span><div>{parts.map(p => <a href={withBase(p.path)} aria-current={p.number === partNumber ? 'page' : undefined} aria-label={`第 ${p.number} 节：${p.title || '开始阅读'}`}>{p.number}</a>)}</div><select class="reading-select" data-reading-select aria-label="选择阅读小节">{parts.map(p => <option value={withBase(p.path)} selected={p.number === partNumber}>{String(p.number).padStart(2,'0')} · {p.title || '开始阅读'}</option>)}</select></nav>}
+    <details class="mobile-toc" data-pagefind-ignore><summary>本篇目录 · {toc.length} 个小节</summary><nav aria-label="文章目录">{toc.map(h => <a href={h.href}><MathLabel text={h.text}/></a>)}</nav></details>
+    {partNumber === 1 && post.data.category !== 'course' && post.data.cover && <img src={withBase(post.data.cover)} alt="" class="article-cover" width="800" height="420" fetchpriority="high"/>}
+    <div class="rich-content article-body" set:html={part.html}/>
+    {(previous || next) && <nav class="chapter-nav" data-pagefind-ignore aria-label="继续阅读"><div>{previous && <a href={withBase(previous.href)}><span>← {previous.label}</span><strong>{previous.title}</strong></a>}</div><div>{next && <a href={withBase(next.href)}><span>{next.label} →</span><strong>{next.title}</strong></a>}</div></nav>}
+    {partNumber === parts.length && <div data-pagefind-ignore><GiscusComments articlePath={withBase(readingPath(post.id))}/></div>}
+   </article>
+   <aside data-pagefind-ignore><nav class="article-toc" aria-label="本篇目录"><p class="eyebrow">ON THIS PAGE / 本篇目录</p>{toc.map(h => <a href={h.href} data-toc-link data-part={h.part}><MathLabel text={h.text}/></a>)}{group && <a href={withBase(seriesHref)} class="toc-series">完整学习路径 ↗</a>}</nav></aside>
+  </div>
+ </section>
+ <script is:inline define:vars={{ legacyAnchors }}>
+  function resolveSection() { if (location.hash) {
+   let fragment;
+   try { fragment = decodeURIComponent(location.hash.slice(1)); } catch {}
+   if (fragment && legacyAnchors[fragment]) location.replace(legacyAnchors[fragment]);
+  } }
+  resolveSection();
+  window.addEventListener('hashchange', resolveSection);
+ </script>
+</BaseLayout>
+<script>
+ const select = document.querySelector<HTMLSelectElement>('[data-reading-select]');
+ select?.addEventListener('change',() => { location.href = select.value; });
+</script>
+<style>
+ .reading-shell { padding-top: 48px; }
+ .article-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+ .article-cover { margin-top: 28px; }
+ .article-continuation h1 { font-size: 26px; margin-block: 14px; }
+ .article-continuation .article-summary,.article-continuation .card-meta,.article-continuation .article-tags { display: none; }
+ .reading-select { display: none; }
+ .reading-parts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--color-line); font-size: 12px; color: var(--color-ink-soft); }
+ .reading-parts strong { margin-left: 10px; color: var(--color-accent-strong); font-weight: 500; font-variant-numeric: tabular-nums; }
+ .reading-parts > div { display: flex; flex-wrap: wrap; gap: 4px; }
+ .reading-parts a { display: grid; place-items: center; min-width: 36px; min-height: 36px; border-radius: 5px; }
+ .reading-parts a:hover { background: var(--color-accent-soft); }
+ .reading-parts a[aria-current] { background: var(--color-ink); color: var(--color-paper); }
+ .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-line); padding: 26px 0; margin-bottom: 36px; }
+ .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
+ .chapter-nav strong { font-weight: 500; font-size: 15px; line-height: 1.8; }
+ .chapter-nav span { color: var(--color-ink-soft); }
+ .chapter-nav > div:last-child { text-align: right; }
+ .toc-series { margin-top: 24px; }
+ @media (max-width: 600px) { .reading-shell { padding-top: 32px; } .reading-parts > div { display: none; } .reading-select { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--color-line-strong); border-radius: 5px; background: var(--color-paper); font-family: var(--font-sans); font-size: 16px; } .chapter-nav { gap: 18px; } }
+</style>

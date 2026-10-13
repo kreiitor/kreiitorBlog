@@ -1,25 +1,20 @@
-# 字体加载与再生成
+# 字体与语料子集
 
-字体组合与设计保持不变。`src/styles/fonts.css` 和 `src/assets/fonts/` 是已提交的生成资源，普通本地构建和 GitHub Actions 无需 Python，也不会从外部下载字体。
+研究札记保留 Source Serif 4 / 思源宋体的阅读气质。英文界面用 DM Sans，中文界面用苹方、微软雅黑等系统字体；代码用 IBM Plex Mono。英文正体和真斜体保留 Source Serif 4 的光学尺寸轴与 400–600 字重范围。
 
-2026-10-12 本地验证：以相同的 579px 首页视口、不同本地服务端口隔离浏览器缓存，通过静态服务器记录实际 WOFF2 请求。接手时的版本为 33 个请求 / 2,254,904 字节（包括两份无法被 CSS 复用的 preload 文件）；优化后为 9 个请求 / 858,216 字节，字体传输量减少约 62%。这是首页样本，长文章使用的回退字体数量随内容而变，不代表全站资产体积减少 62%。
+中文宋体以当前 `src/` 中的正文、标题、强调和界面文字生成：常规字重 400 按使用频率分片，强调字重 600 将共享标题字形与其他标题/强调字形分开。`Journal Serif SC` 是这套思源宋体子集的内部名称。新增生僻字会显示系统宋体回退，更新子集后使用统一的站点字形。
 
-- Source Serif 4 的正体与真斜体保留全部原有字符分片和 `opsz` 光学尺寸轴，实际裁剪 `wght` 至 400–600，覆盖当前正文、强调和标题字重。不是仅修改 CSS 的字重声明。
-- 根据构建后首页正文、所有页面标题和共享导航/页脚收集中文字形，生成 Noto Serif SC / Noto Sans SC 的合并子集。现有 Fontsource 分片作为完整字符回退；新增标题和生僻字无需等待子集更新即可显示。
-- 两个首屏衬线字体由 Vite 的 `?url` 导入预加载，地址与 CSS 的哈希资源一致，避免复制到 `public/` 后的重复下载。全部字体使用 `font-display: swap`。
-- 原来的约 11.8 MB 是构建字体资源总量，不代表单页全部下载。中文原始分片按 `unicode-range` 使用；优化目标是实际请求数量与传输量，而不是删除未访问文章所需的字符。
+2026-10-13 初次生成的八个字体资产共约 863KB。中文常规语料约 414KB，共享标题约 102KB，其他强调约 149KB；其余是两份 Source Serif 4 与 DM Sans。这是全站资源量，单页实际下载由字形、字重、斜体和页面内容决定。按语料准确覆盖正文比随机请求大量中文分片更稳定；不以固定的 150KB 作为不切实际的全站预算。
 
-更新标题后可选择重新生成子集（不是发布必需步骤）：
+`src/styles/fonts.css` 与 `src/assets/fonts/` 已提交。普通本地构建和 GitHub Actions 不需要 Python，也不下载字体。更新文章或界面后可重新生成：
 
 ```sh
-npm ci
-npm run build
 python -m pip install fonttools==4.66.1 brotli==1.2.0
-python scripts/prepare-fonts.py
+npm run fonts:prepare
 npm run check
 npm run build
 ```
 
-Google Fonts 上游固定版本、字体大小和 SHA-256 记录在 `docs/font-manifest.json`。再生成脚本使用锁定的 Fontsource 依赖与该固定版本；下载缓存位于被忽略的 `.artifacts/font-sources/`。字体许可证保留在 `public/fonts/licenses/`。
+脚本直接扫描源文件，无需先构建。思源宋体上游固定为 `docs/font-manifest.json` 的 Google Fonts revision，下载缓存位于忽略的 `.artifacts/font-sources/`。字体许可证在 `public/fonts/licenses/` 保留。所有站点文字字体使用 `font-display: swap`，不作全站字体预加载；小字体也作为独立资源缓存。
 
-将来增加超出 400–600 的设计字重时，应同步调整生成脚本和 CSS 声明并重新生成，避免浏览器选择最近字重。中文阅读正文的合并子集只覆盖标题和首页的字形，其他正文字符仍按需使用原有完整回退。
+KaTeX 与代码字体样式只在阅读页引入。新增超出 400–600 的英文设计字重或新增中文字重时，同步修改生成脚本、CSS 声明和资产。

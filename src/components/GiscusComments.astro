@@ -1,6 +1,8 @@
 ---
 import { giscusConfig, isGiscusConfigured } from '../utils/giscus';
 import { siteConfig } from '../data/site';
+interface Props { articlePath?: string; }
+const { articlePath = '' } = Astro.props;
 ---
 <section class="zen-card-flat comments-panel">
  <p class="eyebrow">CONTINUE THE CONVERSATION</p><h2 class="mt-3 text-xl">讨论与反馈</h2><p class="mt-3 text-sm text-[color:var(--color-ink-soft)]">欢迎围绕文章里的问题、思路和实现细节继续交流。</p>
@@ -10,11 +12,17 @@ import { siteConfig } from '../data/site';
  .comments-panel { padding: 28px; }
  @media (max-width: 600px) { .comments-panel { padding: 22px; } }
 </style>
-{isGiscusConfigured && <script is:inline define:vars={{ giscusConfig }}>
+{isGiscusConfigured && <script is:inline define:vars={{ giscusConfig, articlePath }}>
  const host=document.getElementById('giscus-container');
- if(host && !host.querySelector('script')) {
+ function loadComments() { if(host && !host.querySelector('script')) {
   const script=document.createElement('script');script.src='https://giscus.app/client.js';script.async=true;script.crossOrigin='anonymous';
-  const attributes={'repo':giscusConfig.repo,'repo-id':giscusConfig.repoId,'category':giscusConfig.category,'category-id':giscusConfig.categoryId,'mapping':giscusConfig.mapping,'strict':giscusConfig.strict,'reactions-enabled':giscusConfig.reactionsEnabled,'emit-metadata':giscusConfig.emitMetadata,'input-position':giscusConfig.inputPosition,'theme':'light','lang':giscusConfig.lang};
+  const sharedPath = articlePath && giscusConfig.mapping === 'pathname';
+  const term = articlePath.substring(1).replace(/\.\w+$/, '');
+  const attributes={'repo':giscusConfig.repo,'repo-id':giscusConfig.repoId,'category':giscusConfig.category,'category-id':giscusConfig.categoryId,'mapping':sharedPath ? 'specific' : giscusConfig.mapping,'term':sharedPath ? term : '', 'strict':giscusConfig.strict,'reactions-enabled':giscusConfig.reactionsEnabled,'emit-metadata':giscusConfig.emitMetadata,'input-position':giscusConfig.inputPosition,'theme':'light','lang':giscusConfig.lang};
   Object.entries(attributes).forEach(([key,value])=>script.setAttribute('data-'+key,value));host.append(script);
- }
+ } }
+ if(host && 'IntersectionObserver' in window) {
+  const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){loadComments();observer.disconnect();}},{rootMargin:'300px'});
+  observer.observe(host);
+ }else loadComments();
 </script>}

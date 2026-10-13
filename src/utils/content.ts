@@ -1,4 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
+import { canonicalTag } from './tags';
 
 export type PostEntry = CollectionEntry<'posts'>;
 export type ProjectEntry = CollectionEntry<'projects'>;
@@ -65,7 +66,7 @@ export function getTagIndex(posts: PostEntry[], projects: ProjectEntry[]) {
 	const index = new Map<string, { posts: PostEntry[]; projects: ProjectEntry[] }>();
 
 	for (const post of getPublishedPosts(posts)) {
-		for (const tag of post.data.tags) {
+		for (const tag of new Set(post.data.tags.map(canonicalTag))) {
 			const current = index.get(tag) ?? { posts: [], projects: [] };
 			current.posts.push(post);
 			index.set(tag, current);
@@ -73,7 +74,7 @@ export function getTagIndex(posts: PostEntry[], projects: ProjectEntry[]) {
 	}
 
 	for (const project of getProjects(projects)) {
-		for (const tag of project.data.tags) {
+		for (const tag of new Set(project.data.tags.map(canonicalTag))) {
 			const current = index.get(tag) ?? { posts: [], projects: [] };
 			current.projects.push(project);
 			index.set(tag, current);

@@ -33,16 +33,16 @@ const { Content } = await render(entry);
  .course-intro h1 { font-size: 25px; margin-top: 10px; }
  .course-english { font-family: var(--font-editorial); font-size: 24px; line-height: 1.35; color: var(--color-accent); margin-top: 10px; }
  .course-description { margin-top: 25px; font-size: 12px; line-height: 2; color: var(--color-ink-soft); }
- .course-facts { display: flex; flex-wrap: wrap; gap: 16px; font-size: 10px; margin: 20px 0; color: var(--color-ink-soft); }
+ .course-facts { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--text-caption); margin: 20px 0; color: var(--color-ink-soft); }
  .course-intro .zen-btn { width: 100%; }
- .source-note { margin-top: 23px; font-size: 10px; line-height: 1.9; color: var(--color-ink-soft); }
+ .source-note { margin-top: 23px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
  .series-overview { margin-bottom: 30px; }
  .chapter-label { padding-bottom: 18px; border-bottom: 1px solid var(--color-line); }
  .chapter-row { padding: 22px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 8px; transition: background-color .2s var(--ease-smooth); }
  .chapter-row:hover { background: var(--color-surface-hover); }
  .chapter-number { font-family: var(--font-editorial); font-size: 24px; color: var(--color-accent); line-height: 1.4; }
  .chapter-row h3 { font-family: var(--font-sans); font-size: 14px; font-weight: 500; transition: color .2s var(--ease-smooth); }
- .chapter-row p { margin-top: 7px; font-size: 11px; line-height: 1.9; color: var(--color-ink-soft); }
+ .chapter-row p { margin-top: 7px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
  .chapter-arrow { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
  .chapter-row:hover h3 { color: var(--color-accent); }
  .chapter-row:hover .chapter-arrow { transform: translate(3px,-3px); }

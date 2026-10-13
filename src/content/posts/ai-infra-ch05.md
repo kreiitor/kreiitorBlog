@@ -13,8 +13,6 @@ order: 6
 cover: /covers/series-ai-infra.svg
 ---
 
-# 第 5 章 算子与运行时
-
 > 本笔记对应原书《深入理解 AI Infra：量化分析与系统设计》第 5 章「算子与运行时」（原书印刷 p.162 起）。
 
 第 4 章回答的是加速器「有什么」：多少计算能力、多大存储容量、多高的传输带宽。这一章接着问程序「怎么用」这些资源，同一个矩阵乘，循环怎么写、块切多大、放在哪一级存储、算子之间怎么交接，决定了它实际要搬多少字节、能并行多少任务、最后花多长时间。作者开章就把全章的量级摊开：本章的矩阵乘算例需要约 103 GFLOPs 的运算，输入、权重和输出总共只占 128 MiB，可一种分块实现的读写量却达到约 3 GiB（印刷 p.162）。这一章在书里的位置也很清楚，下一章会把这里的三种切法推广到多卡与通信，第 5.2.4 节已经预告：第 6.1.4 节把样本、序列、特征、层、专家这些分工方向与这里的三种切法对应起来，第 6.2 节再逐一推导各自的通信。全章以一段 FFN 为例往下走，先看主机如何发起计算、加速器如何完成任务，再分析矩阵乘的循环与分块，以及相邻算子如何共享中间结果，然后讨论编译器和运行时如何实现这些优化，收在一道完整请求能省下多少时间上。
@@ -109,11 +107,15 @@ CPU 能够提前提交下一项任务，加速器却只有在输入到达后才�
 
 **例 5-1：主机到 GPU 的输入传输需要多久？** $[8192, 4096]$ 的 BF16 张量占 $8192 \times 4096 \times 2 = 64$ MiB。RTX PRO 6000 经 PCIe Gen5 x16 接到主机，每个方向的标称带宽为 64 GB/s，传输时间为：
 
-$$T_{\text{H2D}} = \frac{64\ \text{MiB}}{64\ \text{GB/s}} \approx 1.05\ \text{ms}.$$
+$$
+T_{\text{H2D}} = \frac{64\ \text{MiB}}{64\ \text{GB/s}} \approx 1.05\ \text{ms}.
+$$
 
 这个算术值得自己动手复算一遍，它把「单位」的坑暴露得很清楚。$8192 \times 4096 = 33{,}554{,}432$ 个元素，每个元素 2 bytes，合计 $67{,}108{,}864$ bytes；而 $64$ MiB $= 64 \times 2^{20} = 67{,}108{,}864$ bytes（这一步换算是笔记补的），正好对上。再除以 $64$ GB/s：
 
-$$T_{\text{H2D}} = \frac{67{,}108{,}864\ \text{bytes}}{64 \times 10^{9}\ \text{bytes/s}} \approx 1.049 \times 10^{-3}\ \text{s} \approx 1.05\ \text{ms}.$$
+$$
+T_{\text{H2D}} = \frac{67{,}108{,}864\ \text{bytes}}{64 \times 10^{9}\ \text{bytes/s}} \approx 1.049 \times 10^{-3}\ \text{s} \approx 1.05\ \text{ms}.
+$$
 
 这里 MiB 用 $2^{20}$、GB/s 用 $10^{9}$，两者混用是存储与带宽估算里的常见写法（MB 与 MiB 差约 4.9%，在量级估算里可以接受，做精确对比时则要统一口径）。原文在 5.2.1 节也专门交代了「MiB 为 $2^{20}$ bytes」。
 
@@ -186,11 +188,15 @@ CUDA 的 stream（流）是一串按顺序执行的加速器任务。把 H2D 和
 
 例 5-2 的核心是一个只优化局部的收益上限问题。整次调用 35 μs 由四段构成：
 
-$$T_{\text{总}} = T_{\text{提交}} + T_{\text{H2D}} + T_{\text{kernel}} + T_{\text{D2H}} = 3 + 8 + 20 + 4 = 35\ \mu s.$$
+$$
+T_{\text{总}} = T_{\text{提交}} + T_{\text{H2D}} + T_{\text{kernel}} + T_{\text{D2H}} = 3 + 8 + 20 + 4 = 35\ \mu s.
+$$
 
 把 $T_{\text{kernel}}$ 从 20 μs 压到 5 μs（提升 4 倍），总时间变成：
 
-$$T'_{\text{总}} = 3 + 8 + 5 + 4 = 20\ \mu s,\qquad \text{加速比} = \frac{35}{20} = 1.75 \approx 1.8.$$
+$$
+T'_{\text{总}} = 3 + 8 + 5 + 4 = 20\ \mu s,\qquad \text{加速比} = \frac{35}{20} = 1.75 \approx 1.8.
+$$
 
 原文写「加速比约为 1.8」，$35/20 = 1.75$，四舍五入到一位小数即 1.8（这一步是笔记补的）。剩下的 15 μs 是 $3+8+4$，即提交与两次复制，不会因为 kernel 变快而减少。这就是为什么做优化前必须先建立时间线：kernel 只占总时间的 57%（20/35），它的改进空间就有天花板。
 
@@ -241,9 +247,13 @@ warp 的定义要交代一下：一起发射的 32 个线程。SM 不逐个线�
 
 占用率之所以重要，是因为独立的访存请求都来自驻留的 warp：在途请求足够多，一个请求等待返回时，接口仍被其他请求占满，这称为延迟隐藏。第 4.3.3 节的 Little 定律给出维持带宽所需的在途字节数，即带宽 × 延迟。取 H100 显存带宽 3.35 TB/s、延迟 600 ns，整卡需要约 2.01 MB 在途，平摊到 132 个 SM，每个 SM 要保持约 15.2 KB 在途。再算驻留的 warp 能提供多少：一个 warp 的一条加载指令让 32 个线程各取 16 bytes，共 512 bytes；每个 warp 最多挂起 4 条未完成的加载；16 个 warp 合计 32 KiB。
 
-$$B_{\text{need}} = \frac{3.35\ \text{TB/s} \times 600\ \text{ns}}{132} \approx 15.2\ \text{KB},$$
+$$
+B_{\text{need}} = \frac{3.35\ \text{TB/s} \times 600\ \text{ns}}{132} \approx 15.2\ \text{KB},
+$$
 
-$$B_{\text{have}} = 16 \times 4 \times 512\ \text{字节} = 32\ \text{KiB}.$$
+$$
+B_{\text{have}} = 16 \times 4 \times 512\ \text{字节} = 32\ \text{KiB}.
+$$
 
 可用在途字节是需求的 2.15 倍，只驻留 8 个 warp（一个线程块）也已足够。第 5.2.2 节会遇到「大块少读数据却可能变慢」的现象，这里给出它的定量形式：工作集越大，驻留块越少，可用的在途字节越少；一旦低于需求，有效带宽就降为可用在途字节除以延迟，接口带宽再高也用不上。
 
@@ -373,11 +383,15 @@ for i in range(M):
 
 内层 $k$ 循环每执行完一遍，得到一个输出。一次乘加计两个 FLOPs，于是算完全部输出需要的运算量为
 
-$$F_{\text{gemm}} = 2MKN \approx 103\ \text{GFLOPs}.$$
+$$
+F_{\text{gemm}} = 2MKN \approx 103\ \text{GFLOPs}.
+$$
 
 用来比较的基准，是三份 BF16 矩阵各经过接口一次的读写量：
 
-$$V_{\text{once}} = 2(MK + KN + MN) = (8+96+24)\ \text{MiB} = 128\ \text{MiB}.$$
+$$
+V_{\text{once}} = 2(MK + KN + MN) = (8+96+24)\ \text{MiB} = 128\ \text{MiB}.
+$$
 
 其中 MiB 是 $2^{20}$ bytes。以各输入读一次、输出写一次为基准，下文就能算出分块究竟多搬了多少数据。
 
@@ -420,13 +434,17 @@ A 块里的每个元素可用于 $n$ 列输出，W 块里的每个元素可用�
 
 例 5-3 算的就是这笔账：图中的 A 输入块、W 权重块和输出累加器分别占 $2mk$、$2kn$ 和 $4mn$ bytes，只用一组输入缓冲时，局部存储需求为
 
-$$S = \underbrace{2mk}_{A\text{块}} + \underbrace{2kn}_{W\text{块}} + \underbrace{4mn}_{\text{累加器}}\ \text{bytes}.$$
+$$
+S = \underbrace{2mk}_{A\text{块}} + \underbrace{2kn}_{W\text{块}} + \underbrace{4mn}_{\text{累加器}}\ \text{bytes}.
+$$
 
 取 $k=32$，先用 $64\times64$ 输出块：A 块和 W 块各占 4 KiB，累加器占 16 KiB，合计 24 KiB。把输出块扩大到 $128\times128$，两份输入各占 8 KiB，累加器占 64 KiB，合计涨到 80 KiB。输入复用变多了，输出累加器却增长得更快。
 
 接着算全矩阵的读写，这里假设每个输出块独立读取自己的输入，不考虑不同输出块之间的缓存复用。$N$ 方向有 $N/n$ 个列块，每个列块都要遍历 $A$；$M$ 方向有 $M/m$ 个行块，每个行块都要遍历 $W$。$C$ 只写出一次，于是
 
-$$V = \underbrace{\frac{2MKN}{n}}_{A\text{的重复读取}} + \underbrace{\frac{2KNM}{m}}_{W\text{的重复读取}} + \underbrace{2MN}_{C\text{写出}}.$$
+$$
+V = \underbrace{\frac{2MKN}{n}}_{A\text{的重复读取}} + \underbrace{\frac{2KNM}{m}}_{W\text{的重复读取}} + \underbrace{2MN}_{C\text{写出}}.
+$$
 
 $64\times64$ 输出块把输出划成 16 个行块、192 个列块。192 个列块各读一遍 8 MiB 的 $A$，共 1536 MiB；16 个行块各读一遍 96 MiB 的 $W$，也是 1536 MiB。加上 24 MiB 输出，总量 3096 MiB，这就是本节开头约 3 GiB 的来源。
 
@@ -452,7 +470,9 @@ $64\times64$ 输出块把输出划成 16 个行块、192 个列块。192 个列�
 
 第 5.1.5 节已经算过这一点：驻留的 warp 提供在途访存请求，在途字节不足时有效带宽就低于接口带宽。假设两种实现都受这一层带宽限制，有效带宽分别为 $B_{64}$ 和 $B_{128}$，则
 
-$$\frac{T_{128}}{T_{64}} = \frac{1560}{3096}\cdot\frac{B_{64}}{B_{128}}.$$
+$$
+\frac{T_{128}}{T_{64}} = \frac{1560}{3096}\cdot\frac{B_{64}}{B_{128}}.
+$$
 
 带宽相同的话，时间接近减半；大块如果只能获得原来四成的带宽，时间比约为 $0.504/0.4 = 1.26$，耗时反而增加约 26%。工程上的顺序是先按容量排除容纳不下的方案，再按访问量缩小比较范围，最后测量实际执行效率，第 5.4 节会把这一过程交给编译器。
 
@@ -666,7 +686,9 @@ SiLU 和 $\odot$（逐元素乘）都是逐元素运算。$Z[i,j]$ 只依赖 $G[
 
 将四块推广到 $n$ 块：首块要先搬移，随后每隔较慢阶段所需的时间完成一块，末块还需完成计算。因此
 
-$$T_{\text{pipe}} = t_m + (n-1)\max(t_m, t_c) + t_c.$$
+$$
+T_{\text{pipe}} = t_m + (n-1)\max(t_m, t_c) + t_c.
+$$
 
 其中 $t_m$ 为每块搬移时间，$t_c$ 为每块计算时间。在刚才的例子中 $t_m > t_c$，搬移器从 0 连续忙到 5.16 μs，总时间为 $4\times1.29 + 0.28 \approx 5.44$ μs，计算单元只有约两成时间在工作。
 
@@ -728,15 +750,27 @@ FlashAttention 围绕这一逐块计算过程安排存储，减少长序列注�
 
 推广到一行分数，减去共同最大值可避免指数溢出。令
 
-$$\ell = \sum_j \exp(s_j - m),\qquad u = \sum_j \exp(s_j - m)V_j,$$
+$$
+\ell = \sum_j \exp(s_j - m),\qquad u = \sum_j \exp(s_j - m)V_j,
+$$
 
 最终输出为 $u/\ell$。新块到来后，把旧状态改到新的最大值基准，再加上新块贡献：
 
-$$m' = \max\big(m,\ \max(s)\big),$$
-$$r = \exp(m - m'),$$
-$$p_j = \exp(s_j - m'),$$
-$$\ell' = r\ell + \sum_j p_j,$$
-$$u' = ru + \sum_j p_j V_j.$$
+$$
+m' = \max\big(m,\ \max(s)\big),
+$$
+$$
+r = \exp(m - m'),
+$$
+$$
+p_j = \exp(s_j - m'),
+$$
+$$
+\ell' = r\ell + \sum_j p_j,
+$$
+$$
+u' = ru + \sum_j p_j V_j.
+$$
 
 右侧求和只遍历新块中的 $j$，旧块的全部贡献已经保存在 $\ell$ 与 $u$ 中，无需重新读回旧分数。
 
@@ -752,7 +786,9 @@ FlashAttention 正是利用这一递推关系省去了完整 $S$ 和 $P$ 的存�
 
 取 RTX PRO 6000 一个线程块可用的 99 KB 共享内存（101,376 bytes）作快速缓冲，一次保留 $a$ 行 $Q$ 与 FP32 输出累加器，分数块大小为 $a\times b$。$K$ 与 $V$ 按阶段复用同一个 $b\times d$ 输入槽，分数和概率复用一个 $a\times b$ 槽，另为逐行统计和更新暂存分配三个 FP32 向量。局部存储需求为：
 
-$$S = \underbrace{2ad}_{Q} + \underbrace{2bd}_{K/V\text{槽}} + \underbrace{4ab}_{\text{分数/概率}} + \underbrace{4ad}_{\text{输出累加器}} + \underbrace{12a}_{\text{逐行状态}} \le 101376.$$
+$$
+S = \underbrace{2ad}_{Q} + \underbrace{2bd}_{K/V\text{槽}} + \underbrace{4ab}_{\text{分数/概率}} + \underbrace{4ad}_{\text{输出累加器}} + \underbrace{12a}_{\text{逐行状态}} \le 101376.
+$$
 
 公式里每一项都要认得。$2ad$ 是 $a$ 行 $Q$（$a\times d$），BF16 每元素 2 bytes；$2bd$ 是 K 与 V 复用同一个槽，所以只算一份 $b\times d$ 的 BF16，这是一个很关键的容量技巧，脚注 18 明确说「K/V 复用输入槽和 S/P 复用临时槽」；$4ab$ 是分数和概率复用同一个槽，$a\times b$ 的 FP32；$4ad$ 是输出累加器 $a\times d$ 的 FP32，要一直留着累加，直到扫描结束；$12a$ 是三个 FP32 向量，每个 $a$ 个分量，$3\times4\times a = 12a$。合并同类项可得 $S = 780a + 256b + 4ab$（把 $4ad$ 展开为 $512a$，与 $2ad = 256a$、$12a$ 相加得 $780a$）。这个化简形式让 $a$ 和 $b$ 怎么互相牵制一目了然：$a$ 的系数很大，每行 780，因为每多一行 $Q$ 都要多存 $Q$、输出累加器和状态；$b$ 的系数是 256（K/V 槽）加 $4a$（分数块），当 $a$ 大时，$b$ 的边际成本主要由 $4a$ 决定。所以「$b$ 小则 $a$ 大」这条规律的来源是：减小 $b$ 省下的容量（每行 $256+4a$）可以换来更多 $Q$ 行（每行 780 bytes）。
 
@@ -954,7 +990,9 @@ AKG 是华为开发并已开源的神经网络算子自动生成编译器，面�
 
 先拿一组固定数字看这项安排带来的变化。令 $C = AB$，三个矩阵的形状都是 $4096 \times 4096$，A、B 使用 BF16、每元素 2 bytes，C 使用 FP32、每元素 4 bytes。一次矩阵乘法需要
 
-$$F = 2 \times 4096^{3} \approx 137.4\ \text{GFLOPs}.$$
+$$
+F = 2 \times 4096^{3} \approx 137.4\ \text{GFLOPs}.
+$$
 
 最直接的循环是：
 
@@ -969,7 +1007,9 @@ for i in range(4096):
 
 如果每个输出元素都从片外读取 A、B 的操作数，那么输入读取量为
 
-$$4096^{2} \times 4096 \times (2 + 2)\ \text{字节} = 256\ \text{GiB}.$$
+$$
+4096^{2} \times 4096 \times (2 + 2)\ \text{字节} = 256\ \text{GiB}.
+$$
 
 这段循环只表达了数学计算，没有表达数据复用。取输出 tile 为 $B_M = B_N = 64$、归约 tile 为 $B_K = 32$，则输出分块数为 $64 \times 64 = 4096$；每个输出 tile 需要 $4096/32 = 128$ 个归约 tile；一个 A 分块和一个 B 分块各占 $64 \times 32 \times 2 = 4096\ \text{字节} = 4\ \text{KiB}$。若每个输出 tile 沿 K 维读取一组 A/B tile，它的输入工作集为 $128 \times (4 + 4) = 1024\ \text{KiB}$；全部输出 tile 的输入读取量为 $4096 \times 1024\ \text{KiB} = 4\ \text{GiB}$。C 的写回量是 $4096^{2} \times 4 = 64\ \text{MiB}$。
 
@@ -992,15 +1032,21 @@ for io in range(64):
 
 一次循环执行会展开成许多语句实例。上面的乘加语句可以记作 $S(i, j, k)$；例如 $S(17, 29, 4)$ 表示计算 $A[17, 4] \times B[4, 29]$ 的那一次实例。所有合法实例组成迭代域：
 
-$$D = \{\,S(i,j,k) \mid 0 \le i < 4096,\ 0 \le j < 4096,\ 0 \le k < 4096\,\}.$$
+$$
+D = \{\,S(i,j,k) \mid 0 \le i < 4096,\ 0 \le j < 4096,\ 0 \le k < 4096\,\}.
+$$
 
 isl schedule 做的事情，是给每个实例分配一个或多个整数坐标，把坐标按字典序排列后，就得到新的执行顺序。原始循环可以写成：
 
-$$S(i,j,k) \mapsto (i, j, k).$$
+$$
+S(i,j,k) \mapsto (i, j, k).
+$$
 
 分块后的 schedule 写成：
 
-$$S(i,j,k) \mapsto \left(\left\lfloor \frac{i}{64} \right\rfloor,\ \left\lfloor \frac{j}{64} \right\rfloor,\ \left\lfloor \frac{k}{32} \right\rfloor,\ i \bmod 64,\ j \bmod 64,\ k \bmod 32\right).$$
+$$
+S(i,j,k) \mapsto \left(\left\lfloor \frac{i}{64} \right\rfloor,\ \left\lfloor \frac{j}{64} \right\rfloor,\ \left\lfloor \frac{k}{32} \right\rfloor,\ i \bmod 64,\ j \bmod 64,\ k \bmod 32\right).
+$$
 
 前 3 个坐标分别是 $i_o$、$j_o$、$k_o$，后 3 个坐标是分块内的 $i_i$、$j_j$、$k_k$。按这个坐标的字典序执行，就会先选一个 $64 \times 64$ 输出 tile，再完成它的 128 个 K tile，之后再遍历分块内元素。这个映射保持每个实例和数组下标不变，只改变实例的执行时间坐标；归约依赖要求同一个 $(i, j)$ 的 K 维更新按合法顺序合并。
 
@@ -1020,9 +1066,15 @@ Domain {S(i,j,k)}
 
 同一个 schedule 可以直接写成数据搬移映射：
 
-$$A_{L1}[i_o, k_o, i_i, k_k] \leftarrow A[64 i_o + i_i,\ 32 k_o + k_k],$$
-$$B_{L1}[k_o, j_o, k_k, j_j] \leftarrow B[32 k_o + k_k,\ 64 j_o + j_j],$$
-$$C_{L0}[i_i, j_j] \leftarrow \sum_{k_k} A_{L0}[i_i, k_k]\, B_{L0}[k_k, j_j].$$
+$$
+A_{L1}[i_o, k_o, i_i, k_k] \leftarrow A[64 i_o + i_i,\ 32 k_o + k_k],
+$$
+$$
+B_{L1}[k_o, j_o, k_k, j_j] \leftarrow B[32 k_o + k_k,\ 64 j_o + j_j],
+$$
+$$
+C_{L0}[i_i, j_j] \leftarrow \sum_{k_k} A_{L0}[i_i, k_k]\, B_{L0}[k_k, j_j].
+$$
 
 左侧是片上 tile 的逻辑坐标，右侧是全局矩阵的地址。$A_{L1}$ 和 $B_{L1}$ 各需要 4 KiB，$C_{L0}$ 需要 16 KiB；如果使用双缓冲，输入槽位各需要 8 KiB。编译器可以据此判断 buffer 容量、插入搬移并安排复用点。
 
@@ -1162,7 +1214,9 @@ TVM 的自动调优根据硬件实测结果搜索分块、循环顺序等调度�
 
 原文推导：令输入形状为 A 的调用占比为 $p$。原实现的平均执行时间为 10 μs，新实现的平均执行时间为
 
-$$T_{\text{new}} = 5p + 20(1 - p) = 20 - 15p\ \ \mu\text{s}.$$
+$$
+T_{\text{new}} = 5p + 20(1 - p) = 20 - 15p\ \ \mu\text{s}.
+$$
 
 要使新实现平均时间更短，需满足 $20 - 15p < 10$，即 $p > 2/3$。图 5-25 的交点说明，只有当 A 占全部调用的比例超过 $2/3$ 时，新实现才更快。
 
@@ -1264,11 +1318,15 @@ vLLM 这个案例有三个点值得学。瓶颈位置的诊断：一步拆成 AP
 
 一般条件下，令输入数据量为 $X$、复制带宽为 $B$，图执行更快的条件为
 
-$$\frac{2X}{B} < 15\ \mu\text{s}.$$
+$$
+\frac{2X}{B} < 15\ \mu\text{s}.
+$$
 
 代入 $B = 1792\ \text{GB/s}$ 得：
 
-$$X < \frac{15 \times 10^{-6} \times 1.792 \times 10^{12}}{2}\ \text{字节} \approx 12.8\ \text{MiB}.$$
+$$
+X < \frac{15 \times 10^{-6} \times 1.792 \times 10^{12}}{2}\ \text{字节} \approx 12.8\ \text{MiB}.
+$$
 
 2 MiB 低于这一临界值，16 MiB 则超过。减少复制开销的两条办法：让前一个算子直接将结果写入图缓冲，或者从输入张量较小的位置开始捕获。因此，选择哪些操作组成一张图时，需要同时比较节省的主机提交时间与增加的输入复制时间（脚注 33：图重放的小输入复制、大输入复制与图执行取舍。复制带宽按源读加目标写的接口流量定义）。
 
@@ -1402,7 +1460,9 @@ decode 时这一点更为突出。batch 为 1 时，每个矩阵—向量乘都�
 
 设请求由串行阶段构成，其他阶段时间保持不变，热点占原时间的比例为 $f$，热点的加速比为 $s$。将原请求时间归一化为 1，新时间为 $(1 - f) + f/s$，整体加速为：
 
-$$S_{\text{request}} = \frac{1}{(1 - f) + f/s}.$$
+$$
+S_{\text{request}} = \frac{1}{(1 - f) + f/s}.
+$$
 
 算例：若热点占 20%，速度提高到原来的两倍后，总时间变为 $0.8 + 0.2/2 = 0.9$，加速比约为 1.11。继续把热点加快到十倍，总时间为 0.82；即使热点耗时降到零，其他阶段仍需原总时间的 0.8，整体加速上限为 1.25 倍。这就是第 1 章介绍的 **Amdahl 定律**，它解释了优化收益逐渐缩小的原因：热点耗时越短，其他阶段在总时间中所占的比例就越高。
 
@@ -1432,7 +1492,9 @@ $S_{\text{request}} = \dfrac{1}{(1-f) + f/s}$。热点占 20% 时，热点快 2 
 
 算例：设准备 10 μs 后，同时启动热点 A 和分支 B，分别需 60、40 μs；收尾需 10 μs，并等待两条分支都完成。原请求时间为
 
-$$T = 10 + \max(60, 40) + 10 = 80\ \mu s.$$
+$$
+T = 10 + \max(60, 40) + 10 = 80\ \mu s.
+$$
 
 将 A 加快四倍至 15 μs，B 仍需 40 μs，新时间为 $10 + \max(15, 40) + 10 = 60\ \mu s$。A 节省 45 μs，请求却只节省 20 μs，因为 B 接替 A 成为关键路径。A 缩至 40 μs 时，恰好与 B 同时结束；继续只优化 A，完成时间便停在 60 μs。该交点给出了单独优化 A 所能获得的最大收益。若要继续缩短请求，应优化 B，或减少准备和收尾。
 
@@ -1564,7 +1626,9 @@ decode 的改进发生在首输出之后，因此当前长输入请求的首 tok
 
 盈亏平衡点用差值就能推。融合每次少搬 $156 - 60 = \mathbf{96\ MiB}$，摊到 1024 行上，每行少搬 96 KiB。按 $1792\ \text{GB/s}$ 算，每行省下的访存时间是 $98{,}304 / 1.792\times10^{12} = 5.49\times10^{-8}\ \text{s} \approx 0.0549\ \mu s$。要盖住 5 μs 的固定开销，需要
 
-$$\text{行数} > \frac{5\ \mu s}{0.0549\ \mu s/\text{行}} \approx 91.2,$$
+$$
+\text{行数} > \frac{5\ \mu s}{0.0549\ \mu s/\text{行}} \approx 91.2,
+$$
 
 也就是至少约 92 行，这是笔记补的推算。
 
@@ -1578,7 +1642,9 @@ $$\text{行数} > \frac{5\ \mu s}{0.0549\ \mu s/\text{行}} \approx 91.2,$$
 
 先写在线统计量的更新规则，也就是 FlashAttention 的 $m$、$\ell$、$u$。设原最大值为 $m_{\text{old}}$、原指数和为 $\ell_{\text{old}}$、原加权和为 $u_{\text{old}}$，新到分数的最大值为 $m_{\text{new}} = \max(m_{\text{old}}, s_{\text{new}})$，则
 
-$$m \leftarrow m_{\text{new}},\qquad \ell \leftarrow \ell_{\text{old}} \cdot e^{\,m_{\text{old}} - m_{\text{new}}} + e^{\,s_{\text{new}} - m_{\text{new}}},\qquad u \leftarrow u_{\text{old}} \cdot e^{\,m_{\text{old}} - m_{\text{new}}} + e^{\,s_{\text{new}} - m_{\text{new}}} \cdot v_{\text{new}}.$$
+$$
+m \leftarrow m_{\text{new}},\qquad \ell \leftarrow \ell_{\text{old}} \cdot e^{\,m_{\text{old}} - m_{\text{new}}} + e^{\,s_{\text{new}} - m_{\text{new}}},\qquad u \leftarrow u_{\text{old}} \cdot e^{\,m_{\text{old}} - m_{\text{new}}} + e^{\,s_{\text{new}} - m_{\text{new}}} \cdot v_{\text{new}}.
+$$
 
 逐元素在线更新和一次处理三个元素为什么结果相同，关键在那个 $e^{m_{\text{old}} - m_{\text{new}}}$ 的因子：把已累积的贡献整体乘上它，就等于对齐到了新的最大值，所以两者完全等价。
 
@@ -1590,7 +1656,9 @@ $$m \leftarrow m_{\text{new}},\qquad \ell \leftarrow \ell_{\text{old}} \cdot e^{
 
 设容纳一行 Q 及其分数所需字节为 $c$（比如 Q 以 BF16 存、分数以 FP32 存时，$c = 2d + 4d = 6d$ 字节；$d = 128$ 时为 768 bytes），则
 
-$$B_r^{\text{new}} = \left\lfloor \frac{84{,}992}{c} \right\rfloor.$$
+$$
+B_r^{\text{new}} = \left\lfloor \frac{84{,}992}{c} \right\rfloor.
+$$
 
 按这个示例口径（$c = 768$ bytes）得 $B_r^{\text{new}} = \lfloor 84{,}992/768 \rfloor = 110$ 行；若每行只计 Q 本身（$c = 2d = 256$ bytes），则为 $332$ 行。精确值取决于例 5-6 采用的缓冲布局，也就是 Q、K/V 块与分数矩阵怎么分配，本章前文没有重述该布局，所以这两种口径都只是笔记补充的演算示例。
 
@@ -1692,7 +1760,9 @@ for io in range(ceil_div(M, BM)):
 
 RTX 4090 上的临界输入按例 5-11 的设定推：图重放相对普通提交节省固定 15 μs（20 μs 提交等待加 5 μs 图准备）。复制代价为 $2X/B$，令它等于 15 μs：
 
-$$\frac{2X}{1008\ \text{GB/s}} = 15\ \mu s \;\Longrightarrow\; X = \frac{15\times10^{-6}\times1.008\times10^{12}}{2} = 7.56\times10^{6}\ \text{字节} \approx 7.2\ \text{MiB}.$$
+$$
+\frac{2X}{1008\ \text{GB/s}} = 15\ \mu s \;\Longrightarrow\; X = \frac{15\times10^{-6}\times1.008\times10^{12}}{2} = 7.56\times10^{6}\ \text{字节} \approx 7.2\ \text{MiB}.
+$$
 
 输入超过约 7.2 MiB 时，复制开销就抵消掉图重放节省的时间。这个值比 RTX PRO 6000 的 12.8 MiB 更低，原因在显存带宽更小。
 

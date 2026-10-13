@@ -1,15 +1,15 @@
-"""Regenerate committed font assets after `npm run build`.
+"""Build the journal's committed font subsets from source, without an Astro build.
 
-Requires Python with fonttools and brotli. Normal/CI builds use the committed
-assets and do not require Python or font downloads. See docs/FONTS.md.
+Requires fonttools/brotli only when regenerating; ordinary builds use the saved
+WOFF2 assets. Unknown future characters retain native serif fallbacks.
 """
+import copy
 import hashlib
 import json
 import re
 import urllib.request
-from html.parser import HTMLParser
+from collections import Counter
 from pathlib import Path
-
 from fontTools import subset
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
@@ -18,88 +18,115 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "src/assets/fonts"
 CACHE = ROOT / ".artifacts/font-sources"
 MANIFEST = ROOT / "docs/font-manifest.json"
+PUNCTUATION = "，。、“”‘’：；！？…—·（）《》「」『』【】［］"
 
 
-class TitleGlyphs(HTMLParser):
-    def __init__(self, home=False):
-        super().__init__()
-        self.home = home
-        self.active = 0
-        self.ignored = 0
-        self.chars = set()
-
-    def handle_starttag(self, tag, attrs):
-        if tag in {"h1", "h2", "h3", "h4", "header", "footer", "nav"}:
-            self.active += 1
-        if tag in {"script", "style"}:
-            self.ignored += 1
-
-    def handle_endtag(self, tag):
-        if tag in {"h1", "h2", "h3", "h4", "header", "footer", "nav"}:
-            self.active -= 1
-        if tag in {"script", "style"}:
-            self.ignored -= 1
-
-    def handle_data(self, data):
-        if (self.home or self.active) and not self.ignored:
-            self.chars.update(ord(c) for c in data if ord(c) >= 0x2E80)
+def chinese(text):
+    return {ord(c) for c in text if 0x3400 <= ord(c) <= 0x9FFF or c in PUNCTUATION}
 
 
-def save_font(font, path):
-    font.flavor = "woff2"
-    font.recalcTimestamp = False
-    font.save(path)
-    return {"bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+def ranges(chars):
+    values = sorted(chars)
+    groups = []
+    if not values:
+        return ""
+    start = end = values[0]
+    for value in values[1:]:
+        if value == end + 1:
+            end = value
+        else:
+            groups.append(f"U+{start:X}" if start == end else f"U+{start:X}-{end:X}")
+            start = end = value
+    groups.append(f"U+{start:X}" if start == end else f"U+{start:X}-{end:X}")
+    return ",".join(groups)
+
+
+def subset_font(font, chars):
+    options = subset.Options()
+    options.recalc_timestamp = False
+    cutter = subset.Subsetter(options=options)
+    cutter.populate(unicodes=sorted(set(chars).intersection(font.getBestCmap())))
+    cutter.subset(font)
+    return font
 
 
 def main():
-    pages = sorted((ROOT / "dist").rglob("*.html"))
-    if not pages:
-        raise SystemExit("Run npm run build first to collect the current site's title glyphs.")
     ASSETS.mkdir(parents=True, exist_ok=True)
     CACHE.mkdir(parents=True, exist_ok=True)
-    previous = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
-    revision = previous.get("googleFontsRevision") or (CACHE / "revision.txt").read_text().strip()
-    chars = set()
-    for page in pages:
-        parser = TitleGlyphs(home=page == ROOT / "dist/index.html")
-        parser.feed(page.read_text(encoding="utf-8"))
-        chars.update(parser.chars)
+    previous = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    revision = previous["googleFontsRevision"]
+    frequency = Counter()
+    headings = set()
+    display = chinese(PUNCTUATION)
+    for source in (ROOT / "src").rglob("*"):
+        if source.suffix not in {".md", ".astro", ".ts"}:
+            continue
+        text = source.read_text(encoding="utf-8")
+        for char in text:
+            if ord(char) in chinese(char):
+                frequency[ord(char)] += 1
+        if source.suffix == ".md":
+            for title in re.findall(r"^title:\s*(.+)$", text, re.M):
+                display.update(chinese(title))
+            for title in re.findall(r"^#{1,6}\s+(.+)$", text, re.M):
+                headings.update(chinese(title))
+            for strong in re.findall(r"\*\*(.+?)\*\*", text):
+                headings.update(chinese(strong))
+        else:
+            display.update(chinese(text))
+    corpus = set(frequency) | display | headings
+    headings |= display
+    font_path = CACHE / "noto-serif-sc.ttf"
+    if not font_path.exists():
+        urllib.request.urlretrieve(f"https://raw.githubusercontent.com/google/fonts/{revision}/ofl/notoserifsc/NotoSerifSC%5Bwght%5D.ttf", font_path)
+    source_font = subset_font(TTFont(font_path, recalcTimestamp=False), corpus)
     faces = []
     files = {}
-    for family in ["noto-serif-sc", "noto-sans-sc"]:
-        cache = CACHE / f"{family}.ttf"
-        if not cache.exists():
-            upstream = "NotoSerifSC" if family == "noto-serif-sc" else "NotoSansSC"
-            folder = family.replace("-", "")
-            url = f"https://raw.githubusercontent.com/google/fonts/{revision}/ofl/{folder}/{upstream}%5Bwght%5D.ttf"
-            urllib.request.urlretrieve(url, cache)
-        font = TTFont(cache, recalcTimestamp=False)
-        covered = sorted(chars.intersection(font.getBestCmap()))
-        options = subset.Options()
-        options.recalc_timestamp = False
-        subsetter = subset.Subsetter(options=options)
-        subsetter.populate(unicodes=covered)
-        subsetter.subset(font)
-        instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
-        name = f"{family}-titles.woff2"
-        files[name] = save_font(font, ASSETS / name)
-        display = "Noto Serif SC Titles" if family == "noto-serif-sc" else "Noto Sans SC Titles"
-        ranges = ",".join(f"U+{cp:X}" for cp in covered)
-        faces.append(f"@font-face {{\n  font-family: '{display}';\n  font-style: normal;\n  font-display: swap;\n  font-weight: 400 600;\n  src: url('../assets/fonts/{name}') format('woff2');\n  unicode-range: {ranges};\n}}")
+
+    def save(font, name, family, weight, chars=None, style="normal"):
+        font.flavor = "woff2"
+        font.recalcTimestamp = False
+        target = ASSETS / name
+        font.save(target)
+        files[name] = {"bytes": target.stat().st_size, "sha256": hashlib.sha256(target.read_bytes()).hexdigest()}
+        rule = f"@font-face {{\n font-family: '{family}'; font-style: {style}; font-weight: {weight}; font-display: swap;\n src: url('../assets/fonts/{name}') format('woff2');"
+        if chars:
+            rule += f"\n unicode-range: {ranges(chars)};"
+        faces.append(rule + "\n}")
         font.close()
-    source = ROOT / "node_modules/@fontsource-variable/source-serif-4"
-    for css in ["standard.css", "standard-italic.css"]:
-        for face in re.findall(r"@font-face\s*\{[^}]+\}", (source / css).read_text()):
-            name = re.search(r"files/([^')]+)", face).group(1)
-            font = TTFont(source / "files" / name, recalcTimestamp=False)
-            instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
-            files[name] = save_font(font, ASSETS / name)
-            font.close()
-            faces.append(face.replace("200 900", "400 600").replace("./files/", "../assets/fonts/"))
-    (ROOT / "src/styles/fonts.css").write_text("/* Generated by scripts/prepare-fonts.py; retain the full Noto fallback faces. */\n" + "\n\n".join(faces) + "\n", encoding="utf-8")
-    MANIFEST.write_text(json.dumps({"googleFontsRevision": revision, "weightRange": [400, 600], "titleGlyphCount": len(chars), "files": files}, indent=2) + "\n")
-    print(f"Generated {len(files)} fonts; {len(chars)} title/homepage glyphs; {sum(f['bytes'] for f in files.values()):,} bytes.")
+
+    for weight in (400, 600):
+        instance = instantiateVariableFont(copy.deepcopy(source_font), {"wght": weight}, inplace=True)
+        if weight == 400:
+            ordered = sorted(corpus, key=lambda cp: (-frequency[cp], cp))
+            chunks = [set(ordered[i:i + 750]) for i in range(0, len(ordered), 750)]
+        else:
+            chunks = [display, headings - display]
+        for index, chars in enumerate(chunks):
+            if not chars:
+                continue
+            font = subset_font(copy.deepcopy(instance), chars)
+            save(font, f"journal-serif-sc-{weight}-{index}.woff2", "Journal Serif SC", str(weight), chars)
+        instance.close()
+    source_font.close()
+
+    for style, filename in (("normal", "source-serif-4-latin-standard-normal.woff2"), ("italic", "source-serif-4-latin-standard-italic.woff2")):
+        path = ROOT / "node_modules/@fontsource-variable/source-serif-4/files" / filename
+        font = TTFont(path, recalcTimestamp=False)
+        instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
+        save(font, f"journal-serif-latin-{style}.woff2", "Source Serif 4 Variable", "400 600", style=style)
+    sans_path = ROOT / "node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-standard-normal.woff2"
+    font = TTFont(sans_path, recalcTimestamp=False)
+    instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
+    save(font, "journal-sans-latin.woff2", "DM Sans Variable", "400 600")
+
+    (ROOT / "src/styles/fonts.css").write_text("/* Generated from the journal's text by scripts/prepare-fonts.py. */\n" + "\n\n".join(faces) + "\n", encoding="utf-8")
+    MANIFEST.write_text(json.dumps({"googleFontsRevision": revision, "weightRange": [400, 600], "corpusGlyphCount": len(corpus), "displayGlyphCount": len(display), "headingGlyphCount": len(headings), "files": files}, indent=2) + "\n", encoding="utf-8")
+    for name in previous.get("files", {}):
+        stale = ASSETS / name
+        if name not in files and stale.parent == ASSETS and stale.is_file():
+            stale.unlink()
+    print(json.dumps({"corpusGlyphs": len(corpus), "displayGlyphs": len(display), "files": files, "totalBytes": sum(item["bytes"] for item in files.values())}, indent=2), flush=True)
 
 
 if __name__ == "__main__":

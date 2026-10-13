@@ -8,7 +8,6 @@ tags:
   - Benchmark
 status: 进行中
 featured: true
-repoUrl: https://github.com/your-name/issue-localization-benchmark
 cover: /covers/project-benchmark.svg
 ---
 

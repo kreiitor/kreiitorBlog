@@ -26,13 +26,26 @@
   <g fill="#f8faf3" stroke="#b9c7a9"><rect x="38" y="91" width="103" height="28" rx="4"/><rect x="362" y="155" width="102" height="28" rx="4"/><rect x="108" y="360" width="116" height="28" rx="4"/></g>
   <g fill="#566c42" font-family="sans-serif" font-size="9" letter-spacing="1.1"><text x="50" y="109">01 / READ</text><text x="374" y="173">02 / BUILD</text><text x="120" y="378">03 / REFLECT</text></g>
  </svg>
- <figcaption><span class="art-dot"></span>阅读 → 实验 → 写作 → 新的问题<span>∞</span></figcaption>
+ <svg class="mobile-orbit" viewBox="0 0 150 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="76" cy="69" r="58" stroke="#c9d3c0" stroke-dasharray="3 5"/><ellipse cx="76" cy="69" rx="70" ry="29" transform="rotate(-28 76 69)" stroke="#a5b494"/><g transform="rotate(-8 77 70)"><rect x="42" y="26" width="74" height="91" rx="3" fill="#e2e8d6" stroke="#b6c4a5" transform="rotate(10 79 72)"/><rect x="39" y="23" width="74" height="91" rx="3" fill="#fffef7" stroke="#a9b697"/><text x="48" y="45" fill="#687c52" font-family="Georgia,serif" font-size="8" letter-spacing="1">FIELD NOTES</text><text x="48" y="66" fill="#34482f" font-family="Georgia,serif" font-size="17">Ideas</text><text x="48" y="87" fill="#6a7e4b" font-family="Georgia,serif" font-size="18" font-style="italic">grow.</text><path d="M49 98h51m-51 5h38" stroke="#cad3bc"/></g><circle cx="28" cy="43" r="4" fill="#687e46"/><circle cx="129" cy="92" r="3" fill="#a29b69"/></svg>
+ <figcaption><span class="art-dot"></span><span class="art-caption-long">阅读 → 实验 → 写作 → 新的问题</span><span class="art-caption-short">阅读 · 实验 · 写作<br/>新问题，继续生长。</span><span>∞</span></figcaption>
 </figure>
 <style>
  .research-art { position: relative; background: #ecf0e3; border: 1px solid #dce3d1; border-radius: 7px; padding: 22px 22px 15px; overflow: hidden; }
- .art-top { display: flex; justify-content: space-between; font-size: 8px; letter-spacing: .14em; color: #657952; }
+ .art-top { display: flex; justify-content: space-between; gap: 12px; font-size: var(--text-caption); letter-spacing: .1em; color: #526544; }
  .orbit-art { display: block; width: 100%; height: auto; margin-top: 4px; }
- figcaption { border-top: 1px solid #d5dfc9; padding-top: 12px; display: flex; align-items: center; gap: 7px; font-size: 9px; color: #657952; }
+ figcaption { border-top: 1px solid #d5dfc9; padding-top: 12px; display: flex; align-items: center; gap: 7px; font-size: var(--text-caption); color: #526544; }
  figcaption > span:last-child { margin-left: auto; font-size: 18px; line-height: 1; }
  .art-dot { width: 4px; height: 4px; border-radius: 50%; background: #738954; }
+ .mobile-orbit { display: none; }
+ .art-caption-short { display: none; }
+ @media (max-width: 700px) {
+  .research-art { display: grid; grid-template-columns: minmax(0,1fr) 132px; grid-template-rows: auto auto; align-items: center; column-gap: 14px; padding: 14px 18px; }
+  .orbit-art { display: none; }
+  .mobile-orbit { display: block; grid-column: 2; grid-row: 1 / 3; width: 132px; height: 124px; }
+  .art-top { grid-column: 1; grid-row: 1; align-self: end; font-size: 11px; }
+  .art-top > span:last-child { display: none; }
+  figcaption { grid-column: 1; grid-row: 2; align-self: start; border-top: 0; padding-top: 10px; flex-wrap: wrap; font-size: 12px; line-height: 1.9; }
+  figcaption > span:last-child,figcaption > .art-dot,.art-caption-long { display: none; }
+  .art-caption-short { display: block; }
+ }
 </style>

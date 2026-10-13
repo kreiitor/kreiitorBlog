@@ -28,7 +28,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
     <p class="eyebrow hero-kicker"><span aria-hidden="true"></span>A PERSONAL JOURNAL · AI & SOFTWARE</p>
     <h1>在代码与思想之间，<br/><span>慢慢生长。</span></h1>
     <p class="hero-english">Thinking in code. Growing through curiosity.</p>
-    <p class="hero-description">我是 <strong>{siteConfig.author}</strong>，一名关注软件工程智能化的研究者。<br class="desktop-break"/>在这里，记录论文里的灵感、实验中的探索，和一路积累的思考。</p>
+    <p class="hero-description"><span class="hero-bio-long">我是 <strong>{siteConfig.author}</strong>，一名关注软件工程智能化的研究者。<br/>在这里，记录论文里的灵感、实验中的探索，和一路积累的思考。</span><span class="hero-bio-short">我是 <strong>{siteConfig.author}</strong>，关注软件工程智能化。<br/>记录论文、实验与一路积累的思考。</span></p>
     <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">翻开研究札记 <span aria-hidden="true">↗</span></a><a href={withBase('/about/')} class="text-link">认识我 <span aria-hidden="true">→</span></a></div>
     <div class="hero-caption"><span>RESEARCH INTERESTS</span><p>AI for SE <i>/</i> LLM <i>/</i> 实验与复现</p></div>
    </div>
@@ -36,7 +36,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   </section>
   <section class="page-shell journal-strip" aria-label="站点概况">
    <p><span class="strip-symbol" aria-hidden="true">✳</span>一份持续更新的数字花园<span class="strip-subtitle">A small corner of the internet.</span></p>
-   <div class="journal-counts"><a href={withBase('/blog/')}><strong>{String(publishedPosts.length).padStart(2,'0')}</strong> 篇札记</a><a href={withBase('/projects/')}><strong>{String(sortedProjects.length).padStart(2,'0')}</strong> 个项目</a><a href={withBase('/blog/')}><strong>{String(allTags.length).padStart(2,'0')}</strong> 个话题</a></div>
+   <div class="journal-counts"><a href={withBase('/blog/')}><strong>{String(publishedPosts.length).padStart(2,'0')}</strong> 篇札记</a><a href={withBase('/projects/')}><strong>{String(sortedProjects.length).padStart(2,'0')}</strong> 个项目</a><a href={withBase('/tags/')}><strong>{String(allTags.length).padStart(2,'0')}</strong> 个话题</a></div>
   </section>
   <section class="page-shell editorial-section">
    <SectionHeading kicker="01 / SELECTED WRITING" title="值得展开的思考" description="从一个问题出发，把想法写深一点。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
@@ -67,37 +67,38 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
 </BaseLayout>
 <style>
  .home-hero { display: grid; grid-template-columns: 1.17fr 1fr; align-items: center; gap: 65px; padding-block: 65px 52px; }
- .hero-kicker { display: flex; align-items: center; gap: 8px; font-size: 9px; }
+ .hero-kicker { display: flex; align-items: center; gap: 8px; font-size: var(--text-caption); }
  .hero-kicker span { width: 5px; height: 5px; background: var(--color-accent); border-radius: 50%; }
- .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.055em; margin-top: 26px; font-weight: 500; }
+ .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.055em; margin-top: 26px; font-weight: 600; }
  .hero-copy h1 span { color: var(--color-accent); }
  .hero-english { margin-top: 14px; font-family: var(--font-editorial); font-size: 18px; font-style: italic; color: var(--color-ink-soft); }
- .hero-description { margin-top: 24px; font-size: 13px; line-height: 2.15; color: var(--color-ink-soft); }
+ .hero-description { margin-top: 24px; font-size: 15px; line-height: 2; color: var(--color-ink-soft); }
  .hero-description strong { font-weight: 500; color: var(--color-ink); }
+ .hero-bio-short { display: none; }
  .hero-actions { display: flex; align-items: center; gap: 30px; margin-top: 30px; }
  .hero-caption { margin-top: 38px; display: flex; align-items: center; gap: 20px; }
- .hero-caption > span { font-size: 8px; letter-spacing: .13em; color: var(--color-ink-muted); }
- .hero-caption p { font-size: 10px; } .hero-caption i { margin: 0 9px; color: var(--color-line-strong); font-style: normal; }
+ .hero-caption > span { font-size: var(--text-caption); letter-spacing: .13em; color: var(--color-ink-muted); }
+ .hero-caption p { font-size: var(--text-caption); } .hero-caption i { margin: 0 9px; color: var(--color-line-strong); font-style: normal; }
  .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 21px; border-block: 1px solid var(--color-line); }
- .journal-strip > p { display: flex; align-items: center; gap: 12px; font-size: 11px; }
+ .journal-strip > p { display: flex; align-items: center; gap: 12px; font-size: var(--text-caption); }
  .strip-symbol { font-size: 23px; color: var(--color-accent); line-height: 1; }
  .strip-subtitle { font-family: var(--font-editorial); font-size: 12px; font-style: italic; color: var(--color-ink-muted); padding-left: 10px; }
- .journal-counts { display: flex; gap: 25px; font-size: 10px; color: var(--color-ink-soft); }
+ .journal-counts { display: flex; gap: 25px; font-size: var(--text-caption); color: var(--color-ink-soft); }
  .journal-counts strong { font-family: var(--font-editorial); font-size: 18px; font-weight: 400; color: var(--color-ink); margin-right: 6px; }
  .project-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; margin-top: 28px; }
  .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 65px; }
  .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
- .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-line-strong); }
+ .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-ink-muted); }
  .recent-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; margin-top: 6px; }
  .recent-arrow { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
  .garden-aside { padding: 30px; background: var(--color-paper-warm); border: 1px solid var(--color-line); border-radius: 6px; }
- .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; font-weight: 500; }
- .topic-list { margin-top: 23px; } .topic-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: 11px; border-bottom: 1px solid var(--color-line); }
- .topic-list a > span:last-child { color: var(--color-ink-muted); font-size: 10px; }
+ .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; font-weight: 600; }
+ .topic-list { margin-top: 23px; } .topic-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-line); }
+ .topic-list a > span:last-child { color: var(--color-ink-muted); font-size: var(--text-caption); }
  .topic-list a:hover { color: var(--color-accent); }
- .aside-note { display: flex; gap: 14px; margin-top: 28px; color: var(--color-ink-soft); font-size: 11px; line-height: 2; }
- .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: 10px; }
+ .aside-note { display: flex; gap: 14px; margin-top: 28px; color: var(--color-ink-soft); font-size: var(--text-caption); line-height: 2; }
+ .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: var(--text-caption); }
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
  @media (max-width: 900px) { .hero-copy h1 { font-size: 33px; } .hero-caption { align-items: start; flex-direction: column; gap: 8px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { grid-template-columns: 1fr; } }
- @media (max-width: 700px) { .home-hero { grid-template-columns: 1fr; padding-block: 42px 30px; gap: 35px; } .hero-copy h1 { font-size: clamp(31px,6.7vw,46px); margin-top: 20px; } .hero-english { font-size: 16px; } .hero-caption { flex-direction: row; gap: 16px; margin-top: 28px; } .hero-visual { max-width: 460px; width: 100%; margin-inline: auto; } .journal-strip { flex-wrap: wrap; gap: 14px; } .journal-counts { justify-content: space-between; width: 100%; } .lower-grid { grid-template-columns: 1fr; gap: 35px; } .desktop-break { display: none; } }
+ @media (max-width: 700px) { .home-hero { grid-template-columns: 1fr; padding-block: 32px 24px; gap: 22px; } .hero-copy h1 { font-size: clamp(31px,6.7vw,46px); margin-top: 16px; line-height: 1.5; } .hero-english { font-size: 16px; margin-top: 10px; } .hero-description { font-size: 14px; margin-top: 18px; } .hero-bio-long { display: none; } .hero-bio-short { display: inline; } .hero-actions { margin-top: 20px; } .hero-caption { display: none; } .hero-visual { width: 100%; margin-inline: auto; } .journal-strip { padding-block: 14px; } .journal-strip > p { display: none; } .journal-counts { justify-content: space-between; gap: 12px; width: 100%; } .lower-grid { grid-template-columns: 1fr; gap: 35px; } .editorial-section { margin-top: 44px; } }
 </style>

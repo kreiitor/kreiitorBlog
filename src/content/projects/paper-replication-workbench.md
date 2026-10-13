@@ -8,8 +8,6 @@ tags:
   - 工具平台
 status: 已完成
 featured: true
-repoUrl: https://github.com/your-name/paper-replication-workbench
-demoUrl: https://example.com/demo
 cover: /covers/project-replication.svg
 ---
 

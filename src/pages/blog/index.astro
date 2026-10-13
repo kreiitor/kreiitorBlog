@@ -1,49 +1,80 @@
 ---
 import { getCollection } from 'astro:content';
-import PostCard from '../../components/PostCard.astro';
+import PostList from '../../components/PostList.astro';
+import SeriesCard from '../../components/SeriesCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPublishedPosts } from '../../utils/content';
+import { getLearningSeries } from '../../utils/series';
 import { withBase } from '../../utils/url';
-const posts = getPublishedPosts(await getCollection('posts'));
+const allPosts = await getCollection('posts');
+const posts = getPublishedPosts(allPosts);
+const series = getLearningSeries(await getCollection('series'), allPosts);
 const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'研究与思考' },{ key:'knowledge', label:'知识笔记' },{ key:'course', label:'系列学习' }];
 ---
 <BaseLayout title="博客" description="研究与思考、实践知识与成体系的学习笔记。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>这是一份持续积累、随时可以翻开的研究札记。</p></section>
+  <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>从一篇札记开始，也可以沿着一条学习路径读下去。</p></section>
   <section class="page-shell blog-content">
    <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? posts.length : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 ↗</a></div>
-   <p class="filter-status" data-filter-status aria-live="polite">共 {posts.length} 篇札记 · 按时间排列</p>
-   <div class="section-grid" data-post-grid>{posts.map(post => <div data-category={post.data.category}><PostCard post={post}/></div>)}</div>
-   <noscript><p class="mt-6 text-sm">全部文章已在下方展示；也可通过<a href={withBase('/notes/')}>学习专题</a>或<a href={withBase('/archive/')}>时间归档</a>浏览。</p></noscript>
+   <div data-blog-series class="blog-series"><p class="eyebrow">LEARNING PATHS / 成体系地读</p><div class="series-grid">{series.map(group => <SeriesCard series={group} compact/>)}</div></div>
+   <p class="filter-status" data-filter-status aria-live="polite">{posts.filter(post => !post.data.series).length} 篇独立札记 · 系列章节可从上方专题阅读</p>
+   <PostList posts={posts} interactive/>
+   <nav class="list-pagination" data-list-pagination aria-label="文章列表翻页"><button type="button" class="zen-btn zen-btn-secondary" data-list-previous disabled>← 上一页</button><span data-list-page>1 / 2</span><button type="button" class="zen-btn zen-btn-secondary" data-list-next>下一页 →</button></nav>
+   <noscript><style>[data-post-row][hidden] { display: grid !important; } [data-list-pagination],.filter-tabs { display: none; }</style><p class="filter-status">所有札记已展示；也可通过学习专题和时间归档浏览。</p></noscript>
   </section>
  </div>
 </BaseLayout>
 <script>
- const buttons = document.querySelectorAll<HTMLButtonElement>('[data-category-filter]');
- const cards = document.querySelectorAll<HTMLElement>('[data-category]');
+ const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-category-filter]'));
+ const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-post-row]'));
  const status = document.querySelector('[data-filter-status]');
- function filter(category: string) {
-  let count = 0;
-  for (const card of cards) { card.hidden = category !== 'all' && card.dataset.category !== category; if (!card.hidden) count++; }
-  for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset.categoryFilter === category));
-  if (status) status.textContent = `共 ${count} 篇札记 · 按时间排列`;
- }
- buttons.forEach(button => button.addEventListener('click', () => {
-  const category = button.dataset.categoryFilter ?? 'all'; filter(category);
-  const url = new URL(location.href); if (category === 'all') url.searchParams.delete('category'); else url.searchParams.set('category',category);
+ const series = document.querySelector<HTMLElement>('[data-blog-series]');
+ const previous = document.querySelector<HTMLButtonElement>('[data-list-previous]');
+ const next = document.querySelector<HTMLButtonElement>('[data-list-next]');
+ const pageLabel = document.querySelector('[data-list-page]');
+ const pagination = document.querySelector<HTMLElement>('[data-list-pagination]');
+ const pageSize = 12;
+ let category = 'all', page = 1;
+ function render() {
+  const selected = rows.filter(row => category === 'all' ? !row.dataset.series : row.dataset.category === category);
+  const pages = Math.max(1,Math.ceil(selected.length / pageSize));
+  page = Math.max(1,Math.min(page,pages));
+  const visible = new Set(selected.slice((page - 1) * pageSize,page * pageSize));
+  rows.forEach(row => { row.hidden = !visible.has(row); });
+  buttons.forEach(button => button.setAttribute('aria-pressed',String(button.dataset.categoryFilter === category)));
+  if (series) series.hidden = category !== 'all' && category !== 'course';
+  if (status) status.textContent = category === 'all' ? `${selected.length} 篇独立札记 · 系列章节可从上方专题阅读` : `${selected.length} 篇札记 · 按时间排列`;
+  if (previous) previous.disabled = page === 1;
+  if (next) next.disabled = page === pages;
+  if (pageLabel) pageLabel.textContent = `${page} / ${pages}`;
+  if (pagination) pagination.hidden = pages <= 1;
+  const url = new URL(location.href);
+  if (category === 'all') url.searchParams.delete('category'); else url.searchParams.set('category',category);
+  if (page === 1) url.searchParams.delete('page'); else url.searchParams.set('page',String(page));
   history.replaceState(null,'',url);
- }));
- const initial = new URLSearchParams(location.search).get('category');
- if (initial && Array.from(buttons).some(button => button.dataset.categoryFilter === initial)) filter(initial);
+ }
+ buttons.forEach(button => button.addEventListener('click',() => { category = button.dataset.categoryFilter ?? 'all'; page = 1; render(); }));
+ function changePage(delta: number) { page += delta; render(); document.querySelector('[data-post-list]')?.scrollIntoView({ block:'start', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); }
+ previous?.addEventListener('click',() => changePage(-1));
+ next?.addEventListener('click',() => changePage(1));
+ const params = new URLSearchParams(location.search);
+ if (buttons.some(button => button.dataset.categoryFilter === params.get('category'))) category = params.get('category')!;
+ const requestedPage = Number(params.get('page'));
+ if (Number.isInteger(requestedPage) && requestedPage > 0) page = requestedPage;
+ render();
 </script>
 <style>
- .blog-content { padding-top: 30px; }
+ .blog-content { padding-top: 28px; }
  .blog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
- .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
- .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid transparent; padding: 9px 13px; border-radius: 4px; font-size: 12px; color: var(--color-ink-soft); }
+ .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+ .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px; border: 1px solid transparent; border-radius: 5px; font-size: 13px; color: var(--color-ink-soft); }
  .filter-tabs button[aria-pressed="true"] { color: var(--color-paper); background: var(--color-ink); }
  .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-line); background: var(--color-accent-soft); }
- .filter-tabs span { opacity: .7; font-size: 9px; }
- .filter-status { font-size: 10px; color: var(--color-ink-muted); margin: 24px 0; }
- @media (max-width: 600px) { .blog-toolbar { align-items: start; } .blog-toolbar > a { font-size: 10px; padding-top: 10px; } .filter-tabs { gap: 3px; } .filter-tabs button { padding: 8px 10px; font-size: 11px; } }
+ .filter-tabs span { font-size: 12px; }
+ .blog-series { margin-top: 34px; }
+ .blog-series .series-grid { margin-top: 18px; }
+ .filter-status { font-size: 12px; color: var(--color-ink-soft); margin: 34px 0 8px; }
+ .list-pagination { display: flex; justify-content: center; align-items: center; gap: 24px; padding-top: 32px; font-size: 12px; }
+ .list-pagination button:disabled { opacity: .5; cursor: default; }
+ @media (max-width: 600px) { .blog-toolbar { flex-wrap: wrap; gap: 12px; } .filter-tabs { gap: 4px; } .filter-tabs button { padding-inline: 12px; } .blog-toolbar > a { margin-left: auto; } .list-pagination { gap: 14px; } }
 </style>

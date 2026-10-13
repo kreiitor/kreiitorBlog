@@ -13,8 +13,6 @@ order: 3
 cover: /covers/series-ai-infra.svg
 ---
 
-# 第2章 模型架构
-
 > 本笔记对应原书《深入理解AI Infra：量化分析与系统设计》第2章「模型架构」2.1–2.3 节，原书印刷 p.23–46（PDF 第 33–56 页）。
 
 ## 本章地图
@@ -103,11 +101,15 @@ RNN 在序列方向和深度方向都要排队，因果Transformer只在深度�
 
 先把一个计算节点展开。设本次对 $m$ 个输入token执行投影，每个token用包含 $k$ 个特征的向量表示。把这些向量逐行排成输入矩阵 $X$，就得到 $m$ 行、$k$ 列的矩阵。设输出宽度为 $n$，则有：
 
-$$X \in \mathbb{R}^{m\times k},\qquad W \in \mathbb{R}^{k\times n},\qquad Y = XW \in \mathbb{R}^{m\times n}.$$
+$$
+X \in \mathbb{R}^{m\times k},\qquad W \in \mathbb{R}^{k\times n},\qquad Y = XW \in \mathbb{R}^{m\times n}.
+$$
 
 每个输出元素是长度为 $k$ 的点积，输出共有 $mn$ 个元素，因此
 
-$$N_W = kn,\qquad F = 2mkn,\qquad M_W = b_W kn.$$
+$$
+N_W = kn,\qquad F = 2mkn,\qquad M_W = b_W kn.
+$$
 
 其中 $N_W$ 是权重参数的数量，$b_W$ 是每个参数占用的字节数。三个量的单位按原文口径整理一下：$m$ 是本次参与计算的token数，$k$ 是输入特征维度，$n$ 是输出宽度，三者都以「个数」为单位；$N_W$ 的单位是「个参数」；$b_W$ 的单位是「字节／参数」（BF16 时 $b_W = 2$）；$M_W$ 的单位是字节；$F$ 的单位是 FLOPs，系数 2 表示一次乘加记为 2 FLOPs。
 
@@ -140,9 +142,15 @@ Qwen3-8B 的配置：包含 $L = 36$ 层，隐藏维度为 $d = 4096$，FFN 中�
 
 解（原文）：查询与输出各使用一个 $4096 \times 4096$ 矩阵，键和值各使用一个 $4096 \times 1024$ 矩阵，三个FFN矩阵各有 $4096 \times 12288$ 个参数。因此，
 
-$$N_{\text{proj}} = 2\times 4096^2 + 2\times 4096\times 1024 = 41{,}943{,}040,$$
-$$N_{\text{FFN}} = 3\times 4096\times 12288 = 150{,}994{,}944,$$
-$$F_{\text{linear}} = 2m\,(N_{\text{proj}} + N_{\text{FFN}}) = 385{,}875{,}968\,m.$$
+$$
+N_{\text{proj}} = 2\times 4096^2 + 2\times 4096\times 1024 = 41{,}943{,}040,
+$$
+$$
+N_{\text{FFN}} = 3\times 4096\times 12288 = 150{,}994{,}944,
+$$
+$$
+F_{\text{linear}} = 2m\,(N_{\text{proj}} + N_{\text{FFN}}) = 385{,}875{,}968\,m.
+$$
 
 原文还说明：此处尚未使用上下文长度，这些投影对每个token的特征向量做相同的变换。下一节介绍查询与上下文之间的注意力计算，其运算量与查询—键配对的数量有关。把两类工作分开，就能看出「增加本次参与计算的token数」和「让每个token读取更长的上下文」的代价为什么不同。
 
@@ -190,7 +198,9 @@ $N_W = kn$ 只看模型宽度，$F = 2mkn$ 随输入行数线性增长，$M_W = 
 
 用矩阵记号写出一个头的计算：
 
-$$A = \operatorname{Softmax}\!\left(\frac{QK^{\mathsf T}}{\sqrt{d_h}} + \mathcal{M}\right),\qquad O = AV.$$
+$$
+A = \operatorname{Softmax}\!\left(\frac{QK^{\mathsf T}}{\sqrt{d_h}} + \mathcal{M}\right),\qquad O = AV.
+$$
 
 $A$ 是各查询对上下文token的权重，$\mathcal{M}$ 是因果掩码，$d_h$ 是头维度。点积决定哪些位置与当前查询相关，Softmax 将分数转成加权系数，再用这些系数汇总值向量。
 
@@ -198,11 +208,15 @@ Qwen3 在点积前还要做查询与键归一化（QK Norm）和旋转位置编�
 
 下面计算点积的数量。输入 $P$ 个新token、已有 $S$ 个上下文token时，第 $i$ 个新token可访问 $S+i$ 个token，其中 $i = 1,\dots,P$。将各查询可以访问的上下文token数相加，就得到一个长方形加一个三角形：
 
-$$N_{\text{pair}} = B\left(PS + \frac{P(P+1)}{2}\right).$$
+$$
+N_{\text{pair}} = B\left(PS + \frac{P(P+1)}{2}\right).
+$$
 
 对每一对查询与上下文token，一个 $Q$ 头的 $QK^{\mathsf T}$ 点积约需 $2d_h$ FLOPs，随后 $AV$ 的贡献又约需 $2d_h$ FLOPs。合计所有 $Q$ 头，$QK^{\mathsf T}$ 与 $AV$ 的有效矩阵运算量为：
 
-$$F_{\text{attn}} = 4\,n_Q d_h N_{\text{pair}} = 16{,}384\,N_{\text{pair}}.$$
+$$
+F_{\text{attn}} = 4\,n_Q d_h N_{\text{pair}} = 16{,}384\,N_{\text{pair}}.
+$$
 
 在此前没有缓存上下文的 prefill 中，序列长度加倍时，投影的输入行数变为两倍，全注意力的查询—键配对数则约为原来的四倍，因为新加入的token也要与此前的上下文交互。计算这些查询—键配对有两种常见路径：完整矩形乘法先产生所有分数再屏蔽上三角，因果分块则跳过上三角。分块还可以把评分、归一化和 $V$ 汇总接在一起，让分数在片上用完即释放。第5章将沿这条数据流解释如何减少中间结果的显存读写。
 
@@ -239,7 +253,9 @@ QK Norm 与 RoPE 各管一件事：QK Norm 管数值范围（防止点积随头�
 
 Qwen3-8B 使用这种结构：输入分别经过 gate 与 up 两条升维投影，gate 分支经过 SiLU 后，再与 up 分支逐元素相乘，最后通过 down 投影降回隐藏维度：
 
-$$\operatorname{FFN}(X) = \left[\operatorname{SiLU}(XW_{\text{gate}}) \odot (XW_{\text{up}})\right] W_{\text{down}}.$$
+$$
+\operatorname{FFN}(X) = \left[\operatorname{SiLU}(XW_{\text{gate}}) \odot (XW_{\text{up}})\right] W_{\text{down}}.
+$$
 
 式中 $\odot$ 表示对应元素相乘；gate 是门控分支，up 是升维分支，down 是降维投影。三者产生的中间向量称为激活。gate 与 up 将每行从 $d$ 维升到 $f$ 维，down 再降回 $d$ 维。三个矩阵因此合计 $3df$ 个参数，处理 $m$ 个token的特征向量需 $6mdf$ FLOPs。
 
@@ -285,7 +301,9 @@ Qwen3-8B 取 $d = 4096,\ f = 12288$，FFN 约有1.51亿个参数，BF16 权重�
 
 将每层的线性变换与上下文交互相加，再加入词表头，得到 Qwen3-8B 的主要矩阵运算量：
 
-$$F_{\text{matrix}} = 36\left(385{,}875{,}968\,m + 16{,}384\,N_{\text{pair}}\right) + 2\,m_{\text{out}} \times 4096 \times 151936.$$
+$$
+F_{\text{matrix}} = 36\left(385{,}875{,}968\,m + 16{,}384\,N_{\text{pair}}\right) + 2\,m_{\text{out}} \times 4096 \times 151936.
+$$
 
 式中第一项随输入行数增长，第二项随查询—键配对数增长，最后一项随实际执行词表投影的token数增长。原文给出两个结果：对包含8192个token的输入，按有效因果查询—键配对计算注意力，词表头只处理最后一个token，共需 133.6 TFLOPs；已有8192个上下文token、再补入一个token时，共需 20.0 GFLOPs。（脚注3：逐层记录。）
 
@@ -356,7 +374,9 @@ SwiGLU 为什么比一个简单的两层 MLP 好？普通 MLP 是「升维 → �
 
 Qwen3-8B 的 BF16 KV 每个上下文token占：
 
-$$c_{\text{KV}} = 2\,L\,n_{\text{KV}}\,d_h\,b_{\text{KV}} = 2 \times 36 \times 8 \times 128 \times 2\ \text{bytes} = 144\ \text{KiB}.$$
+$$
+c_{\text{KV}} = 2\,L\,n_{\text{KV}}\,d_h\,b_{\text{KV}} = 2 \times 36 \times 8 \times 128 \times 2\ \text{bytes} = 144\ \text{KiB}.
+$$
 
 第一个 2 分别对应键和值；$L$ 层各保存 $n_{\text{KV}}$ 组宽度为 $d_h$ 的向量，每元素占 $b_{\text{KV}}$ 字节。因此，保存 $H$ 个上下文token需 $M_{\text{KV}} = c_{\text{KV}}H$。Qwen3-8B 的 $H = 8192$ 对应 1.125 GiB，再处理一个新输入token就追加 144 KiB。层数或 KV 头数减半，增长速度也减半；batch 增加时，每条独立请求各增加一份上下文。（脚注4：缓存累计计算。）
 
@@ -404,7 +424,9 @@ KV 缓存保存已经算出的结果，省去后续生成中的重复计算。�
 
 解（原文）：每批共享权重读取量记为 $R_W$，各请求的上下文独立，则上下文读取量为 $B c_{\text{KV}} H$。两者相等时
 
-$$B^{*} = \frac{R_W}{c_{\text{KV}}H}.$$
+$$
+B^{*} = \frac{R_W}{c_{\text{KV}}H}.
+$$
 
 以 $R_W = 15{,}136{,}811{,}008$ 字节、$c_{\text{KV}} = 147{,}456$ 字节代入，$H = 8192$ 时最小整数 batch 为 13；$H = 2048$ 时为 51。上下文长度缩短到原来的四分之一，上下文读取量超过权重读取量所需的请求数就约增至四倍。原文的结论是：上下文越长，批内权重复用的收益就越早受到限制，因为每个新增请求都会增加一份独立上下文的读取。（脚注5：跨章核对。）
 
@@ -434,13 +456,17 @@ $B^{*}$ 这个交点的工程意义：batch 小于它时，这一步的带宽主
 
 第 $j$ 次 decode（$j$ 从 0 开始）执行前，上下文长度为 $H + j$。因此，若每次 decode 将此前的上下文各读取一遍，累计读取量为：
 
-$$R_{\text{old}} = c_{\text{KV}}\sum_{j=0}^{n_d-1}(H+j) = c_{\text{KV}}\left[n_d H + \frac{n_d(n_d-1)}{2}\right].$$
+$$
+R_{\text{old}} = c_{\text{KV}}\sum_{j=0}^{n_d-1}(H+j) = c_{\text{KV}}\left[n_d H + \frac{n_d(n_d-1)}{2}\right].
+$$
 
 decode 新增的状态大小为 $c_{\text{KV}}n_d$；若保留整个上下文，最终有效 KV 为 $c_{\text{KV}}(H + n_d)$。本次请求的全部新增 KV 还应包含 prefill 写入的 $c_{\text{KV}}P$。已有前缀的恢复与传输单独核算。求和中的每一项都对应一次 decode 开始时已有的上下文：早出现的位置参与更多后续查询，晚出现的位置参与较少查询。
 
 这组调用也决定了总运算量。线性投影和 FFN 在每次 decode 中处理一行，上下文交互则随 $H + j$ 增长。设每步固定的矩阵运算量为 $F_0$、与每个上下文token交互所需的运算量为 $a$，便有
 
-$$F_{\text{decode,total}} = n_d F_0 + a\left[n_d H + \frac{n_d(n_d-1)}{2}\right].$$
+$$
+F_{\text{decode,total}} = n_d F_0 + a\left[n_d H + \frac{n_d(n_d-1)}{2}\right].
+$$
 
 输出变长时，各步固定部分的累计工作量随 $n_d$ 线性增长，生成过程中新增的上下文还会使一部分累计运算量按生成步数的平方增长。返回一个token时 $G = 1$、$n_d = 0$，只有 prefill；这一特殊情形也说明为什么完整回答包含 $G-1$ 次后续 decode。
 
@@ -553,7 +579,9 @@ GQA、MQA 靠减少 KV 组数省空间，多头潜变量注意力（Multi-head L
 
 只保存潜变量是有依据的。设键的上投影为 $U_k$，上下文潜变量按行组成矩阵 $c$，展开键就是 $K = cU_k$。矩阵乘法的结合律给出
 
-$$qK^{\mathsf T} = q(cU_k)^{\mathsf T} = (qU_k^{\mathsf T})c^{\mathsf T}.$$
+$$
+qK^{\mathsf T} = q(cU_k)^{\mathsf T} = (qU_k^{\mathsf T})c^{\mathsf T}.
+$$
 
 左边要先为每个上下文 token 恢复键，右边先把当前查询变换一次。对单个新查询来说，右边只需要做一次查询变换，之后直接跟潜变量点积。值向量也能在加权汇总之后再上投影：先汇总低维向量，再恢复输出维度。原来针对每个上下文 token 做的那次升维，就这么挪到了当前查询和汇总结果上。
 
@@ -651,7 +679,9 @@ DeepSeek V4-Flash 把这套机制组合在同一个模型里：43 个主干层�
 
 构造状态的基本运算是外积，即把一个键向量与一个值向量的每对元素相乘，组成二维的关联表。考虑由键值外积累加得到的矩阵 $\mathcal{S}_t$。每个新 token 到来时，先读取旧状态，再写入本位置的贡献，当前查询直接从状态矩阵读出结果：
 
-$$\mathcal{S}_t = \mathcal{S}_{t-1} + k_t v_t^{\mathsf T},\qquad o_t = q_t^{\mathsf T}\mathcal{S}_t.$$
+$$
+\mathcal{S}_t = \mathcal{S}_{t-1} + k_t v_t^{\mathsf T},\qquad o_t = q_t^{\mathsf T}\mathcal{S}_t.
+$$
 
 若键宽为 $d_k$、值宽为 $d_v$，状态始终有 $d_k d_v$ 个元素。新增 token 改变的是矩阵内容，不是矩阵大小。逐 token 的上下文列表因此变成一组累积的键值关联，查询从这组关联中取得输出。
 
@@ -693,7 +723,9 @@ Qwen3.6-35B-A3B 同样要分别计算线性注意力层和完整注意力层的�
 
 把固定递推状态与逐 token 上下文相加，就得到混合结构的容量模型：
 
-$$M_{\text{state}}(H) = M_{\text{fixed}} + c_{\text{state}}H,\qquad H^{*} = \frac{M_{\text{fixed}}}{c_{\text{state}}}.$$
+$$
+M_{\text{state}}(H) = M_{\text{fixed}} + c_{\text{state}}H,\qquad H^{*} = \frac{M_{\text{fixed}}}{c_{\text{state}}}.
+$$
 
 $c_{\text{state}}$ 是每个上下文 token 增加的状态字节数，$H^{*}$ 表示两部分占用相等的上下文长度。代入原文给的数：Qwen3.6 的固定部分为 61.875 MiB，每 token 增加 20 KiB，因此 $H^{*} = 3168$；Kimi K3 的紧凑表示每 token 增加 27 KiB，固定部分约为 433.4 MiB，交点约在 16.4K 个上下文 token。低于交点时，缩短上下文只能节省较小一部分空间；远高于交点时，减小每个 token 的表示宽度能更有效地节省容量。DeepSeek V4-Flash 则按完成的压缩块增加条目，曲线呈阶梯增长。
 
@@ -780,19 +812,27 @@ Kimi K3 的两种 MLA 表示展示了缓存路径对容量的影响：表中的�
 
 把共享关系代入容量计算。2026 年 9 月发布的 DeepSeek V4.1 Flash 有 40 层文本主干，但只有 4 层拥有独立的全局 KV：按从零开始的编号，第 2、8、14 层每两个 token 生成一条压缩记录，第 20 层每个 token 生成一条记录，其余全局注意力层共享这些缓存。主记录的 512 个值采用 FP4（每个值占 4 位的浮点格式），每 16 个值另有一个字节的 scale，因此每条记录占
 
-$$\frac{512}{2} + \frac{512}{16} = 288\ \text{字节};$$
+$$
+\frac{512}{2} + \frac{512}{16} = 288\ \text{字节};
+$$
 
 索引记录占
 
-$$\frac{128}{2} + \frac{128}{32} = 68\ \text{字节}.$$
+$$
+\frac{128}{2} + \frac{128}{32} = 68\ \text{字节}.
+$$
 
 全局KV的平均存储增量为
 
-$$\left(\frac{3}{2} + 1\right)(288 + 68) = 890\ \text{B/token}.$$
+$$
+\left(\frac{3}{2} + 1\right)(288 + 68) = 890\ \text{B/token}.
+$$
 
 作为对照，旧 V4-Flash 有 21 层 4:1 压缩和 20 层 128:1 压缩。按官方 FlashMLA（DeepSeek 开源的 MLA 注意力计算库）的格式（主记录 584 B、索引记录 68 B），其全局 KV 的平均存储增量为
 
-$$\mathrm{V4}:\quad \frac{21(584+68)}{4} + \frac{20\times 584}{128} = 3514.25\ \text{B/token}.$$
+$$
+\mathrm{V4}:\quad \frac{21(584+68)}{4} + \frac{20\times 584}{128} = 3514.25\ \text{B/token}.
+$$
 
 > ℹ️ 说明：原书正文此式在 PDF 提取文本中串行错乱为「21584 + 68／4 + 20584／128 = 3514.25 B/token」，这是提取工具丢掉了括号与乘号所致，**不是原书的错误**。笔记按算式结构与给出的结果 3,514.25 还原为上式。两个依据：① 按还原式复算 $21\times 652/4 = 3423$、$20\times 584/128 = 91.25$，合计正好 $3514.25$，与正文印出的结果一致；② 原文同段明确给出「21 层 4:1 压缩和 20 层 128:1 压缩」与「主记录 584 B、索引记录 68 B」，正是还原式的构成。若按「索引记录也随 HCA 一起压缩」理解则会得到 3524.875，与正文结果不符，故不取。
 
@@ -904,29 +944,39 @@ Qwen3.6 的 A3B 名称体现激活规模，全部文本参数约为 346.6 亿，
 
 单专家参数量：
 
-$$N_e = 3 \times d \times f = 3 \times 2048 \times 512 = 3{,}145{,}728$$
+$$
+N_e = 3 \times d \times f = 3 \times 2048 \times 512 = 3{,}145{,}728
+$$
 
 其中 $d=2048$ 是主干隐藏维度（专家输入／输出宽度），$f=512$ 是专家中间维度，系数 3 表示 gate、up、down 三个矩阵（gate 与 up 各为 $d\times f$，down 为 $f\times d$）。
 
 BF16 存储量：
 
-$$M_e = b_W N_e = 2 \times 3{,}145{,}728 = 6{,}291{,}456\ \text{bytes} = 6\ \text{MiB}$$
+$$
+M_e = b_W N_e = 2 \times 3{,}145{,}728 = 6{,}291{,}456\ \text{bytes} = 6\ \text{MiB}
+$$
 
 其中 $b_W = 2$ 字节／参数（BF16）。注意 1 MiB $=2^{20}$ 字节，$6{,}291{,}456 / 2^{20} = 6$，所以原文说「6 MiB」而不是「6.29 MB」。
 
 每层全部路由专家与单 token 选中专家：
 
-$$M_{\text{layer}} = b_W E N_e = 256 \times 6\ \text{MiB} = 1{,}536\ \text{MiB} = 1.5\ \text{GiB}, \qquad M_{\text{token}} = 8 \times 6\ \text{MiB} = 48\ \text{MiB}$$
+$$
+M_{\text{layer}} = b_W E N_e = 256 \times 6\ \text{MiB} = 1{,}536\ \text{MiB} = 1.5\ \text{GiB}, \qquad M_{\text{token}} = 8 \times 6\ \text{MiB} = 48\ \text{MiB}
+$$
 
 单 token 专家运算量与「$2k_{\text{top}}N_e$」的等价性（笔记补充推导）：对一个 token 而言 $\sum_e t_e = k_{\text{top}} = 8$（它被分派给 8 个专家，每个专家各收到它的 1 行），于是
 
-$$6\,t_e d f \text{ 求和} = 6 d f \sum_e t_e = 6 \times 2048 \times 512 \times 8 = 50{,}331{,}648\ \text{FLOPs} \approx 0.0503\ \text{GFLOPs}$$
+$$
+6\,t_e d f \text{ 求和} = 6 d f \sum_e t_e = 6 \times 2048 \times 512 \times 8 = 50{,}331{,}648\ \text{FLOPs} \approx 0.0503\ \text{GFLOPs}
+$$
 
 而 $2k_{\text{top}}N_e = 2 \times 8 \times 3{,}145{,}728 = 50{,}331{,}648$ FLOPs，两者完全一致。这正是原文把「$6t_e \times 2048 \times 512$」和「$2k_{\text{top}}N_e$」写成同一件事的原因：$N_e = 3df$，展开后 $2k_{\text{top}} \cdot 3df = 6k_{\text{top}}df$。
 
 全模型文本参数与 BF16 权重：
 
-$$M_{\text{BF16}} = b_W \times 34.66 \times 10^9 = 2 \times 34.66 \times 10^9 = 69.32 \times 10^9\ \text{bytes} = 69.321\ \text{GB}$$
+$$
+M_{\text{BF16}} = b_W \times 34.66 \times 10^9 = 2 \times 34.66 \times 10^9 = 69.32 \times 10^9\ \text{bytes} = 69.321\ \text{GB}
+$$
 
 这里用的是十进制 GB（$1\ \text{GB}=10^9$ 字节），与前面 MiB 的口径不同，本章两种单位混用是原文的既定约定（见本章前文的开篇计数口径）。
 
@@ -958,7 +1008,9 @@ $2k_{\text{top}}N_e$ 统计的只是单个 token 的专家工作。一批 token 
 
 设本批实际访问的不同专家数为 $U$。路由过程中不丢弃任何分派给专家的 token 时，$\sum_e t_e = B k_{\text{top}}$，于是
 
-$$F_{\text{expert}} = 2N_e \sum_e t_e = 2N_e B k_{\text{top}}, \qquad R_{\text{expert}} = b_W N_e U$$
+$$
+F_{\text{expert}} = 2N_e \sum_e t_e = 2N_e B k_{\text{top}}, \qquad R_{\text{expert}} = b_W N_e U
+$$
 
 第一式按分派的总行数累计，第二式按实际读入的不同权重累计。两种路由方式都产生 512 次 token 到专家的分派；一个 token 发给八个专家，会在八个专家的输入矩阵中各占一行。这 512 行来自 64 个原始 token，矩阵运算量相同；但 $U$ 分别为 256 和 8，每层读取量分别为 1.5 GiB 和 48 MiB，相差 32 倍。40 层所有路由专家合计保存 60 GiB，集中路由每批选中的权重合计只有 1.875 GiB。
 
@@ -989,17 +1041,27 @@ $$F_{\text{expert}} = 2N_e \sum_e t_e = 2N_e B k_{\text{top}}, \qquad R_{\text{e
 
 几个数再复算一遍（笔记补充计算）。矩阵运算量两种路由方式都一样：
 
-$$F_{\text{expert}} = 2 \times 3{,}145{,}728 \times 512 = 3{,}221{,}225{,}472\ \text{FLOPs} \approx 3.22\ \text{GFLOPs}$$
+$$
+F_{\text{expert}} = 2 \times 3{,}145{,}728 \times 512 = 3{,}221{,}225{,}472\ \text{FLOPs} \approx 3.22\ \text{GFLOPs}
+$$
 
 权重读取量：
 
-$$R_{\text{均匀}} = 2 \times 3{,}145{,}728 \times 256 = 1{,}610{,}612{,}736\ \text{bytes} = 1.5\ \text{GiB}$$
-$$R_{\text{集中}} = 2 \times 3{,}145{,}728 \times 8 = 50{,}331{,}648\ \text{bytes} = 48\ \text{MiB}$$
-$$\frac{R_{\text{均匀}}}{R_{\text{集中}}} = \frac{256}{8} = 32$$
+$$
+R_{\text{均匀}} = 2 \times 3{,}145{,}728 \times 256 = 1{,}610{,}612{,}736\ \text{bytes} = 1.5\ \text{GiB}
+$$
+$$
+R_{\text{集中}} = 2 \times 3{,}145{,}728 \times 8 = 50{,}331{,}648\ \text{bytes} = 48\ \text{MiB}
+$$
+$$
+\frac{R_{\text{均匀}}}{R_{\text{集中}}} = \frac{256}{8} = 32
+$$
 
 整模型累加：
 
-$$M_{\text{全部路由专家}} = 40 \times 1.5\ \text{GiB} = 60\ \text{GiB}, \qquad R_{\text{集中,40层}} = 40 \times 48\ \text{MiB} = 1{,}920\ \text{MiB} = 1.875\ \text{GiB}$$
+$$
+M_{\text{全部路由专家}} = 40 \times 1.5\ \text{GiB} = 60\ \text{GiB}, \qquad R_{\text{集中,40层}} = 40 \times 48\ \text{MiB} = 1{,}920\ \text{MiB} = 1.875\ \text{GiB}
+$$
 
 > 图 2-23（原文插图）：64 个 token 各选八个专家，总计 512 次分派。图分左右两半：左边「分散」画 64 个 token 扇出到 256 个专家，每个专家平均只收到 2 行；右边「集中」画 64 个 token 全部落到同 8 个专家，每个专家平均收到 64 行。图注的结论是「分散时可覆盖 256 个专家，集中时只访问八个；每专家处理的行数随之改变」——它想强调的是：**分派总次数不变（512），但被访问到的权重份数可以从 256 变到 8**。
 
@@ -1021,7 +1083,9 @@ DeepSeek V4-Flash 每层有 256 个路由专家，每 token 选 6 个，另有 1
 
 共享专家处理本次全部 $m$ 个 token 的特征向量，路由专家 $e$ 只处理分派给它的 $t_e$ 个 token。若共享专家有 $N_s$ 个参数，一层的专家矩阵运算量为
 
-$$2mN_s + 2\sum_e t_e N_e$$
+$$
+2mN_s + 2\sum_e t_e N_e
+$$
 
 普通的单步 decode 中，每条请求输入一个新 token，此时 $m=B$；prefill 则要累计各请求本次处理的全部 token。DeepSeek V4-Flash 每 token 选择六个路由专家并执行一个共享专家，运算量正是这两部分之和，容量则需要保存全部 256 个路由专家和共享分支。
 
@@ -1031,18 +1095,26 @@ Kimi K3 那边是另一种形状：每个 MoE 层有 896 个路由专家，每�
 
 下面把几个数复算一遍（笔记补充，原书只给结论）。DeepSeek V4-Flash 的单专家参数量：
 
-$$N_e = 2 \times d \times f + f \times d = 2 \times 4096 \times 2048 + 2048 \times 4096 = 16{,}777{,}216 + 8{,}388{,}608 = 25{,}165{,}824$$
+$$
+N_e = 2 \times d \times f + f \times d = 2 \times 4096 \times 2048 + 2048 \times 4096 = 16{,}777{,}216 + 8{,}388{,}608 = 25{,}165{,}824
+$$
 
 其中 $d=4096$ 是主干隐藏维度，$f=2048$ 是路由专家中间维度；两个 $d\times f$ 分别是 gate 与 up，一个 $f\times d$ 是 down。单专家每 token 的矩阵运算量：
 
-$$6 t_e d f = 6 \times 1 \times 4096 \times 2048 = 50{,}331{,}648\ \text{FLOPs} \approx 50.3\ \text{MFLOPs}$$
+$$
+6 t_e d f = 6 \times 1 \times 4096 \times 2048 = 50{,}331{,}648\ \text{FLOPs} \approx 50.3\ \text{MFLOPs}
+$$
 
 整模型路由专家参数（与 2.6 节的表 2-B 对照）：$256 \times 25{,}165{,}824 \times 43 = 277{,}025{,}390{,}592 \approx 277.025\text{B}$。
 
 Kimi K3 的单专家参数量与整模型路由专家参数：
 
-$$N_e^{K3} = 2 \times 3584 \times 3072 + 3072 \times 3584 = 22{,}020{,}096 + 11{,}010{,}048 = 33{,}030{,}144$$
-$$896 \times 33{,}030{,}144 \times 92 = 2{,}722{,}740{,}830{,}208 \approx 2722.741\text{B}$$
+$$
+N_e^{K3} = 2 \times 3584 \times 3072 + 3072 \times 3584 = 22{,}020{,}096 + 11{,}010{,}048 = 33{,}030{,}144
+$$
+$$
+896 \times 33{,}030{,}144 \times 92 = 2{,}722{,}740{,}830{,}208 \approx 2722.741\text{B}
+$$
 
 **练习2-6〔延伸〕：专家数量与分派方式如何影响计算和权重读取**
 
@@ -1059,20 +1131,28 @@ FLOPs、被访问的专家数量与 BF16 权重读取量：
 
 接下来把专家总数减半、中间维度加倍、选中数减半，即 $E: 256\to128$、$f: 512\to1024$、$k_{\text{top}}: 8\to4$：
 
-$$3Edf = 3 \times 256 \times 2048 \times 512 = 3 \times 128 \times 2048 \times 1024 = 805{,}306{,}368$$
-$$6k_{\text{top}}df = 6 \times 8 \times 2048 \times 512 = 6 \times 4 \times 2048 \times 1024 = 50{,}331{,}648$$
+$$
+3Edf = 3 \times 256 \times 2048 \times 512 = 3 \times 128 \times 2048 \times 1024 = 805{,}306{,}368
+$$
+$$
+6k_{\text{top}}df = 6 \times 8 \times 2048 \times 512 = 6 \times 4 \times 2048 \times 1024 = 50{,}331{,}648
+$$
 
 专家总参数量不变，单 token 实际执行的专家矩阵运算量也不变，这正是第 2.5.1 节说的「保持参数量和运算量不变」的等价变换。但每层专家数少了、单个专家宽了，分派结构就变成「256 次分派落到 128 个专家」：均匀时 $t_e=2$、$U=128$，读取量 $2\times(3\times2048\times1024)\times128 = 1.5$ GiB；集中时 4 个专家各 $t_e=64$、$U=4$，读取量 $2\times6{,}291{,}456\times4 = 48$ MiB。读取量恰好也不变，变的是矩阵形状与分组 GEMM 的组织方式。
 
 加入共享专家时，共享专家处理全部 $m=64$ 行，若其参数量为 $N_s$，则
 
-$$M_{\text{层}} = b_W(E N_e + N_s), \qquad F_{\text{层}} = 2mN_s + 2\sum_e t_e N_e$$
+$$
+M_{\text{层}} = b_W(E N_e + N_s), \qquad F_{\text{层}} = 2mN_s + 2\sum_e t_e N_e
+$$
 
 按表 2-A，Qwen3.6 共享专家中间宽度为 512，故 $N_s = 3\times2048\times512 = 3{,}145{,}728$，$2mN_s = 2\times64\times3{,}145{,}728 = 402{,}653{,}184 \approx 0.403$ GFLOPs。这一项约为路由专家 3.22 GFLOPs 的八分之一，不能漏掉。
 
 加入潜空间投影时（以 Kimi K3 的形状为例，$d=7168$、潜空间宽度 $d_e=3584$），进入投影 $2mdd_e$、离开投影 $2md_e d$ 各自为
 
-$$2 \times 64 \times 7168 \times 3584 = 3{,}288{,}334{,}336 \text{ FLOPs} \approx 3.29\ \text{GFLOPs（每次投影，整批）}$$
+$$
+2 \times 64 \times 7168 \times 3584 = 3{,}288{,}334{,}336 \text{ FLOPs} \approx 3.29\ \text{GFLOPs（每次投影，整批）}
+$$
 
 两者合计约 6.58 GFLOPs，而该层 64 个 token 的路由专家运算量为 $2mk_{\text{top}}N_e = 2\times64\times16\times33{,}030{,}144 \approx 67.6$ GFLOPs。潜空间投影是每层都要为所有 token 执行一次的固定开销，专家运算量则随选中数放大，所以短上下文、小 batch 时前者的占比会更显眼。
 
@@ -1102,7 +1182,9 @@ $$2 \times 64 \times 7168 \times 3584 = 3{,}288{,}334{,}336 \text{ FLOPs} \appro
 
 下面这几个式子是把上面的量写成公式的样子，复算是笔记补的，原书只给了「这两个量都不变」这个结论。
 
-$$N_{\text{主干}} \propto L d^2, \qquad N_E^{\text{层}} = 3Edf, \qquad F^{\text{单token}} = 6k_{\text{top}}df$$
+$$
+N_{\text{主干}} \propto L d^2, \qquad N_E^{\text{层}} = 3Edf, \qquad F^{\text{单token}} = 6k_{\text{top}}df
+$$
 
 | 变体 | $E$ | $f$ | $k_{\text{top}}$ | $3Edf$ | $6k_{\text{top}}df$ |
 | --- | --- | --- | --- | --- | --- |
@@ -1137,7 +1219,9 @@ Kimi K3 走的是另一条路。它希望当前层能按需要选取不同深度
 
 普通残差的式子是
 
-$$x_{\ell+1} = x_\ell + f_\ell(x_\ell)$$
+$$
+x_{\ell+1} = x_\ell + f_\ell(x_\ell)
+$$
 
 其中 $x_\ell \in \mathbb{R}^{d}$ 是第 $\ell$ 个子层的输入（这里 $d=4096$），$f_\ell(\cdot)$ 是该子层的变换（注意力或 FFN），$x_{\ell+1}$ 是写回残差通路的结果。
 
@@ -1169,7 +1253,9 @@ AttnRes 与序列注意力的区别很好记：序列注意力在 token 维度�
 
 设一次普通 decode 耗时为 $T_d$，一轮推测解码的草稿与验证合计耗时为 $T_s + T_v$，平均得到 $\bar{g}$ 个有效输出，每输出分摊的时间就是 $(T_s + T_v)/\bar{g}$。有收益的条件是
 
-$$\bar{g} > \frac{T_s + T_v}{T_d}$$
+$$
+\bar{g} > \frac{T_s + T_v}{T_d}
+$$
 
 原书给的例子是这样的：普通 decode 为 20 ms，草稿与验证合计 30 ms，平均每轮得到两个有效输出时，每输出分摊 15 ms；只能得到一个，就需要 30 ms。多预测几个位置会增加单轮工作量，只有采用的输出足够多，才能抵消新增的计算开销。
 
@@ -1184,7 +1270,9 @@ $$\bar{g} > \frac{T_s + T_v}{T_d}$$
 
 MTP 辅助计算的构成也复算过一遍。共享词表头对 1 个 token 的投影为
 
-$$2 \times m \times d \times V = 2 \times 1 \times 4096 \times 129280 = 1{,}059{,}061{,}760 \approx 1.06\ \text{GFLOPs}$$
+$$
+2 \times m \times d \times V = 2 \times 1 \times 4096 \times 129280 = 1{,}059{,}061{,}760 \approx 1.06\ \text{GFLOPs}
+$$
 
 其中 $m=1$ 是本次参与的行数，$d=4096$ 是 DeepSeek V4-Flash 的主干隐藏维度，$V=129280$ 是词表大小，系数 2 表示一次乘加计 2 FLOPs。这与原文「共享词表头约需 1.06 GFLOPs」一致；剩下的 $1.80 - 1.06 = 0.74$ GFLOPs 由辅助块的其他投影承担。**共享词表头不增加独立权重，运算却一笔都不少**，权重可以复用，每次调用仍得做一遍 $d\times V$ 的投影。
 
@@ -1236,8 +1324,12 @@ V4.1 Flash 的执行阶段值得单独交代。它的 40 层分成 20 层因果�
 
 有了一类层的参数、一次调用的运算和一条请求的状态，整模型只需把这些项按各类层的实际数量加权求和：
 
-$$M_W = b_W \sum_g L_g N_g + M_{\text{embedding}} + M_{\text{head}}$$
-$$F_{\text{model}} = \sum_g L_g F_g + F_{\text{head}}$$
+$$
+M_W = b_W \sum_g L_g N_g + M_{\text{embedding}} + M_{\text{head}}
+$$
+$$
+F_{\text{model}} = \sum_g L_g F_g + F_{\text{head}}
+$$
 
 其中 $g$ 表示模型层的类别（同一类层采用相同的注意力、前馈网络与连接结构），$L_g$ 为第 $g$ 类层的数量。MoE 的 $N_g$ 包含全部专家，$F_g$ 则使用各专家实际接收的行数。表 2-1 已建立 Qwen3-8B 的稠密基线；章末查阅表按同样方式展开 Qwen3.6、DeepSeek-V3、DeepSeek V4-Flash、Kimi K3 和 DeepSeek V4.1 Flash，方便查明总量中的每一项来自哪个矩阵。
 
@@ -1450,13 +1542,17 @@ Kimi K3 的 69 个 KDA 层保持固定递推状态，24 个 MLA 层继续访问�
 
 把分项算出来的模型权重和每条请求的状态放进同一张显存容量表，就能回答两个很实际的问题：一张卡能同时容纳多少条请求，量化权重又能释放多少空间。对单张卡来说，先从总容量里扣掉权重、工作区和其他固定预留，剩下的才是放请求状态的地方。在请求等长、各自独立保存 KV 的简化情形下，可以写成
 
-$$B_{\max} = \left\lfloor \frac{M_{\text{device}} - M_{\text{weight}} - M_{\text{workspace}}}{M_{\text{state/request}}} \right\rfloor$$
+$$
+B_{\max} = \left\lfloor \frac{M_{\text{device}} - M_{\text{weight}} - M_{\text{workspace}}}{M_{\text{state/request}}} \right\rfloor
+$$
 
 分子是扣掉固定驻留数据之后可用于请求的空间，分母是每条请求的状态大小。每加一条请求就得为它分配一份状态，剩余空间装不下完整的一份时请求数就不能再加，所以结果向下取整，不能四舍五入。递推与卷积状态同样属于每请求数据，要和 KV 一起算进分母。
 
 拿一张 24 GB 显存的 RTX 4090 跑 Qwen3-8B BF16 试一下：权重占 16,381,470,720 字节，工作区预留 2 GiB，每条请求的 8K 上下文占 1.125 GiB。可容纳的请求数是
 
-$$B_{\max} = \left\lfloor \frac{24 \times 10^9 - 16{,}381{,}470{,}720 - 2 \times 2^{30}}{1.125 \times 2^{30}} \right\rfloor = 4$$
+$$
+B_{\max} = \left\lfloor \frac{24 \times 10^9 - 16{,}381{,}470{,}720 - 2 \times 2^{30}}{1.125 \times 2^{30}} \right\rfloor = 4
+$$
 
 上下文换成 16K 时，每条请求涨到 2.25 GiB，同一块空间只能放两条；换成 4K，能放九条。请求数在这些档位之间是整数跳变的，原因就在「完整」两个字上：装下一部分状态没有意义。
 
@@ -1484,8 +1580,12 @@ $$B_{\max} = \left\lfloor \frac{24 \times 10^9 - 16{,}381{,}470{,}720 - 2 \times
 
 下面这些数按同一批数据复算一遍就能对上。RTX 4090 跑 Qwen3-8B BF16：
 
-$$24\times10^9 - 16{,}381{,}470{,}720 - 2\times2^{30} = 24{,}000{,}000{,}000 - 16{,}381{,}470{,}720 - 2{,}147{,}483{,}648 = 5{,}471{,}045{,}632\ \text{bytes}$$
-$$\frac{5{,}471{,}045{,}632}{1.125 \times 2^{30}} = \frac{5{,}471{,}045{,}632}{1{,}207{,}959{,}552} \approx 4.53 \Rightarrow B_{\max} = 4$$
+$$
+24\times10^9 - 16{,}381{,}470{,}720 - 2\times2^{30} = 24{,}000{,}000{,}000 - 16{,}381{,}470{,}720 - 2{,}147{,}483{,}648 = 5{,}471{,}045{,}632\ \text{bytes}
+$$
+$$
+\frac{5{,}471{,}045{,}632}{1.125 \times 2^{30}} = \frac{5{,}471{,}045{,}632}{1{,}207{,}959{,}552} \approx 4.53 \Rightarrow B_{\max} = 4
+$$
 
 16K 时分母变成 $2.25\times2^{30} = 2{,}415{,}919{,}104$，$\dfrac{5{,}471{,}045{,}632}{2{,}415{,}919{,}104}\approx 2.27 \Rightarrow B_{\max}=2$ ✓
 4K 时分母变成 $0.5625\times2^{30} = 603{,}979{,}776$，$\dfrac{5{,}471{,}045{,}632}{603{,}979{,}776}\approx 9.06 \Rightarrow B_{\max}=9$ ✓
@@ -1533,11 +1633,15 @@ H100 SXM（80 GB 十进制）跑 70B：
 
 给定加速器和服务目标，也可以反过来求留给模型的空间。设每卡可用容量为 $C$，固定预留工作区为 $M_0$，每条请求的 KV 为 $K$，并发为 $B$，每参数占 $b_W$ 字节。忽略其他驻留对象，单卡容量给出的参数上界为
 
-$$N_{\max} = \frac{C - M_0 - BK}{b_W}$$
+$$
+N_{\max} = \frac{C - M_0 - BK}{b_W}
+$$
 
 思路是先确定服务所需的状态大小，再算留给权重的空间。取 RTX 4090 的 24 GB 容量、2 GiB 工作区、4 条各 8192 个 token 的请求，每请求 KV 沿用 Qwen3-8B 的 1.125 GiB，BF16 每参数 2 字节，剩余空间最多容纳约 85.1 亿参数。²⁷
 
-$$N_{\max} = \frac{24\times10^9 - 2\times2^{30} - 4\times1.125\times2^{30}}{2} = \frac{17{,}020{,}678{,}144}{2} = 8{,}510{,}339{,}072 \approx 85.1\ \text{亿参数}$$
+$$
+N_{\max} = \frac{24\times10^9 - 2\times2^{30} - 4\times1.125\times2^{30}}{2} = \frac{17{,}020{,}678{,}144}{2} = 8{,}510{,}339{,}072 \approx 85.1\ \text{亿参数}
+$$
 
 我按这个式子复算的结果与原文「约 85.1 亿」一致；图 2-34 里那三段容量 4.83 GB ＋ 2.15 GB ＋ 17.02 GB ＝ 24 GB 也与此式吻合。
 
@@ -1607,7 +1711,9 @@ Kimi K3 那 27.16 TFLOPs 来自它的体量：93 层、$d=7168$、词表 163840�
 - **投影行数**：完全重算需要让 1443 行都过一遍 prefill 投影，复用后只处理 51 行，减少 **$1443-51 = 1392$ 行**，降幅 $1392/1443 \approx 96.5\%$。
 - **有效因果查询—键配对数**：完全重算约 $\dfrac{1443\times1444}{2} = 1{,}041{,}846$ 对；复用后仅新增的 51 个 token 作为查询、对全部 1443 个位置打分：
 
-$$51 \times 1392 + \frac{51\times52}{2} = 70{,}992 + 1{,}326 = 72{,}318\ \text{对}$$
+$$
+51 \times 1392 + \frac{51\times52}{2} = 70{,}992 + 1{,}326 = 72{,}318\ \text{对}
+$$
 
 减少 $1{,}041{,}846 - 72{,}318 = \mathbf{969{,}528}$ 对，降幅约 **93.1%**。
 

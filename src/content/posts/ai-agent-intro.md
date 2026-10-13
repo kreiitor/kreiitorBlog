@@ -13,8 +13,6 @@ order: 1
 cover: /covers/series-ai-agent.svg
 ---
 
-# 引言
-
 > 对应原书《深入理解AI Agent：设计原理与工程实践》（李博杰 著）的引言，印刷 p.1–6（PDF 第 9–14 页）。
 > 引言分四节：全书结构、如何阅读本书、前置知识、致谢，末尾是自测题。
 
@@ -54,7 +52,9 @@ cover: /covers/series-ai-agent.svg
 
 全书的核心公式只有一句话：
 
-$$\text{Agent} = \text{LLM} + \text{上下文} + \text{工具}$$
+$$
+\text{Agent} = \text{LLM} + \text{上下文} + \text{工具}
+$$
 
 三者缺一不可。LLM 是大语言模型，上下文是模型能感知到的全部信息，工具是 Agent 可调用的外部能力。原文写的是加号，所以这三样是并列相加的关系，缺任何一项都不构成完整的 Agent。
 
@@ -77,7 +77,9 @@ $$\text{Agent} = \text{LLM} + \text{上下文} + \text{工具}$$
 
 对熟悉强化学习的读者，这三者还能映射到 RL 的形式化语言里。
 
-$$(\text{LLM},\ \text{上下文},\ \text{工具}) \;\longleftrightarrow\; (\text{Policy},\ \text{Observation Space},\ \text{Action Space})$$
+$$
+(\text{LLM},\ \text{上下文},\ \text{工具}) \;\longleftrightarrow\; (\text{Policy},\ \text{Observation Space},\ \text{Action Space})
+$$
 
 LLM 对应 Policy（策略），上下文对应 Observation Space（观察空间），工具对应 Action Space（动作空间）。原文的结论是三种说法对应同一个对象，只是表达层次不同：实现层说"LLM + 上下文 + 工具"，直觉层说"大脑 + 眼睛 + 手脚"，学术层说"策略 + 观察空间 + 动作空间"。
 

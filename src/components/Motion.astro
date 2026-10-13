@@ -1,4 +1,4 @@
-<a href="#main-content" class="back-to-top" data-back-to-top aria-label="回到页面顶部" aria-hidden="true" tabindex="-1"><span aria-hidden="true">↑</span></a>
+<a href="#top" class="back-to-top" data-back-to-top aria-label="回到页面顶部" aria-hidden="true" tabindex="-1"><span aria-hidden="true">↑</span></a>
 <script>
  const preference = matchMedia('(prefers-reduced-motion: reduce)');
  const header = document.querySelector<HTMLElement>('.site-header');
@@ -58,6 +58,6 @@
  .back-to-top:hover { background: var(--color-accent-soft); }
  @view-transition { navigation: auto; }
  ::view-transition-old(root),::view-transition-new(root) { animation-duration: .18s; }
- @media (max-width: 600px) { .back-to-top { width: 38px; height: 38px; right: 16px; bottom: 18px; } }
+ @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 </style>

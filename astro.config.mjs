@@ -2,11 +2,9 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import { baseLinks } from './src/utils/rehype-base-links.mjs';
 import { unified } from '@astrojs/markdown-remark';
-import { journalCodeTheme } from './src/styles/code-theme.mjs';
+import { markdownOptions } from './src/utils/markdown.mjs';
+import { tagAliases } from './src/utils/tags';
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const base =
@@ -20,19 +18,20 @@ export default defineConfig({
 	output: 'static',
 	trailingSlash: 'always',
 	devToolbar: { enabled: false },
-	integrations: [sitemap()],
+	integrations: [sitemap({ filter: url => {
+		const pathname = new URL(url).pathname;
+		const tag = pathname.match(/\/tags\/([^/]+)\/?$/)?.[1];
+		return !/\/(?:search|404)\/?$/.test(pathname) && !(tag && Object.hasOwn(tagAliases,decodeURIComponent(tag)));
+	} })],
 	markdown: {
-		shikiConfig: { theme: journalCodeTheme, langAlias: { gitignore: 'text' } },
-		processor: unified({
-			remarkPlugins: [remarkMath],
-			rehypePlugins: [[rehypeKatex, { strict: 'ignore', throwOnError: false }], baseLinks(base)],
-		}),
+		shikiConfig: markdownOptions(base).shikiConfig,
+		processor: unified(markdownOptions(base)),
 	},
 	vite: {
 		plugins: [tailwindcss()],
 		build: {
 			cssCodeSplit: true,
-			assetsInlineLimit: 4096,
+			assetsInlineLimit: 0,
 		},
 	},
 });

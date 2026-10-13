@@ -1,55 +1,10 @@
 ---
-import { getCollection, render } from 'astro:content';
-import GiscusComments from '../../components/GiscusComments.astro';
-import TagLink from '../../components/TagLink.astro';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import ReadingTools from '../../components/ReadingTools.astro';
-import MathLabel from '../../components/MathLabel.astro';
-import { getPublishedPosts, getReadingTime, getHeadingLabels } from '../../utils/content';
-import { formatDate } from '../../utils/date';
-import { withBase } from '../../utils/url';
-import { getLearningSeries } from '../../utils/series';
+import { getCollection } from 'astro:content';
+import ArticlePage from '../../components/ArticlePage.astro';
+import { getPublishedPosts } from '../../utils/content';
 export async function getStaticPaths() {
- return getPublishedPosts(await getCollection('posts')).map(post => ({ params:{slug:post.id}, props:{post} }));
+ return getPublishedPosts(await getCollection('posts')).map(post => ({ params: { slug: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
-const { Content, headings } = await render(post);
-const sourceLabels = getHeadingLabels(post.body ?? '');
-const tocHeadings = headings.filter(heading => heading.depth <= 2).map((heading,index) => ({ ...heading, text: sourceLabels[index] ?? heading.text }));
-const group = post.data.series ? getLearningSeries(await getCollection('series'), await getCollection('posts')).find(item => item.entry.id === post.data.series) : undefined;
-const series = group?.chapters ?? [];
-const seriesHref = group ? `/notes/${group.entry.id}/` : '/blog/';
-const index = series.findIndex(item => item.id === post.id);
-const previous = series[index-1];
-const next = series[index+1];
 ---
-<BaseLayout title={post.data.title} description={post.data.description} image={post.data.cover ?? '/social-card.svg'} type="article" searchWeight={post.data.series ? 0.6 : 1.5} publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags}>
- <ReadingTools/>
- <section class="page-shell pt-10 sm:pt-14">
-  <a href={withBase(seriesHref)} class="text-link back-link">← {group ? `返回${group.entry.data.title}` : '返回全部札记'}</a>
-  <div class="article-layout">
-   <article data-pagefind-body data-reading-article>
-    <header class="article-header">
-     <span data-pagefind-meta="type" class="sr-only">{post.data.category === 'course' ? '学习笔记' : '博客文章'}</span>
-     <p class="eyebrow">{group ? `${group.entry.data.englishTitle ?? group.entry.data.title} / ${String(index+1).padStart(2,'0')}` : 'FIELD NOTES / '+post.data.tags[0]}</p>
-     <h1 data-pagefind-meta="title">{post.data.title}</h1>
-     <p class="article-summary">{post.data.description}</p>
-     <div class="card-meta"><span>kreiitor</span><span>·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <span>· 更新于 {formatDate(post.data.updatedDate)}</span>}</div>
-     <div class="mt-5 flex flex-wrap gap-2">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
-    </header>
-    <details class="mobile-toc"><summary>本篇目录 · {tocHeadings.length} 个章节</summary><nav aria-label="移动端文章目录">{tocHeadings.map(heading => <a href={`#${heading.slug}`}><MathLabel text={heading.text}/></a>)}</nav></details>
-    {post.data.cover && <img src={withBase(post.data.cover)} alt="" class="article-cover mt-8" width="800" height="420"/>}
-    <div class="rich-content article-body"><Content/></div>
-    {series.length > 0 && <nav class="chapter-nav" data-pagefind-ignore aria-label="相邻章节"><div>{previous && <a href={withBase(`/blog/${previous.id}/`)}><span>← 上一章</span><strong>{previous.data.title}</strong></a>}</div><div>{next && <a href={withBase(`/blog/${next.id}/`)}><span>下一章 →</span><strong>{next.data.title}</strong></a>}</div></nav>}
-    <div data-pagefind-ignore><GiscusComments/></div>
-   </article>
-   <aside data-pagefind-ignore><nav class="article-toc" aria-label="文章目录"><p class="eyebrow mb-4">ON THIS PAGE / 本篇目录</p>{tocHeadings.map(heading => <a href={`#${heading.slug}`} data-toc-link><MathLabel text={heading.text}/></a>)}{series.length > 0 && <a href={withBase(seriesHref)} class="mt-6">查看完整学习路径 ↗</a>}</nav></aside>
-  </div>
- </section>
-</BaseLayout>
-<style>
- .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; border-block: 1px solid var(--color-line); padding: 24px 0; margin-bottom: 36px; }
- .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
- .chapter-nav strong { font-weight: 500; font-size: 14px; } .chapter-nav span { color: var(--color-ink-muted); font-size: 10px; }
- .chapter-nav > div:last-child { text-align: right; }
-</style>
+<ArticlePage post={post}/>
