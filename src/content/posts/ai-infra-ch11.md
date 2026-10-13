@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 12
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第11章 资源调度与运行环境

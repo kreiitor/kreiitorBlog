@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 10
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第9章 Agent 的持续进化

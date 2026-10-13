@@ -5,7 +5,7 @@ interface Props { series: LearningSeries; }
 const { series } = Astro.props;
 const { entry, chapters } = series;
 ---
-<a href={withBase(`/notes/${entry.id}/`)} class="zen-card series-card">
+<a href={withBase(`/notes/${entry.id}/`)} class="zen-card series-card" data-series={entry.id}>
  <div class="series-heading"><span class="series-emblem" aria-hidden="true">{entry.data.emblem}</span><div><p class="eyebrow">{entry.data.englishTitle ?? 'STRUCTURED LEARNING'}</p><h3>{entry.data.title}</h3></div><span class="series-arrow" aria-hidden="true">↗</span></div>
  <p class="series-description">{entry.data.description}</p>
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
@@ -17,7 +17,8 @@ const { entry, chapters } = series;
  .series-heading > div { min-width: 0; }
  .series-heading .eyebrow { font-size: 9px; letter-spacing: .1em; overflow-wrap: anywhere; }
  .series-heading h3 { margin-top: 9px; font-size: 25px; }
- .series-emblem { font-family: var(--font-editorial); font-size: 46px; color: var(--color-accent); line-height: 1; }
+ .series-emblem { font-family: var(--font-editorial); font-size: 46px; color: var(--color-accent); line-height: 1; width: 58px; height: 58px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-line-strong); border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--color-surface) 0%, var(--color-accent-soft) 100%); font-size: 26px; font-style: normal; transition: border-color .2s var(--ease-smooth),transform .3s var(--ease-out-expo); }
+ .series-card:hover .series-emblem { border-color: var(--color-accent); transform: rotate(-6deg); }
  .series-arrow { margin-left: auto; align-self: start; color: var(--color-accent); transition: transform .2s var(--ease-smooth); }
  .series-card:hover .series-arrow { transform: translate(3px,-3px); }
  .series-description { color: var(--color-ink-soft); font-size: 13px; line-height: 2; margin: 22px 0; max-width: 65ch; }

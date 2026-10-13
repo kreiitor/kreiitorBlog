@@ -23,7 +23,7 @@ const index = series.findIndex(item => item.id === post.id);
 const previous = series[index-1];
 const next = series[index+1];
 ---
-<BaseLayout title={post.data.title} description={post.data.description} image={post.data.cover ?? '/social-card.svg'} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags}>
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.cover ?? '/social-card.svg'} type="article" searchWeight={post.data.series ? 0.6 : 1.5} publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags}>
  <ReadingTools/>
  <section class="page-shell pt-10 sm:pt-14">
   <a href={withBase(seriesHref)} class="text-link back-link">← {group ? `返回${group.entry.data.title}` : '返回全部札记'}</a>

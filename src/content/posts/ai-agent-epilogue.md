@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 12
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 后记：回到 Agent = LLM + 上下文 + 工具

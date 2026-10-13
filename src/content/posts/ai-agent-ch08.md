@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 9
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第8章 模型后训练

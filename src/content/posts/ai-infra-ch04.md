@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 5
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第 4 章 加速器架构

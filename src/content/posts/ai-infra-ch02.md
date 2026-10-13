@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 3
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第2章 模型架构

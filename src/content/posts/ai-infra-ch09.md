@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 10
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第9章 分布式推理

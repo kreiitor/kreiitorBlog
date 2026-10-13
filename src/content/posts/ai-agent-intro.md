@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 1
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 引言

@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 13
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第12章 端边云协同

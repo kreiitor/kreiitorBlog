@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 4
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 3 章 用户记忆和知识库

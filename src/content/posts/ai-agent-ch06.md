@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 7
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 6 章 交互：观察与动作空间的扩展

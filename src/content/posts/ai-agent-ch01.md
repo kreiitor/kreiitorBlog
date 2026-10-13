@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 2
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第1章 AI Agent 入门

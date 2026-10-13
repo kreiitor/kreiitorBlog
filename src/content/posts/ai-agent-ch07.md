@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 8
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 7 章 Agent 的评估

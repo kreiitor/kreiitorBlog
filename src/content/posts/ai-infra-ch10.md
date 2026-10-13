@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 11
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第10章 训练系统

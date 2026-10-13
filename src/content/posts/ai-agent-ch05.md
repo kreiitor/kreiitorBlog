@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 6
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 5 章 Coding Agent 与通用 Agent

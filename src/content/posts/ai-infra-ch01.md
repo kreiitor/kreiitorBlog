@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 2
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第1章 初识AI Infra

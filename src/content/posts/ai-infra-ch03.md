@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 4
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第 3 章 推理与训练负载

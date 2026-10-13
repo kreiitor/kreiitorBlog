@@ -25,6 +25,7 @@ interface Props {
 	publishedTime?: Date;
 	updatedTime?: Date;
 	tags?: string[];
+	searchWeight?: number;
 }
 
 const {
@@ -36,6 +37,7 @@ const {
 	publishedTime,
 	updatedTime,
 	tags = [],
+	searchWeight,
 } = Astro.props;
 
 const pageTitle = title === siteConfig.title ? title : `${title} — ${siteConfig.title}`;
@@ -79,7 +81,7 @@ const imageUrl = image.startsWith('http') ? image : new URL(withBase(image), sit
 		<a href="#main-content" class="skip-link">跳到主要内容</a>
 		<div class="relative">
 			<SiteHeader currentPath={currentPath} />
-			<main id="main-content" tabindex="-1">
+			<main id="main-content" tabindex="-1" {...(searchWeight !== undefined ? { 'data-pagefind-weight': searchWeight } : {})}>
 				<slot />
 			</main>
 			<SiteFooter />

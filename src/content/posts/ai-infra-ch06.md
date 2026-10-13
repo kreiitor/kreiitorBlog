@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 7
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第6章 超节点

@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 5
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 4 章 工具

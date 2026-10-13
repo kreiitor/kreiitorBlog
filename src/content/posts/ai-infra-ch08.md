@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 9
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第 8 章 推理优化

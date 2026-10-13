@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 0
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 《深入理解AI Agent：设计原理与工程实践》学习笔记 · 全书导读

@@ -29,7 +29,7 @@ const { Content } = await render(entry);
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 30px; align-items: start; }
  .course-intro { padding: 32px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper-warm); position: sticky; top: 118px; }
- .course-emblem { font-family: var(--font-editorial); font-size: 100px; line-height: 1.1; color: var(--color-accent); display: block; margin-top: 25px; }
+ .course-emblem { font-family: var(--font-editorial); font-size: 46px; font-style: normal; line-height: 1.1; color: var(--color-accent); display: grid; place-items: center; width: 96px; height: 96px; margin-top: 25px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--color-surface) 0%, var(--color-accent-soft) 100%); }
  .course-intro h1 { font-size: 25px; margin-top: 10px; }
  .course-english { font-family: var(--font-editorial); font-size: 24px; line-height: 1.35; color: var(--color-accent); margin-top: 10px; }
  .course-description { margin-top: 25px; font-size: 12px; line-height: 2; color: var(--color-ink-soft); }

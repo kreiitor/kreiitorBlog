@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 6
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第 5 章 算子与运行时

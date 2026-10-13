@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 8
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 第7章 数据中心网络

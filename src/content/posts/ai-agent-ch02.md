@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 3
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 2 章 上下文工程

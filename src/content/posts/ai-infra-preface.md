@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-infra
 order: 1
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-infra.svg
 ---
 
 # 《深入理解AI Infra：量化分析与系统设计》前言

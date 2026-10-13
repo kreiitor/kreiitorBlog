@@ -10,7 +10,7 @@ tags:
 category: course
 series: ai-agent
 order: 11
-cover: /covers/post-llm.svg
+cover: /covers/series-ai-agent.svg
 ---
 
 # 第 10 章 多 Agent 协作
