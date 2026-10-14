@@ -7,7 +7,7 @@ tags:
   - "学习笔记"
   - "Go"
 category: knowledge
-cover: /covers/post-code-algorithm.svg
+cover: /covers/post-code-go.svg
 featured: true
 ---
 

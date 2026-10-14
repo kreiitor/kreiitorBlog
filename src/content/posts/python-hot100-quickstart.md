@@ -7,7 +7,7 @@ tags:
   - "学习笔记"
   - "Python"
 category: knowledge
-cover: /covers/post-code-algorithm.svg
+cover: /covers/post-code-python.svg
 featured: true
 ---
 

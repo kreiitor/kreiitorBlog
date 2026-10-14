@@ -78,6 +78,19 @@ draft: true
 
 学习章节缺少 `series` / `order`、引用未配置系列或同组已发布章节序号重复时，检查或构建会报错并说明位置；草稿不参与目录和相邻章节导航。
 
+## 隐藏页图片
+
+隐藏页位于 `/gallery/`，入口是“关于”页右侧标志连续点击三次。新增图片分两步：
+
+1. 把图片放入 `public/gallery/`。文件名可以使用中文，但应避免空格和特殊符号；推荐 JPG 或 WebP，并在提交前适当压缩。
+2. 打开 `src/pages/gallery.astro`，在 `photos` 数组中加入一项：
+
+```js
+{ file: '新的图片.jpg', title: '显示在图片下方的标题' },
+```
+
+数组顺序就是页面展示顺序。当前第三张图会横跨两列；如需调整宽图位置，同时修改模板里的 `i === 2`。
+
 ## 项目说明
 
 在 `src/content/projects/` 新建文件，例如 `my-project.md`：
@@ -151,3 +164,15 @@ npm run preview
 ```
 
 添加内容后先检查本地预览。只有明确准备发布时才提交并推送到 GitHub；构建本身不会提交或发布。新标题的字体自动使用完整回退，合并字体子集可以在内容定稿后统一更新，见 `docs/FONTS.md`。
+
+在 `master` 分支发布时，可以依次执行：
+
+```sh
+git status
+git add src/content/posts/ public/gallery/ src/pages/gallery.astro
+git diff --cached
+git commit -m "Add new writing and gallery photos"
+git push origin master
+```
+
+`git status` 用来确认改动范围；`git diff --cached` 用来在提交前复核将要发布的内容。若只新增文章或只新增图片，就从 `git add` 中删掉无关路径。推送后可在 GitHub 仓库的 Actions 页面查看 `Deploy Astro site`，必须等 build 和 deploy 两个 job 都成功，网站才算发布完成。

@@ -90,7 +90,24 @@ const compositions = {
   path('M400 118v190M400 118c-30-14-84-14-122 0v190c38-14 92-14 122 0m0-190c30-14 84-14 122 0v190c-38-14-92-14-122 0', sage) +
   path('M296 152h76m-76 22h84m-84 22h70M428 152h76m-76 22h84m-84 22h70', line) +
   path('M548 208c22-4 26 30 4 30m-4-30 8-8m-8 8 10 6', clay) + circle(258, 250, 4, clay) +
-  dots(546, 300) }
+  dots(546, 300) },
+ 'post-code-cpp': { title: 'Memory has a shape', note: 'C++ / TYPES · MEMORY · STL', bg: '#e6ebdb', art:
+  [0, 1, 2, 3, 4].map(i => box(242 + i * 64, 172, 48, 68, i === 2 ? '#f3e6d8' : '#fbf9f3')).join('') +
+  path('M266 154v-28h256v28M266 258v28h256v-28', line) + path('m370 206 12 10 20-25', clay) +
+  label(266, 206, '0', sage, 13) + label(330, 206, '1', sage, 13) + label(394, 206, '2', clay, 13) + label(458, 206, '3', sage, 13) + label(522, 206, '4', sage, 13) +
+  dots(566, 316) },
+ 'post-code-python': { title: 'Readable steps, composable ideas', note: 'PYTHON / ITERATION · COLLECTIONS · CLARITY', bg: '#ece7d9', art:
+  box(226, 112, 348, 202) + path('M226 148h348', line) + dots(248, 130) +
+  path('M260 180h132m-108 27h182m-158 27h126m-102 27h168', line) +
+  path('M260 174v94m24-67v67m24-40v40m24-13v13', sage) + circle(500, 261, 4, clay) },
+ 'post-code-rust': { title: 'Correctness by construction', note: 'RUST / OWNERSHIP · BORROWING · SAFETY', bg: '#efecdf', art:
+  box(246, 142, 114, 72) + box(440, 142, 114, 72, '#e6ebdb') + box(343, 258, 114, 52, '#f3e6d8') +
+  label(303, 178, 'owner', sage, 14) + label(497, 178, 'borrow', sage, 14) + label(400, 284, 'valid', clay, 14) +
+  path('M360 178h80m-40 36v44m-7-8 7 8 7-8', clay) + path('m431 171 9 7-9 7', sage) + halo(400, 284, 5) },
+ 'post-code-go': { title: 'Simple parts, concurrent paths', note: 'GO / GOROUTINES · CHANNELS · INTERFACES', bg: '#e6ebdb', art:
+  [0, 1, 2].map(i => box(224, 126 + i * 68, 112, 42) + label(280, 147 + i * 68, `task ${i + 1}`, sage, 13)).join('') +
+  path('M336 147h92m-92 68h92m-92 68h92', line) + box(428, 129, 146, 170, '#fbf9f3') +
+  label(501, 162, 'channel', clay, 15) + path('M454 190h94m-94 22h72m-72 22h94m-94 22h58', sage) + circle(548, 256, 4, clay) }
 };
 let n = 0;
 for (const [name, { title, note, bg, art }] of Object.entries(compositions)) {

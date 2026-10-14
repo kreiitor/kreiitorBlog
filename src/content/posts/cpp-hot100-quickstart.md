@@ -7,7 +7,7 @@ tags:
   - "学习笔记"
   - "cpp"
 category: knowledge
-cover: /covers/post-code-algorithm.svg
+cover: /covers/post-code-cpp.svg
 featured: true
 ---
 

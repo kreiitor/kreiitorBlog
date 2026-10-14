@@ -7,7 +7,7 @@ tags:
   - "学习笔记"
   - "Rust"
 category: knowledge
-cover: /covers/post-code-algorithm.svg
+cover: /covers/post-code-rust.svg
 featured: true
 ---
 

@@ -9,7 +9,7 @@ tags:
   - "文献管理"
   - "效率"
 category: knowledge
-cover: /covers/post-cli-terminal.svg
+cover: /covers/post-paper.svg
 ---
 
 ## 这篇文档解决什么问题
