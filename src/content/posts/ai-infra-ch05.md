@@ -722,7 +722,7 @@ FlashAttention 代表了一种典型的架构—算法协同：它不改变注�
 
 FlashAttention 围绕这一逐块计算过程安排存储，减少长序列注意力中间矩阵的显存读写。该方法由斯坦福大学的 Tri Dao 等研究者与纽约州立大学布法罗分校的合作者于 2022 年提出。脚注 17（印刷 p.181）：FlashAttention、FlashAttention-2、FlashAttention-3。
 
-> 🔎 检索确认：FlashAttention 论文题为 *FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness*，发表于 NeurIPS 2022，作者包括斯坦福大学的 Tri Dao 与纽约州立大学布法罗分校（University at Buffalo, SUNY）的 Atri Rudra 等，与原文「由斯坦福大学的 Tri Dao 等研究者与纽约州立大学布法罗分校的合作者于 2022 年提出」一致。（来源：[FlashAttention, NeurIPS 2022](https://dev.neurips.cc/virtual/2022/poster/54008)、[University at Buffalo CSE（Atri Rudra）](https://cse.buffalo.edu/~atri/cse331/fall24/lectures/lect1.pdf)）
+> 🔎 检索确认：FlashAttention 论文题为 *FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness*，发表于 NeurIPS 2022，作者包括斯坦福大学的 Tri Dao 与纽约州立大学布法罗分校（University at Buffalo, SUNY）的 Atri Rudra 等，与原文「由斯坦福大学的 Tri Dao 等研究者与纽约州立大学布法罗分校的合作者于 2022 年提出」一致。（来源：[FlashAttention, NeurIPS 2022](https://proceedings.neurips.cc/paper_files/paper/2022/hash/67d57c32e20fd0a7a302cb81d36e40d5-Abstract-Conference.html)、[University at Buffalo CSE（Atri Rudra）](https://cse.buffalo.edu/~atri/cse331/fall24/lectures/lect1.pdf)）
 
 作者在这里插了一段亲身经历：读到 FlashAttention 时，笔者想起了自己在 2019 年做 AKG 的那段经历。当时为了融合 Softmax 算子，笔者四处寻找合适的在线算法，后来找到 NVIDIA 在 2018 年发表的研究，才得以结合 AKG 的分块与融合能力，把前面的矩阵乘法和后面的 Softmax 接在一起计算。笔者那时甚至还不了解注意力机制，后来才意识到，自己偶然摸到了 FlashAttention 的一条核心思路。从这一步走到完整的 FlashAttention，还需要把后续与 $V$ 的加权求和也纳入在线更新，并围绕完整注意力安排片内存储和数据搬移。
 

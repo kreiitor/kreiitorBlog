@@ -1,0 +1,38 @@
+---
+import SearchPanel from './SearchPanel.astro';
+import Icon from './Icon.astro';
+import { withBase } from '../utils/url';
+---
+<dialog class="search-dialog" data-search-dialog aria-labelledby="quick-search-title">
+ <button type="button" class="dialog-close" data-search-close aria-label="关闭搜索"><Icon name="close"/></button>
+ <SearchPanel modal title="寻找下一条线索。" description="搜索札记、学习章节与研究项目。"/>
+ <div class="dialog-footer"><span>↑ ↓ 选择 · Enter 打开 · Esc 关闭</span><a href={withBase('/search/')} data-full-search>打开完整搜索 →</a></div>
+</dialog>
+<script>
+ const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
+ let trigger: HTMLElement | null = null;
+ function open() {
+  if (!dialog || dialog.open) return;
+  trigger = document.activeElement as HTMLElement;
+  dialog.showModal(); document.documentElement.classList.add('search-is-open');
+  dialog.querySelector('[data-search-root]')?.dispatchEvent(new Event('search:open'));
+ }
+ document.addEventListener('search:request',open);
+ dialog?.querySelector('[data-search-close]')?.addEventListener('click',()=>dialog.close());
+ dialog?.addEventListener('close',()=>{ document.documentElement.classList.remove('search-is-open'); trigger?.focus({preventScroll:true}); });
+ dialog?.addEventListener('click',event=>{ if(event.target!==dialog)return; const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close(); });
+ dialog?.querySelector('[data-full-search]')?.addEventListener('click',event=>{
+  const link=event.currentTarget as HTMLAnchorElement; const url=new URL(link.href); const query=dialog.querySelector<HTMLInputElement>('[data-search-input]')?.value.trim(); if(query)url.searchParams.set('q',query); link.href=url.href;
+ });
+</script>
+<style is:global>
+ .search-is-open { overflow: hidden; }
+ .search-dialog { position: fixed; inset: 10vh 0 auto; margin-inline: auto; width: min(720px,calc(100% - 32px)); max-height: 80vh; padding: 32px; border: 1px solid var(--color-line-strong); border-radius: 16px; background: var(--color-surface); color: var(--color-ink); box-shadow: 0 24px 100px var(--color-dialog-shadow); overflow-y: auto; }
+ .search-dialog[open] { animation: reveal var(--dur-base) var(--ease-out-expo); }
+ .search-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(3px); }
+ .dialog-close { position: absolute; right: 16px; top: 14px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; }
+ .dialog-close:hover { background: var(--color-paper-warm); }
+ .dialog-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--color-line); padding-top: 18px; margin-top: 20px; font-size: 12px; color: var(--color-ink-soft); }
+ .dialog-footer a { color: var(--color-accent); }
+ @media (max-width: 600px) { .search-dialog { padding: 26px 20px; inset-block-start: 4vh; max-height: 90vh; } .dialog-footer > span { display: none; } }
+</style>

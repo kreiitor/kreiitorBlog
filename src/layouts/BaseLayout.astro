@@ -2,6 +2,7 @@
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Motion from '../components/Motion.astro';
+import SearchDialog from '../components/SearchDialog.astro';
 import { siteConfig } from '../data/site';
 import '../styles/fonts.css';
 import '../styles/global.css';
@@ -49,7 +50,51 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<meta name="author" content={siteConfig.author} />
-		<meta name="theme-color" content="#f8f9f5" />
+		<meta name="color-scheme" content="light dark" />
+		<!-- 地址栏配色：无 JS 时用两条带 media 的 meta（HTML 规范允许 noscript 内含 meta）；
+		     有 JS 时由下方内联脚本把不带 media 的那条同步成「实际生效」的主题。 -->
+		<meta name="theme-color" content="#f6f3eb" />
+		<noscript>
+			<meta name="theme-color" content="#f6f3eb" media="(prefers-color-scheme: light)" />
+			<meta name="theme-color" content="#1a1a17" media="(prefers-color-scheme: dark)" />
+		</noscript>
+		<!-- 防闪白：必须是 head 内、解析期阻塞的内联脚本。
+		     Astro 里必须用 is:inline —— 普通 script 标签会被提升并打包成 module，失去阻塞语义。
+		     两态语义：首次访问按系统偏好写入存储，之后只有显式 light/dark；
+		     存储值始终存在，页面不再随系统主题自动变化。
+		     属性设在 documentElement（不是 body），color-scheme 才能一并切换。 -->
+		<script is:inline>
+			(() => {
+				const mq = window.matchMedia('(prefers-color-scheme: dark)');
+				const readPref = () => {
+					try {
+						let p = localStorage.getItem('theme');
+						if (p !== 'light' && p !== 'dark') {
+							p = mq.matches ? 'dark' : 'light';
+							localStorage.setItem('theme', p);
+						}
+						return p;
+					} catch { return mq.matches ? 'dark' : 'light'; }
+				};
+				const LIGHT = '#f6f3eb', DARK = '#1a1a17';
+				const LABELS = {
+					light: '主题：浅色（点击切换为深色）',
+					dark: '主题：深色（点击切换为浅色）',
+				};
+				window.__applyTheme = () => {
+					const pref = readPref();
+					document.documentElement.setAttribute('data-theme', pref);
+					const meta = document.querySelector('meta[name="theme-color"]:not([media])');
+					if (meta) meta.setAttribute('content', pref === 'dark' ? DARK : LIGHT);
+					document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+						btn.setAttribute('data-pref', pref);
+						btn.setAttribute('aria-label', LABELS[pref]);
+						btn.setAttribute('title', LABELS[pref]);
+					});
+				};
+				window.__applyTheme();
+			})();
+		</script>
 		{tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
 		{noIndex && <meta name="robots" content="noindex, nofollow" />}
 		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
@@ -82,6 +127,7 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 			<SiteFooter />
 		</div>
 		<Motion />
+		{currentPath !== '/search/' && <SearchDialog/>}
 
 	</body>
 </html>

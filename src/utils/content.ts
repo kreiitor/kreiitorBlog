@@ -42,6 +42,15 @@ export function getReadingTime(post: PostEntry) {
 	return post.data.readingTime ?? estimateReadingTime(post.body ?? '');
 }
 
+/** Give legacy generic tool covers a more specific subject, retaining custom artwork. */
+export function getPostCover(post: PostEntry) {
+	if (post.data.cover && post.data.cover !== '/covers/post-tools.svg') return post.data.cover;
+	if (post.id.includes('infra')) return '/covers/series-ai-infra.svg';
+	if (/reading|literature|annotation|paper/.test(post.id)) return '/covers/post-paper.svg';
+	if (/algorithm|career|roadmap/.test(post.id)) return '/covers/post-code-algorithm.svg';
+	return post.data.cover ?? (post.data.category === 'knowledge' ? '/covers/post-tools.svg' : '/covers/post-paper.svg');
+}
+
 /** Preserve readable TOC labels before KaTeX adds visual and accessibility copies. */
 export function getHeadingLabels(markdown: string, maxDepth = 2) {
 	const labels: string[] = [];
@@ -114,8 +123,32 @@ export function getArchiveGroups(posts: PostEntry[]) {
 	return [...groups.values()].sort((left, right) => Number(right.year) - Number(left.year));
 }
 
-export function getLatestUpdates(posts: PostEntry[], projects: ProjectEntry[], limit = 5): UpdateEntry[] {
-	const merged: UpdateEntry[] = [
+/**
+ * 相关文章：本地按「共享标签数 ×2 + 同系列 ×3」打分，只保留至少共享一个标签的文章。
+ * 刻意不引入第二个搜索后端 —— 语料里 eugeneyan 的相关阅读绑死 Algolia Recommend
+ * （容器初始 display:none，需索引 + 前端 SDK），而我们已有 Pagefind，
+ * 多一套后端是纯负担。同系列权重更高，因为连载章节的关联强于偶发同标签。
+ */
+export function getRelatedPosts(post: PostEntry, posts: PostEntry[], limit = 3): PostEntry[] {
+	const own = new Set(post.data.tags);
+	return getPublishedPosts(posts)
+		.filter((candidate) => candidate.id !== post.id)
+		.map((candidate) => {
+			const shared = candidate.data.tags.filter((tag) => own.has(tag)).length;
+			const sameSeries = post.data.series && candidate.data.series === post.data.series ? 1 : 0;
+			return { candidate, shared, score: shared * 2 + sameSeries * 3 };
+		})
+		.filter((item) => item.shared > 0)
+		.sort(
+			(left, right) =>
+				right.score - left.score ||
+				right.candidate.data.pubDate.valueOf() - left.candidate.data.pubDate.valueOf(),
+		)
+		.slice(0, limit)
+		.map((item) => item.candidate);
+}
+
+export function getLatestUpdates(posts: PostEntry[], projects: ProjectEntry[], limit = 5): UpdateEntry[] {	const merged: UpdateEntry[] = [
 		...getPublishedPosts(posts).map((post) => ({
 			type: 'post' as const,
 			title: post.data.title,

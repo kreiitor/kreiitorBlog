@@ -5,10 +5,10 @@ import { withBase } from '../utils/url';
 ---
 <BaseLayout title="关于我" description="kreiitor 的研究兴趣、写作方向与联系方式。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><p class="eyebrow">BEHIND THE NOTES / ABOUT ME</p><h1>你好，我是 kreiitor<span class="hello-dot">.</span></h1><p>软件工程智能化方向研究者，坐标武汉。<br/>喜欢把复杂的问题拆开，再把零散的想法连起来。</p></section>
+  <section class="page-shell page-intro"><p class="eyebrow">BEHIND THE NOTES / ABOUT ME</p><h1>你好，我是 kreiitor<span class="hello-dot">.</span></h1><p>数据科学硕士，偏软件工程方向，坐标武汉。<br/>记录问题，记录想法，喜欢看着零散的东西慢慢连起来。</p></section>
   <section class="page-shell about-layout">
-   <div class="about-copy"><p class="eyebrow">A LITTLE ABOUT THIS SPACE</p><h2>认真做研究，<br/>也认真记录途中。</h2><p>我关注 AI for Software Engineering，尤其是大语言模型如何帮助我们理解代码、分析程序和改善软件工程实践。</p><p>这份博客是我的研究札记，也是一个持续生长的知识花园。论文阅读、实验复现、数学学习、工具实践，都可以在这里留下痕迹。</p><p>我希望文章不只是记录结论，也能保留问题从哪里来、为什么这样做，以及哪些地方还值得继续追问。</p><div class="mt-7 flex flex-wrap gap-3">{siteConfig.socialLinks.map(link => <a href={link.href} target="_blank" rel="noreferrer" class="zen-btn zen-btn-secondary">{link.label} ↗</a>)}</div></div>
-   <aside class="profile-note"><img src={withBase(siteConfig.avatar)} alt="kreiitor 的字母标志" width="80" height="80"/><h2>{siteConfig.author}</h2><p>{siteConfig.role}</p><div class="profile-rule"></div><p class="eyebrow">CURRENTLY EXPLORING</p><ul><li>LLM × Software Engineering</li><li>程序分析与代码理解</li><li>可复现的研究工作流</li></ul><p class="profile-location"><span aria-hidden="true">↳</span>{siteConfig.location}</p></aside>
+   <div class="about-copy"><p class="eyebrow">A LITTLE ABOUT THIS SPACE</p><h2>认真做研究，<br/>也认真记录过程。</h2><p>我目前关注于 AI 的基础理论和它能用在哪儿，尤其是大语言模型怎么帮我们理解代码、改善软件工程、完成日常任务等具体的事。而数学和阅读是让我安静下来的兴趣所在。</p><p>这个博客算是我的一个自留地：读过的论文、做完的项目、遇到的问题，都想在这里留一份记录。不一定有结论，但希望保留问题从哪里来、当时为什么这么做。</p><p>如果某篇札记碰巧对你有用，或者你想聊聊里面的某个想法，欢迎随时找我。</p><div class="mt-7 flex flex-wrap gap-3">{siteConfig.socialLinks.map(link => <a href={link.href} target="_blank" rel="noreferrer" class="zen-btn zen-btn-secondary">{link.label} ↗</a>)}</div></div>
+   <aside class="profile-note"><img src={withBase(siteConfig.avatar)} alt="kreiitor 的标志" width="80" height="80"/><h2>{siteConfig.author}</h2><p>{siteConfig.role}</p><div class="profile-rule"></div><p class="eyebrow">PERSONAL INTERESTS</p><ul><li>AI 理论与应用</li><li>数学知识</li><li>文学阅读</li></ul><p class="profile-location"><span aria-hidden="true">↳</span>{siteConfig.location}</p></aside>
   </section>
   <section class="page-shell about-principles">{aboutSections.map((section,index) => <div><p class="eyebrow">0{index+1}</p><h2>{section.title}</h2><ul>{section.items.map(item => <li>{item}</li>)}</ul></div>)}</section>
  </div>

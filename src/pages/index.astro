@@ -6,6 +6,7 @@ import SeriesCard from '../components/SeriesCard.astro';
 import { getLearningSeries } from '../utils/series';
 import SectionHeading from '../components/SectionHeading.astro';
 import ResearchArt from '../components/ResearchArt.astro';
+import Icon from '../components/Icon.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../data/site';
 import { getFeaturedPosts, getFeaturedProjects, getPublishedPosts, getProjects, getTagSummaries, getReadingTime } from '../utils/content';
@@ -28,9 +29,9 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
     <p class="eyebrow hero-kicker"><span aria-hidden="true"></span>A PERSONAL JOURNAL · AI & SOFTWARE</p>
     <h1>在代码与思想之间，<br/><span>慢慢生长。</span></h1>
     <p class="hero-english">Thinking in code. Growing through curiosity.</p>
-    <p class="hero-description"><span class="hero-bio-long">我是 <strong>{siteConfig.author}</strong>，一名关注软件工程智能化的研究者。<br/>在这里，记录论文里的灵感、实验中的探索，和一路积累的思考。</span><span class="hero-bio-short">我是 <strong>{siteConfig.author}</strong>，关注软件工程智能化。<br/>记录论文、实验与一路积累的思考。</span></p>
-    <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">翻开研究札记 <span aria-hidden="true">↗</span></a><a href={withBase('/about/')} class="text-link">认识我 <span aria-hidden="true">→</span></a></div>
-    <div class="hero-caption"><span>RESEARCH INTERESTS</span><p>AI for SE <i>/</i> LLM <i>/</i> 实验与复现</p></div>
+    <p class="hero-description"><span class="hero-bio-long">我是 <strong>{siteConfig.author}</strong>，一个普通的数据科学硕士。<br/>在这里，记录论文里的灵感、实验中的探索，和一路积累的思考。</span><span class="hero-bio-short">我是 <strong>{siteConfig.author}</strong>，关注软件工程智能化。<br/>记录论文、实验与一路积累的思考。</span></p>
+    <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">翻开研究札记 <Icon name="arrow" size={18}/></a><a href={withBase('/about/')} class="text-link">认识我 <Icon name="arrow" size={16}/></a></div>
+    <div class="hero-caption"><span>RESEARCH INTERESTS</span><p>LLM理论与应用 <i>/</i> 学习与思考 <i>/</i> 实验和复现</p></div>
    </div>
    <div class="hero-visual zen-reveal zen-delay-1"><ResearchArt/></div>
   </section>
@@ -40,7 +41,10 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   </section>
   <section class="page-shell editorial-section">
    <SectionHeading kicker="01 / SELECTED WRITING" title="值得展开的思考" description="从一个问题出发，把想法写深一点。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
-   <div class="section-grid">{featuredPosts.map(post => <PostCard post={post}/>)}</div>
+   <div class="selected-writing">
+    {featuredPosts[0] && <PostCard post={featuredPosts[0]}/>}
+    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="eyebrow">札记 / {String(index+2).padStart(2,'0')}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}<a class="selected-invitation" href={withBase('/archive/')}><span>每一条线索，都值得慢慢展开。</span><span>沿时间线浏览 <Icon name="arrow" size={16}/></span></a></div>
+   </div>
   </section>
   <section class="page-shell editorial-section">
    <SectionHeading kicker="02 / RESEARCH & PRACTICE" title="让想法落地" description="论文复现、实验平台，以及正在打磨的工具。" linkHref={withBase('/projects/')} linkLabel="浏览研究项目"/>
@@ -67,9 +71,21 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
 </BaseLayout>
 <style>
  .home-hero { display: grid; grid-template-columns: 1.17fr 1fr; align-items: center; gap: 65px; padding-block: 65px 52px; }
+ .selected-writing { display: grid; grid-template-columns: 1fr 1.08fr; gap: 48px; margin-top: 30px; }
+ .selected-row { display: block; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
+ .selected-row:first-child { padding-top: 6px; }
+ .selected-writing :global(.card-content h3) { font-size: 24px; }
+ .selected-row h3 { font-size: 25px; margin-block: 10px; }
+ .selected-row:hover h3 { color: var(--color-accent); }
+ .selected-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; font-size: 12px; color: var(--color-ink-soft); }
+ .selected-meta :global(svg) { color: var(--color-accent); transition: transform 160ms var(--ease-smooth); }
+ .selected-row:hover :global(svg) { transform: translateX(3px); }
+ .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
+ .selected-invitation span:last-child { color: var(--color-accent); }
+ @media (max-width: 700px) { .selected-writing { grid-template-columns: 1fr; gap: 25px; } .selected-row h3 { font-size: 22px; } }
  .hero-kicker { display: flex; align-items: center; gap: 8px; font-size: var(--text-caption); }
  .hero-kicker span { width: 5px; height: 5px; background: var(--color-accent); border-radius: 50%; }
- .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.055em; margin-top: 26px; font-weight: 600; }
+ .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.02em; margin-top: 26px; }
  .hero-copy h1 span { color: var(--color-accent); }
  .hero-english { margin-top: 14px; font-family: var(--font-editorial); font-size: 18px; font-style: italic; color: var(--color-ink-soft); }
  .hero-description { margin-top: 24px; font-size: 15px; line-height: 2; color: var(--color-ink-soft); }
@@ -92,7 +108,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .recent-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; margin-top: 6px; }
  .recent-arrow { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
  .garden-aside { padding: 30px; background: var(--color-paper-warm); border: 1px solid var(--color-line); border-radius: 6px; }
- .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; font-weight: 600; }
+ .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; }
  .topic-list { margin-top: 23px; } .topic-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-line); }
  .topic-list a > span:last-child { color: var(--color-ink-muted); font-size: var(--text-caption); }
  .topic-list a:hover { color: var(--color-accent); }

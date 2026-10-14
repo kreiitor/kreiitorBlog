@@ -559,7 +559,7 @@ VLM 把视觉感知与语言理解放进同一个模型，核心挑战在跨模�
 
 这条路线不是新发明。经典的 DAPT/TAPT 研究已经表明，在领域语料或任务相关的无标注语料上做第二阶段预训练，可以继续改善下游任务表现（脚注 3：Gururangan, Suchin et al., "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks", ACL, 2020）。
 
-> 🔎 检索确认：该脚注所指论文即 "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks"（Gururangan et al., ACL 2020），其预印本编号为 arXiv:2004.10964，与原文作者、会议、年份一致。（来源：[Don't Stop Pretraining: Adapt Language Models to Domains and Tasks](https://browse.arxiv.org/abs/2004.10964)）
+> 🔎 检索确认：该脚注所指论文即 "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks"（Gururangan et al., ACL 2020），其预印本编号为 arXiv:2004.10964，与原文作者、会议、年份一致。（来源：[Don't Stop Pretraining: Adapt Language Models to Domains and Tasks](https://arxiv.org/abs/2004.10964)）
 
 Mid-training 主要解决两类缺口。一类是知识缺口：通用预训练没有充分覆盖目标语言，或者没覆盖金融、医疗、法律领域、企业内部文档、某类代码库，模型连概念与术语都不能理解。另一类是基础能力缺口：目标任务要求基础模型尚未形成的长上下文、代码模式、数学推导或跨模态表征，此时问题已经超出回答格式不对的范围，在足够多次采样下模型也几乎得不到正确解。后者的症状更接近 8.1.4 里"pass@k 接近 0"的判据，也提示你多给几个示范解决不了问题。
 

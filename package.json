@@ -11,9 +11,11 @@
     "test:browser": "playwright test",
     "fonts:prepare": "python scripts/prepare-fonts.py",
     "social:prepare": "node scripts/prepare-social-images.mjs",
+    "art:prepare": "node scripts/prepare-garden-art.mjs && npm run social:prepare",
     "dev": "astro dev",
     "build": "astro build",
-    "postbuild": "pagefind --site dist && node scripts/check-site.mjs",
+    "postbuild": "node scripts/inject-heading-anchors.mjs && pagefind --site dist && node scripts/check-site.mjs",
+    "links:check": "node scripts/check-external-links.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "astro": "astro"
@@ -38,6 +40,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/lora": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
     "@playwright/test": "^1.64.0",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3"

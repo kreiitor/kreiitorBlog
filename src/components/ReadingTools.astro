@@ -1,5 +1,10 @@
 <div class="reading-progress" data-reading-progress role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 <span class="sr-only" data-copy-status role="status" aria-live="polite"></span>
+<div class="reading-memory" data-reading-memory data-pagefind-ignore>
+ <span data-memory-status role="status" aria-live="polite">在本机记录阅读位置</span>
+ <div><button type="button" data-memory-toggle aria-pressed="false" disabled>开启记录</button><button type="button" data-memory-resume hidden>继续上次阅读 →</button><button type="button" data-memory-clear hidden>清除记录</button></div>
+</div>
+<noscript><style>.reading-memory { display: none !important; }</style></noscript>
 <script>
  const article = document.querySelector<HTMLElement>('[data-reading-article]');
  const body = article?.querySelector<HTMLElement>('.article-body');
@@ -8,6 +13,12 @@
  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
  let start = 0, height = 1, offsets: { id: string; y: number }[] = [];
  let scrollQueued = false, measureQueued = false;
+ let activeId: string | undefined;
+ function currentHeading(y:number) {
+  let lo=0, hi=offsets.length-1, result=-1;
+  while(lo<=hi){const mid=(lo+hi)>>1;if(offsets[mid].y<=y){result=mid;lo=mid+1;}else hi=mid-1;}
+  return result;
+ }
  function measure() {
   measureQueued = false;
   if (!body) return;
@@ -23,15 +34,16 @@
   if (!progress || !body) return;
   const y = window.scrollY;
   const fraction = Math.max(0, Math.min(1, (y + window.innerHeight - start) / height));
-  const current = offsets.filter(h => h.y <= y + 150).at(-1)?.id;
+  const current = offsets[currentHeading(y + 150)]?.id;
   progress.style.transform = `scaleX(${fraction})`;
   progress.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
-  for (const link of links) {
+  if (current !== activeId) for (const link of links) {
    let id;
    try { id = decodeURIComponent(link.hash.slice(1)); } catch { continue; }
    if (id === current) link.setAttribute('aria-current','location');
    else link.removeAttribute('aria-current');
   }
+  activeId = current;
  }
  function scheduleScroll() { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(update); } }
  function scheduleMeasure() { if (!measureQueued) { measureQueued = true; requestAnimationFrame(measure); } }
@@ -40,6 +52,55 @@
  document.fonts.ready.then(scheduleMeasure);
  if (article && 'ResizeObserver' in window) new ResizeObserver(scheduleMeasure).observe(article);
  scheduleMeasure();
+
+ const memory = document.querySelector<HTMLElement>('[data-reading-memory]');
+ const toggle = memory?.querySelector<HTMLButtonElement>('[data-memory-toggle]');
+ const resume = memory?.querySelector<HTMLButtonElement>('[data-memory-resume]');
+ const clear = memory?.querySelector<HTMLButtonElement>('[data-memory-clear]');
+ const memoryStatus = memory?.querySelector<HTMLElement>('[data-memory-status]');
+ const memoryKey = `garden-reading:${import.meta.env.BASE_URL}:${article?.dataset.articleSlug}`;
+ interface Position { id:string; fraction:number; progress:number; }
+ let enabled = false, saved:Position | undefined, saveTimer:ReturnType<typeof setTimeout>;
+ function memoryUI() {
+  if(!memory||!toggle||!resume||!clear||!memoryStatus)return;
+  memory.hidden=false;toggle.disabled=false;toggle.setAttribute('aria-pressed',String(enabled));toggle.textContent=enabled?'关闭记录':'开启记录';
+  resume.hidden=!saved||Boolean(location.hash);clear.hidden=!saved;
+  memoryStatus.textContent=saved?`上次读到约 ${saved.progress}% · 仅保存在本机`:enabled?'已开启 · 仅在本机保存阅读位置':'在本机记录阅读位置';
+ }
+ try {
+  const data=JSON.parse(localStorage.getItem(memoryKey)??'null');
+  enabled=data?.enabled===true;
+  if(enabled&&data.position&&typeof data.position.id==='string'&&Number.isFinite(data.position.fraction)&&Number.isFinite(data.position.progress))saved=data.position;
+  memoryUI();
+ } catch { memoryUI(); }
+ function persist() {
+  try{localStorage.setItem(memoryKey,JSON.stringify({enabled,position:saved}));return true;}
+  catch{if(memoryStatus)memoryStatus.textContent='浏览器无法保存记录，请检查本机存储设置。';return false;}
+ }
+ function save() {
+  if(!enabled||!body)return;
+  const index=currentHeading(window.scrollY+120), heading=offsets[index];
+  const top=heading?.y??start, end=offsets[index+1]?.y??start+height;
+  saved={id:heading?.id??'',fraction:Math.max(0,Math.min(1,(scrollY-top)/Math.max(1,end-top))),progress:Math.round(Math.max(0,Math.min(1,(scrollY-start)/height))*100)};
+  if(persist()&&clear)clear.hidden=false;
+ }
+ toggle?.addEventListener('click',()=>{enabled=!enabled;if(!enabled){clearTimeout(saveTimer);saved=undefined;}memoryUI();persist();if(enabled)save();});
+ clear?.addEventListener('click',()=>{clearTimeout(saveTimer);saved=undefined;memoryUI();persist();});
+ resume?.addEventListener('click',()=>{
+  if(!saved)return;measure();const index=offsets.findIndex(h=>h.id===saved!.id);const top=index<0?start:offsets[index].y;const end=offsets[index+1]?.y??start+height;
+  scrollTo({top:top+saved.fraction*Math.max(1,end-top),behavior:'instant'});resume.hidden=true;
+ });
+ window.addEventListener('scroll',()=>{if(!enabled)return;clearTimeout(saveTimer);saveTimer=setTimeout(save,600);},{passive:true});
+ window.addEventListener('pagehide',()=>{clearTimeout(saveTimer);if(enabled&&scrollY>start)save();});
+ window.addEventListener('hashchange',memoryUI);
+ document.querySelectorAll<HTMLDetailsElement>('.mobile-toc').forEach(toc=>{
+  const summary=toc.querySelector('summary');summary?.setAttribute('aria-expanded',String(toc.open));
+  toc.addEventListener('toggle',()=>summary?.setAttribute('aria-expanded',String(toc.open)));
+  toc.addEventListener('keydown',event=>{if(event.key==='Escape'&&toc.open){toc.open=false;summary?.focus();}});
+  toc.querySelectorAll<HTMLAnchorElement>('a').forEach(link=>link.addEventListener('click',()=>{
+   toc.open=false;try{const heading=document.getElementById(decodeURIComponent(link.hash.slice(1)));if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}catch{}
+  }));
+ });
 
  const live = document.querySelector<HTMLElement>('[data-copy-status]');
  document.querySelectorAll('.rich-content pre').forEach(pre => {
@@ -60,17 +121,28 @@
  let mathQueued = false;
  function measureMath() {
   mathQueued = false;
-  const measured = Array.from(visible, element => ({ element, overflow: element.scrollWidth > element.clientWidth + 1 }));
+  const widths = new Map<HTMLElement,number>();
+  function containingWidth(element:HTMLElement) {
+   let parent=element.parentElement;
+   while(parent) {
+    const width=widths.get(parent)??parent.clientWidth; widths.set(parent,width);
+    if(width>0)return width;
+    parent=parent.parentElement;
+   }
+   return 0;
+  }
+  const measured = Array.from(visible, element => {
+   const display = element.matches('.katex-display');
+   const natural = (display ? element.querySelector<HTMLElement>(':scope > .katex') : element.querySelector<HTMLElement>('.katex-html'))?.getBoundingClientRect().width ?? 0;
+   const available = display ? element.clientWidth - 12 : containingWidth(element);
+   return { element, overflow: natural > available + 3 };
+  });
   for (const { element, overflow } of measured) {
    element.classList.toggle('is-overflowing', overflow);
    element.tabIndex = overflow ? 0 : -1;
    if (overflow) { element.setAttribute('role','region'); element.setAttribute('aria-label','数学公式，左右滑动查看完整内容'); }
    else { element.removeAttribute('role'); element.removeAttribute('aria-label'); element.removeAttribute('tabindex'); }
-   if (element.matches('.katex-display')) {
-    const hint = element.nextElementSibling?.matches('.math-scroll-hint') ? element.nextElementSibling : null;
-    if (overflow && !hint) { const label = document.createElement('span'); label.className = 'math-scroll-hint'; label.textContent = '↔ 左右滑动查看完整公式'; element.after(label); }
-    if (!overflow && hint) hint.remove();
-   }
+   if (overflow) element.title = '左右滑动查看完整公式'; else element.removeAttribute('title');
   }
  }
  function scheduleMath() { if (!mathQueued) { mathQueued = true; requestAnimationFrame(measureMath); } }
@@ -85,11 +157,17 @@
  window.addEventListener('resize', scheduleMath, { passive: true });
 </script>
 <style is:global>
- .rich-content .katex { font-size: 1.04em; max-width: 100%; display: inline-block; vertical-align: middle; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
- .rich-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: 12px 4px; max-width: 100%; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
- .rich-content .katex-display > .katex { white-space: nowrap; display: block; max-width: none; overflow: visible; }
+ .reading-memory { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: space-between; align-items: center; padding: 14px 0; margin-bottom: 20px; border-bottom: 1px solid var(--color-line); font-size: 12px; color: var(--color-ink-soft); }
+ .reading-memory > div { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+ .reading-memory button { min-height: 36px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
+ .rich-content .katex { font-size: 1.04em; overflow: visible; }
+ .rich-content .katex-display { max-width: 100%; padding: 12px 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+ .rich-content .katex-display > .katex { white-space: nowrap; display: inline-block; width: max-content; max-width: none; overflow: visible; }
+ .rich-content .katex-display:has(.katex-tag) > .katex { min-width: 100%; }
+ .rich-content .katex-display:has(.katex-tag) > .katex > .katex-html { padding-inline: 3em; }
+ .rich-content .katex-display.is-overflowing { text-align: left; }
+ .rich-content .katex.is-overflowing { display: inline-block; vertical-align: middle; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 4px; }
  .rich-content .is-overflowing:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
- .rich-content .math-scroll-hint { display: block; margin-top: 4px !important; text-align: right; font-family: var(--font-sans); font-size: var(--text-caption); line-height: 1.6; color: var(--color-ink-soft); }
  .code-copy { position: absolute; top: 10px; right: 12px; min-height: 34px; padding: 4px 12px; font-family: var(--font-sans); font-size: 12px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 5px; color: var(--color-ink-soft); background: var(--color-paper); }
  .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
 </style>

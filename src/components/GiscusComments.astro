@@ -1,28 +1,79 @@
 ---
-import { giscusConfig, isGiscusConfigured } from '../utils/giscus';
+import { isGiscusConfigured } from '../utils/giscus';
 import { siteConfig } from '../data/site';
+import { withBase } from '../utils/url';
 interface Props { articlePath?: string; }
 const { articlePath = '' } = Astro.props;
+// Both skins ship with the site and are handed to the widget as its `theme` value.
+// A local preview cannot serve them to the giscus.app iframe (cross-origin, CSS not
+// published yet), so the client falls back to a built-in theme there.
+const siteBase = Astro.site ?? siteConfig.siteUrl;
+const giscusThemeUrls = {
+	light: new URL(withBase('/giscus-garden.css'), siteBase).href,
+	dark: new URL(withBase('/giscus-garden-dark.css'), siteBase).href,
+};
 ---
 <section class="zen-card-flat comments-panel">
- <p class="eyebrow">CONTINUE THE CONVERSATION</p><h2 class="mt-3 text-xl">讨论与反馈</h2><p class="mt-3 text-sm text-[color:var(--color-ink-soft)]">欢迎围绕文章里的问题、思路和实现细节继续交流。</p>
- {isGiscusConfigured ? <div id="giscus-container" class="mt-6"></div> : <a href={`mailto:${siteConfig.email}`} class="text-link mt-5">通过邮件交流 ↗</a>}
+ <p class="eyebrow">继续交流</p><h2 class="mt-3 text-xl">讨论与反馈</h2><p class="mt-3 text-sm text-[color:var(--color-ink-soft)]">欢迎留下问题、补充与不同的思路，让这篇札记继续生长。</p>
+ {isGiscusConfigured ? <><div class="comments-state"><p data-comment-status role="status" aria-live="polite">评论将在接近此处时加载。</p><button class="text-link" data-comment-retry type="button" hidden>重新加载评论 →</button></div><div id="giscus-container" data-article-path={articlePath} data-theme-light={giscusThemeUrls.light} data-theme-dark={giscusThemeUrls.dark}></div></> : <p role="status">评论配置尚未完成。</p>}
+ <a href={`mailto:${siteConfig.email}`} class="text-link mt-5">也可以通过邮件交流 ↗</a>
 </section>
 <style>
  .comments-panel { padding: 28px; }
+ .comments-state { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 22px 12px; color: var(--color-ink-soft); font-size: 13px; }
  @media (max-width: 600px) { .comments-panel { padding: 22px; } }
 </style>
-{isGiscusConfigured && <script is:inline define:vars={{ giscusConfig, articlePath }}>
- const host=document.getElementById('giscus-container');
- function loadComments() { if(host && !host.querySelector('script')) {
-  const script=document.createElement('script');script.src='https://giscus.app/client.js';script.async=true;script.crossOrigin='anonymous';
-  const sharedPath = articlePath && giscusConfig.mapping === 'pathname';
-  const term = articlePath.substring(1).replace(/\.\w+$/, '');
-  const attributes={'repo':giscusConfig.repo,'repo-id':giscusConfig.repoId,'category':giscusConfig.category,'category-id':giscusConfig.categoryId,'mapping':sharedPath ? 'specific' : giscusConfig.mapping,'term':sharedPath ? term : '', 'strict':giscusConfig.strict,'reactions-enabled':giscusConfig.reactionsEnabled,'emit-metadata':giscusConfig.emitMetadata,'input-position':giscusConfig.inputPosition,'theme':'light','lang':giscusConfig.lang};
-  Object.entries(attributes).forEach(([key,value])=>script.setAttribute('data-'+key,value));host.append(script);
- } }
- if(host && 'IntersectionObserver' in window) {
-  const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){loadComments();observer.disconnect();}},{rootMargin:'300px'});
-  observer.observe(host);
- }else loadComments();
-</script>}
+<script>
+ import { giscusConfig, resolveGiscusScheme, selectGiscusTheme } from '../utils/giscus';
+
+ const host = document.getElementById('giscus-container');
+ const status = document.querySelector<HTMLElement>('[data-comment-status]');
+ const retry = document.querySelector<HTMLButtonElement>('[data-comment-retry]');
+ // No container means this build has no comment configuration; there is nothing to wire up.
+ if (host && status && retry) init(host, status, retry);
+
+ function init(host: HTMLElement, status: HTMLElement, retry: HTMLButtonElement) {
+  const articlePath = host.dataset.articlePath ?? '';
+  const urls = { light: host.dataset.themeLight ?? '', dark: host.dataset.themeDark ?? '' };
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let attempt = 0, fatalError = false, requested = false, loadedScheme = '';
+
+  // <html data-theme> is authoritative; without it the site follows the OS.
+  const currentScheme = () => resolveGiscusScheme(document.documentElement.getAttribute('data-theme'), systemDark.matches);
+
+  function fail() { clearTimeout(timer); status.textContent = '评论暂时无法连接，请重试或通过邮件交流。'; retry.hidden = false; }
+  function ready() { if (fatalError) return; clearTimeout(timer); status.textContent = '评论已加载，登录 GitHub 后即可参与讨论。'; retry.hidden = true; }
+  function loadComments() {
+   const current = ++attempt; fatalError = false; clearTimeout(timer); host.replaceChildren(); retry.hidden = true; status.textContent = '正在连接讨论…';
+   requested = true;
+   const scheme = currentScheme(); loadedScheme = scheme;
+   const script = document.createElement('script'); script.src = 'https://giscus.app/client.js'; script.async = true; script.crossOrigin = 'anonymous';
+   const sharedPath = articlePath && giscusConfig.mapping === 'pathname';
+   const term = articlePath.substring(1).replace(/\.\w+$/, '');
+   // The public CSS exists after publishing. A local preview uses the supported built-in theme.
+   const theme = selectGiscusTheme({ scheme, hostname: location.hostname, urls });
+   const attributes = { 'repo': giscusConfig.repo, 'repo-id': giscusConfig.repoId, 'category': giscusConfig.category, 'category-id': giscusConfig.categoryId, 'mapping': sharedPath ? 'specific' : giscusConfig.mapping, 'term': sharedPath ? term : '', 'strict': giscusConfig.strict, 'reactions-enabled': giscusConfig.reactionsEnabled, 'emit-metadata': giscusConfig.emitMetadata, 'input-position': giscusConfig.inputPosition, 'theme': theme, 'lang': giscusConfig.lang };
+   script.onerror = () => { if (current === attempt) { fatalError = true; fail(); } };
+   timer = setTimeout(() => { if (current === attempt) fail(); }, 18000);
+   Object.entries(attributes).forEach(([key, value]) => script.setAttribute('data-' + key, value));
+   host.append(script);
+  }
+  // giscus reads `theme` once while building the iframe and never re-skins itself, so a
+  // scheme change means rebuilding the iframe and resetting the loading state. The old
+  // node is dropped first, which also invalidates its timers through the attempt counter.
+  function syncTheme() {
+   if (!requested || currentScheme() === loadedScheme) return;
+   loadComments();
+  }
+  window.addEventListener('message', event => { if (event.origin !== 'https://giscus.app' || event.source !== host.querySelector('iframe')?.contentWindow || !event.data?.giscus) return; const error = event.data.giscus.error; if (error && !String(error).includes('Discussion not found')) { fatalError = true; fail(); } else if (error || event.data.giscus.resizeHeight > 0) ready(); });
+  retry.addEventListener('click', loadComments);
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  // Only reaches syncTheme while the site follows the system; an explicit data-theme wins above.
+  systemDark.addEventListener('change', syncTheme);
+  if ('IntersectionObserver' in window) {
+   const observer = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) { loadComments(); observer.disconnect(); } }, { rootMargin: '300px' });
+   observer.observe(host);
+  } else loadComments();
+ }
+</script>

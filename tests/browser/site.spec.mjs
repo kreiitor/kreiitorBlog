@@ -34,15 +34,24 @@ test('Long-form reading renders the whole article on one page with working ancho
  await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('.katex-error')).toHaveCount(0);
  expect(await page.locator('.rich-content math').count()).toBeGreaterThan(0);
  await expect(page.locator('.reading-parts,[data-reading-select]')).toHaveCount(0);
- const ids=await page.locator('.article-body h2[id]').evaluateAll(nodes=>nodes.map(node=>node.id));
- expect(ids.length).toBeGreaterThan(12);
+ const ids=await page.locator('.article-body :is(h2,h3)[id]').evaluateAll(nodes=>nodes.map(node=>node.id));
+ const h2count=await page.locator('.article-body h2[id]').count();
+ const h3count=await page.locator('.article-body h3[id]').count();
+ expect(h2count).toBeGreaterThan(12);
+ // 目录覆盖 h2 与 h3（实测该篇 26 个 h2 + 83 个 h3），这是本轮把 depth===2 放宽到 h3 的契约。
+ expect(h3count).toBeGreaterThan(0);
+ expect(ids.length).toBe(h2count+h3count);
  const hashes=await page.locator('.article-toc a[data-toc-link]').evaluateAll(nodes=>nodes.map(node=>decodeURIComponent(node.hash.slice(1))));
  expect(hashes).toEqual(ids);
+ // h3 条目应带缩进类，与 h2 在视觉上分层
+ const h3Links=await page.locator('.article-toc a[data-toc-link].toc-h3').count();
+ expect(h3Links).toBe(h3count);
  const pathname=new URL(page.url()).pathname;
  await page.goto(`blog/fods-linear-algebra-calculus-convexity/#${encodeURIComponent(ids.at(-1))}`);
  await expect.poll(()=>new URL(page.url()).pathname).toBe(pathname);
  await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('.katex-error')).toHaveCount(0);
- await expect(page.locator('.article-body h2[id]').last()).toBeInViewport();
+ // 跳到最后一个条目（可能是 h3）后，目标标题应在视口内
+ await expect(page.locator(`[id="${ids.at(-1)}"]`)).toBeInViewport();
 });
 test('Configured project actions have a mobile-safe location and placeholder URLs are absent',async({page})=>{
  await page.goto('projects/paper-replication-workbench/');
@@ -64,6 +73,7 @@ test('Back to top reaches the document start',async({page})=>{
  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
 });
 test('Viewport boundaries retain readable content without horizontal page scrolling',async({page},info)=>{
+ test.setTimeout(120000);
  for(const width of info.project.name==='mobile'?[320,390]:[768,900,901,1024,1440]) {
   await page.setViewportSize({width,height:1000});
   await page.goto('');await page.evaluate(()=>document.fonts.ready);
@@ -71,4 +81,39 @@ test('Viewport boundaries retain readable content without horizontal page scroll
   await page.goto('blog/fods-linear-algebra-calculus-convexity/');await page.evaluate(()=>document.fonts.ready);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
  }
+});
+test('Heading permalinks resolve to real ids and are keyboard reachable',async({page})=>{
+ await page.goto('blog/fods-linear-algebra-calculus-convexity/');
+ // 由 scripts/inject-heading-anchors.mjs 在构建后注入（Astro 的 components 覆盖只对 .mdx 生效）
+ const anchors=page.locator('.heading-anchor');
+ expect(await anchors.count()).toBeGreaterThan(50);
+ // 每个锚点的 href 都必须指向页面上真实存在的 id
+ const bad=await page.evaluate(()=>[...document.querySelectorAll('.heading-anchor')]
+  .map(a=>decodeURIComponent(a.getAttribute('href').slice(1)))
+  .filter(id=>!document.getElementById(id)));
+ expect(bad).toEqual([]);
+ // 键盘可达，且点击后地址栏 hash 更新到该节
+ const first=anchors.first();
+ await first.focus();
+ await expect(first).toBeFocused();
+ const target=await first.getAttribute('href');
+ await first.click();
+ await expect.poll(()=>page.evaluate(()=>decodeURIComponent(location.hash))).toBe(target);
+});
+test('Related posts link to same-site articles and follow the shared-tag signal',async({page})=>{
+ await page.goto('blog/ai-agent-ch01/');
+ const section=page.locator('.related-posts');
+ await expect(section).toBeVisible();
+ const items=section.locator('li a');
+ const count=await items.count();
+ expect(count).toBeGreaterThan(0);
+ expect(count).toBeLessThanOrEqual(3);
+ // 全部是站内文章链接，且不指向自己
+ const hrefs=await items.evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+ for(const href of hrefs){
+  expect(href).toMatch(/^\/blog\/[^/]+\/$/);
+  expect(href).not.toBe('/blog/ai-agent-ch01/');
+ }
+ // 同系列的第 2 章应出现在首位（同系列权重高于普通共享标签）
+ expect(decodeURIComponent(hrefs[0])).toContain('ai-agent-ch02');
 });

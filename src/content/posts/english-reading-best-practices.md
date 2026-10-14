@@ -8,7 +8,7 @@ tags:
   - "文献阅读"
   - "效率"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-reading-notes.svg
 ---
 
 ## 这篇文档解决什么问题

@@ -4,7 +4,7 @@ export const siteConfig = {
 	description:
 		'围绕 AI for Software Engineering、程序分析与实验复现，持续整理研究笔记、项目摘要与技术文章。',
 	author: 'kreiitor',
-	role: '软件工程智能化方向研究者',
+	role: '数据科学硕士 · 偏软件工程',
 	location: '武汉，中国',
 	siteUrl: 'https://kreiitor.github.io/kreiitorBlog',
 	email: 'kreiitor@foxmail.com',
@@ -32,12 +32,12 @@ export const navLinks = [
 
 export const aboutSections = [
 	{
-		title: '研究兴趣',
-		items: ['AI for Software Engineering', '代码理解与程序分析', '实验平台搭建与结果复现'],
+		title: '个人兴趣',
+		items: ['AI 的基础与应用', '数学', '阅读'],
 	},
 	{
 		title: '写作方向',
-		items: ['论文阅读与方法拆解', '项目阶段性总结', '工具链与工程化实践'],
+		items: ['论文阅读', '项目复盘总结', '个人知识库、学习笔记'],
 	},
 	{
 		title: '站点维护原则',

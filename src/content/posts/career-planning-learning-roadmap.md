@@ -8,7 +8,7 @@ tags:
   - "AI"
   - "学习路线"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-learning-path.svg
 ---
 
 ## 学习路线的适用场景

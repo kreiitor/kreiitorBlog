@@ -9,7 +9,7 @@ tags:
   - "AI"
   - "学习路线"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-learning-path.svg
 ---
 
 ## 这篇文档解决什么问题

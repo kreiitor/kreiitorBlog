@@ -35,12 +35,13 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
  const pagination = document.querySelector<HTMLElement>('[data-list-pagination]');
  const pageSize = 12;
  let category = 'all', page = 1;
- function render() {
+ function render(animate = false) {
   const selected = rows.filter(row => category === 'all' ? !row.dataset.series : row.dataset.category === category);
   const pages = Math.max(1,Math.ceil(selected.length / pageSize));
   page = Math.max(1,Math.min(page,pages));
   const visible = new Set(selected.slice((page - 1) * pageSize,page * pageSize));
   rows.forEach(row => { row.hidden = !visible.has(row); });
+  if (animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelector('[data-post-list]')?.animate([{opacity:.5,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.2,.7,.2,1)'});
   buttons.forEach(button => button.setAttribute('aria-pressed',String(button.dataset.categoryFilter === category)));
   if (series) series.hidden = category !== 'all' && category !== 'course';
   if (status) status.textContent = category === 'all' ? `${selected.length} 篇独立札记 · 系列章节可从上方专题阅读` : `${selected.length} 篇札记 · 按时间排列`;
@@ -53,8 +54,8 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
   if (page === 1) url.searchParams.delete('page'); else url.searchParams.set('page',String(page));
   history.replaceState(null,'',url);
  }
- buttons.forEach(button => button.addEventListener('click',() => { category = button.dataset.categoryFilter ?? 'all'; page = 1; render(); }));
- function changePage(delta: number) { page += delta; render(); document.querySelector('[data-post-list]')?.scrollIntoView({ block:'start', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); }
+ buttons.forEach(button => button.addEventListener('click',() => { category = button.dataset.categoryFilter ?? 'all'; page = 1; render(true); }));
+ function changePage(delta: number) { page += delta; render(true); const list=document.querySelector<HTMLElement>('[data-post-list]');if(list){list.tabIndex=-1;list.focus({preventScroll:true});list.scrollIntoView({ block:'start', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });} }
  previous?.addEventListener('click',() => changePage(-1));
  next?.addEventListener('click',() => changePage(1));
  const params = new URLSearchParams(location.search);
@@ -69,6 +70,7 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
  .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
  .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px; border: 1px solid transparent; border-radius: 5px; font-size: 13px; color: var(--color-ink-soft); }
  .filter-tabs button[aria-pressed="true"] { color: var(--color-paper); background: var(--color-ink); }
+ .filter-tabs button { transition: color 160ms, background-color 160ms, border-color 160ms; }
  .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-line); background: var(--color-accent-soft); }
  .filter-tabs span { font-size: 12px; }
  .blog-series { margin-top: 34px; }

@@ -1,20 +1,21 @@
 ---
 import type { PostEntry } from '../utils/content';
-import { getReadingTime } from '../utils/content';
+import { getReadingTime, getPostCover } from '../utils/content';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
+import Icon from './Icon.astro';
 interface Props { post: PostEntry; featured?: boolean; }
 const { post } = Astro.props;
 const href = withBase(`/blog/${post.id}/`);
-const cover = post.data.cover ?? (post.data.category === 'knowledge' ? '/covers/post-tools.svg' : '/covers/post-paper.svg');
+const cover = getPostCover(post);
 ---
 <article class="zen-card post-card" data-post-tags={JSON.stringify(post.data.tags)}>
- <a href={href} class="card-cover" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/><span class="card-category">{post.data.tags[0]}</span></a>
+ <a href={href} class="card-cover" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/></a>
  <div class="card-content">
   <div class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span></div>
   <h3><a href={href}>{post.data.title}</a></h3>
   <p class="card-description zen-truncate">{post.data.description}</p>
-  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`阅读：${post.data.title}`}>↗</a></div>
+  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`阅读：${post.data.title}`}><Icon name="arrow"/></a></div>
  </div>
 </article>

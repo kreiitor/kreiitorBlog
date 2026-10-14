@@ -4,6 +4,7 @@ import type { LearningSeries } from '../../utils/series';
 import { getLearningSeries } from '../../utils/series';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { withBase } from '../../utils/url';
+import Icon from '../../components/Icon.astro';
 export async function getStaticPaths() {
  const groups = getLearningSeries(await getCollection('series'), await getCollection('posts'));
  return groups.map(group => ({ params: { series: group.entry.id }, props: { group } }));
@@ -17,7 +18,7 @@ const { Content } = await render(entry);
  <div data-pagefind-ignore>
   <section class="page-shell pt-10 sm:pt-14"><a href={withBase('/notes/')} class="text-link back-link">← 全部学习专题</a></section>
   <section class="page-shell learning-layout" aria-label={`${entry.data.title}学习路径`}>
-   <aside class="course-intro"><p class="eyebrow">STRUCTURED LEARNING</p><span class="course-emblem" aria-hidden="true">{entry.data.emblem}</span><h1>{entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 ↗</a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
+   <aside class="course-intro"><p class="eyebrow">学习路径</p><img class="course-art" src={withBase(entry.id.includes('agent') ? '/covers/series-ai-agent.svg' : entry.id.includes('infra') ? '/covers/series-ai-infra.svg' : '/covers/post-math.svg')} alt="" width="800" height="420"/><span class="course-emblem" aria-hidden="true"><Icon name={entry.id.includes('agent')?'branch':entry.id.includes('infra')?'layers':'book'} size={28}/></span><h1>{entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
    <div class="chapter-list">
     {entry.body?.trim() && <div class="rich-content series-overview"><Content/></div>}
     <h2 class="eyebrow chapter-label">CONTENTS / 按章节阅读</h2>
@@ -29,7 +30,8 @@ const { Content } = await render(entry);
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 30px; align-items: start; }
  .course-intro { padding: 32px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper-warm); position: sticky; top: 118px; }
- .course-emblem { font-family: var(--font-editorial); font-size: 46px; font-style: normal; line-height: 1.1; color: var(--color-accent); display: grid; place-items: center; width: 96px; height: 96px; margin-top: 25px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--color-surface) 0%, var(--color-accent-soft) 100%); }
+ .course-art { display: block; width: 100%; margin-top: 18px; border-radius: 6px; }
+ .course-emblem { color: var(--color-sage); display: grid; place-items: center; width: 48px; height: 48px; margin-top: 22px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface); }
  .course-intro h1 { font-size: 25px; margin-top: 10px; }
  .course-english { font-family: var(--font-editorial); font-size: 24px; line-height: 1.35; color: var(--color-accent); margin-top: 10px; }
  .course-description { margin-top: 25px; font-size: 12px; line-height: 2; color: var(--color-ink-soft); }

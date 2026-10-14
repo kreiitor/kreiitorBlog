@@ -8,7 +8,7 @@ tags:
   - "AI"
   - "CLI"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-cli-terminal.svg
 ---
 
 ## 这篇文档解决什么问题

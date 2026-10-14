@@ -334,7 +334,7 @@ cd ai-agent-book
 - 部分标为**"复现指南"**的实验依赖外部仓库，具体获取方式也会在相应的 README 中说明。
 - 原文提到，**大部分实验配有完整的可运行代码**，都组织在这个配套仓库中。
 
-> 原文出处：以上信息来自原书引言"如何阅读本书"一节（印刷 p.4–5）。原文原话是"配套代码仓库：https://github.com/bojieli/ai-agent-book"，并说明"实验代码按章节组织在 chapter1/ 至 chapter10/ 中；要查找'实验 X-Y'，请先打开对应的 chapterX/README.md，根据实验编号找到项目目录，再按照项目自身的 README 安装依赖并运行"。
+> 原文出处：以上信息来自原书引言"如何阅读本书"一节（印刷 p.4–5）。原文原话是"配套代码仓库：<https://github.com/bojieli/ai-agent-book>"，并说明"实验代码按章节组织在 chapter1/ 至 chapter10/ 中；要查找'实验 X-Y'，请先打开对应的 chapterX/README.md，根据实验编号找到项目目录，再按照项目自身的 README 安装依赖并运行"。
 
 > 🔎 检索确认：该开源仓库确实存在，仓库描述为《深入理解 AI Agent：设计原理与工程实践》（李博杰 著）开源主仓库，包含全书正文、编译版 PDF 与按章配套代码，与引言中的说明一致。（来源：[GitHub - bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)）
 

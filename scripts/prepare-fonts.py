@@ -5,6 +5,7 @@ WOFF2 assets. Unknown future characters retain native serif fallbacks.
 """
 import copy
 import hashlib
+import io
 import json
 import re
 import urllib.request
@@ -79,6 +80,9 @@ def main():
     font_path = CACHE / "noto-serif-sc.ttf"
     if not font_path.exists():
         urllib.request.urlretrieve(f"https://raw.githubusercontent.com/google/fonts/{revision}/ofl/notoserifsc/NotoSerifSC%5Bwght%5D.ttf", font_path)
+    kai_path = CACHE / "lxgw-wenkai-regular.ttf"
+    if not kai_path.exists():
+        urllib.request.urlretrieve("https://github.com/lxgw/LxgwWenKai/releases/download/v1.522/LXGWWenKai-Regular.ttf", kai_path)
     source_font = subset_font(TTFont(font_path, recalcTimestamp=False), corpus)
     faces = []
     files = {}
@@ -87,8 +91,15 @@ def main():
         font.flavor = "woff2"
         font.recalcTimestamp = False
         target = ASSETS / name
-        font.save(target)
-        files[name] = {"bytes": target.stat().st_size, "sha256": hashlib.sha256(target.read_bytes()).hexdigest()}
+        buffer = io.BytesIO()
+        font.save(buffer)
+        data = buffer.getvalue()
+        # Avoid rewriting fonts that the preview server may currently have open.
+        if not target.exists() or target.read_bytes() != data:
+            temporary = target.with_suffix(".woff2.tmp")
+            temporary.write_bytes(data)
+            temporary.replace(target)
+        files[name] = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
         rule = f"@font-face {{\n font-family: '{family}'; font-style: {style}; font-weight: {weight}; font-display: swap;\n src: url('../assets/fonts/{name}') format('woff2');"
         if chars:
             rule += f"\n unicode-range: {ranges(chars)};"
@@ -110,6 +121,10 @@ def main():
         instance.close()
     source_font.close()
 
+    # Display headings: LXGW WenKai Regular covers the shared title/interface glyph set.
+    kai = subset_font(TTFont(kai_path, recalcTimestamp=False), display)
+    save(kai, "journal-kai-sc-400.woff2", "Journal Kai SC", "400", display)
+
     for style, filename in (("normal", "source-serif-4-latin-standard-normal.woff2"), ("italic", "source-serif-4-latin-standard-italic.woff2")):
         path = ROOT / "node_modules/@fontsource-variable/source-serif-4/files" / filename
         font = TTFont(path, recalcTimestamp=False)
@@ -119,6 +134,22 @@ def main():
     font = TTFont(sans_path, recalcTimestamp=False)
     instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
     save(font, "journal-sans-latin.woff2", "DM Sans Variable", "400 600")
+
+    # Editorial display face: Lora, a well-balanced serif with sturdy strokes,
+    # covers latin display/editorial text (replaces Fraunces whose thin strokes
+    # read poorly at heading sizes).
+    for style, filename in (("normal", "lora-latin-wght-normal.woff2"), ("italic", "lora-latin-wght-italic.woff2")):
+        path = ROOT / "node_modules/@fontsource-variable/lora/files" / filename
+        font = TTFont(path, recalcTimestamp=False)
+        instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
+        save(font, f"journal-editorial-latin-{style}.woff2", "Lora Variable", "400 600", style=style)
+
+    # Code face: JetBrains Mono — designed for developers, clear letterforms.
+    for style, filename in (("normal", "jetbrains-mono-latin-wght-normal.woff2"), ("italic", "jetbrains-mono-latin-wght-italic.woff2")):
+        path = ROOT / "node_modules/@fontsource-variable/jetbrains-mono/files" / filename
+        font = TTFont(path, recalcTimestamp=False)
+        instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
+        save(font, f"journal-mono-latin-{style}.woff2", "JetBrains Mono Variable", "400 600", style=style)
 
     (ROOT / "src/styles/fonts.css").write_text("/* Generated from the journal's text by scripts/prepare-fonts.py. */\n" + "\n\n".join(faces) + "\n", encoding="utf-8")
     MANIFEST.write_text(json.dumps({"googleFontsRevision": revision, "weightRange": [400, 600], "corpusGlyphCount": len(corpus), "displayGlyphCount": len(display), "headingGlyphCount": len(headings), "files": files}, indent=2) + "\n", encoding="utf-8")

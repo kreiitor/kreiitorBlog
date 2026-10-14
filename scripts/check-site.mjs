@@ -2,9 +2,15 @@ import {readdir,readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fromHtml} from 'hast-util-from-html';
 const root=path.resolve('dist'),pages=new Map(),failures=[];
+// dist 不存在就明确报错退出，而不是抛未捕获的 ENOENT。
+if(!await stat(root).then(s=>s.isDirectory()).catch(()=>false)){console.error(`Site checks: ${root} does not exist — build first.`);process.exit(2);}
 async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())await walk(file);else if(file.endsWith('.html')){
  const html=await readFile(file,'utf8');
- const tree=fromHtml(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,''),{fragment:false});
+ // 必须先剥注释再去剥 script/style：注释放首位。
+ // 否则注释里若出现字面 `<script>`（例如"普通 <script> 会被提升"这类说明文字），
+ // 下面的惰性正则会从注释内部开始匹配、吃掉真正的 </script>，连注释自己的 `-->` 一起删除，
+ // 留下一个未闭合的 `<!--`，把整篇文档吞成注释 → 解析出空 body → 全部页面误报 "found 0 H1"。
+ const tree=fromHtml(html.replace(/<!--[\s\S]*?-->/g,'').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,''),{fragment:false});
  const ids=new Set(),refs=[];let h1=0;
  function visit(node){if(node.type==='element'){
   if(node.tagName==='h1')h1++;
@@ -19,6 +25,9 @@ async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true
  pages.set(file,{ids,refs,html});
 }}}
 await walk(root);
+// dist 为空（或构建被中断）时，下面的循环会一个页面都不检查却报「通过」，
+// 是危险的假阳性（并发构建或先清空 dist 时出现过）。这里显式拦住。
+if (pages.size === 0) {console.error(`Site checks: found no HTML under ${root} — build first, or dist was cleared mid-run.`);process.exit(2);}
 let checked=0;
 for(const [file,page]of pages){
  const relative=path.relative(root,file).split(path.sep).join('/');

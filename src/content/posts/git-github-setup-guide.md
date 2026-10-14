@@ -8,7 +8,7 @@ tags:
   - "GitHub"
   - "教程"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-git-graph.svg
 ---
 
 ## 这份文档适合什么场景

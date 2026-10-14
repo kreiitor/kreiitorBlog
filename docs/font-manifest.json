@@ -5,28 +5,32 @@
     600
   ],
   "corpusGlyphCount": 2173,
-  "displayGlyphCount": 578,
-  "headingGlyphCount": 1339,
+  "displayGlyphCount": 655,
+  "headingGlyphCount": 1345,
   "files": {
     "journal-serif-sc-400-0.woff2": {
-      "bytes": 129760,
-      "sha256": "2a8ae58a3c48597fc9359a107d588f6741168fe30dc445af6e6440853832caef"
+      "bytes": 129668,
+      "sha256": "fcc4d0071eda1b2aaed6b11e05e3739b54b31be7a3d4a07425245921e08d974f"
     },
     "journal-serif-sc-400-1.woff2": {
-      "bytes": 146008,
-      "sha256": "594dc3a832e2c2023f1ccc761c875b3358707034e9422aa231b98b270f8cb27b"
+      "bytes": 146188,
+      "sha256": "d7609d33d9abe85e0722dbfc0aa2b997d2c1d38a3c2cb0efafff1dab561fa58c"
     },
     "journal-serif-sc-400-2.woff2": {
       "bytes": 137948,
       "sha256": "1885d38240918a7ff03c880efd76bd225fb1d3f677330d5dbe055b2bd1791e63"
     },
     "journal-serif-sc-600-0.woff2": {
-      "bytes": 103096,
-      "sha256": "bc43a325f3f4acaba82a622d2d16ecc6cdf85e37c0370843ae5fcce28e61fec7"
+      "bytes": 115992,
+      "sha256": "e895c61ad06097c7aa399306cb307146a9ada45f572398020c7fc5e0dddfebfa"
     },
     "journal-serif-sc-600-1.woff2": {
-      "bytes": 147716,
-      "sha256": "55c753f725b1efbcca24d3ceb5ddc6ff2bcb3abf4f9c982f2c447da8c9001e9a"
+      "bytes": 135812,
+      "sha256": "dad2d6509fd2a3ff5e7d03a0c77b5cec1c35151d97e0ff87f120a2239a2b398c"
+    },
+    "journal-kai-sc-400.woff2": {
+      "bytes": 143256,
+      "sha256": "a09e9e2f35c12f4b45c1fea9a77315e01e63cdc19edd5c2c61ad4c71cf3517ec"
     },
     "journal-serif-latin-normal.woff2": {
       "bytes": 79452,
@@ -39,6 +43,22 @@
     "journal-sans-latin.woff2": {
       "bytes": 34732,
       "sha256": "8878d34c56f40b51ee5cb04cb708c1e753c9d99873bca7c0f8ab46f7acc174ad"
+    },
+    "journal-editorial-latin-normal.woff2": {
+      "bytes": 36248,
+      "sha256": "ee5aed0ce62860fc791c22da106fbe1a26e8e0d287632996186fdaac71fe903e"
+    },
+    "journal-editorial-latin-italic.woff2": {
+      "bytes": 39340,
+      "sha256": "716074abc058f22e7ede8d27fea39d3cd325506eaa074aba76ac98b61886b6e5"
+    },
+    "journal-mono-latin-normal.woff2": {
+      "bytes": 30076,
+      "sha256": "26081238373a40062d5f4aefeeb30260021597123b30ec28dfd580e7cbd3a458"
+    },
+    "journal-mono-latin-italic.woff2": {
+      "bytes": 31676,
+      "sha256": "3d71bee74e07eb6f9077686090483f1de3e659804c78620dce177e1b702b56a6"
     }
   }
 }

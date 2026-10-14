@@ -1,0 +1,52 @@
+/* Loaded inside the Giscus iframe. Inherits the maintained Primer dark tokens via
+   @import, then rebinds the ones that carry the site's warm-paper palette, so the
+   widget cannot drift from src/styles/global.css (:root[data-theme="dark"], and the
+   matching :root:not([data-theme]) block used by "follow the system").
+   Token roles are chosen the way Primer splits them: --color-border-default is the
+   edge of interactive controls, --color-border-muted is a divider. */
+@import url("https://giscus.app/themes/dark.css");
+main {
+ /* Surfaces. The iframe ground is --color-surface so the widget blends into the
+    .zen-card-flat comments panel it lives in; recessed areas take --color-paper,
+    code/inset the deeper code ground, overlays the raised surface-soft. */
+ --color-canvas-default: #22211d;
+ --color-canvas-subtle: #1a1a17;
+ --color-canvas-inset: #141412;
+ --color-canvas-overlay: #2a2925;
+
+ /* Text: --color-ink / --color-ink-soft / --color-ink-muted. */
+ --color-fg-default: #e6e2d6;
+ --color-fg-muted: #c9c4b6;
+ --color-fg-subtle: #a09b8c;
+ /* Text sitting on an accent/danger fill inverts to the dark paper tone. */
+ --color-fg-on-emphasis: #1a1a17;
+
+ /* Boundaries. Control edges must clear WCAG 1.4.11 (3:1), which the divider
+    token #35342e cannot do on any dark surface (1.29-1.48:1), so they take the
+    site's --color-control-line (#6f6d61: 3.10:1 on the surface, 3.35:1 on paper).
+    Dividers keep --color-line so separators match the page's other hairlines. */
+ --color-border-default: #6f6d61;
+ --color-border-muted: #35342e;
+ /* Kept as a named token for the explicit control-edge rule below. */
+ --color-control-line: #6f6d61;
+
+ /* Accent: the terracotta has to be lifted for dark, and lifted further on hover. */
+ --color-accent-fg: #c9805c;
+ --color-accent-emphasis: #c9805c;
+ --color-accent-muted: #2b211a;
+ --color-accent-subtle: #33261f;
+
+ --color-btn-primary-bg: #c9805c;
+ --color-btn-primary-border: #c9805c;
+ --color-btn-primary-hover-bg: #db9a78;
+ --color-btn-primary-hover-border: #db9a78;
+ --color-btn-primary-text: #1a1a17;
+
+ /* Native widgets inside the iframe (textarea, scrollbars) follow dark. */
+ color-scheme: dark;
+}
+/* Belt and braces for the comment field: only the border colour is touched, so
+   this is a no-op wherever the widget draws no border of its own. */
+.gsc-comment-box, .gsc-main textarea { border-color: var(--color-control-line); }
+.gsc-main { font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", sans-serif; }
+.gsc-comment-box, .gsc-comment { border-radius: 10px; }

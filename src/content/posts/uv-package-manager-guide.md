@@ -8,7 +8,7 @@ tags:
   - "uv"
   - "工具"
 category: knowledge
-cover: /covers/post-tools.svg
+cover: /covers/post-cli-terminal.svg
 ---
 
 ## 这份文档适合什么场景

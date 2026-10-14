@@ -1,6 +1,7 @@
 ---
 import { navLinks, siteConfig } from '../data/site';
 import { withBase } from '../utils/url';
+import Icon from './Icon.astro';
 interface Props { currentPath: string; }
 const { currentPath } = Astro.props;
 const active = (href: string) => href === '/' ? currentPath === '/' : currentPath.startsWith(href);
@@ -8,7 +9,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
 <header class="site-header">
  <div class="page-shell header-inner">
   <a href={withBase('/')} class="brand" title="首页">
-   <span class="brand-mark" aria-hidden="true">k<span>.</span></span>
+   <span class="brand-mark" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 23V7.5" stroke="var(--color-ink)" stroke-width="1.7" stroke-linecap="round"/><path d="M15 15.2L10.3 19.4M15 15.2L19.7 11" stroke="var(--color-ink)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19.7" cy="11" r="1.9" fill="var(--color-accent)"/><circle cx="10.3" cy="19.4" r="1.15" fill="none" stroke="var(--color-sage)" stroke-width=".7"/></svg></span>
    <span class="brand-name">kreiitor<span class="brand-subtitle">研究札记<span class="brand-detail"> / FIELD NOTES</span></span></span>
    <span class="sr-only">，首页</span>
   </a>
@@ -17,14 +18,18 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   </nav>
   <div class="header-actions">
    <a href={withBase('/search/')} class="header-search" aria-label="搜索文章" data-search-link>
-    <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+    <Icon name="search" size={20}/>
     <span>搜索</span><kbd aria-hidden="true">⌘ K</kbd>
    </a>
+   <button type="button" class="theme-toggle" data-theme-toggle aria-label="主题：浅色" title="主题：浅色">
+    <svg class="icon-light" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+    <svg class="icon-dark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+   </button>
    <a href={siteConfig.socialLinks[0].href} class="header-github" target="_blank" rel="noreferrer" aria-label="GitHub 主页">
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
    </a>
    <details class="mobile-menu">
-    <summary aria-label="展开导航"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
+    <summary aria-label="展开导航" aria-expanded="false"><Icon name="menu"/></summary>
     <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}<span aria-hidden="true">↗</span></a>)}<a href={withBase('/archive/')}>文章归档<span aria-hidden="true">↗</span></a></nav>
    </details>
   </div>
@@ -34,26 +39,51 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  const searchLink = document.querySelector<HTMLAnchorElement>('[data-search-link]');
  const shortcut = searchLink?.querySelector('kbd');
  if (shortcut && !/Mac|iPhone|iPad/.test(navigator.userAgent)) shortcut.textContent = 'Ctrl K';
+ function search() {
+  const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
+  if (dialog) document.dispatchEvent(new Event('search:request'));
+  else { const input = document.querySelector<HTMLInputElement>('[data-search-input]'); if (input) { input.focus(); input.select(); } }
+ }
+ searchLink?.addEventListener('click',event=>{ if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return; if(document.querySelector('[data-search-dialog]')||document.querySelector('[data-search-input]')){event.preventDefault();search();} });
  document.addEventListener('keydown', event => {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && searchLink) {
    event.preventDefault();
-   const input = document.querySelector<HTMLInputElement>('[data-search-input]');
-   if (input) { input.focus(); input.select(); }
-   else { const url = new URL(searchLink.href); url.searchParams.set('focus','1'); window.location.href = url.href; }
+   search();
   }
-  if (event.key === 'Escape') document.querySelector<HTMLDetailsElement>('.mobile-menu')?.removeAttribute('open');
+  if (event.key === 'Escape') { const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu'); if(menu?.open){menu.open=false;menu.querySelector('summary')?.focus();} }
  });
+ const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu');
+ menu?.addEventListener('toggle',()=>{menu.querySelector('summary')?.setAttribute('aria-expanded',String(menu.open));document.documentElement.classList.toggle('menu-is-open',menu.open);});
+ menu?.addEventListener('focusout',()=>{setTimeout(()=>{if(menu.open&&!menu.contains(document.activeElement))menu.open=false;},0);});
+ menu?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{menu.open=false;}));
  document.addEventListener('click', event => {
   const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu');
   if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
  });
+
+ // 两态循环：浅色 ⇄ 深色。首次访问由 BaseLayout 按系统偏好写入存储，
+ // 之后按钮只在这两个显式值之间切换（语义见 BaseLayout 的防闪白脚本）。
+ document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach(btn => {
+  btn.addEventListener('click', () => {
+   const cur = btn.getAttribute('data-pref') === 'dark' ? 'dark' : 'light';
+   const next = cur === 'dark' ? 'light' : 'dark';
+   try { localStorage.setItem('theme', next); } catch { /* 隐私模式下存储不可用，仍就地切换生效 */ }
+   if (typeof window.__applyTheme === 'function') window.__applyTheme();
+   else document.documentElement.setAttribute('data-theme', next);
+  });
+ });
+ // 首帧同步按钮状态（head 内联脚本执行时按钮还不存在）
+ if (typeof window.__applyTheme === 'function') window.__applyTheme();
 </script>
 <style>
- .site-header { position: sticky; top: 0; z-index: 40; background: #f8f9f5ed; backdrop-filter: blur(16px); border-bottom: 1px solid var(--color-line); view-transition-name: site-header; }
- .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
+ .site-header { position: sticky; top: 0; z-index: 40; background: var(--color-header-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--color-line); view-transition-name: site-header; }
+ .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; transition: height .25s var(--ease-smooth); }
+ .site-header[data-scrolled="true"] .header-inner { height: 64px; }
+ .site-header[data-scrolled="true"] .brand-mark svg { width: 25px; height: 25px; }
+ .brand-mark svg { transition: width .25s var(--ease-smooth),height .25s var(--ease-smooth); }
  .brand { display: flex; gap: 12px; align-items: center; }
- .brand-mark { font-family: var(--font-editorial); font-size: 38px; line-height: 1; letter-spacing: -5px; padding-right: 5px; }
- .brand-mark span { color: var(--color-accent); }
+ .brand-mark { display: flex; align-items: center; transition: transform .3s var(--ease-out-expo); }
+ .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.06); }
  .brand-name { font-size: 20px; font-weight: 600; letter-spacing: -.05em; line-height: 1.2; }
  .brand-subtitle { display: block; margin-top: 7px; font-size: var(--text-caption); font-weight: 400; letter-spacing: .08em; white-space: nowrap; }
  .desktop-nav { display: flex; gap: 34px; align-items: center; }
@@ -66,10 +96,19 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .header-search:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
  kbd { font-family: var(--font-sans); font-size: var(--text-caption); border: 1px solid var(--color-line); border-radius: 3px; padding: 1px 5px; }
  .header-github { border-left: 1px solid var(--color-line); padding-left: 20px; }
+ /* 两态主题切换：浅色 / 深色。
+    data-pref 未设置时默认显示 light 图标，避免 JS 未跑时按钮空白。 */
+ .theme-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 8px; border-radius: 6px; color: var(--color-ink-soft); transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth); }
+ .theme-toggle:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
+ .theme-toggle svg { display: none; }
+ .theme-toggle .icon-light { display: block; }
+ .theme-toggle[data-pref="light"] .icon-dark,
+ .theme-toggle[data-pref="dark"] .icon-light { display: none; }
+ .theme-toggle[data-pref="dark"] .icon-dark { display: block; }
  .mobile-menu { display: none; }
  @media (max-width: 800px) {
-  .header-inner { height: 74px; gap: 16px; }
-  .brand-name { font-size: 18px; } .brand-mark { font-size: 34px; }
+  .header-inner, .site-header[data-scrolled="true"] .header-inner { height: 74px; gap: 16px; }
+  .brand-name { font-size: 18px; } .brand-mark svg { width: 26px; height: 26px; }
   .brand-detail { display: none; }
   .desktop-nav,.header-search span,kbd,.header-github { display: none; }
   .header-search { padding: 10px; } .header-actions { gap: 8px; }

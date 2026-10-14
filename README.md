@@ -26,7 +26,11 @@ npm run preview
 
 阅读体验重构的实现说明、最终性能对比和根路径／子目录验收记录见 [重构记录](docs/REFACTOR-2026-10-13.md)。
 
-有 Chrome 的环境可用 `npm run test:browser` 验证搜索、键盘、分页、分节深链接、代码复制与主要屏幕断点。截图和失败记录保存在忽略的 `.artifacts/`。
+温暖数字花园的视觉、交互与功能优化已落地。设计取舍见 [方案](docs/WARM-DIGITAL-GARDEN-PLAN.md)，实现、验收和当前单页性能数据见 [实施记录](docs/WARM-DIGITAL-GARDEN-IMPLEMENTATION.md)。
+
+下一轮重构方向（暗色模式、颜色与间距令牌化、目录升到 h3、脚注等）见 [重构方向](docs/REFACTOR-2026-10-14.md)；它的证据基座是对 53 个个人站点的实地抓取与源码取证，见 [站点实测研究](docs/SITE-STUDY-2026-10-14.md)。
+
+有 Chrome 的环境可用 `npm run test:browser` 验证快捷搜索与焦点、搜索重试、评论配置与失败恢复、公式滚动、阅读记录、打印、列表分页、全文锚点、代码复制与主要屏幕断点。截图和失败记录保存在忽略的 `.artifacts/`。
 
 模拟 GitHub Pages 子目录部署（PowerShell）：
 
@@ -69,17 +73,21 @@ SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字�
 
 标题与阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 系统中文字体，代码使用 IBM Plex Mono。中文宋体按当前语料生成常规与强调子集，界面不下载另一套中文字体。字体层级与字号在 `src/styles/global.css` 中统一维护；代码与数学字体样式仅随阅读页面加载。
 
-长文自动按小节和完整段落生成静态阅读分节，原文章地址作为第一节。代码块、表格、公式和 MathML 保持完整；全文目录可跨节跳转，原有正文锚点会转到相应分节。博客以学习专题与紧凑列表组织内容，每页展示 12 篇独立札记。
+每篇文章完整呈现在同一页面，保留正文、MathML、原有地址和章节锚点。目录、浏览器查找、复制和打印沿用全文阅读。博客列表仍按学习专题与紧凑条目组织，每页展示 12 篇独立札记。
+
+文章页可主动开启本机阅读记录，保存最近章节与近似进度，并提供继续、清除和关闭入口。数据只保存在当前浏览器的 localStorage；带明确锚点的链接优先定位到该章节。顶部搜索或 Ctrl/Cmd K 打开快捷搜索，Escape 关闭并恢复焦点；查询与完整搜索页共享。
 
 字体的 SIL Open Font License 原文保留在 `public/fonts/licenses/`。
 
 中文语料子集、Source Serif 4 字重裁剪与维护方式见 `docs/FONTS.md`。
 
-分享预览使用 1200×630 PNG，站内封面保留 SVG。修改封面后运行 `npm run social:prepare` 更新分享图。
+分享预览使用 1200×630 PNG，站内封面保留 SVG。图形原稿集中在 `scripts/prepare-garden-art.mjs`；运行 `npm run art:prepare` 重建主题封面与分享图，手动编辑 SVG 后运行 `npm run social:prepare`。原有通用工具封面会根据文章主题选用阅读、算法或 Infra 构图，自定义封面保持优先。
 
 ## 评论
 
-复制 `.env.example` 为 `.env`，配置 Giscus 仓库和分类 ID。没有完整配置时，文章页显示邮件交流入口。评论接近阅读末尾才加载；同一篇文章的各分节共享原始路径对应的讨论。GitHub Pages 使用仓库 Variables 中的 `PUBLIC_GISCUS_REPO`、`PUBLIC_GISCUS_REPO_ID`、`PUBLIC_GISCUS_CATEGORY`、`PUBLIC_GISCUS_CATEGORY_ID`；本地 `.env` 不应提交。
+站点默认沿用原有 Giscus 的公开仓库、分类 ID，无需本地 `.env` 即可显示评论。需要切换仓库时，复制 `.env.example` 为 `.env` 并完整替换对应配置；GitHub Pages 通过同名仓库 Variables 覆盖 `PUBLIC_GISCUS_REPO`、`PUBLIC_GISCUS_REPO_ID`、`PUBLIC_GISCUS_CATEGORY`、`PUBLIC_GISCUS_CATEGORY_ID`。这些 ID 为公开配置；本地 `.env` 不应提交。各项变量的含义与 `REPO_ID` / `CATEGORY_ID` 的获取步骤见 `.env.example` 的注释，配置本身可在 https://giscus.app 生成。
+
+评论接近阅读末尾才连接，原路径对应的讨论关联保持一致。加载中、失败与重试状态可见，邮件交流入口始终保留。公开部署使用 `public/giscus-garden.css` 为 iframe 设置花园主题；localhost 预览使用 Giscus 内置 light 主题，避免请求尚未发布的样式。自定义域名需同时正确设置 `SITE_URL` 与 `BASE_PATH`。
 
 ## 部署
 

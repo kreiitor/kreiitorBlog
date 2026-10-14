@@ -1,8 +1,9 @@
 ---
+import Icon from './Icon.astro';
 interface Props { kicker?: string; title: string; description?: string; linkHref?: string; linkLabel?: string; }
 const { kicker, title, description, linkHref, linkLabel } = Astro.props;
 ---
 <div class="section-heading">
  <div>{kicker && <p class="eyebrow">{kicker}</p>}<h2>{title}</h2>{description && <p class="section-description">{description}</p>}</div>
- {linkHref && linkLabel && <a href={linkHref} class="text-link">{linkLabel}<span aria-hidden="true">↗</span></a>}
+ {linkHref && linkLabel && <a href={linkHref} class="text-link">{linkLabel}<Icon name="arrow" size={16}/></a>}
 </div>

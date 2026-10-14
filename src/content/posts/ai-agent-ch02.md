@@ -43,7 +43,7 @@ cover: /covers/series-ai-agent.svg
 
 OpenAI 研究员翁家翌对这个观点的总结被原文引了进来：「人和模型一样，最重要的是 Context。」他拿自身经历举例，说自己在 OpenAI 的工作也没有那么难，如果换一个其他人，只要有他所有的 context，也是能干的。同样的道理适用于 Agent：决定 Agent 在业务中发挥价值的，往往在于它在每个决策点能获得多么丰富、精准的上下文，模型参数量反倒次要。翁家翌还指出，团队合作中最大的问题是 context 的不一致，而 AI 短时间内无法取代人的最大原因也是 context，因为 AI 跟人并不在同一个环境里面。这恰恰是上下文工程要解决的核心问题：如何把 Agent 需要的背景信息系统性地、结构化地送到模型面前。
 
-原文指出 ReAct 被广泛视为基于大语言模型构建 Agent 的奠基性工作之一，论文开篇用一句话把 Agent、Environment、Context 和 Action 的关系连了起来（脚注 1：Yao, Shunyu, et al. "ReAct: Synergizing Reasoning and Acting in Language Models." ICLR, 2023. https://arxiv.org/abs/2210.03629）。原文引用的英文原句是：
+原文指出 ReAct 被广泛视为基于大语言模型构建 Agent 的奠基性工作之一，论文开篇用一句话把 Agent、Environment、Context 和 Action 的关系连了起来（脚注 1：Yao, Shunyu, et al. "ReAct: Synergizing Reasoning and Acting in Language Models." ICLR, 2023. <https://arxiv.org/abs/2210.03629>）。原文引用的英文原句是：
 
 > Consider a general setup of an agent interacting with an environment for task solving. At time step $t$, an agent receives an observation $o_t \in \mathcal{O}$ from the environment and takes an action $a_t \in \mathcal{A}$ following some policy $\pi(a_t \mid c_t)$, where $c_t = (o_1, a_1, \dots, o_{t-1}, a_{t-1}, o_t)$ is the context to the agent.
 
@@ -878,7 +878,7 @@ Claude Code 的实践揭示了一个深层的模式：当 Prompt Cache 的经济
 
 工具结果的替换字符串在首次出现时就被冻结。当大型工具输出被替换为摘要预览时，替换后的字符串会被持久化保存。即使后续会话重启，系统也会使用完全相同的替换字符串，以保证恢复后的消息序列与缓存中的字节流一致，避免缓存失效。
 
-上面几条讲的都是缓存：前缀变了，请求变慢、变贵，但结果仍然正确。而 Anthropic 从 Claude Fable 5.1 和 Claude Opus 5.5 开始引入的「保留思考」（preserved thinking）机制，让前缀稳定多了一层含义（脚注 2：Anthropic, "Preserved thinking", Claude API 文档, https://platform.claude.com/docs/en/build-with-claude/preserved-thinking）。
+上面几条讲的都是缓存：前缀变了，请求变慢、变贵，但结果仍然正确。而 Anthropic 从 Claude Fable 5.1 和 Claude Opus 5.5 开始引入的「保留思考」（preserved thinking）机制，让前缀稳定多了一层含义（脚注 2：Anthropic, "Preserved thinking", Claude API 文档, <https://platform.claude.com/docs/en/build-with-claude/preserved-thinking>）。
 
 这个机制的初衷是防蒸馏：服务端用签名把每个 thinking block 绑定到产生它时的前缀上，也就是顶层的 system、tools，以及它之前的全部消息。之后的请求里，只要这段前缀有任何改动，这个 thinking block 和它后面的所有 thinking 都会失效。新注册的账户默认直接收到 400 错误；也可以改成静默丢弃失效的 thinking，请求照常成功，但模型这一轮用不上之前的推理，只能从头想起。
 
@@ -1307,7 +1307,7 @@ Agent Skills 的核心思想是把 Agent 的能力模块化为独立的、可按
 
 第二层是核心流程。当 Agent 判断某个任务需要特定的 Skill 时，运行时才加载完整的 `SKILL.md`。触发加载有两种方式：用户显式输入斜杠命令（如 `/pptx`）时，由客户端在本地拦截并展开，模型不必先发起一次工具调用；模型读过元数据目录后自己判断需要某个 Skill 时，则调用专用的 Skill 工具，比前者多一次 ReAct 往返。两条路径的落点相同，Claude Code 都在调用位置把 Skill 正文作为 user message 加入会话。模型自主触发时返回的那条 tool result 只是一句「正在启动 Skill」的占位符，并不承载正文（脚注 8：Claude Code Docs 原文为「Skills and commands inject their instructions as user messages at the point of invocation.」；两种触发方式的分工见 Agent Skills, "How to add skills support to your agent", "User-explicit activation"：斜杠命令由 Harness 拦截并注入，模型无需自己发起激活动作）。没有专用激活工具的运行时，则用通用文件读取工具去读 `SKILL.md`，正文以 tool result 的形式进入上下文。
 
-以 PPTX Skill 为例（脚注 9：Anthropic, "PPTX Skill", 2025, https://github.com/anthropics/skills/），其中包含处理 PowerPoint 文件的核心流程：如何通过 markitdown（Microsoft 开源的文档转 Markdown 工具）提取文本，如何解压 PPTX 文件访问原始的 XML 结构，以及关键文件的路径约定。
+以 PPTX Skill 为例（脚注 9：Anthropic, "PPTX Skill", 2025, <https://github.com/anthropics/skills/>），其中包含处理 PowerPoint 文件的核心流程：如何通过 markitdown（Microsoft 开源的文档转 Markdown 工具）提取文本，如何解压 PPTX 文件访问原始的 XML 结构，以及关键文件的路径约定。
 
 第三层是细则，通过文件引用深入到更详细的子文档。主文件引用了 `html2pptx.md`（通过 HTML 模板创建 PowerPoint 的详细工作流）、`reference.md`（格式技术细节）等。Agent 会根据具体的需求选择性地深入阅读相关的子文档。
 
@@ -1331,7 +1331,7 @@ Skill 是「目录常驻、正文按需、细则再深挖」的三层知识包�
 
 Skills 的运行时结构解决了「什么时候加载、加载多少」，内容本身还需要有人把经验写成模型能执行的指令。一份实用的 Skill 不应只是背景知识或一次成功对话的摘要，它应当让一个刚加入团队的员工知道：遇到什么任务时使用它，应该按什么顺序行动，哪些情况需要停下来确认，什么结果才算完成。
 
-根据著名提示工程师宝玉的《图解 Skill》（脚注 10：宝玉，《别再用提示词去 AI 味了，方向就是错的》，2026-02-14，https://baoyu.io/blog/2026-02-14/remove-ai-writing-flavor），Skill 建议包含四个部分。角色与读者，说明这份 Skill 服务谁、面向什么任务，以及输出应达到什么标准；核心原则，只保留三到五条最重要的判断，并为关键原则配正例和反例；禁止清单，记录高频错误、越权动作和容易误解的表达，同时写清合法例外；参考资料，放术语表、模板、范文和更详细的子文档。原文强调：规则应尽量写成「作用域＋动作＋例外＋验证方式」，避免把所有可能的情况堆成一张越来越长的禁用词表。
+根据著名提示工程师宝玉的《图解 Skill》（脚注 10：宝玉，《别再用提示词去 AI 味了，方向就是错的》，2026-02-14，<https://baoyu.io/blog/2026-02-14/remove-ai-writing-flavor>），Skill 建议包含四个部分。角色与读者，说明这份 Skill 服务谁、面向什么任务，以及输出应达到什么标准；核心原则，只保留三到五条最重要的判断，并为关键原则配正例和反例；禁止清单，记录高频错误、越权动作和容易误解的表达，同时写清合法例外；参考资料，放术语表、模板、范文和更详细的子文档。原文强调：规则应尽量写成「作用域＋动作＋例外＋验证方式」，避免把所有可能的情况堆成一张越来越长的禁用词表。
 
 写作型 Skill 可以从三到五篇自己最满意的原创文章开始。让 Agent 归纳用词、句式、段落结构和语气，生成一份二十行左右的初版；再用它处理一项真实的写作任务，由作者逐句改稿。原文与修改稿的差异比抽象地说「更自然一点」更有信息量，它能告诉 Agent 哪些词被删掉、哪些长句被拆开、哪些地方需要补充事实。把反复出现的改动整理回 Skill，并为每条规则保留正例、反例和适用范围。
 
@@ -1513,7 +1513,7 @@ Current State:
 
 对照组 B 的结果是注意力高度集中在状态栏信息上，思考过程直接使用已提炼好的信息，不再从原始数据中做统计。对于 Qwen3-0.6B 这样小的模型，对照组 A 经常违反约束继续拨打，对照组 B 则能稳定地遵从约束。
 
-实验最终表明（脚注 12：Li, Bojie and Noah Shi. *Distill, Don't Retrieve: Inference-Time Context Distillation for LLM Agent Reasoning.* 2026. https://01.me/research/context-distillation）：为模型提供一条提前算好的状态栏后，较小开源模型的准确率可以接近前沿大模型；状态栏可以大大提高模型的思考效率，让每次 Agent 迭代的思考 token 量、延迟和花费均降低约一个数量级；不带状态栏时，每次查询的思考量随上下文变长而持续增长，带上状态栏后它变得基本恒定。
+实验最终表明（脚注 12：Li, Bojie and Noah Shi. *Distill, Don't Retrieve: Inference-Time Context Distillation for LLM Agent Reasoning.* 2026. <https://01.me/research/context-distillation>）：为模型提供一条提前算好的状态栏后，较小开源模型的准确率可以接近前沿大模型；状态栏可以大大提高模型的思考效率，让每次 Agent 迭代的思考 token 量、延迟和花费均降低约一个数量级；不带状态栏时，每次查询的思考量随上下文变长而持续增长，带上状态栏后它变得基本恒定。
 
 这个实验的巧妙之处在于「同一个轨迹、同一个追问，只改末尾那一段」。两组的前文完全相同，热力图的差异只能归因于状态栏。这比「换一个任务再比较」干净得多，属于标准的控制变量法，与实验 2-4 的方法论一致。
 

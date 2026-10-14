@@ -3,6 +3,7 @@ import type { PostEntry } from '../utils/content';
 import { getReadingTime } from '../utils/content';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
+import Icon from './Icon.astro';
 interface Props { posts: PostEntry[]; interactive?: boolean; }
 const { posts, interactive = false } = Astro.props;
 const initial = new Set(posts.filter(post => !post.data.series).slice(0,12).map(post => post.id));
@@ -10,7 +11,7 @@ const labels = { writing: '研究与思考', knowledge: '知识笔记', course: 
 ---
 <div class="post-list" data-post-list>
  {posts.map(post => <a class="post-row" href={withBase(`/blog/${post.id}/`)} data-post-row data-category={post.data.category} data-series={post.data.series ?? ''} hidden={interactive && !initial.has(post.id)}>
-  <div><div class="row-meta"><span class="row-category">{labels[post.data.category]}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h3>{post.data.title}</h3><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true">↗</span>
+  <div><div class="row-meta"><span class="row-category">{labels[post.data.category]}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h3>{post.data.title}</h3><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true"><Icon name="arrow"/></span>
  </a>)}
 </div>
 <style>
