@@ -9,6 +9,7 @@ import Icon from './Icon.astro';
  const art = document.querySelector<HTMLElement>('.hero-visual');
  const heroEnglish = document.querySelector<HTMLElement>('.hero-english');
  const revealTargets = document.querySelectorAll('.section-heading,.post-card,.project-card,.series-card,.garden-aside,.course-intro,.chapter-row');
+ const entrances = new Set<Animation>();
  let framePending = false;
  let lastScrolled: boolean | null = null;
  let lastVisible: boolean | null = null;
@@ -34,7 +35,10 @@ import Icon from './Icon.astro';
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
  window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('resize',schedule,{passive:true});
- preference.addEventListener('change',updateScroll);
+ preference.addEventListener('change',() => {
+  if (preference.matches) { entrances.forEach(animation => animation.cancel()); entrances.clear(); }
+  updateScroll();
+ });
  updateScroll();
  if (!preference.matches && 'IntersectionObserver' in window && revealTargets.length) {
   const staggerCache = new Map();
@@ -48,7 +52,15 @@ import Icon from './Icon.astro';
      stagger = element.matches('.post-card,.project-card,.series-card') ? Array.from(element.parentElement?.children ?? []).indexOf(element)%3*70 : 0;
      staggerCache.set(element, stagger);
     }
-    element.animate([{opacity:.15,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
+    const heading = element.matches('.section-heading');
+    const project = element.matches('.project-card');
+    const series = element.matches('.series-card');
+    const animation = element.animate([
+     {opacity:heading ? .65 : .4,transform:project ? 'translateX(10px)' : `translateY(${heading ? 6 : 12}px)`},
+     {opacity:1,transform:'translate(0,0)'}
+    ],{duration:heading ? 340 : series ? 520 : 420,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
+    entrances.add(animation);
+    animation.finished.then(() => entrances.delete(animation),() => entrances.delete(animation));
     observer.unobserve(element);
     staggerCache.delete(element);
    }

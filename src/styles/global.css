@@ -22,7 +22,7 @@
  --color-accent: #2448d8; --color-accent-strong: #1939b3; --color-accent-soft: #e9edff;
  --color-sage: #394d77; --color-sage-soft: #ecf0f8;
  --color-highlight: #e5ee95; --color-highlight-soft: #f0f3d6; --color-on-highlight: #29321c;
- --color-hero-panel: #2448d8; --color-hero-paper: #f4f5dd; --color-hero-ink: #18243a; --color-hero-line: #a6bafa;
+ --color-hero-panel: #304bbd; --color-hero-paper: #f4f5dd; --color-hero-ink: #18243a; --color-hero-line: #a6bafa;
  --color-primary: #2448d8; --color-primary-strong: #1939b3; --color-on-primary: #fffefa;
  --shadow-whisper: 0 2px 8px #35382f04; --shadow-soft: 0 10px 28px #35382f0a; --shadow-lift: 0 14px 34px #35382f14;
 
@@ -75,7 +75,7 @@
  html { background: var(--color-paper); scroll-padding-top: 110px; -webkit-font-smoothing: antialiased; }
  body { min-width: 0; color: var(--color-ink); font-family: var(--font-sans); font-size: var(--text-body); line-height: 1.75; font-optical-sizing: auto; }
  h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.5; text-wrap: pretty; line-break: strict; overflow-wrap: anywhere; }
- h2,h3,h4 { font-family: var(--font-title); }
+ h2,h3,h4 { font-family: var(--font-title); font-weight: 600; }
  a { color: inherit; text-decoration: none; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
  button,input { font: inherit; } button { cursor: pointer; } img { max-width: 100%; }
  ::selection { background: var(--color-selection-bg); color: var(--color-selection-ink); }
@@ -89,10 +89,12 @@
  .zen-card,.zen-card-flat { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 10px; }
  .zen-card { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo),transform var(--dur-slow) var(--ease-out-expo); }
  .zen-card:focus-within { border-color: var(--color-line-strong); }
- @media (hover: hover) { .zen-card:hover { border-color: var(--color-line-strong); box-shadow: var(--shadow-lift); translate: 0 -3px; } }
+ @media (hover: hover) { .zen-card:hover { border-color: var(--color-line-strong); box-shadow: var(--shadow-soft); translate: 0 -2px; } }
  .zen-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 11px 22px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth),transform var(--dur-base) var(--ease-out-expo); }
  .zen-btn:hover { transform: translateY(-1px); }
  .zen-btn:active { transform: translateY(1px); transition-duration: var(--dur-press); }
+ .zen-btn svg,.text-link svg { transition: transform var(--dur-base) var(--ease-out-expo); }
+ @media (hover: hover) { .zen-btn:hover svg,.text-link:hover svg { transform: translateX(3px); } }
  .zen-btn-primary { background: var(--color-primary); color: var(--color-on-primary); border: 1px solid var(--color-primary); }
  .zen-btn-primary:hover { background: var(--color-primary-strong); border-color: var(--color-primary-strong); }
  .zen-btn-secondary { border: 1px solid var(--color-control-line); background: transparent; }
@@ -105,7 +107,7 @@
  .zen-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
  .section-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--space-m); }
  .section-heading { display: flex; justify-content: space-between; align-items: end; gap: var(--space-m); padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
- .section-heading h2 { font-size: 26px; margin-top: var(--space-2xs); }
+ .section-heading h2 { font-size: 27px; line-height: 1.5; margin-top: var(--space-2xs); }
  .section-heading .section-description { margin-top: var(--space-2xs); font-size: 13px; color: var(--color-ink-soft); }
  .text-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 32px; font-size: var(--text-caption); white-space: nowrap; }
  .text-link:hover { color: var(--color-accent); }
@@ -121,10 +123,10 @@
  .card-category { position: absolute; top: 14px; left: 15px; padding: 3px var(--space-2xs); border: 1px solid var(--color-badge-line); background: var(--color-badge-bg); border-radius: 4px; color: var(--color-accent-strong); font-size: 12px; letter-spacing: .03em; }
  .card-content { padding: 23px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
  .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: var(--text-caption); color: var(--color-ink-muted); }
- .card-content h3 { font-size: 18px; line-height: 1.7; }
+ .card-content h3 { font-size: 20px; line-height: 1.6; }
  .card-content h3 a { background-image: linear-gradient(var(--color-accent),var(--color-accent)); background-repeat: no-repeat; background-size: 0 1px; background-position: 0 100%; transition: color var(--dur-base) var(--ease-smooth),background-size var(--dur-slow) var(--ease-out-expo); padding-bottom: 2px; }
  .card-content h3 a:hover { color: var(--color-accent); background-size: 100% 1px; }
- .card-description { font-size: var(--text-ui); line-height: 1.9; color: var(--color-ink-soft); }
+ .card-description { font-size: var(--text-body); line-height: 1.85; color: var(--color-ink-soft); }
  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: var(--space-2xs); }
  .card-arrow { display: grid; place-items: center; min-width: 36px; min-height: 36px; font-size: 20px; color: var(--color-accent); transition: transform var(--dur-base) var(--ease-out-expo); }
  .zen-card:is(:hover,:focus-within) .card-arrow { transform: translateX(3px); }
@@ -281,7 +283,7 @@
   --color-highlight: #e5ee95;
   --color-highlight-soft: #303a29;
   --color-on-highlight: #29321c;
-  --color-hero-panel: #2949bd;
+  --color-hero-panel: #2d4299;
   --color-hero-paper: #f0f3d9;
   --color-hero-ink: #18243a;
   --color-hero-line: #a6bafa;
@@ -331,7 +333,7 @@
   --color-highlight: #e5ee95;
   --color-highlight-soft: #303a29;
   --color-on-highlight: #29321c;
-  --color-hero-panel: #2949bd;
+  --color-hero-panel: #2d4299;
   --color-hero-paper: #f0f3d9;
   --color-hero-ink: #18243a;
   --color-hero-line: #a6bafa;

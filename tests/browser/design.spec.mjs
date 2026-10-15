@@ -54,3 +54,34 @@ test('Practical articles lead directly into their text without a decorative cove
  await expect(page.locator('.article-cover')).toHaveCount(0);
  await expect(page.locator('.article-body')).toBeVisible();
 });
+
+test('Layered illustration settles and stays still with reduced motion', async ({ page }) => {
+ await page.emulateMedia({ reducedMotion: 'no-preference' });
+ await page.goto('');
+ const art = page.locator('.research-art');
+ await expect(art.locator('.art-layer')).toHaveCount(3);
+ await expect.poll(() => art.evaluate(node => node.getAnimations({subtree:true}).filter(animation => animation.playState === 'running').length)).toBe(0);
+ await page.emulateMedia({ reducedMotion: 'reduce' });
+ await expect.poll(() => art.locator('.art-layer').evaluateAll(nodes => nodes.every(node => getComputedStyle(node).animationName === 'none'))).toBe(true);
+ for (const layer of await art.locator('.art-layer').all()) await expect(layer).toHaveCSS('opacity', '1');
+});
+
+test('Enabling reduced motion cancels card entrances already in flight', async ({ page }) => {
+ await page.emulateMedia({ reducedMotion: 'no-preference' });
+ await page.goto('');
+ await page.evaluate(() => document.fonts.ready);
+ const wasAnimating = await page.locator('.series-grid').evaluate(node => new Promise(resolve => {
+  node.scrollIntoView({block:'center',behavior:'instant'});
+  const until = performance.now() + 1200;
+  function inspect() {
+   const active = node.getAnimations({subtree:true}).some(animation => animation.playState === 'running' && animation.effect?.target?.matches('.series-card'));
+   if (active || performance.now() > until) resolve(active);
+   else requestAnimationFrame(inspect);
+  }
+  requestAnimationFrame(inspect);
+ }));
+ expect(wasAnimating).toBe(true);
+ await page.emulateMedia({ reducedMotion: 'reduce' });
+ await expect.poll(() => page.locator('.series-grid').evaluate(node => node.getAnimations({subtree:true}).filter(animation => animation.playState === 'running').length)).toBe(0);
+ await expect(page.locator('.series-card').first()).toHaveCSS('opacity','1');
+});

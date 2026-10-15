@@ -12,7 +12,7 @@ const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
 <article class="zen-card project-card">
  <a href={href} class="project-image" tabindex="-1" aria-hidden="true">{studyCover ? <svg viewBox="190 100 440 240" width="440" height="240" aria-hidden="true"><image href={withBase(cover)} width="800" height="420"/></svg> : <img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/>}</a>
  <div class="card-content">
-  <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span><span>RESEARCH PROJECT</span></div>
+  <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
   <h3><a href={href}>{project.data.title}</a></h3>
   <p class="card-description zen-truncate">{project.data.summary}</p>
   <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{project.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`查看项目：${project.data.title}`}><Icon name="arrow"/></a></div>
@@ -21,14 +21,15 @@ const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
 <style>
  .project-card { display: grid; grid-template-columns: 148px minmax(0,1fr); overflow: hidden; background: var(--color-surface); }
  .project-image { background: var(--color-sage-soft); overflow: hidden; border-right: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center; }
- .project-image img,.project-image svg { width: 100%; height: auto; }
+ .project-image img,.project-image svg { width: 100%; height: auto; transition: translate var(--dur-slow) var(--ease-out-expo); }
  .project-card .card-content { min-width: 0; gap: 12px; padding: 24px; }
  .project-card h3 { font-size: 21px; line-height: 1.5; }
- .project-card .card-meta { font-size: 11px; }
- .project-card .card-description { font-size: 14px; }
+ .project-card .card-meta { font-size: 13px; }
+ .project-card .card-description { font-size: 15px; }
  .project-status { display: flex; align-items: center; gap: 6px; color: var(--color-accent-strong); font-weight: 500; }
  .project-status span { width: 6px; height: 6px; background: currentColor; border-radius: 50%; flex-shrink: 0; }
  .project-status.is-complete { color: var(--color-sage); }
  .project-status.is-planned { color: var(--color-ink-muted); }
- @media (max-width: 600px) { .project-card { grid-template-columns: 88px minmax(0,1fr); } .project-card .card-content { padding: 18px; } .project-card h3 { font-size: 19px; } .project-card .card-meta > span:last-child { display: none; } .project-card .card-description { -webkit-line-clamp: 4; } }
+ @media (hover: hover) { .project-card:hover { translate: 0 0; } .project-card:hover .project-image :is(img,svg) { translate: 2px 0; } }
+ @media (max-width: 600px) { .project-card { grid-template-columns: 88px minmax(0,1fr); } .project-card .card-content { padding: 18px; } .project-card h3 { font-size: 19px; } .project-card .card-description { -webkit-line-clamp: 4; } }
 </style>
