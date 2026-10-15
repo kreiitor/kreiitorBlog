@@ -68,7 +68,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
    const cur = btn.getAttribute('data-pref') === 'dark' ? 'dark' : 'light';
    const next = cur === 'dark' ? 'light' : 'dark';
    try { localStorage.setItem('theme', next); } catch { /* 隐私模式下存储不可用，仍就地切换生效 */ }
-   if (typeof window.__applyTheme === 'function') window.__applyTheme();
+   if (typeof window.__applyTheme === 'function') window.__applyTheme(next);
    else document.documentElement.setAttribute('data-theme', next);
   });
  });
@@ -77,10 +77,9 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
 </script>
 <style>
  .site-header { position: sticky; top: 0; z-index: 40; background: var(--color-header-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--color-line); view-transition-name: site-header; }
- .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; transition: height .25s var(--ease-smooth); }
- .site-header[data-scrolled="true"] .header-inner { height: 64px; }
- .site-header[data-scrolled="true"] .brand-mark svg { width: 25px; height: 25px; }
- .brand-mark svg { transition: width .25s var(--ease-smooth),height .25s var(--ease-smooth); }
+ /* Keep the sticky header's layout height stable: resizing it at the scroll
+    threshold shifts the whole document while the reader is scrolling. */
+ .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
  .brand { display: flex; gap: 12px; align-items: center; }
  .brand-mark { display: flex; align-items: center; transition: transform .3s var(--ease-out-expo); }
  .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.06); }
@@ -107,7 +106,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .theme-toggle[data-pref="dark"] .icon-dark { display: block; }
  .mobile-menu { display: none; }
  @media (max-width: 800px) {
-  .header-inner, .site-header[data-scrolled="true"] .header-inner { height: 74px; gap: 16px; }
+  .header-inner { height: 74px; gap: 16px; }
   .brand-name { font-size: 18px; } .brand-mark svg { width: 26px; height: 26px; }
   .brand-detail { display: none; }
   .desktop-nav,.header-search span,kbd,.header-github { display: none; }

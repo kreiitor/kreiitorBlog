@@ -3,11 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { withBase } from '../utils/url';
 
 const photos = [
-	{ file: '两只小猫.jpg', title: '两只小猫' },
-	{ file: '第一顿饭.jpg', title: '第一顿饭' },
-	{ file: '恩施屏山峡谷.jpg', title: '恩施屏山峡谷' },
-	{ file: '抽象车流.jpg', title: '抽象车流' },
-	{ file: '官宣图.jpg', title: '官宣图' },
+	{ file: '两只小猫.jpg', title: '两只小猫', width: 1600, height: 1200 },
+	{ file: '第一顿饭.jpg', title: '第一顿饭', width: 1600, height: 1200 },
+	{ file: '恩施屏山峡谷.jpg', title: '恩施屏山峡谷', width: 1205, height: 1600 },
+	{ file: '抽象车流.jpg', title: '抽象车流', width: 1600, height: 1205 },
+	{ file: '官宣图.jpg', title: '官宣图', width: 1200, height: 1600 },
 ];
 ---
 <BaseLayout title="有意义的图" description="一些值得留下的瞬间。">
@@ -21,7 +21,7 @@ const photos = [
    {photos.map((p, i) => (
     <figure class:list={['photo-card', { 'photo-wide': i === 2 }]}>
      <div class="photo-frame">
-      <img src={withBase(`/gallery/${p.file}`)} alt={p.title} loading="lazy" decoding="async"/>
+      <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async"/>
      </div>
      <figcaption><span class="photo-no">0{i + 1}</span>{p.title}</figcaption>
     </figure>
@@ -46,7 +46,7 @@ const photos = [
   border-radius: 12px;
   padding: 10px;
   background: var(--color-surface);
-  box-shadow: 0 2px 10px #35382f0a;
+  box-shadow: var(--shadow-whisper);
   transition: box-shadow var(--dur-base) var(--ease-smooth), transform var(--dur-slow) var(--ease-out-expo), border-color var(--dur-fast) var(--ease-smooth);
  }
  .photo-card:hover .photo-frame {

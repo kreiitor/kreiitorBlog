@@ -1,11 +1,10 @@
 // 全局运行时挂载点。
 // BaseLayout 的 <script is:inline> 在 head 解析期定义 __applyTheme，
-// SiteHeader 的三态切换按钮调用它。
+// SiteHeader 的两态切换按钮调用它。
 declare global {
 	interface Window {
-		/** 依据 localStorage 的 theme 键（light/dark/未设置=跟随系统）重新应用主题，
-		 *  并同步 data-theme、theme-color meta 与切换按钮状态。 */
-		__applyTheme?: () => void;
+		/** 显式应用主题或读取首次系统偏好；存储受限时保留当前页面的选择。 */
+		__applyTheme?: (next?: 'light' | 'dark') => void;
 	}
 }
 

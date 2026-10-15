@@ -66,7 +66,9 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 		<script is:inline>
 			(() => {
 				const mq = window.matchMedia('(prefers-color-scheme: dark)');
+				let currentPref;
 				const readPref = () => {
+					if (currentPref) return currentPref;
 					try {
 						let p = localStorage.getItem('theme');
 						if (p !== 'light' && p !== 'dark') {
@@ -81,8 +83,9 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 					light: '主题：浅色（点击切换为深色）',
 					dark: '主题：深色（点击切换为浅色）',
 				};
-				window.__applyTheme = () => {
-					const pref = readPref();
+				window.__applyTheme = (next) => {
+					const pref = next === 'light' || next === 'dark' ? next : readPref();
+					currentPref = pref;
 					document.documentElement.setAttribute('data-theme', pref);
 					const meta = document.querySelector('meta[name="theme-color"]:not([media])');
 					if (meta) meta.setAttribute('content', pref === 'dark' ? DARK : LIGHT);

@@ -71,6 +71,7 @@ def main():
                 display.update(chinese(title))
             for title in re.findall(r"^#{1,6}\s+(.+)$", text, re.M):
                 headings.update(chinese(title))
+                display.update(chinese(title))
             for strong in re.findall(r"\*\*(.+?)\*\*", text):
                 headings.update(chinese(strong))
         else:
@@ -88,6 +89,10 @@ def main():
     files = {}
 
     def save(font, name, family, weight, chars=None, style="normal"):
+        # Declare actual coverage so Latin fallback faces are not downloaded
+        # while the browser is resolving Chinese characters.
+        if chars is None:
+            chars = set(font.getBestCmap())
         font.flavor = "woff2"
         font.recalcTimestamp = False
         target = ASSETS / name
@@ -121,7 +126,7 @@ def main():
         instance.close()
     source_font.close()
 
-    # Display headings: LXGW WenKai Regular covers the shared title/interface glyph set.
+    # Display headings include article headings as well as frontmatter titles.
     kai = subset_font(TTFont(kai_path, recalcTimestamp=False), display)
     save(kai, "journal-kai-sc-400.woff2", "Journal Kai SC", "400", display)
 

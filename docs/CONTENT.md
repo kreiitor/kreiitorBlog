@@ -2,6 +2,8 @@
 
 首页固定为四个区块：精选思考、项目实践、成体系学习笔记、最近写下。新增内容通过 Markdown 资料自动进入页面，不需要逐个修改页面代码。
 
+可从 [封面库与内容模板](COVERS.md) 直接开始：已有文章、专题、章节三个模板，以及可离线筛选、复制路径的封面选图册。
+
 ## 随笔与独立知识笔记
 
 在 `src/content/posts/` 新建文件，例如 `my-new-note.md`：
@@ -38,6 +40,8 @@ title: Agent 学习笔记
 englishTitle: Agents & Workflows
 description: 从基本概念到工作流设计，记录理解、实验与复盘。
 emblem: ↳
+cover: /covers/series-ai-agent.svg
+icon: branch
 order: 10
 facts: 概念与实践
 ---
@@ -51,11 +55,13 @@ title: AI Infra 学习笔记
 englishTitle: AI Infrastructure
 description: 围绕训练、推理与部署，逐步整理基础设施知识。
 emblem: ∞
+cover: /covers/series-ai-infra.svg
+icon: layers
 order: 20
 ---
 ```
 
-只有 `title` 和 `description` 必填。`englishTitle`、`emblem`、`facts`、`sourceNote` 可选，`order` 默认为 0，用于多个系列的展示排序。可在 YAML 之后写 Markdown 学习目标或路线，它会显示在目录页章节列表之前。
+只有 `title` 和 `description` 必填。`englishTitle`、`cover`、`icon`、`emblem`、`facts`、`sourceNote` 可选，`order` 默认为 0，用于多个系列的展示排序。`icon` 可选 `book`、`branch`、`layers`，默认 `book`；`emblem` 保留兼容旧资料，卡片使用 `icon` 图标。封面用于专题卡片、目录和分享，省略时使用通用研究封面。可在 YAML 之后写 Markdown 学习目标或路线，它会显示在目录页章节列表之前。
 
 再在 `src/content/posts/` 新建章节，例如 `agent-overview.md`：
 
@@ -86,10 +92,12 @@ draft: true
 2. 打开 `src/pages/gallery.astro`，在 `photos` 数组中加入一项：
 
 ```js
-{ file: '新的图片.jpg', title: '显示在图片下方的标题' },
+{ file: '新的图片.jpg', title: '显示在图片下方的标题', width: 1600, height: 1200 },
 ```
 
 数组顺序就是页面展示顺序。当前第三张图会横跨两列；如需调整宽图位置，同时修改模板里的 `i === 2`。
+
+`width` 与 `height` 填图片真实像素尺寸，以便加载前预留空间。
 
 ## 项目说明
 

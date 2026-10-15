@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none"><rect width="256" height="256" rx="60" fill="#f6f3eb"/><rect x="30" y="30" width="196" height="196" rx="42" fill="none" stroke="#d8d6c5" stroke-width="2"/><path d="M128 192V68" stroke="#33362e" stroke-width="13" stroke-linecap="round"/><path d="M128 128L88 160M128 128L168 96" stroke="#33362e" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><circle cx="168" cy="96" r="14" fill="#b0603c"/><circle cx="88" cy="160" r="8.5" fill="none" stroke="#55624b" stroke-width="5"/><path d="M192 192h-11M192 192v-11" stroke="#a3a593" stroke-width="3" stroke-linecap="round" opacity=".7"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="avatar-title">
+ <title id="avatar-title">kreiitor · 让想法生长</title>
+ <rect width="256" height="256" rx="56" fill="#f6f3eb"/>
+ <rect x="24" y="24" width="208" height="208" rx="36" stroke="#d8d6c5" stroke-width="2"/>
+ <path d="M128 196V60m0 68-44 36m44-36 44-36" stroke="#33362e" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="172" cy="92" r="17" fill="#9e5130"/>
+ <circle cx="84" cy="164" r="12" fill="#f6f3eb" stroke="#55624b" stroke-width="6"/>
+</svg>

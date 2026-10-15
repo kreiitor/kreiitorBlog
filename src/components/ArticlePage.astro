@@ -7,7 +7,7 @@ import GiscusComments from './GiscusComments.astro';
 import MathLabel from './MathLabel.astro';
 import TagLink from './TagLink.astro';
 import { getHeadingLabels, getReadingTime, getPostCover, getRelatedPosts } from '../utils/content';
-import { getLearningSeries } from '../utils/series';
+import { DEFAULT_SERIES_COVER, getLearningSeries } from '../utils/series';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
 import 'katex/dist/katex.min.css';
@@ -27,9 +27,10 @@ const nextChapter = group?.chapters[chapterIndex + 1];
 const previous = previousChapter ? { href: `/blog/${previousChapter.id}/`, title: previousChapter.data.title, label: '上一章' } : undefined;
 const next = nextChapter ? { href: `/blog/${nextChapter.id}/`, title: nextChapter.data.title, label: '下一章' } : undefined;
 const cover = post.data.category !== 'course' ? getPostCover(post) : undefined;
+const shareCover = cover ?? post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : undefined);
 const related = getRelatedPosts(post, await getCollection('posts'), 3);
 ---
-<BaseLayout title={post.data.title} description={post.data.description} image={cover} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1}>
+<BaseLayout title={post.data.title} description={post.data.description} image={shareCover} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1}>
  <section class="page-shell reading-shell">
   <a href={withBase(seriesHref)} class="text-link back-link">← {group ? group.entry.data.title : '全部札记'}</a>
   <div class="article-layout">
@@ -43,7 +44,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
      <div class="article-tags">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
     </header>
     <ReadingTools/>
-    <details class="mobile-toc" data-pagefind-ignore><summary>本篇目录 · {toc.length} 个小节</summary><nav aria-label="文章目录">{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined}><MathLabel text={h.text}/></a>)}</nav></details>
+    <details class="mobile-toc" data-pagefind-ignore><summary>本篇目录 · {toc.length} 个小节</summary><nav aria-label="文章目录">{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined} data-toc-link><MathLabel text={h.text}/></a>)}</nav></details>
     {cover && <img src={withBase(cover)} alt="" class="article-cover" width="800" height="420" fetchpriority="high"/>}
     <div class="rich-content article-body"><Content/></div>
     {(previous || next) && <nav class="chapter-nav" data-pagefind-ignore aria-label="继续阅读"><div>{previous && <a href={withBase(previous.href)}><span>← {previous.label}</span><strong>{previous.title}</strong></a>}</div><div>{next && <a href={withBase(next.href)}><span>{next.label} →</span><strong>{next.title}</strong></a>}</div></nav>}
@@ -64,6 +65,9 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .chapter-nav span { color: var(--color-ink-soft); }
  .chapter-nav > div:last-child { text-align: right; }
  .toc-series { margin-top: 24px; }
+ .mobile-toc nav a { min-width: 0; padding-block: 4px; overflow-wrap: anywhere; }
+ .mobile-toc .toc-h3 { padding-left: 16px; }
+ .mobile-toc a[aria-current="location"] { color: var(--color-accent-strong); font-weight: 600; }
  .related-posts { margin-bottom: 36px; }
  .related-posts h2 { font-size: 13px; font-family: var(--font-sans); font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-accent); padding-bottom: 14px; border-bottom: 1px solid var(--color-line); }
  .related-posts ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }

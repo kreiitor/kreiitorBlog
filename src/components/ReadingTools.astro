@@ -9,14 +9,24 @@
  const article = document.querySelector<HTMLElement>('[data-reading-article]');
  const body = article?.querySelector<HTMLElement>('.article-body');
  const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
- const headings = Array.from(document.querySelectorAll<HTMLElement>('.article-body h2[id]'));
+ const headings = Array.from(body?.querySelectorAll<HTMLElement>('h2[id], h3[id]') ?? []);
  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
+ const linksById = new Map<string, HTMLAnchorElement[]>();
+ for (const link of links) {
+  try {
+   const id = decodeURIComponent(link.hash.slice(1));
+   linksById.set(id, [...(linksById.get(id) ?? []), link]);
+  } catch { /* Ignore a malformed fragment without breaking the reading tools. */ }
+ }
  let start = 0, height = 1, offsets: { id: string; y: number }[] = [];
+ let memoryOffsets: typeof offsets = [];
  let scrollQueued = false, measureQueued = false;
+ let measuredWidth = 0, forceMeasure = true;
  let activeId: string | undefined;
- function currentHeading(y:number) {
-  let lo=0, hi=offsets.length-1, result=-1;
-  while(lo<=hi){const mid=(lo+hi)>>1;if(offsets[mid].y<=y){result=mid;lo=mid+1;}else hi=mid-1;}
+ let progressValue = -1;
+ function currentHeading(y:number, entries = offsets) {
+  let lo=0, hi=entries.length-1, result=-1;
+  while(lo<=hi){const mid=(lo+hi)>>1;if(entries[mid].y<=y){result=mid;lo=mid+1;}else hi=mid-1;}
   return result;
  }
  function measure() {
@@ -24,9 +34,19 @@
   if (!body) return;
   const y = window.scrollY;
   const rect = body.getBoundingClientRect();
-  start = rect.top + y;
-  height = Math.max(1, rect.height);
-  offsets = headings.map(h => ({ id: h.id, y: h.getBoundingClientRect().top + y }));
+  const top = rect.top + y;
+  // Changes in comments or the memory toolbar can resize the article while
+  // leaving the body untouched. Only reread heading geometry when necessary.
+  if (forceMeasure || Math.abs(top - start) > .5 || rect.height !== height || rect.width !== measuredWidth) {
+   start = top;
+   height = Math.max(1, rect.height);
+   measuredWidth = rect.width;
+   offsets = headings.map(h => ({ id: h.id, y: h.getBoundingClientRect().top + y }));
+   // Existing saved fractions use h2 sections; keep those records compatible
+   // while the live contents highlight also follows h3 subsections.
+   memoryOffsets = offsets.filter((_, index) => headings[index].tagName === 'H2');
+  }
+  forceMeasure = false;
   update();
  }
  function update() {
@@ -36,20 +56,22 @@
   const fraction = Math.max(0, Math.min(1, (y + window.innerHeight - start) / height));
   const current = offsets[currentHeading(y + 150)]?.id;
   progress.style.transform = `scaleX(${fraction})`;
-  progress.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
-  if (current !== activeId) for (const link of links) {
-   let id;
-   try { id = decodeURIComponent(link.hash.slice(1)); } catch { continue; }
-   if (id === current) link.setAttribute('aria-current','location');
-   else link.removeAttribute('aria-current');
+  const value = Math.round(fraction * 100);
+  if (value !== progressValue) {
+   progress.setAttribute('aria-valuenow', String(value));
+   progressValue = value;
+  }
+  if (current !== activeId) {
+   for (const link of linksById.get(activeId ?? '') ?? []) link.removeAttribute('aria-current');
+   for (const link of linksById.get(current ?? '') ?? []) link.setAttribute('aria-current', 'location');
   }
   activeId = current;
  }
  function scheduleScroll() { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(update); } }
  function scheduleMeasure() { if (!measureQueued) { measureQueued = true; requestAnimationFrame(measure); } }
  window.addEventListener('scroll', scheduleScroll, { passive: true });
- window.addEventListener('resize', scheduleMeasure, { passive: true });
- document.fonts.ready.then(scheduleMeasure);
+ window.addEventListener('resize', () => { forceMeasure = true; scheduleMeasure(); }, { passive: true });
+ document.fonts.ready.then(() => { forceMeasure = true; scheduleMeasure(); });
  if (article && 'ResizeObserver' in window) new ResizeObserver(scheduleMeasure).observe(article);
  scheduleMeasure();
 
@@ -79,15 +101,15 @@
  }
  function save() {
   if(!enabled||!body)return;
-  const index=currentHeading(window.scrollY+120), heading=offsets[index];
-  const top=heading?.y??start, end=offsets[index+1]?.y??start+height;
+  const index=currentHeading(window.scrollY+120,memoryOffsets), heading=memoryOffsets[index];
+  const top=heading?.y??start, end=memoryOffsets[index+1]?.y??start+height;
   saved={id:heading?.id??'',fraction:Math.max(0,Math.min(1,(scrollY-top)/Math.max(1,end-top))),progress:Math.round(Math.max(0,Math.min(1,(scrollY-start)/height))*100)};
   if(persist()&&clear)clear.hidden=false;
  }
  toggle?.addEventListener('click',()=>{enabled=!enabled;if(!enabled){clearTimeout(saveTimer);saved=undefined;}memoryUI();persist();if(enabled)save();});
  clear?.addEventListener('click',()=>{clearTimeout(saveTimer);saved=undefined;memoryUI();persist();});
  resume?.addEventListener('click',()=>{
-  if(!saved)return;measure();const index=offsets.findIndex(h=>h.id===saved!.id);const top=index<0?start:offsets[index].y;const end=offsets[index+1]?.y??start+height;
+  if(!saved)return;measure();const index=memoryOffsets.findIndex(h=>h.id===saved!.id);const top=index<0?start:memoryOffsets[index].y;const end=memoryOffsets[index+1]?.y??start+height;
   scrollTo({top:top+saved.fraction*Math.max(1,end-top),behavior:'instant'});resume.hidden=true;
  });
  window.addEventListener('scroll',()=>{if(!enabled)return;clearTimeout(saveTimer);saveTimer=setTimeout(save,600);},{passive:true});
@@ -116,8 +138,10 @@
   pre.classList.add('has-copy-button'); pre.append(button);
  });
 
- const regions = Array.from(document.querySelectorAll<HTMLElement>('.rich-content .katex-display, .rich-content .katex')).filter(e => !e.matches('.katex-display .katex'));
+ const regions = Array.from(body?.querySelectorAll<HTMLElement>('.katex') ?? [], element =>
+  element.parentElement?.classList.contains('katex-display') ? element.parentElement : element);
  const visible = new Set<HTMLElement>();
+ const pendingMath = new Set<HTMLElement>();
  let mathQueued = false;
  function measureMath() {
   mathQueued = false;
@@ -131,12 +155,13 @@
    }
    return 0;
   }
-  const measured = Array.from(visible, element => {
+  const measured = Array.from(pendingMath).filter(element => visible.has(element)).map(element => {
    const display = element.matches('.katex-display');
    const natural = (display ? element.querySelector<HTMLElement>(':scope > .katex') : element.querySelector<HTMLElement>('.katex-html'))?.getBoundingClientRect().width ?? 0;
    const available = display ? element.clientWidth - 12 : containingWidth(element);
    return { element, overflow: natural > available + 3 };
   });
+  pendingMath.clear();
   for (const { element, overflow } of measured) {
    element.classList.toggle('is-overflowing', overflow);
    element.tabIndex = overflow ? 0 : -1;
@@ -146,15 +171,20 @@
   }
  }
  function scheduleMath() { if (!mathQueued) { mathQueued = true; requestAnimationFrame(measureMath); } }
+ function scheduleVisibleMath() { for (const element of visible) pendingMath.add(element); scheduleMath(); }
  if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver(entries => {
-   for (const entry of entries) { if (entry.isIntersecting) visible.add(entry.target as HTMLElement); else visible.delete(entry.target as HTMLElement); }
+   for (const entry of entries) {
+    const element = entry.target as HTMLElement;
+    if (entry.isIntersecting) { visible.add(element); pendingMath.add(element); }
+    else { visible.delete(element); pendingMath.delete(element); }
+   }
    scheduleMath();
   }, { rootMargin: '400px' });
   regions.forEach(element => observer.observe(element));
- } else { regions.forEach(element => visible.add(element)); scheduleMath(); }
- document.fonts.ready.then(scheduleMath);
- window.addEventListener('resize', scheduleMath, { passive: true });
+ } else { regions.forEach(element => visible.add(element)); scheduleVisibleMath(); }
+ document.fonts.ready.then(scheduleVisibleMath);
+ window.addEventListener('resize', scheduleVisibleMath, { passive: true });
 </script>
 <style is:global>
  .reading-memory { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: space-between; align-items: center; padding: 14px 0; margin-bottom: 20px; border-bottom: 1px solid var(--color-line); font-size: 12px; color: var(--color-ink-soft); }

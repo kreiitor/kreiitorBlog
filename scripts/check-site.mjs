@@ -22,6 +22,11 @@ async function walk(dir){for(const item of await readdir(dir,{withFileTypes:true
  if(h1!==1)failures.push(`${path.relative(root,file)}: expected one page H1, found ${h1}`);
  const share=html.match(/<meta property="og:image" content="([^"]+)"/);
  if(share&&share[1].endsWith('.svg'))failures.push(`${path.relative(root,file)}: SVG social preview`);
+ const canonical=html.match(/<link rel="canonical" href="([^"]+)"/);
+ if(share&&canonical){
+  const imageUrl=new URL(share[1],canonical[1]);
+  if(imageUrl.origin===new URL(canonical[1]).origin)refs.push(imageUrl.pathname);
+ }
  pages.set(file,{ids,refs,html});
 }}}
 await walk(root);

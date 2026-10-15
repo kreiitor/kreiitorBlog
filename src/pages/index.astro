@@ -17,6 +17,8 @@ const projects = await getCollection('projects');
 const publishedPosts = getPublishedPosts(posts);
 const sortedProjects = getProjects(projects);
 const featuredPosts = getFeaturedPosts(posts,3);
+const featuredIds = new Set(featuredPosts.map(post => post.id));
+const recentPosts = publishedPosts.filter(post => !featuredIds.has(post.id)).slice(0,5);
 const featuredProjects = getFeaturedProjects(projects,2);
 const allTags = getTagSummaries(posts,projects);
 const tags = allTags.slice(0,8);
@@ -58,7 +60,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   <section class="page-shell editorial-section lower-grid">
    <div>
     <SectionHeading kicker="04 / RECENT NOTES" title="最近写下" linkHref={withBase('/archive/')} linkLabel="时间归档"/>
-    <div class="recent-list">{publishedPosts.slice(0,5).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><span class="recent-arrow" aria-hidden="true">↗</span></a>)}</div>
+    <div class="recent-list">{recentPosts.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><Icon name="external" size={18}/></a>)}</div>
    </div>
    <aside class="garden-aside">
     <p class="eyebrow">TOPICS TO EXPLORE</p><h2>循着好奇心，<br/>找到下一个问题。</h2>
@@ -70,19 +72,21 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  </div>
 </BaseLayout>
 <style>
- .home-hero { display: grid; grid-template-columns: 1.17fr 1fr; align-items: center; gap: 65px; padding-block: 65px 52px; }
- .selected-writing { display: grid; grid-template-columns: 1fr 1.08fr; gap: 48px; margin-top: 30px; }
+ .home-hero { display: grid; grid-template-columns: minmax(0,1.17fr) minmax(0,1fr); align-items: center; gap: 65px; padding-block: 65px 52px; }
+ .selected-writing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); gap: 48px; margin-top: 30px; }
+ .selected-writing > *, .home-hero > * { min-width: 0; }
  .selected-row { display: block; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
  .selected-row:first-child { padding-top: 6px; }
  .selected-writing :global(.card-content h3) { font-size: 24px; }
  .selected-row h3 { font-size: 25px; margin-block: 10px; }
+ .selected-row .card-description { overflow-wrap: anywhere; }
  .selected-row:hover h3 { color: var(--color-accent); }
  .selected-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; font-size: 12px; color: var(--color-ink-soft); }
  .selected-meta :global(svg) { color: var(--color-accent); transition: transform 160ms var(--ease-smooth); }
  .selected-row:hover :global(svg) { transform: translateX(3px); }
  .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
  .selected-invitation span:last-child { color: var(--color-accent); }
- @media (max-width: 700px) { .selected-writing { grid-template-columns: 1fr; gap: 25px; } .selected-row h3 { font-size: 22px; } }
+ @media (max-width: 700px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
  .hero-kicker { display: flex; align-items: center; gap: 8px; font-size: var(--text-caption); }
  .hero-kicker span { width: 5px; height: 5px; background: var(--color-accent); border-radius: 50%; }
  .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.02em; margin-top: 26px; }
@@ -106,7 +110,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
  .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-ink-muted); }
  .recent-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; margin-top: 6px; }
- .recent-arrow { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
+ .recent-row > :global(svg) { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
  .garden-aside { padding: 30px; background: var(--color-paper-warm); border: 1px solid var(--color-line); border-radius: 6px; }
  .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; }
  .topic-list { margin-top: 23px; } .topic-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-line); }

@@ -42,9 +42,9 @@ export function getReadingTime(post: PostEntry) {
 	return post.data.readingTime ?? estimateReadingTime(post.body ?? '');
 }
 
-/** Give legacy generic tool covers a more specific subject, retaining custom artwork. */
+/** Explicit artwork always wins; infer a subject only when no cover is chosen. */
 export function getPostCover(post: PostEntry) {
-	if (post.data.cover && post.data.cover !== '/covers/post-tools.svg') return post.data.cover;
+	if (post.data.cover) return post.data.cover;
 	if (post.id.includes('infra')) return '/covers/series-ai-infra.svg';
 	if (/reading|literature|annotation|paper/.test(post.id)) return '/covers/post-paper.svg';
 	if (/algorithm|career|roadmap/.test(post.id)) return '/covers/post-code-algorithm.svg';

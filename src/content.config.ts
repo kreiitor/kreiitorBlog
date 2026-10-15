@@ -32,6 +32,8 @@ const series = defineCollection({
 		description: z.string(),
 		englishTitle: z.string().optional(),
 		emblem: z.string().default('↳'),
+		cover: z.string().optional(),
+		icon: z.enum(['book', 'branch', 'layers']).default('book'),
 		order: z.number().int().default(0),
 		facts: z.string().optional(),
 		sourceNote: z.string().optional(),

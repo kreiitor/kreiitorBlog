@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-// 三态主题：显式 light/dark 优先，未设置则跟随系统且不写存储。
+// 两态主题：首次按系统偏好选择并持久化，之后显式 light/dark 优先。
 // 关键不变量：首帧不能闪白（颜色必须在脚本执行前后一致）。
 
 const readTheme=page=>page.evaluate(()=>({
@@ -12,34 +12,34 @@ const readTheme=page=>page.evaluate(()=>({
  pref:document.querySelector('[data-theme-toggle]')?.getAttribute('data-pref'),
 }));
 
-const LIGHT='rgb(244, 241, 232)';
+const LIGHT='rgb(246, 243, 235)';
 const DARK='rgb(26, 26, 23)';
 
-test('Default theme follows the system without writing storage',async({page})=>{
- await page.emulateMedia({colorScheme:'dark'});
- await page.goto('');
- const s=await readTheme(page);
- expect(s.dataTheme).toBeNull();
- expect(s.stored).toBeNull();
- expect(s.bg).toBe(DARK);
- expect(String(s.colorScheme)).toContain('dark');
- expect(s.meta).toBe('#1a1a17');
-});
+for(const system of ['light','dark']) {
+ test(`First visit persists the ${system} system preference`,async({page})=>{
+  await page.emulateMedia({colorScheme:system});
+  await page.goto('');
+  const s=await readTheme(page);
+  expect([s.dataTheme,s.stored,s.pref]).toEqual([system,system,system]);
+  expect(s.bg).toBe(system==='dark'?DARK:LIGHT);
+  expect(String(s.colorScheme)).toContain(system);
+  expect(s.meta).toBe(system==='dark'?'#1a1a17':'#f6f3eb');
+  // 首次选择后，操作系统改色和刷新都不能覆盖已保存的选择。
+  await page.emulateMedia({colorScheme:system==='dark'?'light':'dark'});
+  await page.reload();
+  expect(await readTheme(page)).toEqual(s);
+ });
+}
 
-test('Theme toggle cycles system → light → dark → system and persists',async({page})=>{
+test('Theme toggle switches light → dark → light and persists both choices',async({page})=>{
  await page.emulateMedia({colorScheme:'light'});
  await page.goto('');
  const btn=page.locator('[data-theme-toggle]');
  await expect(btn).toBeVisible();
- expect((await readTheme(page)).pref).toBe('auto');
+ expect((await readTheme(page)).pref).toBe('light');
 
  await btn.click();
  let s=await readTheme(page);
- expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['light','light','light',LIGHT]);
- expect(s.meta).toBe('#f4f1e8');
-
- await btn.click();
- s=await readTheme(page);
  expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['dark','dark','dark',DARK]);
  // 显式选择必须压过系统偏好（此处系统为浅色）
  expect(s.meta).toBe('#1a1a17');
@@ -51,7 +51,10 @@ test('Theme toggle cycles system → light → dark → system and persists',asy
 
  await btn.click();
  s=await readTheme(page);
- expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['auto',null,null,LIGHT]);
+ expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['light','light','light',LIGHT]);
+ expect(s.meta).toBe('#f6f3eb');
+ await page.reload();
+ expect(await readTheme(page)).toEqual(s);
 });
 
 test('Explicit light overrides a dark system preference',async({page})=>{
@@ -61,7 +64,29 @@ test('Explicit light overrides a dark system preference',async({page})=>{
  const s=await readTheme(page);
  expect(s.dataTheme).toBe('light');
  expect(s.bg).toBe(LIGHT);
+ await page.emulateMedia({colorScheme:'light'});
+ await page.emulateMedia({colorScheme:'dark'});
+ expect(await readTheme(page)).toEqual(s);
 });
+
+for(const failingMethod of ['getItem','setItem']) {
+ test(`Theme remains switchable when localStorage.${failingMethod} throws`,async({page})=>{
+  await page.emulateMedia({colorScheme:'light'});
+  await page.addInitScript(method=>{
+   Object.defineProperty(Storage.prototype,method,{configurable:true,value(){throw new DOMException('Storage disabled','SecurityError');}});
+  },failingMethod);
+  await page.goto('');
+  const btn=page.locator('[data-theme-toggle]');
+  await expect(btn).toHaveAttribute('data-pref','light');
+  for(const [theme,bg,meta] of [['dark',DARK,'#1a1a17'],['light',LIGHT,'#f6f3eb']]) {
+   await btn.click();
+   await expect(btn).toHaveAttribute('data-pref',theme);
+   await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
+   expect(await page.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor)).toBe(bg);
+   await expect(page.locator('meta[name="theme-color"]:not([media])')).toHaveAttribute('content',meta);
+  }
+ });
+}
 
 test('Dark theme is applied during head parsing, before body paint',async({page})=>{
  await page.emulateMedia({colorScheme:'light'});

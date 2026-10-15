@@ -16,13 +16,40 @@ test('Chinese title search, readable summaries, query-preserving shortcut and ke
 });
 test('Blog categories and paging survive reload',async({page})=>{
  await page.goto('blog/');
- await page.getByRole('button',{name:/知识笔记/}).click();
- await expect(page.locator('[data-post-row]:visible')).toHaveCount(12);
- await page.getByRole('button',{name:'下一页 →'}).click();
- await expect(page.locator('[data-post-row]:visible')).toHaveCount(2);
- await expect(page).toHaveURL(/category=knowledge.*page=2/);
- await page.reload();await expect(page.locator('[data-post-row]:visible')).toHaveCount(2);
+ const category=page.getByRole('button',{name:/知识笔记/});
+ const total=Number(await category.locator('span').textContent());
+ expect(total).toBeGreaterThan(12);
+ const allCategoryLinks=await page.locator('[data-post-row][data-category="knowledge"]').evaluateAll(rows=>rows.map(row=>row.getAttribute('href')));
+ expect(allCategoryLinks).toHaveLength(total);
+ await category.click();
+ const rows=page.locator('[data-post-row]:visible');
+ await expect(rows).toHaveCount(12);
+ const visited=new Set(await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href'))));
+ await expect(page.getByRole('button',{name:'← 上一页'})).toBeDisabled();
+ let currentPage=1;
+ const next=page.getByRole('button',{name:'下一页 →'});
+ while(await next.isEnabled()) {
+  await next.click();
+  currentPage++;
+  await expect(rows).toHaveCount(Math.min(12,total-visited.size));
+  const links=await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')));
+  for(const href of links) {
+   expect(visited.has(href),`Article ${href} must appear on only one page`).toBe(false);
+   visited.add(href);
+  }
+  await expect.poll(()=>new URL(page.url()).searchParams.get('category')).toBe('knowledge');
+  await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(String(currentPage));
+  await page.reload();
+  await expect(rows).toHaveCount(links.length);
+  expect(await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))).toEqual(links);
+  await expect(page.getByRole('button',{name:/知识笔记/})).toHaveAttribute('aria-pressed','true');
+ }
+ expect([...visited].sort()).toEqual([...allCategoryLinks].sort());
+ await expect(next).toBeDisabled();
  await expect(page.locator('[data-blog-series]')).toBeHidden();
+ await page.getByRole('button',{name:'← 上一页'}).click();
+ await expect(rows).toHaveCount(12);
+ await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(currentPage===2?null:String(currentPage-1));
 });
 test('Practical knowledge cards do not repeat adjacent covers',async({page})=>{
  await page.goto('notes/');

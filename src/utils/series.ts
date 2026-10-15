@@ -1,6 +1,8 @@
 import type { CollectionEntry } from 'astro:content';
 import type { PostEntry } from './content';
 
+export const DEFAULT_SERIES_COVER = '/covers/series-research.svg';
+
 export interface LearningSeries {
 	entry: CollectionEntry<'series'>;
 	chapters: PostEntry[];

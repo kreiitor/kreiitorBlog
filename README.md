@@ -32,6 +32,8 @@ npm run preview
 
 有 Chrome 的环境可用 `npm run test:browser` 验证快捷搜索与焦点、搜索重试、评论配置与失败恢复、公式滚动、阅读记录、打印、列表分页、全文锚点、代码复制与主要屏幕断点。截图和失败记录保存在忽略的 `.artifacts/`。
 
+2026-10-15 的滚动稳定性、可读性、字体加载与封面优化见 [优化记录](docs/OPTIMIZATION-2026-10-15.md)。
+
 模拟 GitHub Pages 子目录部署（PowerShell）：
 
 ```powershell
@@ -71,7 +73,7 @@ cover: /covers/post-math.svg
 
 SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字体资产与 Fontsource 代码字体随网站构建部署，按字符范围按需加载；系统中文字体作为最终回退，读者访问网站时不需要连接 Google Fonts。
 
-标题与阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 系统中文字体，代码使用 IBM Plex Mono。中文宋体按当前语料生成常规与强调子集，界面不下载另一套中文字体。字体层级与字号在 `src/styles/global.css` 中统一维护；代码与数学字体样式仅随阅读页面加载。
+标题使用 Lora / 霞鹜文楷，阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 系统中文字体，代码使用 JetBrains Mono。中文字体按当前语料生成子集，界面不下载另一套中文字体。字体层级与字号在 `src/styles/global.css` 中统一维护；数学字体样式仅随阅读页面加载。
 
 每篇文章完整呈现在同一页面，保留正文、MathML、原有地址和章节锚点。目录、浏览器查找、复制和打印沿用全文阅读。博客列表仍按学习专题与紧凑条目组织，每页展示 12 篇独立札记。
 
@@ -81,7 +83,9 @@ SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字�
 
 中文语料子集、Source Serif 4 字重裁剪与维护方式见 `docs/FONTS.md`。
 
-分享预览使用 1200×630 PNG，站内封面保留 SVG。图形原稿集中在 `scripts/prepare-garden-art.mjs`；运行 `npm run art:prepare` 重建主题封面与分享图，手动编辑 SVG 后运行 `npm run social:prepare`。原有通用工具封面会根据文章主题选用阅读、算法或 Infra 构图，自定义封面保持优先。
+分享预览使用 1200×630 PNG，站内封面保留 SVG。图形原稿集中在 `scripts/prepare-garden-art.mjs`；运行 `npm run art:prepare` 重建主题封面与分享图，手动编辑 SVG 后运行 `npm run social:prepare`。未指定封面时根据文章标识和栏目选择默认图，显式配置的封面始终优先。
+
+30 张统一风格的封面与内容起始模板见 [封面库使用说明](docs/COVERS.md)，可打开 [离线选图册](docs/cover-catalog.html) 筛选并复制配置。新增专题直接设置 `cover` 和 `icon`，无需修改页面组件。
 
 ## 评论
 

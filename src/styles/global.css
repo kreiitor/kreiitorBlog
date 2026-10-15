@@ -12,14 +12,14 @@
  --font-reading: 'Source Serif 4 Variable','Journal Serif SC','Songti SC','SimSun',Georgia,serif;
  --font-editorial: 'Lora Variable','Source Serif 4 Variable',Georgia,serif;
  --font-mono: 'JetBrains Mono Variable','IBM Plex Mono','SFMono-Regular',Consolas,'PingFang SC','Microsoft YaHei',monospace;
- --text-caption: 12px; --text-ui: 14px; --text-body: 15px; --text-reading: 18px;
- --color-paper: #f6f3eb; --color-paper-warm: #ece7d9; --color-paper-cool: #e6ebdb;
- --color-surface: #fbf9f3; --color-surface-soft: #efecdf; --color-surface-hover: #eee9dc;
+ --text-caption: 13px; --text-ui: 14px; --text-body: 15px; --text-reading: 18px;
+ --color-paper: #f6f3eb; --color-paper-warm: #eeeae2; --color-paper-cool: #eeeee8;
+ --color-surface: #fbf9f3; --color-surface-soft: #f0ede5; --color-surface-hover: #eeebe3;
  --color-ink: #33362e; --color-ink-soft: #5b6154; --color-ink-muted: #5b6154;
  --color-line: #d8d6c5; --color-line-strong: #a3a593;
  --color-control-line: #7f8270;
- --color-accent: #b0603c; --color-accent-strong: #8f4a2c; --color-accent-soft: #f3e6d8;
- --color-sage: #55624b; --color-sage-soft: #e6ebdb;
+ --color-accent: #9e5130; --color-accent-strong: #8f4a2c; --color-accent-soft: #f3e6d8;
+ --color-sage: #55624b; --color-sage-soft: #eeeee8;
  --shadow-whisper: 0 2px 8px #35382f04; --shadow-soft: 0 10px 28px #35382f0a; --shadow-lift: 0 14px 34px #35382f14;
 
  /* 间距刻度：0.25rem 网格（4px 基准）。
@@ -38,8 +38,7 @@
 
 @layer base {
  :root {
-  /* 三态主题：默认跟随系统；显式选择由下方 [data-theme] 改写 color-scheme，
-     从而让表单控件与滚动条一并跟随。 */
+  /* JS 首次按系统选择并保存两态主题；无 JS 时由媒体查询跟随系统。 */
   color-scheme: light dark;
   --ease-smooth: cubic-bezier(.2,.7,.2,1);
   --ease-out-expo: cubic-bezier(.16,1,.3,1);
@@ -81,7 +80,7 @@
 @layer components {
  .series-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); gap: var(--space-m); margin-top: 28px; }
  .page-shell { width: min(100% - 96px,1160px); margin-inline: auto; }
- .zen-kicker,.eyebrow { font-family: var(--font-sans); font-size: 12px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-accent); }
+ .zen-kicker,.eyebrow { font-family: var(--font-sans); font-size: var(--text-caption); font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-accent); }
  .zen-card,.zen-card-flat { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 10px; }
  .zen-card { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo),transform var(--dur-slow) var(--ease-out-expo); }
  .zen-card:focus-within { border-color: var(--color-line-strong); }
@@ -111,8 +110,8 @@
  .page-intro h1 { font-size: clamp(32px,4vw,48px); margin: var(--space-xs) 0 var(--space-s); letter-spacing: -.03em; }
  .page-intro p:not(.eyebrow) { max-width: 640px; color: var(--color-ink-soft); line-height: 1.9; }
  .post-card { overflow: hidden; height: 100%; display: flex; flex-direction: column; }
- .card-cover { position: relative; display: block; aspect-ratio: 1.9; overflow: hidden; background: var(--color-accent-soft); border-bottom: 1px solid var(--color-line); }
- .card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-base) var(--ease-out-expo); }
+ .card-cover { position: relative; display: block; aspect-ratio: 800 / 420; overflow: hidden; background: var(--color-paper); border-bottom: 1px solid var(--color-line); }
+ .card-cover img { width: 100%; height: 100%; object-fit: contain; transition: transform var(--dur-base) var(--ease-out-expo); }
  .post-card:hover .card-cover img { transform: scale(1.025); }
  .card-category { position: absolute; top: 14px; left: 15px; padding: 3px var(--space-2xs); border: 1px solid var(--color-badge-line); background: var(--color-badge-bg); border-radius: 4px; color: var(--color-accent-strong); font-size: 12px; letter-spacing: .03em; }
  .card-content { padding: 23px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
@@ -183,7 +182,7 @@
  .article-header { padding-bottom: 30px; border-bottom: 1px solid var(--color-line); }
  .article-header h1 { font-size: clamp(28px,3.2vw,40px); line-height: 1.65; margin: 18px 0; }
  .article-summary { font-size: 15px; color: var(--color-ink-soft); margin-bottom: 22px; }
- .article-cover { width: 100%; aspect-ratio: 2; object-fit: cover; border-radius: 10px; border: 1px solid var(--color-line); }
+ .article-cover { width: 100%; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); border-radius: 10px; border: 1px solid var(--color-line); }
  .article-body { margin-block: 40px; }
  .article-toc { position: sticky; top: 110px; max-height: calc(100vh - 145px); overflow-y: auto; border-left: 1px solid var(--color-line); padding-left: var(--space-m); scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
  .article-toc a { display: block; font-size: var(--text-caption); line-height: 1.8; padding: 7px 0 7px 14px; text-indent: -14px; color: var(--color-ink-soft); position: relative; transition: color var(--dur-base) var(--ease-smooth); }
@@ -195,15 +194,15 @@
  .reading-progress { position: fixed; top: 0; left: 0; z-index: 60; height: 3px; width: 100%; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
  .mobile-toc { border-block: 1px solid var(--color-line); padding: 14px 0; margin-bottom: 28px; }
  .mobile-toc summary { cursor: pointer; font-size: 13px; }
- .mobile-toc nav { padding-top: var(--space-xs); display: grid; gap: 10px; font-size: 12px; color: var(--color-ink-soft); }
+ .mobile-toc nav { padding-top: var(--space-xs); display: grid; gap: 10px; font-size: var(--text-caption); color: var(--color-ink-soft); }
  .back-link { margin-bottom: 35px; }
  /* 标题永久链接：hover / 聚焦时出现，触屏常显。
     用 ink-mute 而非 line-strong —— 它的唯一识别特征就是颜色，
     必须自己达到对比度（浅 5.41:1 / 暗 6.28:1），不能依赖 line-strong（两侧都 <3:1）。 */
- .heading-anchor { margin-left: .35em; color: var(--color-ink-mute); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-smooth),color var(--dur-fast) var(--ease-smooth); }
+ .heading-anchor { margin-left: .35em; color: var(--color-ink-muted); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-smooth),color var(--dur-fast) var(--ease-smooth); }
  :is(h2,h3,h4):hover > .heading-anchor, .heading-anchor:focus-visible { opacity: 1; }
  .heading-anchor:hover { color: var(--color-accent); text-decoration: none; }
- @media (hover: none) { .heading-anchor { opacity: .45; } }
+ @media (hover: none) { .heading-anchor { opacity: 1; } }
  .zen-card,.zen-tag,.zen-btn,.zen-input,.card-arrow { transition-duration: var(--dur-fast); }
  .zen-btn:active { transition-duration: var(--dur-press); }
  .card-cover img { transition-duration: var(--dur-base); }
@@ -238,7 +237,6 @@
  .section-heading .text-link { padding-top: var(--space-m); font-size: var(--text-caption); gap: 7px; }
  .editorial-section { margin-top: 54px; }
  .page-intro { padding-top: 42px; }
- .card-cover { aspect-ratio: 2.1; }
  .rich-content { font-size: 17px; }
  .rich-content h2 { font-size: 23px; }
  .rich-content pre { padding: 52px var(--space-s) 18px; font-size: 13px; }
