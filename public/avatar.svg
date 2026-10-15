@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="avatar-title">
- <title id="avatar-title">kreiitor · 让想法生长</title>
- <rect width="256" height="256" rx="56" fill="#f6f3eb"/>
- <rect x="24" y="24" width="208" height="208" rx="36" stroke="#d8d6c5" stroke-width="2"/>
- <path d="M128 196V60m0 68-44 36m44-36 44-36" stroke="#33362e" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="172" cy="92" r="17" fill="#9e5130"/>
- <circle cx="84" cy="164" r="12" fill="#f6f3eb" stroke="#55624b" stroke-width="6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
+ <title id="logo-title">kreiitor · 研究与探索</title>
+ <rect width="64" height="64" rx="15" fill="#2448d8"/>
+ <path d="M13 17C20 15 25 17 30 21V48C25 44 20 42 13 44V17Z" fill="#fffefa"/>
+ <path d="M34 21C39 17 44 15 51 17V44C44 42 39 44 34 48V21Z" fill="#fffefa"/>
+ <path d="M20 36L27 29L36 35L44 25" stroke="#2448d8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="44" cy="25" r="4.5" fill="#e5ee95" stroke="#2448d8" stroke-width="1.5"/>
 </svg>

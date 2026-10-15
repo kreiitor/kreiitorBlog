@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
- <rect width="64" height="64" rx="14" fill="#f6f3eb"/>
- <path d="M32 49V15m0 17L21 41m11-9 11-9" stroke="#33362e" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
- <circle cx="43" cy="23" r="4.25" fill="#9e5130"/>
- <circle cx="21" cy="41" r="3" fill="#55624b"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
+ <title id="logo-title">kreiitor · 研究与探索</title>
+ <rect width="64" height="64" rx="15" fill="#2448d8"/>
+ <path d="M13 17C20 15 25 17 30 21V48C25 44 20 42 13 44V17Z" fill="#fffefa"/>
+ <path d="M34 21C39 17 44 15 51 17V44C44 42 39 44 34 48V21Z" fill="#fffefa"/>
+ <path d="M20 36L27 29L36 35L44 25" stroke="#2448d8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="44" cy="25" r="4.5" fill="#e5ee95" stroke="#2448d8" stroke-width="1.5"/>
 </svg>

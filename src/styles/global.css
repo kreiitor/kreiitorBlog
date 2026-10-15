@@ -10,16 +10,20 @@
  --font-sans: 'DM Sans Variable','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
  --font-display: 'Lora Variable','Journal Kai SC','Source Serif 4 Variable','Journal Serif SC','Songti SC','SimSun',Georgia,serif;
  --font-reading: 'Source Serif 4 Variable','Journal Serif SC','Songti SC','SimSun',Georgia,serif;
+ --font-title: 'Lora Variable','Journal Serif SC','Songti SC','SimSun',Georgia,serif;
  --font-editorial: 'Lora Variable','Source Serif 4 Variable',Georgia,serif;
  --font-mono: 'JetBrains Mono Variable','IBM Plex Mono','SFMono-Regular',Consolas,'PingFang SC','Microsoft YaHei',monospace;
  --text-caption: 13px; --text-ui: 14px; --text-body: 15px; --text-reading: 18px;
- --color-paper: #f6f3eb; --color-paper-warm: #eeeae2; --color-paper-cool: #eeeee8;
- --color-surface: #fbf9f3; --color-surface-soft: #f0ede5; --color-surface-hover: #eeebe3;
- --color-ink: #33362e; --color-ink-soft: #5b6154; --color-ink-muted: #5b6154;
- --color-line: #d8d6c5; --color-line-strong: #a3a593;
- --color-control-line: #7f8270;
- --color-accent: #9e5130; --color-accent-strong: #8f4a2c; --color-accent-soft: #f3e6d8;
- --color-sage: #55624b; --color-sage-soft: #eeeee8;
+ --color-paper: #f7f6f2; --color-paper-warm: #eceef3; --color-paper-cool: #e9edf8;
+ --color-surface: #fffefa; --color-surface-soft: #edf0f8; --color-surface-hover: #e6eafa;
+ --color-ink: #18243a; --color-ink-soft: #536076; --color-ink-muted: #606b7b;
+ --color-line: #d9dde5; --color-line-strong: #a0abc0;
+ --color-control-line: #7a879f;
+ --color-accent: #2448d8; --color-accent-strong: #1939b3; --color-accent-soft: #e9edff;
+ --color-sage: #394d77; --color-sage-soft: #ecf0f8;
+ --color-highlight: #e5ee95; --color-highlight-soft: #f0f3d6; --color-on-highlight: #29321c;
+ --color-hero-panel: #2448d8; --color-hero-paper: #f4f5dd; --color-hero-ink: #18243a; --color-hero-line: #a6bafa;
+ --color-primary: #2448d8; --color-primary-strong: #1939b3; --color-on-primary: #fffefa;
  --shadow-whisper: 0 2px 8px #35382f04; --shadow-soft: 0 10px 28px #35382f0a; --shadow-lift: 0 14px 34px #35382f14;
 
  /* 间距刻度：0.25rem 网格（4px 基准）。
@@ -53,24 +57,25 @@
 
   /* 语义派生令牌（亮色）。这些原本是散在组件里的硬编码色值，
      收进令牌后暗色才能整体接管。 */
-  --color-on-accent: #fbf9f3;
-  --color-header-bg: rgb(246 243 235 / .93);
-  --color-selection-bg: #e0d9c4;
-  --color-selection-ink: #33362e;
-  --color-overlay: rgb(51 54 46 / .35);
-  --color-dialog-shadow: rgb(51 54 46 / .15);
-  --color-hairline: rgb(51 54 46 / .15);
-  --color-badge-bg: rgb(251 249 243 / .93);
+  --color-on-accent: #fffefa;
+  --color-header-bg: rgb(247 246 242 / .93);
+  --color-selection-bg: #e5ee95;
+  --color-selection-ink: #18243a;
+  --color-overlay: rgb(24 36 58 / .35);
+  --color-dialog-shadow: rgb(24 36 58 / .15);
+  --color-hairline: rgb(24 36 58 / .15);
+  --color-badge-bg: rgb(255 254 250 / .93);
   --color-badge-line: rgb(255 255 255 / .44);
   --color-head-shadow: rgb(36 55 44 / .03);
   --color-skip-ink: #fdfefa;
-  --color-code-bg: #efe9de;
-  --color-card-deco-1: #b1bca1;
-  --color-card-deco-2: #c69f85;
+  --color-code-bg: #eceef7;
+  --color-card-deco-1: #96a9de;
+  --color-card-deco-2: #c6d66b;
  }
  html { background: var(--color-paper); scroll-padding-top: 110px; -webkit-font-smoothing: antialiased; }
  body { min-width: 0; color: var(--color-ink); font-family: var(--font-sans); font-size: var(--text-body); line-height: 1.75; font-optical-sizing: auto; }
  h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.5; text-wrap: pretty; line-break: strict; overflow-wrap: anywhere; }
+ h2,h3,h4 { font-family: var(--font-title); }
  a { color: inherit; text-decoration: none; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
  button,input { font: inherit; } button { cursor: pointer; } img { max-width: 100%; }
  ::selection { background: var(--color-selection-bg); color: var(--color-selection-ink); }
@@ -80,7 +85,7 @@
 @layer components {
  .series-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); gap: var(--space-m); margin-top: 28px; }
  .page-shell { width: min(100% - 96px,1160px); margin-inline: auto; }
- .zen-kicker,.eyebrow { font-family: var(--font-sans); font-size: var(--text-caption); font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-accent); }
+ .zen-kicker,.eyebrow { font-family: var(--font-sans); font-size: var(--text-caption); font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-sage); }
  .zen-card,.zen-card-flat { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 10px; }
  .zen-card { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo),transform var(--dur-slow) var(--ease-out-expo); }
  .zen-card:focus-within { border-color: var(--color-line-strong); }
@@ -88,8 +93,8 @@
  .zen-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 11px 22px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth),transform var(--dur-base) var(--ease-out-expo); }
  .zen-btn:hover { transform: translateY(-1px); }
  .zen-btn:active { transform: translateY(1px); transition-duration: var(--dur-press); }
- .zen-btn-primary { background: var(--color-accent); color: var(--color-on-accent); border: 1px solid var(--color-accent); }
- .zen-btn-primary:hover { background: var(--color-accent-strong); border-color: var(--color-accent-strong); }
+ .zen-btn-primary { background: var(--color-primary); color: var(--color-on-primary); border: 1px solid var(--color-primary); }
+ .zen-btn-primary:hover { background: var(--color-primary-strong); border-color: var(--color-primary-strong); }
  .zen-btn-secondary { border: 1px solid var(--color-control-line); background: transparent; }
  .zen-btn-secondary:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
  .zen-btn-ghost { color: var(--color-ink-soft); padding-inline: 0; }
@@ -99,14 +104,14 @@
  .zen-input { width: 100%; min-width: 0; min-height: 48px; padding: 11px var(--space-s); border: 1px solid var(--color-control-line); border-radius: 6px; background: var(--color-paper); color: var(--color-ink); transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-base) var(--ease-smooth); }
  .zen-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
  .section-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--space-m); }
- .section-heading { display: flex; justify-content: space-between; align-items: end; gap: var(--space-m); padding-bottom: 25px; border-bottom: 1px solid var(--color-line); }
+ .section-heading { display: flex; justify-content: space-between; align-items: end; gap: var(--space-m); padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
  .section-heading h2 { font-size: 26px; margin-top: var(--space-2xs); }
  .section-heading .section-description { margin-top: var(--space-2xs); font-size: 13px; color: var(--color-ink-soft); }
  .text-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 32px; font-size: var(--text-caption); white-space: nowrap; }
  .text-link:hover { color: var(--color-accent); }
- .editorial-section { margin-top: 80px; }
+ .editorial-section { margin-top: 64px; }
  .editorial-section .section-grid { margin-top: 28px; }
- .page-intro { padding-top: 70px; padding-bottom: 35px; border-bottom: 1px solid var(--color-line); }
+ .page-intro { padding-top: 48px; padding-bottom: 30px; border-bottom: 1px solid var(--color-line); }
  .page-intro h1 { font-size: clamp(32px,4vw,48px); margin: var(--space-xs) 0 var(--space-s); letter-spacing: -.03em; }
  .page-intro p:not(.eyebrow) { max-width: 640px; color: var(--color-ink-soft); line-height: 1.9; }
  .post-card { overflow: hidden; height: 100%; display: flex; flex-direction: column; }
@@ -179,8 +184,8 @@
 
  .article-layout { display: grid; grid-template-columns: minmax(0,760px) 220px; gap: var(--space-xl); justify-content: space-between; }
  .article-layout > aside { min-width: 0; }
- .article-header { padding-bottom: 30px; border-bottom: 1px solid var(--color-line); }
- .article-header h1 { font-size: clamp(28px,3.2vw,40px); line-height: 1.65; margin: 18px 0; }
+ .article-header { padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
+ .article-header h1 { font-family: var(--font-title); font-size: clamp(28px,3.2vw,40px); line-height: 1.5; margin: 14px 0; }
  .article-summary { font-size: 15px; color: var(--color-ink-soft); margin-bottom: 22px; }
  .article-cover { width: 100%; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); border-radius: 10px; border: 1px solid var(--color-line); }
  .article-body { margin-block: 40px; }
@@ -192,10 +197,10 @@
  .article-toc a[aria-current="location"]::before { opacity: 1; }
  .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
  .reading-progress { position: fixed; top: 0; left: 0; z-index: 60; height: 3px; width: 100%; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
- .mobile-toc { border-block: 1px solid var(--color-line); padding: 14px 0; margin-bottom: 28px; }
+ .mobile-toc { border-bottom: 1px solid var(--color-line); padding: 10px 0; margin-bottom: 20px; }
  .mobile-toc summary { cursor: pointer; font-size: 13px; }
  .mobile-toc nav { padding-top: var(--space-xs); display: grid; gap: 10px; font-size: var(--text-caption); color: var(--color-ink-soft); }
- .back-link { margin-bottom: 35px; }
+ .back-link { margin-bottom: 22px; }
  /* 标题永久链接：hover / 聚焦时出现，触屏常显。
     用 ink-mute 而非 line-strong —— 它的唯一识别特征就是颜色，
     必须自己达到对比度（浅 5.41:1 / 暗 6.28:1），不能依赖 line-strong（两侧都 <3:1）。 */
@@ -253,39 +258,50 @@
    =========================================================================== */
 
 /* 通道一：用户显式选择暗色（系统为亮色时也生效） */
+:root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-paper: #1a1a17;
-  --color-paper-warm: #22211d;
-  --color-paper-cool: #1d1f1a;
-  --color-surface: #22211d;
-  --color-surface-soft: #2a2925;
-  --color-surface-hover: #2f2e29;
-  --color-ink: #e6e2d6;
-  --color-ink-soft: #c9c4b6;
-  --color-ink-muted: #a09b8c;
-  --color-line: #35342e;
-  --color-line-strong: #5c5a4e;
-  --color-control-line: #6f6d61;
-  --color-accent: #d28a63;
-  --color-accent-strong: #e09b74;
-  --color-accent-soft: #362820;
-  --color-sage: #8fa07a;
-  --color-sage-soft: #23281f;
-  --color-on-accent: #1a1a17;
-  --color-header-bg: rgb(26 26 23 / .93);
-  --color-selection-bg: #3d372c;
-  --color-selection-ink: #e6e2d6;
+  --color-paper: #151a27;
+  --color-paper-warm: #1d2537;
+  --color-paper-cool: #1a2235;
+  --color-surface: #1d2537;
+  --color-surface-soft: #252f47;
+  --color-surface-hover: #2d3956;
+  --color-ink: #eff2fa;
+  --color-ink-soft: #c8d1e5;
+  --color-ink-muted: #a7b5cf;
+  --color-line: #374460;
+  --color-line-strong: #637596;
+  --color-control-line: #7b8baa;
+  --color-accent: #b6c7ff;
+  --color-accent-strong: #d1dcff;
+  --color-accent-soft: #29365b;
+  --color-sage: #bdccf0;
+  --color-sage-soft: #242f48;
+  --color-highlight: #e5ee95;
+  --color-highlight-soft: #303a29;
+  --color-on-highlight: #29321c;
+  --color-hero-panel: #2949bd;
+  --color-hero-paper: #f0f3d9;
+  --color-hero-ink: #18243a;
+  --color-hero-line: #a6bafa;
+  --color-primary: #b6c7ff;
+  --color-primary-strong: #d1dcff;
+  --color-on-primary: #151a27;
+  --color-on-accent: #151a27;
+  --color-header-bg: rgb(21 26 39 / .93);
+  --color-selection-bg: #475781;
+  --color-selection-ink: #eff2fa;
   --color-overlay: rgb(0 0 0 / .55);
   --color-dialog-shadow: rgb(0 0 0 / .6);
-  --color-hairline: rgb(230 226 214 / .12);
-  --color-badge-bg: rgb(34 33 29 / .93);
-  --color-badge-line: rgb(230 226 214 / .2);
+  --color-hairline: rgb(239 242 250 / .12);
+  --color-badge-bg: rgb(29 37 55 / .93);
+  --color-badge-line: rgb(239 242 250 / .2);
   --color-head-shadow: rgb(0 0 0 / .4);
-  --color-skip-ink: #1a1a17;
-  --color-code-bg: #1b1a16;
-  --color-card-deco-1: #5c6b4e;
-  --color-card-deco-2: #8a6a4e;
+  --color-skip-ink: #151a27;
+  --color-code-bg: #111725;
+  --color-card-deco-1: #637bb7;
+  --color-card-deco-2: #c6d66b;
   /* 暗色下层级靠提亮表达，阴影只保留一点纵深 */
   --shadow-whisper: 0 2px 8px rgb(0 0 0 / .3);
   --shadow-soft: 0 10px 28px rgb(0 0 0 / .45);
@@ -295,37 +311,47 @@
 @media (prefers-color-scheme: dark) {
  :root:not([data-theme]) {
   color-scheme: dark;
-  --color-paper: #1a1a17;
-  --color-paper-warm: #22211d;
-  --color-paper-cool: #1d1f1a;
-  --color-surface: #22211d;
-  --color-surface-soft: #2a2925;
-  --color-surface-hover: #2f2e29;
-  --color-ink: #e6e2d6;
-  --color-ink-soft: #c9c4b6;
-  --color-ink-muted: #a09b8c;
-  --color-line: #35342e;
-  --color-line-strong: #5c5a4e;
-  --color-control-line: #6f6d61;
-  --color-accent: #d28a63;
-  --color-accent-strong: #e09b74;
-  --color-accent-soft: #362820;
-  --color-sage: #8fa07a;
-  --color-sage-soft: #23281f;
-  --color-on-accent: #1a1a17;
-  --color-header-bg: rgb(26 26 23 / .93);
-  --color-selection-bg: #3d372c;
-  --color-selection-ink: #e6e2d6;
+  --color-paper: #151a27;
+  --color-paper-warm: #1d2537;
+  --color-paper-cool: #1a2235;
+  --color-surface: #1d2537;
+  --color-surface-soft: #252f47;
+  --color-surface-hover: #2d3956;
+  --color-ink: #eff2fa;
+  --color-ink-soft: #c8d1e5;
+  --color-ink-muted: #a7b5cf;
+  --color-line: #374460;
+  --color-line-strong: #637596;
+  --color-control-line: #7b8baa;
+  --color-accent: #b6c7ff;
+  --color-accent-strong: #d1dcff;
+  --color-accent-soft: #29365b;
+  --color-sage: #bdccf0;
+  --color-sage-soft: #242f48;
+  --color-highlight: #e5ee95;
+  --color-highlight-soft: #303a29;
+  --color-on-highlight: #29321c;
+  --color-hero-panel: #2949bd;
+  --color-hero-paper: #f0f3d9;
+  --color-hero-ink: #18243a;
+  --color-hero-line: #a6bafa;
+  --color-primary: #b6c7ff;
+  --color-primary-strong: #d1dcff;
+  --color-on-primary: #151a27;
+  --color-on-accent: #151a27;
+  --color-header-bg: rgb(21 26 39 / .93);
+  --color-selection-bg: #475781;
+  --color-selection-ink: #eff2fa;
   --color-overlay: rgb(0 0 0 / .55);
   --color-dialog-shadow: rgb(0 0 0 / .6);
-  --color-hairline: rgb(230 226 214 / .12);
-  --color-badge-bg: rgb(34 33 29 / .93);
-  --color-badge-line: rgb(230 226 214 / .2);
+  --color-hairline: rgb(239 242 250 / .12);
+  --color-badge-bg: rgb(29 37 55 / .93);
+  --color-badge-line: rgb(239 242 250 / .2);
   --color-head-shadow: rgb(0 0 0 / .4);
-  --color-skip-ink: #1a1a17;
-  --color-code-bg: #1b1a16;
-  --color-card-deco-1: #5c6b4e;
-  --color-card-deco-2: #8a6a4e;
+  --color-skip-ink: #151a27;
+  --color-code-bg: #111725;
+  --color-card-deco-1: #637bb7;
+  --color-card-deco-2: #c6d66b;
   --shadow-whisper: 0 2px 8px rgb(0 0 0 / .3);
   --shadow-soft: 0 10px 28px rgb(0 0 0 / .45);
   --shadow-lift: 0 14px 34px rgb(0 0 0 / .55);
@@ -339,7 +365,7 @@
      --shiki-dark-font-style、--shiki-light-font-style。
      **没有 --shiki-light，也没有 --shiki-light-bg**——因为 defaultColor='light'，
      亮色值写成行内字面量；所以暗色覆盖必须 !important 才能压过行内样式。
-     <pre class="astro-code" style="background-color:#eee8dd;--shiki-dark-bg:#1b1a16;
+     <pre class="astro-code" style="background-color:#eee8dd;--shiki-dark-bg:#111725;
                                      color:#35382f;--shiki-dark:#e6e2d6">
      <span style="color:#62685B;--shiki-light-font-style:italic;
                   --shiki-dark:#A8B39A;--shiki-dark-font-style:italic">
@@ -355,7 +381,7 @@
 
 /* 暗色通路一：用户显式选择 */
 :root[data-theme="dark"] .astro-code,
-:root[data-theme="dark"] .astro-code code { color: var(--shiki-dark, #e6e2d6) !important; background-color: var(--shiki-dark-bg, #1b1a16) !important; }
+:root[data-theme="dark"] .astro-code code { color: var(--shiki-dark, #e6e2d6) !important; background-color: var(--shiki-dark-bg, #111725) !important; }
 :root[data-theme="dark"] .astro-code span {
  color: var(--shiki-dark, #e6e2d6) !important;
  font-style: var(--shiki-dark-font-style, normal) !important;
@@ -365,7 +391,7 @@
 /* 暗色通路二：未显式选择时跟随系统（也让无 JS 读者拿到暗色代码块） */
 @media (prefers-color-scheme: dark) {
  :root:not([data-theme]) .astro-code,
- :root:not([data-theme]) .astro-code code { color: var(--shiki-dark, #e6e2d6) !important; background-color: var(--shiki-dark-bg, #1b1a16) !important; }
+ :root:not([data-theme]) .astro-code code { color: var(--shiki-dark, #e6e2d6) !important; background-color: var(--shiki-dark-bg, #111725) !important; }
  :root:not([data-theme]) .astro-code span {
   color: var(--shiki-dark, #e6e2d6) !important;
   font-style: var(--shiki-dark-font-style, normal) !important;

@@ -1,22 +1,22 @@
 /* Loaded inside the Giscus iframe; inherit its maintained Primer light tokens. */
 @import url("https://giscus.app/themes/light.css");
 main {
- --color-canvas-default: #faf8f1;
- --color-canvas-subtle: #f4f1e8;
- --color-canvas-inset: #f4f1e8;
- --color-fg-default: #35382f;
- --color-fg-muted: #5e6458;
- --color-border-default: #d7d6c7;
- --color-border-muted: #e5e1d5;
- --color-accent-fg: #925134;
- --color-accent-emphasis: #925134;
- --color-accent-muted: #e9e1d3;
- --color-accent-subtle: #f0e5da;
- --color-btn-primary-bg: #925134;
- --color-btn-primary-border: #925134;
- --color-btn-primary-hover-bg: #79412b;
- --color-btn-primary-hover-border: #79412b;
- --color-btn-primary-text: #faf8f1;
+ --color-canvas-default: #fffefa;
+ --color-canvas-subtle: #edf0f8;
+ --color-canvas-inset: #edf0f8;
+ --color-fg-default: #18243a;
+ --color-fg-muted: #536076;
+ --color-border-default: #d9dde5;
+ --color-border-muted: #e4e8f0;
+ --color-accent-fg: #2448d8;
+ --color-accent-emphasis: #2448d8;
+ --color-accent-muted: #dce3fc;
+ --color-accent-subtle: #e9edff;
+ --color-btn-primary-bg: #2448d8;
+ --color-btn-primary-border: #2448d8;
+ --color-btn-primary-hover-bg: #1939b3;
+ --color-btn-primary-hover-border: #1939b3;
+ --color-btn-primary-text: #fffefa;
 }
 .gsc-main { font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", sans-serif; }
 .gsc-comment-box, .gsc-comment { border-radius: 10px; }

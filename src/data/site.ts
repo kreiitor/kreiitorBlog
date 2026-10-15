@@ -9,6 +9,12 @@ export const siteConfig = {
 	siteUrl: 'https://kreiitor.github.io/kreiitorBlog',
 	email: 'kreiitor@foxmail.com',
 	avatar: '/avatar.svg',
+	// 首页编辑推荐：研究实践、阅读方法、系统学习。仅展示已发布的文章。
+	homeFeaturedPosts: [
+		{ id: 'llm-eval-pipeline', label: '研究与实践' },
+		{ id: 'paper-reading-notes', label: '阅读与方法' },
+		{ id: 'fods-overview', label: '系统学习' },
+	],
 	hero: {
 		kicker: 'AI for Software Engineering',
 		title: '把论文、实验和博客写进同一条长期创作路径',

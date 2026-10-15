@@ -16,7 +16,13 @@ const posts = await getCollection('posts');
 const projects = await getCollection('projects');
 const publishedPosts = getPublishedPosts(posts);
 const sortedProjects = getProjects(projects);
-const featuredPosts = getFeaturedPosts(posts,3);
+const curatedSelections = siteConfig.homeFeaturedPosts.flatMap(selection => {
+ const post = publishedPosts.find(post => post.id === selection.id);
+ return post ? [{ post, label: selection.label }] : [];
+});
+const curatedPosts = curatedSelections.map(selection => selection.post);
+const featuredPosts = [...curatedPosts, ...getFeaturedPosts(posts).filter(post => !curatedPosts.some(item => item.id === post.id))].slice(0,3);
+const featuredLabels = featuredPosts.map(post => curatedSelections.find(selection => selection.post.id === post.id)?.label ?? '精选札记');
 const featuredIds = new Set(featuredPosts.map(post => post.id));
 const recentPosts = publishedPosts.filter(post => !featuredIds.has(post.id)).slice(0,5);
 const featuredProjects = getFeaturedProjects(projects,2);
@@ -31,9 +37,9 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
     <p class="eyebrow hero-kicker"><span aria-hidden="true"></span>A PERSONAL JOURNAL · AI & SOFTWARE</p>
     <h1>在代码与思想之间，<br/><span>慢慢生长。</span></h1>
     <p class="hero-english">Thinking in code. Growing through curiosity.</p>
-    <p class="hero-description"><span class="hero-bio-long">我是 <strong>{siteConfig.author}</strong>，一个普通的数据科学硕士。<br/>在这里，记录论文里的灵感、实验中的探索，和一路积累的思考。</span><span class="hero-bio-short">我是 <strong>{siteConfig.author}</strong>，关注软件工程智能化。<br/>记录论文、实验与一路积累的思考。</span></p>
+    <p class="hero-description">我是 <strong>{siteConfig.author}</strong>，关注软件工程智能化。<br/>记录论文里的灵感、实验中的探索，与一路积累的思考。</p>
     <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">翻开研究札记 <Icon name="arrow" size={18}/></a><a href={withBase('/about/')} class="text-link">认识我 <Icon name="arrow" size={16}/></a></div>
-    <div class="hero-caption"><span>RESEARCH INTERESTS</span><p>LLM理论与应用 <i>/</i> 学习与思考 <i>/</i> 实验和复现</p></div>
+    <div class="hero-caption"><p>LLM 与软件工程 <i>/</i> 阅读与实验 <i>/</i> 持续学习</p></div>
    </div>
    <div class="hero-visual zen-reveal zen-delay-1"><ResearchArt/></div>
   </section>
@@ -44,18 +50,18 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   <section class="page-shell editorial-section">
    <SectionHeading kicker="01 / SELECTED WRITING" title="值得展开的思考" description="从一个问题出发，把想法写深一点。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
    <div class="selected-writing">
-    {featuredPosts[0] && <PostCard post={featuredPosts[0]}/>}
-    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="eyebrow">札记 / {String(index+2).padStart(2,'0')}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}<a class="selected-invitation" href={withBase('/archive/')}><span>每一条线索，都值得慢慢展开。</span><span>沿时间线浏览 <Icon name="arrow" size={16}/></span></a></div>
+    {featuredPosts[0] && <PostCard post={featuredPosts[0]} featured/>}
+    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="eyebrow">0{index+2} / {featuredLabels[index+1]}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}<a class="selected-invitation" href={withBase('/archive/')}><span>每一条线索，都值得慢慢展开。</span><span>沿时间线浏览 <Icon name="arrow" size={16}/></span></a></div>
    </div>
   </section>
   <section class="page-shell editorial-section">
-   <SectionHeading kicker="02 / RESEARCH & PRACTICE" title="让想法落地" description="论文复现、实验平台，以及正在打磨的工具。" linkHref={withBase('/projects/')} linkLabel="浏览研究项目"/>
-   <div class="project-grid">{featuredProjects.map(project => <ProjectCard project={project}/>)}</div>
-  </section>
-  <section class="page-shell editorial-section">
-   <SectionHeading kicker="03 / STRUCTURED LEARNING" title="成体系的学习笔记" description="沿着一条主线，把概念、推导与实践连起来。" linkHref={withBase('/notes/')} linkLabel="全部学习专题"/>
+   <SectionHeading kicker="02 / STRUCTURED LEARNING" title="成体系的学习笔记" description="沿着一条主线，把概念、推导与实践连起来。" linkHref={withBase('/notes/')} linkLabel="全部学习专题"/>
    <div class="series-grid">{learningSeries.slice(0,3).map(item => <SeriesCard series={item}/>)}</div>
    {learningSeries.length === 0 && <p class="section-description">学习笔记正在整理中。</p>}
+  </section>
+  <section class="page-shell editorial-section">
+   <SectionHeading kicker="03 / RESEARCH & PRACTICE" title="让想法落地" description="论文复现、实验平台，以及正在打磨的工具。" linkHref={withBase('/projects/')} linkLabel="浏览研究项目"/>
+   <div class="project-grid">{featuredProjects.map(project => <ProjectCard project={project}/>)}</div>
   </section>
   <section class="page-shell editorial-section lower-grid">
    <div>
@@ -72,13 +78,15 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  </div>
 </BaseLayout>
 <style>
- .home-hero { display: grid; grid-template-columns: minmax(0,1.17fr) minmax(0,1fr); align-items: center; gap: 65px; padding-block: 65px 52px; }
+ .home-hero { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); align-items: center; gap: 72px; padding-block: 36px 28px; }
+ .hero-visual { width: 100%; max-width: 420px; justify-self: end; }
+ .journal-strip + .editorial-section { margin-top: 40px; }
  .selected-writing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); gap: 48px; margin-top: 30px; }
  .selected-writing > *, .home-hero > * { min-width: 0; }
  .selected-row { display: block; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
  .selected-row:first-child { padding-top: 6px; }
  .selected-writing :global(.card-content h3) { font-size: 24px; }
- .selected-row h3 { font-size: 25px; margin-block: 10px; }
+ .selected-row h3 { font-size: 23px; margin-block: 10px; line-height: 1.65; }
  .selected-row .card-description { overflow-wrap: anywhere; }
  .selected-row:hover h3 { color: var(--color-accent); }
  .selected-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; font-size: 12px; color: var(--color-ink-soft); }
@@ -87,19 +95,17 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
  .selected-invitation span:last-child { color: var(--color-accent); }
  @media (max-width: 700px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
- .hero-kicker { display: flex; align-items: center; gap: 8px; font-size: var(--text-caption); }
+ .hero-kicker { display: flex; align-items: center; gap: 8px; width: fit-content; padding: 4px 9px; border-radius: 3px; font-size: 11px; background: var(--color-highlight); color: var(--color-on-highlight); }
  .hero-kicker span { width: 5px; height: 5px; background: var(--color-accent); border-radius: 50%; }
- .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.6; letter-spacing: -.02em; margin-top: 26px; }
+ .hero-copy h1 { font-size: clamp(36px,3.7vw,48px); line-height: 1.45; letter-spacing: -.02em; margin-top: 18px; }
  .hero-copy h1 span { color: var(--color-accent); }
- .hero-english { margin-top: 14px; font-family: var(--font-editorial); font-size: 18px; font-style: italic; color: var(--color-ink-soft); }
- .hero-description { margin-top: 24px; font-size: 15px; line-height: 2; color: var(--color-ink-soft); }
+ .hero-english { margin-top: 10px; font-family: var(--font-editorial); font-size: 18px; font-style: italic; color: var(--color-ink-soft); }
+ .hero-description { margin-top: 14px; font-size: 15px; line-height: 1.9; color: var(--color-ink-soft); }
  .hero-description strong { font-weight: 500; color: var(--color-ink); }
- .hero-bio-short { display: none; }
- .hero-actions { display: flex; align-items: center; gap: 30px; margin-top: 30px; }
- .hero-caption { margin-top: 38px; display: flex; align-items: center; gap: 20px; }
- .hero-caption > span { font-size: var(--text-caption); letter-spacing: .13em; color: var(--color-ink-muted); }
+ .hero-actions { display: flex; align-items: center; gap: 28px; margin-top: 20px; }
+ .hero-caption { margin-top: 16px; color: var(--color-ink-soft); }
  .hero-caption p { font-size: var(--text-caption); } .hero-caption i { margin: 0 9px; color: var(--color-line-strong); font-style: normal; }
- .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 21px; border-block: 1px solid var(--color-line); }
+ .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 13px; border-block: 1px solid var(--color-line); }
  .journal-strip > p { display: flex; align-items: center; gap: 12px; font-size: var(--text-caption); }
  .strip-symbol { font-size: 23px; color: var(--color-accent); line-height: 1; }
  .strip-subtitle { font-family: var(--font-editorial); font-size: 12px; font-style: italic; color: var(--color-ink-muted); padding-left: 10px; }
@@ -109,16 +115,17 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 65px; }
  .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
  .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-ink-muted); }
- .recent-row h3 { font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1.9; margin-top: 6px; }
+ .recent-row h3 { font-family: var(--font-title); font-size: 17px; font-weight: 500; line-height: 1.7; margin-top: 6px; }
  .recent-row > :global(svg) { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
- .garden-aside { padding: 30px; background: var(--color-paper-warm); border: 1px solid var(--color-line); border-radius: 6px; }
+ .garden-aside { padding: 30px; background: var(--color-highlight-soft); border: 1px solid var(--color-line); border-radius: 8px; }
  .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; }
  .topic-list { margin-top: 23px; } .topic-list a { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-line); }
- .topic-list a > span:last-child { color: var(--color-ink-muted); font-size: var(--text-caption); }
+ .topic-list a > span:last-child { color: var(--color-ink-soft); font-size: var(--text-caption); }
  .topic-list a:hover { color: var(--color-accent); }
  .aside-note { display: flex; gap: 14px; margin-top: 28px; color: var(--color-ink-soft); font-size: var(--text-caption); line-height: 2; }
  .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: var(--text-caption); }
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
  @media (max-width: 900px) { .hero-copy h1 { font-size: 33px; } .hero-caption { align-items: start; flex-direction: column; gap: 8px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { grid-template-columns: 1fr; } }
- @media (max-width: 700px) { .home-hero { grid-template-columns: 1fr; padding-block: 32px 24px; gap: 22px; } .hero-copy h1 { font-size: clamp(31px,6.7vw,46px); margin-top: 16px; line-height: 1.5; } .hero-english { font-size: 16px; margin-top: 10px; } .hero-description { font-size: 14px; margin-top: 18px; } .hero-bio-long { display: none; } .hero-bio-short { display: inline; } .hero-actions { margin-top: 20px; } .hero-caption { display: none; } .hero-visual { width: 100%; margin-inline: auto; } .journal-strip { padding-block: 14px; } .journal-strip > p { display: none; } .journal-counts { justify-content: space-between; gap: 12px; width: 100%; } .lower-grid { grid-template-columns: 1fr; gap: 35px; } .editorial-section { margin-top: 44px; } }
+ @media (max-width: 700px) { .home-hero { grid-template-columns: 1fr; padding-block: 28px 20px; gap: 18px; } .hero-copy h1 { font-size: clamp(31px,6.7vw,46px); margin-top: 14px; line-height: 1.5; } .hero-english { font-size: 15px; margin-top: 8px; } .hero-description { font-size: 14px; margin-top: 16px; } .hero-actions { margin-top: 18px; } .hero-caption { display: none; } .hero-visual { max-width: none; } .journal-strip { padding-block: 12px; } .journal-strip > p { display: none; } .journal-counts { justify-content: space-between; gap: 12px; width: 100%; } .lower-grid { grid-template-columns: 1fr; gap: 35px; } .editorial-section { margin-top: 40px; } .journal-strip + .editorial-section { margin-top: 28px; } }
+ @media (max-width: 700px) { .journal-strip + .editorial-section :global(.section-description) { display: none; } }
 </style>

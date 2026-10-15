@@ -26,8 +26,8 @@ const previousChapter = group?.chapters[chapterIndex - 1];
 const nextChapter = group?.chapters[chapterIndex + 1];
 const previous = previousChapter ? { href: `/blog/${previousChapter.id}/`, title: previousChapter.data.title, label: '上一章' } : undefined;
 const next = nextChapter ? { href: `/blog/${nextChapter.id}/`, title: nextChapter.data.title, label: '下一章' } : undefined;
-const cover = post.data.category !== 'course' ? getPostCover(post) : undefined;
-const shareCover = cover ?? post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : undefined);
+const cover = post.data.category === 'writing' ? getPostCover(post) : undefined;
+const shareCover = cover ?? post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : getPostCover(post));
 const related = getRelatedPosts(post, await getCollection('posts'), 3);
 ---
 <BaseLayout title={post.data.title} description={post.data.description} image={shareCover} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1}>
@@ -56,9 +56,10 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  </section>
 </BaseLayout>
 <style>
- .reading-shell { padding-top: 48px; }
- .article-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
- .article-cover { margin-top: 28px; }
+ .reading-shell { padding-top: 32px; }
+ .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+ .article-tags :global(.zen-tag) { padding: 2px 9px; font-size: 12px; }
+ .article-cover { margin-top: 22px; max-height: 240px; }
  .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-line); padding: 26px 0; margin-bottom: 36px; }
  .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
  .chapter-nav strong { font-weight: 500; font-size: 15px; line-height: 1.8; }
@@ -75,5 +76,5 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .related-posts li a:hover { color: var(--color-accent); }
  .related-title { font-family: var(--font-display); font-size: 17px; line-height: 1.65; }
  .related-desc { font-size: 13px; line-height: 1.8; color: var(--color-ink-soft); }
- @media (max-width: 600px) { .reading-shell { padding-top: 32px; } .chapter-nav { gap: 18px; } }
+ @media (max-width: 600px) { .reading-shell { padding-top: 22px; } .chapter-nav { gap: 18px; } }
 </style>

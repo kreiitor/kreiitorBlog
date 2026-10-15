@@ -6,11 +6,11 @@ import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
 import Icon from './Icon.astro';
 interface Props { post: PostEntry; featured?: boolean; }
-const { post } = Astro.props;
+const { post, featured = false } = Astro.props;
 const href = withBase(`/blog/${post.id}/`);
 const cover = getPostCover(post);
 ---
-<article class="zen-card post-card" data-post-tags={JSON.stringify(post.data.tags)}>
+<article class:list={['zen-card','post-card',{'post-featured':featured}]} data-post-tags={JSON.stringify(post.data.tags)}>
  <a href={href} class="card-cover" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/></a>
  <div class="card-content">
   <div class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span></div>
@@ -19,3 +19,13 @@ const cover = getPostCover(post);
   <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`阅读：${post.data.title}`}><Icon name="arrow"/></a></div>
  </div>
 </article>
+<style>
+ .post-featured .card-content { order: -1; padding: 24px 28px; }
+ .post-featured .card-meta::before { content: '精选'; padding: 1px 6px; border-radius: 2px; font-size: 11px; background: var(--color-highlight); color: var(--color-on-highlight); }
+ .post-featured h3 { color: var(--color-accent); }
+ .post-featured .card-cover { border-bottom: 0; border-top: 1px solid var(--color-line); }
+ @media (max-width: 700px) {
+  .post-featured .card-content { padding: 20px; }
+  .post-featured .card-cover { max-height: 160px; }
+ }
+</style>

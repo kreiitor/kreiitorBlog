@@ -1,8 +1,9 @@
 import { writeFile } from 'node:fs/promises';
+import { brandSymbol } from './brand-art.mjs';
 
-// Original vector vocabulary: paper, annotation lines, sage structures, clay focal points.
-// One neutral paper palette for every topic. Sage carries the structure;
-// clay is reserved for small focal points, never a whole cover background.
+// Vector studies share ivory, cobalt and restrained citron accents.
+// The source drawing colors below are mapped to semantic light/dark tokens
+// at export, keeping illustration geometry independent of the site palette.
 // Header and drawing use separate safe areas so narrow cards retain breathing room.
 const paper = "#f6f3eb";
 const line = '#87917c', ink = '#33362e', sage = '#55624b', clay = '#9e5130';
@@ -206,10 +207,24 @@ const topics = {
  'series-systems': 'Systems · A Study', 'series-research': 'Research · A Study'
 };
 let n = 0;
+// Embedded SVG media queries inherit the embedding element's color-scheme.
+// Manual theme switches and no-JS system preferences therefore share one asset.
+const coverColors = {
+ '#f6f3eb': ['paper', '#edf0fb', '#202b45'],
+ '#fbf9f3': ['surface', '#fffefa', '#2c3c60'],
+ '#f0eee6': ['soft', '#f0f3cd', '#3d4c57'],
+ '#87917c': ['line', '#a0aed4', '#8b9dc8'],
+ '#33362e': ['ink', '#18243a', '#eff2fa'],
+ '#55624b': ['sage', '#4963a5', '#c2cfeb'],
+ '#9e5130': ['clay', '#2448d8', '#e5ee95'],
+};
+const themeStyle = `<style>:root{${Object.values(coverColors).map(([name, light]) => `--cover-${name}:${light}`).join(';')}}@media(prefers-color-scheme:dark){:root{${Object.values(coverColors).map(([name, , dark]) => `--cover-${name}:${dark}`).join(';')}}}</style>`;
 for (const [name, { title, art }] of Object.entries(compositions)) {
  n += 1;
  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" fill="none" role="img" aria-labelledby="cover-title"><title id="cover-title">${title.replaceAll('&', '&amp;')}</title><rect width="800" height="420" fill="${paper}"/>${grain('g-' + name)}<text x="40" y="66" font-family="Georgia,serif" font-size="30" fill="${ink}">${topics[name].replaceAll('&', '&amp;')}</text><path d="M40 88h720" stroke="${line}" opacity=".45"/><g transform="translate(-16 24) scale(1.04)">${art}</g></svg>`;
- await writeFile(`public/covers/${name}.svg`, svg);
+ const themed = svg.replace(/#[0-9a-f]{6}/gi, color => coverColors[color] ? `var(--cover-${coverColors[color][0]})` : color).replace('</title>', `</title>${themeStyle}`);
+ await writeFile(`public/covers/${name}.svg`, themed);
 }
-await writeFile('public/social-card.svg', `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f6f3eb"/><rect x="790" y="54" width="350" height="522" rx="16" fill="#f0eee6"/><text x="78" y="117" font-family="sans-serif" font-size="18" letter-spacing="3" fill="#9e5130">KREIITOR / FIELD NOTES</text><text x="74" y="275" font-family="Georgia,serif" font-size="76" fill="#33362e">Stay curious.</text><text x="74" y="372" font-family="Georgia,serif" font-size="76" font-style="italic" fill="#55624b">Let it grow.</text><text x="78" y="460" font-family="sans-serif" font-size="20" fill="#5b6154">AI for Software Engineering · Research · Learning</text><path d="M78 530h630" stroke="#d8d6c5"/><text x="78" y="567" font-family="sans-serif" font-size="15" fill="#5b6154">kreiitor.github.io/kreiitorBlog</text><g transform="rotate(-7 965 315)"><rect x="851" y="154" width="228" height="315" rx="5" fill="#fbf9f3" stroke="#a3a593"/><path d="M877 187h176M877 413h176" stroke="#d8d6c5"/><g transform="translate(915 240) scale(3.4)"><path d="M15 23V7.5" stroke="#33362e" stroke-width="1.7" stroke-linecap="round"/><path d="M15 15.2L10.3 19.4M15 15.2L19.7 11" stroke="#33362e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19.7" cy="11" r="1.9" fill="#9e5130"/><circle cx="10.3" cy="19.4" r="1.15" fill="none" stroke="#55624b" stroke-width=".7"/></g><path d="M902 394c30 0 22-35 56-21s30-34 72-36" stroke="#9e5130" fill="none" stroke-width="2"/></g></svg>`);
+const socialCard = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f6f3eb"/><rect x="790" y="54" width="350" height="522" rx="16" fill="#f0eee6"/><text x="78" y="117" font-family="sans-serif" font-size="18" letter-spacing="3" fill="#9e5130">KREIITOR / FIELD NOTES</text><text x="74" y="275" font-family="Georgia,serif" font-size="76" fill="#33362e">Stay curious.</text><text x="74" y="372" font-family="Georgia,serif" font-size="76" font-style="italic" fill="#55624b">Let it grow.</text><text x="78" y="460" font-family="sans-serif" font-size="20" fill="#5b6154">AI for Software Engineering · Research · Learning</text><path d="M78 530h630" stroke="#d8d6c5"/><text x="78" y="567" font-family="sans-serif" font-size="15" fill="#5b6154">kreiitor.github.io/kreiitorBlog</text><g transform="rotate(-7 965 315)"><rect x="851" y="154" width="228" height="315" rx="5" fill="#fbf9f3" stroke="#a3a593"/><path d="M877 187h176M877 413h176" stroke="#d8d6c5"/><g transform="translate(917 244) scale(1.5)">${brandSymbol}</g><path d="M902 394c30 0 22-35 56-21s30-34 72-36" stroke="#9e5130" fill="none" stroke-width="2"/></g></svg>`;
+await writeFile('public/social-card.svg', socialCard.replace(/#[0-9a-f]{6}/gi, color => coverColors[color]?.[1] ?? ({'#d8d6c5':'#d9dde5','#a3a593':'#a0abc0','#5b6154':'#536076'}[color] ?? color)));
 console.log(`Prepared ${n} refined garden covers and the social card.`);

@@ -53,10 +53,10 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 		<meta name="color-scheme" content="light dark" />
 		<!-- 地址栏配色：无 JS 时用两条带 media 的 meta（HTML 规范允许 noscript 内含 meta）；
 		     有 JS 时由下方内联脚本把不带 media 的那条同步成「实际生效」的主题。 -->
-		<meta name="theme-color" content="#f6f3eb" />
+		<meta name="theme-color" content="#f7f6f2" />
 		<noscript>
-			<meta name="theme-color" content="#f6f3eb" media="(prefers-color-scheme: light)" />
-			<meta name="theme-color" content="#1a1a17" media="(prefers-color-scheme: dark)" />
+			<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)" />
+			<meta name="theme-color" content="#151a27" media="(prefers-color-scheme: dark)" />
 		</noscript>
 		<!-- 防闪白：必须是 head 内、解析期阻塞的内联脚本。
 		     Astro 里必须用 is:inline —— 普通 script 标签会被提升并打包成 module，失去阻塞语义。
@@ -78,7 +78,7 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 						return p;
 					} catch { return mq.matches ? 'dark' : 'light'; }
 				};
-				const LIGHT = '#f6f3eb', DARK = '#1a1a17';
+				const LIGHT = '#f7f6f2', DARK = '#151a27';
 				const LABELS = {
 					light: '主题：浅色（点击切换为深色）',
 					dark: '主题：深色（点击切换为浅色）',

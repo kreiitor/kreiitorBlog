@@ -16,32 +16,33 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>
 <style>
- .series-card { position: relative; display: flex; flex-direction: column; padding: 28px 28px 28px 34px; border-radius: 4px 12px 12px 4px; border-left: 5px solid var(--color-card-deco-1); background: var(--color-surface); transition: border-color var(--dur-fast) var(--ease-smooth),background-color var(--dur-fast) var(--ease-smooth); overflow: hidden; }
- .series-illustration { width: calc(100% + 62px); max-width: none; height: auto; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); margin: -28px -28px 24px -34px; border-bottom: 1px solid var(--color-line); transition: transform var(--dur-slower) var(--ease-out-expo); }
+ .series-card { position: relative; display: flex; flex-direction: column; padding: 24px 24px 24px 28px; border-radius: 3px 10px 10px 3px; border-left: 4px solid var(--color-card-deco-1); background: var(--color-surface); transition: border-color var(--dur-fast) var(--ease-smooth),background-color var(--dur-fast) var(--ease-smooth); overflow: hidden; }
+ .series-illustration { width: calc(100% + 52px); max-width: none; height: auto; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); margin: -24px -24px 22px -28px; border-bottom: 1px solid var(--color-line); transition: transform var(--dur-slower) var(--ease-out-expo); }
  .series-card:hover .series-illustration { transform: scale(1.03); }
  .series-card:hover { border-color: var(--color-line-strong); background: var(--color-surface-soft); }
- .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; row-gap: 18px; }
- .series-heading > div { grid-column: 1 / -1; grid-row: 2; }
- .series-emblem { grid-column: 1; grid-row: 1; }
+ .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; }
+ .series-heading > div { grid-column: 1; grid-row: 1; }
+ .series-card:not(.series-compact) .series-emblem { display: none; }
  .series-arrow { grid-column: 2; grid-row: 1; }
  .series-heading > div { min-width: 0; }
- .series-heading .eyebrow { font-size: var(--text-caption); letter-spacing: .08em; overflow-wrap: anywhere; }
+ .series-heading .eyebrow { font-size: 11px; letter-spacing: .06em; overflow-wrap: anywhere; }
  .series-heading h3 { margin-top: 9px; font-size: 25px; }
  .series-emblem { font-family: var(--font-editorial); font-size: 46px; color: var(--color-accent); line-height: 1; width: 58px; height: 58px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface-soft); font-size: 26px; font-style: normal; transition: border-color var(--dur-base) var(--ease-smooth),transform var(--dur-slow) var(--ease-out-expo); }
  .series-card:hover .series-emblem { border-color: var(--color-accent); transform: rotate(-6deg); }
- .series-arrow { margin-left: auto; align-self: start; color: var(--color-accent); transition: transform var(--dur-base) var(--ease-smooth); }
+ .series-arrow { margin-left: auto; align-self: start; color: var(--color-sage); transition: transform var(--dur-base) var(--ease-smooth); }
  .series-card:hover .series-arrow { transform: translateX(3px); }
  .series-heading h3 > span { display: block; }
  .series-heading .series-subtitle { margin-top: 4px; font-size: 20px; text-wrap: balance; }
  .series-description { color: var(--color-ink-soft); font-size: 14px; line-height: 1.9; margin: 20px 0; max-width: 65ch; }
  .series-bottom { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--color-line); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-size: 12px; color: var(--color-ink-soft); }
- .series-bottom > span:last-child { color: var(--color-accent-strong); }
+ .series-bottom > span:last-child { color: var(--color-sage); }
  @media (max-width: 600px) { .series-card { padding: 24px; } .series-illustration { width: calc(100% + 48px); margin: -24px -24px 22px; } .series-heading { gap: 14px; } .series-heading h3 { font-size: 22px; } }
  .series-compact { padding: 20px 22px; }
  .series-compact .series-heading { display: flex; align-items: center; gap: 14px; min-height: 50px; }
  .series-compact .series-heading > div { flex: 1; }
  .series-compact .series-heading .eyebrow,.series-compact .series-description { display: none; }
  .series-compact .series-emblem { width: 40px; height: 40px; font-size: 20px; }
+ .series-compact .series-emblem { display: grid; color: var(--color-sage); background: var(--color-sage-soft); border-color: var(--color-line); }
  .series-compact .series-heading h3 { margin-top: 0; font-size: 21px; }
  .series-compact .series-subtitle { font-size: 16px; }
  .series-compact .series-arrow { align-self: center; }

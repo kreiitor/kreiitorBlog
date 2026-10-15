@@ -1,4 +1,4 @@
-import { readdir, rename, writeFile } from 'node:fs/promises';
+import { readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import sharp from 'sharp';
 // Replace complete files so concurrent previews never read a half-written PNG.
 async function writeAsset(target, data) {
@@ -8,7 +8,16 @@ async function writeAsset(target, data) {
 }
 const sources = ['public/social-card.svg', ...(await readdir('public/covers')).filter(file => file.endsWith('.svg')).map(file => `public/covers/${file}`)];
 for (const source of sources) {
- const image = await sharp(source).resize(1200, 630, { fit: 'cover' }).png({ compressionLevel: 9 }).toBuffer();
+ // librsvg does not resolve SVG custom properties. Bake the light palette into
+ // sharing PNGs; browser SVGs retain their adaptive light/dark media query.
+ const svg = await readFile(source, 'utf8');
+ const declarations = svg.match(/<style>:root\{([^}]+)\}/)?.[1];
+ const colors = new Map((declarations ?? '').split(';').filter(Boolean).map(entry => entry.split(':')));
+ const staticSvg = svg.replace(/<style>[\s\S]*?<\/style>/g, '').replace(/var\((--cover-[\w-]+)\)/g, (_, name) => {
+  if (!colors.has(name)) throw new Error(`Missing light palette token ${name} in ${source}`);
+  return colors.get(name);
+ });
+ const image = await sharp(Buffer.from(staticSvg)).resize(1200, 630, { fit: 'cover' }).png({ compressionLevel: 9 }).toBuffer();
  await writeAsset(source.replace(/\.svg$/, '.png'), image);
 }
 console.log(`Prepared ${sources.length} sharing images at 1200×630.`);

@@ -50,11 +50,11 @@
  <figcaption><span>阅读 · 实验 · 写作</span><span>让问题带来新的问题。</span></figcaption>
 </figure>
 <style>
- .research-art { background: var(--color-surface-soft); border-radius: 8px 48px 8px 8px; padding: 22px 24px 18px; overflow: hidden; }
- .art-top { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .07em; color: var(--color-sage); }
+ .research-art { --color-surface: var(--color-hero-paper); --color-paper-warm: #dfe6fb; --color-ink: var(--color-hero-ink); --color-ink-muted: #4a5976; --color-line: #ccd3c0; --color-line-strong: var(--color-hero-line); --color-sage: #2448d8; --color-accent: #2448d8; background: var(--color-hero-panel); border-radius: 8px 48px 8px 8px; padding: 22px 24px 18px; overflow: hidden; }
+ .art-top { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .07em; color: #edf2ff; }
  svg { display: block; width: 100%; height: auto; margin-block: 6px; }
  .art-mobile-mark { display: none; }
- figcaption { display: flex; justify-content: space-between; gap: 12px; padding-top: 13px; border-top: 1px solid var(--color-line-strong); font-size: 12px; color: var(--color-sage); }
+ figcaption { display: flex; justify-content: space-between; gap: 12px; padding-top: 13px; border-top: 1px solid rgb(255 255 255 / .35); font-size: 12px; color: var(--color-highlight); }
  /* SVG colors inherit both the manual theme and the system preference. */
- @media (max-width: 700px) { .research-art { padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr) 112px; align-items: center; border-radius: 8px 30px 8px 8px; } .art-top { display: block; font-size: 11px; letter-spacing: .04em; } .art-top span:last-child { display: none; } svg { grid-column: 2; grid-row: 1 / 3; width: 132px; max-width: none; margin: 0 -10px; } .art-detail { display: none; } .art-mobile-mark { display: block; } figcaption { grid-column: 1; display: block; line-height: 1.9; border: 0; padding-top: 6px; } figcaption span { display: block; } }
+ @media (max-width: 700px) { .research-art { padding: 12px 18px; display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: center; border-radius: 8px 26px 8px 8px; } .art-top { display: block; font-size: 10px; letter-spacing: .04em; } .art-top span:last-child { display: none; } svg { grid-column: 2; grid-row: 1 / 3; width: 104px; max-width: none; margin: 0 -8px; } .art-detail { display: none; } .art-mobile-mark { display: block; } figcaption { grid-column: 1; display: block; font-size: 11px; line-height: 1.7; border: 0; padding-top: 4px; } figcaption span { display: block; } }
 </style>

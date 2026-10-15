@@ -2,6 +2,7 @@
 import { navLinks, siteConfig } from '../data/site';
 import { withBase } from '../utils/url';
 import Icon from './Icon.astro';
+import brandSvg from '../../public/logo.svg?raw';
 interface Props { currentPath: string; }
 const { currentPath } = Astro.props;
 const active = (href: string) => href === '/' ? currentPath === '/' : currentPath.startsWith(href);
@@ -9,7 +10,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
 <header class="site-header">
  <div class="page-shell header-inner">
   <a href={withBase('/')} class="brand" title="首页">
-   <span class="brand-mark" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 23V7.5" stroke="var(--color-ink)" stroke-width="1.7" stroke-linecap="round"/><path d="M15 15.2L10.3 19.4M15 15.2L19.7 11" stroke="var(--color-ink)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19.7" cy="11" r="1.9" fill="var(--color-accent)"/><circle cx="10.3" cy="19.4" r="1.15" fill="none" stroke="var(--color-sage)" stroke-width=".7"/></svg></span>
+   <span class="brand-mark" aria-hidden="true" set:html={brandSvg}/>
    <span class="brand-name">kreiitor<span class="brand-subtitle">研究札记<span class="brand-detail"> / FIELD NOTES</span></span></span>
    <span class="sr-only">，首页</span>
   </a>
@@ -82,6 +83,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
  .brand { display: flex; gap: 12px; align-items: center; }
  .brand-mark { display: flex; align-items: center; transition: transform .3s var(--ease-out-expo); }
+ .brand-mark :global(svg) { width: 36px; height: 36px; display: block; }
  .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.06); }
  .brand-name { font-size: 20px; font-weight: 600; letter-spacing: -.05em; line-height: 1.2; }
  .brand-subtitle { display: block; margin-top: 7px; font-size: var(--text-caption); font-weight: 400; letter-spacing: .08em; white-space: nowrap; }
@@ -107,7 +109,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .mobile-menu { display: none; }
  @media (max-width: 800px) {
   .header-inner { height: 74px; gap: 16px; }
-  .brand-name { font-size: 18px; } .brand-mark svg { width: 26px; height: 26px; }
+  .brand-name { font-size: 18px; } .brand-mark :global(svg) { width: 32px; height: 32px; }
   .brand-detail { display: none; }
   .desktop-nav,.header-search span,kbd,.header-github { display: none; }
   .header-search { padding: 10px; } .header-actions { gap: 8px; }
