@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { brandSymbol } from './brand-art.mjs';
 
-// Vector studies share ivory, cobalt and restrained citron accents.
+// Vector studies share warm paper, ultramarine and restrained vermilion accents.
 // The source drawing colors below are mapped to semantic light/dark tokens
 // at export, keeping illustration geometry independent of the site palette.
 // Header and drawing use separate safe areas so narrow cards retain breathing room.
@@ -210,13 +210,13 @@ let n = 0;
 // Embedded SVG media queries inherit the embedding element's color-scheme.
 // Manual theme switches and no-JS system preferences therefore share one asset.
 const coverColors = {
- '#f6f3eb': ['paper', '#edf0fb', '#202b45'],
- '#fbf9f3': ['surface', '#fffefa', '#2c3c60'],
- '#f0eee6': ['soft', '#f0f3cd', '#3d4c57'],
- '#87917c': ['line', '#a0aed4', '#8b9dc8'],
- '#33362e': ['ink', '#18243a', '#eff2fa'],
- '#55624b': ['sage', '#4963a5', '#c2cfeb'],
- '#9e5130': ['clay', '#2448d8', '#e5ee95'],
+ '#f6f3eb': ['paper', '#e9ecf8', '#242940'],
+ '#fbf9f3': ['surface', '#fffdf8', '#303854'],
+ '#f0eee6': ['soft', '#f6b18f', '#514047'],
+ '#87917c': ['line', '#9ca6c9', '#98a6d0'],
+ '#33362e': ['ink', '#232739', '#f3f1fb'],
+ '#55624b': ['sage', '#5969a4', '#c2caff'],
+ '#9e5130': ['clay', '#b8432c', '#f5aa84'],
 };
 const themeStyle = `<style>:root{${Object.values(coverColors).map(([name, light]) => `--cover-${name}:${light}`).join(';')}}@media(prefers-color-scheme:dark){:root{${Object.values(coverColors).map(([name, , dark]) => `--cover-${name}:${dark}`).join(';')}}}</style>`;
 for (const [name, { title, art }] of Object.entries(compositions)) {
@@ -225,6 +225,6 @@ for (const [name, { title, art }] of Object.entries(compositions)) {
  const themed = svg.replace(/#[0-9a-f]{6}/gi, color => coverColors[color] ? `var(--cover-${coverColors[color][0]})` : color).replace('</title>', `</title>${themeStyle}`);
  await writeFile(`public/covers/${name}.svg`, themed);
 }
-const socialCard = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f6f3eb"/><rect x="790" y="54" width="350" height="522" rx="16" fill="#f0eee6"/><text x="78" y="117" font-family="sans-serif" font-size="18" letter-spacing="3" fill="#9e5130">KREIITOR / FIELD NOTES</text><text x="74" y="275" font-family="Georgia,serif" font-size="76" fill="#33362e">Stay curious.</text><text x="74" y="372" font-family="Georgia,serif" font-size="76" font-style="italic" fill="#55624b">Let it grow.</text><text x="78" y="460" font-family="sans-serif" font-size="20" fill="#5b6154">AI for Software Engineering · Research · Learning</text><path d="M78 530h630" stroke="#d8d6c5"/><text x="78" y="567" font-family="sans-serif" font-size="15" fill="#5b6154">kreiitor.github.io/kreiitorBlog</text><g transform="rotate(-7 965 315)"><rect x="851" y="154" width="228" height="315" rx="5" fill="#fbf9f3" stroke="#a3a593"/><path d="M877 187h176M877 413h176" stroke="#d8d6c5"/><g transform="translate(917 244) scale(1.5)">${brandSymbol}</g><path d="M902 394c30 0 22-35 56-21s30-34 72-36" stroke="#9e5130" fill="none" stroke-width="2"/></g></svg>`;
-await writeFile('public/social-card.svg', socialCard.replace(/#[0-9a-f]{6}/gi, color => coverColors[color]?.[1] ?? ({'#d8d6c5':'#d9dde5','#a3a593':'#a0abc0','#5b6154':'#536076'}[color] ?? color)));
+const socialCard = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f6f3eb"/><rect x="790" y="54" width="350" height="522" rx="16" fill="#f0eee6"/><text x="78" y="117" font-family="sans-serif" font-size="18" letter-spacing="3" fill="#9e5130">KREIITOR / FIELD NOTES</text><text x="74" y="275" font-family="Georgia,serif" font-size="76" fill="#33362e">Read. Build.</text><text x="74" y="372" font-family="Georgia,serif" font-size="76" font-style="italic" fill="#55624b">Then verify.</text><text x="78" y="460" font-family="sans-serif" font-size="20" fill="#5b6154">AI for Software Engineering · Research · Learning</text><path d="M78 530h630" stroke="#d8d6c5"/><text x="78" y="567" font-family="sans-serif" font-size="15" fill="#5b6154">kreiitor.github.io/kreiitorBlog</text><g transform="rotate(-7 965 315)"><rect x="851" y="154" width="228" height="315" rx="5" fill="#fbf9f3" stroke="#a3a593"/><path d="M877 187h176M877 413h176" stroke="#d8d6c5"/><g transform="translate(917 244) scale(1.5)">${brandSymbol}</g><path d="M902 394c30 0 22-35 56-21s30-34 72-36" stroke="#9e5130" fill="none" stroke-width="2"/></g></svg>`;
+await writeFile('public/social-card.svg', socialCard.replace(/#[0-9a-f]{6}/gi, color => ({'#f6f3eb':'#f7f3eb','#d8d6c5':'#d8d9e6','#a3a593':'#9ca6c9','#5b6154':'#596176'}[color] ?? coverColors[color]?.[1] ?? color)));
 console.log(`Prepared ${n} refined garden covers and the social card.`);

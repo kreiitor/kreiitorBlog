@@ -30,7 +30,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
    </a>
    <details class="mobile-menu">
-    <summary aria-label="展开导航" aria-expanded="false"><Icon name="menu"/></summary>
+    <summary aria-label="展开导航"><Icon name="menu"/></summary>
     <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}<span aria-hidden="true">↗</span></a>)}<a href={withBase('/archive/')}>文章归档<span aria-hidden="true">↗</span></a></nav>
    </details>
   </div>
@@ -82,16 +82,20 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
     threshold shifts the whole document while the reader is scrolling. */
  .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
  .brand { display: flex; gap: 12px; align-items: center; }
- .brand-mark { display: flex; align-items: center; transition: transform .3s var(--ease-out-expo); }
+ .brand-mark { display: flex; align-items: center; transition: transform var(--dur-base) var(--ease-out-expo); }
  .brand-mark :global(svg) { width: 36px; height: 36px; display: block; }
- .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.06); }
+ .brand-mark :global(path) { fill: var(--color-accent); }
+ .brand-mark :global(.logo-index) { transition: transform var(--dur-base) var(--ease-out-expo); }
+ .brand:is(:hover,:focus-visible) .brand-mark { transform: translateY(-1px); }
+ .brand:is(:hover,:focus-visible) .brand-mark :global(.logo-index) { transform: translateX(1px); }
  .brand-name { font-size: 20px; font-weight: 600; letter-spacing: -.05em; line-height: 1.2; }
  .brand-subtitle { display: block; margin-top: 7px; font-size: var(--text-caption); font-weight: 400; letter-spacing: .08em; white-space: nowrap; }
  .desktop-nav { display: flex; gap: 34px; align-items: center; }
  .desktop-nav a { position: relative; padding: 32px 0; font-size: 13px; color: var(--color-ink-soft); transition: color .2s var(--ease-smooth); }
- .desktop-nav a:hover { color: var(--color-accent-strong); }
+ .desktop-nav a::after { content: ''; position: absolute; bottom: 22px; left: 0; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left center; transition: transform var(--dur-base) var(--ease-out-expo); }
+ .desktop-nav a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
+ .desktop-nav a:is(:hover,:focus-visible)::after,.desktop-nav a[aria-current]::after { transform: scaleX(1); }
  .desktop-nav a[aria-current] { color: var(--color-ink); font-weight: 500; }
- .desktop-nav a[aria-current]::after { content: ''; position: absolute; bottom: 22px; left: calc(50% - 2px); height: 4px; width: 4px; border-radius: 50%; background: var(--color-accent); }
  .header-actions { display: flex; align-items: center; gap: 20px; }
  .header-search { display: flex; min-height: 44px; gap: 10px; align-items: center; font-size: 12px; color: var(--color-ink-soft); padding: 8px 10px; margin: -8px -10px; border-radius: 6px; transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth); }
  .header-search:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
@@ -117,10 +121,10 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   .mobile-menu summary { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 10px; cursor: pointer; list-style: none; border-radius: 6px; transition: background-color .2s var(--ease-smooth); }
   .mobile-menu summary:hover { background: var(--color-accent-soft); }
   .mobile-menu summary::-webkit-details-marker { display: none; }
-  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; padding: 15px 24px 24px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
-  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; transition: color .2s var(--ease-smooth),padding-left .2s var(--ease-out-expo); }
-  .mobile-menu nav a:hover { color: var(--color-accent-strong); padding-left: 6px; }
-  .mobile-menu nav a[aria-current] { color: var(--color-accent); }
+  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 74px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
+  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; transition: color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
+  .mobile-menu nav a:is(:hover,:focus-visible) { color: var(--color-accent-strong); border-bottom-color: var(--color-accent); }
+  .mobile-menu nav a[aria-current] { color: var(--color-accent); border-bottom-color: var(--color-accent); }
  }
  @keyframes menuSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 </style>

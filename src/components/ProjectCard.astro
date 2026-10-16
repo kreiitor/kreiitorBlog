@@ -3,13 +3,13 @@ import type { ProjectEntry } from '../utils/content';
 import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
 import Icon from './Icon.astro';
-interface Props { project: ProjectEntry; }
-const { project } = Astro.props;
+interface Props { project: ProjectEntry; showcase?: boolean; }
+const { project, showcase = false } = Astro.props;
 const href = withBase(`/projects/${project.id}/`);
 const cover = project.data.cover ?? '/covers/project-benchmark.svg';
 const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
 ---
-<article class="zen-card project-card">
+<article class:list={['zen-card','project-card',{'project-showcase':showcase}]}>
  <a href={href} class="project-image" tabindex="-1" aria-hidden="true">{studyCover ? <svg viewBox="190 100 440 240" width="440" height="240" aria-hidden="true"><image href={withBase(cover)} width="800" height="420"/></svg> : <img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/>}</a>
  <div class="card-content">
   <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
@@ -32,4 +32,17 @@ const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
  .project-status.is-planned { color: var(--color-ink-muted); }
  @media (hover: hover) { .project-card:hover { translate: 0 0; } .project-card:hover .project-image :is(img,svg) { translate: 2px 0; } }
  @media (max-width: 600px) { .project-card { grid-template-columns: 88px minmax(0,1fr); } .project-card .card-content { padding: 18px; } .project-card h3 { font-size: 19px; } .project-card .card-description { -webkit-line-clamp: 4; } }
+ .project-showcase { display: flex; flex-direction: column; border-radius: 4px; }
+ .project-showcase .project-image { height: 180px; flex: 0 0 180px; border-right: 0; border-bottom: 1px solid var(--color-line); background: var(--color-sage-soft); }
+ .project-showcase .project-image :is(img,svg) { width: min(100%,330px); height: 180px; object-fit: contain; }
+ .project-showcase .card-content { flex: 1; gap: 14px; padding: 26px 28px; }
+ .project-showcase h3 { font-size: 24px; line-height: 1.45; }
+ .project-showcase .card-description { -webkit-line-clamp: 3; line-height: 1.85; }
+ .project-showcase .card-bottom { padding-top: 12px; }
+ .project-showcase .project-status:not(.is-complete):not(.is-planned) { color: var(--color-counterpoint-ink,var(--color-accent-strong)); }
+ @media (max-width: 600px) {
+  .project-showcase .card-content { padding: 22px; }
+  .project-showcase h3 { font-size: 22px; }
+  .project-showcase .card-description { -webkit-line-clamp: 4; }
+ }
 </style>

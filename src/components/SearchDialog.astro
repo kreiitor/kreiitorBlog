@@ -22,7 +22,7 @@ import { withBase } from '../utils/url';
  dialog?.addEventListener('close',()=>{ document.documentElement.classList.remove('search-is-open'); trigger?.focus({preventScroll:true}); });
  dialog?.addEventListener('click',event=>{ if(event.target!==dialog)return; const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close(); });
  dialog?.querySelector('[data-full-search]')?.addEventListener('click',event=>{
-  const link=event.currentTarget as HTMLAnchorElement; const url=new URL(link.href); const query=dialog.querySelector<HTMLInputElement>('[data-search-input]')?.value.trim(); if(query)url.searchParams.set('q',query); link.href=url.href;
+  const link=event.currentTarget as HTMLAnchorElement; const url=new URL(link.href); const query=dialog.querySelector<HTMLInputElement>('[data-search-input]')?.value.trim(); if(query)url.searchParams.set('q',query); else url.searchParams.delete('q'); link.href=url.href;
  });
 </script>
 <style is:global>

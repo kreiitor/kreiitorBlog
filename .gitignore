@@ -28,3 +28,4 @@ pnpm-debug.log*
 _site-research/
 test-results/
 playwright-report/
+.playwright-cli/
