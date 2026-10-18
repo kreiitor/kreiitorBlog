@@ -8,12 +8,12 @@ const projects = getProjects(await getCollection('projects'));
 <BaseLayout title="研究项目" description="论文复现、评测基准与实验工作台。">
  <div data-pagefind-ignore>
   <section class="page-shell page-intro"><p class="eyebrow">RESEARCH & PRACTICE / SELECTED PROJECTS</p><h1>从想法，到实践。</h1><p>用实验检验判断，用工具沉淀方法。<br/>这里记录论文复现、评测基准和持续迭代的研究工作台。</p></section>
-  <section class="page-shell mt-10"><div class="projects-grid">{projects.map(project => <ProjectCard project={project}/>)}</div><p class="project-note"><span aria-hidden="true">↳</span> 项目不必一步到位。每次复现、每份实验记录，都是下一次探索的起点。</p></section>
+  <section class="page-shell mt-10"><div class="projects-grid">{projects.map(project => <ProjectCard headingLevel="h2" project={project}/>)}</div><p class="project-note"><span aria-hidden="true">↳</span> 项目不必一步到位。每次复现、每份实验记录，都是下一次探索的起点。</p></section>
  </div>
 </BaseLayout>
 <style>
  .projects-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
- .project-note { margin-top: 35px; font-size: 12px; color: var(--color-ink-soft); }
+ .project-note { margin-top: 24px; padding: 18px 20px; border-left: 3px solid var(--color-card-deco-1); background: var(--color-paper-warm); font-size: 14px; color: var(--color-ink-soft); }
  .project-note span { font-size: 20px; margin-right: 8px; color: var(--color-accent); }
  @media (max-width: 900px) { .projects-grid { grid-template-columns: 1fr; } }
 </style>

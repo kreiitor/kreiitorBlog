@@ -1,82 +1,98 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { withBase } from '../utils/url';
-
 const photos = [
-	{ file: '两只小猫.jpg', title: '两只小猫', width: 1600, height: 1200 },
-	{ file: '第一顿饭.jpg', title: '第一顿饭', width: 1600, height: 1200 },
-	{ file: '恩施屏山峡谷.jpg', title: '恩施屏山峡谷', width: 1205, height: 1600 },
-	{ file: '抽象车流.jpg', title: '抽象车流', width: 1600, height: 1205 },
-	{ file: '官宣图.jpg', title: '官宣图', width: 1200, height: 1600 },
+ { file: '两只小猫.jpg', title: '两只小猫', width: 1600, height: 1200 },
+ { file: '第一顿饭.jpg', title: '第一顿饭', width: 1600, height: 1200 },
+ { file: '恩施屏山峡谷.jpg', title: '恩施屏山峡谷', width: 1205, height: 1600 },
+ { file: '抽象车流.jpg', title: '抽象车流', width: 1600, height: 1205 },
+ { file: '官宣图.jpg', title: '官宣图', width: 1200, height: 1600 },
+ { file: '碰杯.jpg', title: '碰杯', width: 1003, height: 1600 },
 ];
 ---
 <BaseLayout title="有意义的图" description="一些值得留下的瞬间。">
  <div data-pagefind-ignore>
   <section class="page-shell gallery-head">
-   <p class="eyebrow">KEEPSAKES / 有意义的图</p>
-   <h1>一些有意义的图。</h1>
-   <p class="gallery-lede">有些瞬间无需展开成文，也值得好好收藏。</p>
+   <div><p class="eyebrow">生活的切片</p><h1>一些有意义的图。</h1></div>
+   <p>有些瞬间无需展开成文，<br/>也值得好好收藏。<span>点击照片，放大看看。</span></p>
   </section>
-  <section class="page-shell gallery-grid">
-   {photos.map((p, i) => (
-    <figure class:list={['photo-card', { 'photo-wide': i === 2 }]}>
-     <div class="photo-frame">
-      <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async"/>
-     </div>
-     <figcaption><span class="photo-no">0{i + 1}</span>{p.title}</figcaption>
-    </figure>
-   ))}
+  <section class="page-shell gallery-grid" aria-label="照片集">
+   {photos.map(p => <figure class="photo-card">
+    <a class="photo-frame" href={withBase(`/gallery/${p.file}`)} data-photo aria-label={`放大查看：${p.title}`}>
+     <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async"/>
+    </a><figcaption>{p.title}</figcaption>
+   </figure>)}
   </section>
  </div>
+ <dialog class="photo-dialog" data-photo-dialog aria-labelledby="photo-caption">
+  <div class="photo-toolbar"><p id="photo-caption"></p><button type="button" data-photo-close aria-label="关闭大图">关闭 ×</button></div>
+  <div class="photo-stage"><img data-photo-large alt=""/></div>
+  <div class="photo-controls"><button type="button" data-photo-previous>← 上一张</button><span data-photo-position></span><button type="button" data-photo-next>下一张 →</button></div>
+ </dialog>
 </BaseLayout>
+<script>
+ const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
+ const photos = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-photo]'));
+ const image = dialog?.querySelector<HTMLImageElement>('[data-photo-large]');
+ const caption = dialog?.querySelector<HTMLElement>('#photo-caption');
+ const position = dialog?.querySelector<HTMLElement>('[data-photo-position]');
+ let current = 0;
+ let trigger: HTMLAnchorElement | undefined;
+ function show(index: number) {
+  current = (index + photos.length) % photos.length;
+  const photo = photos[current].querySelector('img');
+  if (!image || !photo) return;
+  image.src = photos[current].href; image.alt = photo.alt;
+  if (caption) caption.textContent = photo.alt;
+  if (position) position.textContent = `${current + 1} / ${photos.length}`;
+ }
+ photos.forEach((link,index) => link.addEventListener('click',event => {
+  if (!dialog || !image || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault(); trigger = link; show(index); dialog.showModal();
+  document.documentElement.classList.add('photo-is-open');
+ }));
+ dialog?.querySelector('[data-photo-close]')?.addEventListener('click',()=>dialog.close());
+ dialog?.querySelector('[data-photo-previous]')?.addEventListener('click',()=>show(current-1));
+ dialog?.querySelector('[data-photo-next]')?.addEventListener('click',()=>show(current+1));
+ dialog?.addEventListener('keydown',event=>{
+  if(event.key==='ArrowLeft'){event.preventDefault();show(current-1);}
+  if(event.key==='ArrowRight'){event.preventDefault();show(current+1);}
+ });
+ dialog?.addEventListener('click',event=>{
+  if(event.target!==dialog)return;
+  const r=dialog.getBoundingClientRect();
+  if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();
+ });
+ dialog?.addEventListener('close',()=>{document.documentElement.classList.remove('photo-is-open');trigger?.focus({preventScroll:true});});
+</script>
 <style>
- .gallery-head { padding-bottom: 8px; }
- .gallery-head h1 { margin: 14px 0 10px; }
- .gallery-lede { color: var(--color-ink-soft); font-size: 14px; }
- .gallery-grid {
-  margin-top: 40px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
- }
- .photo-wide { grid-column: 1 / -1; }
- .photo-card { margin: 0; }
- .photo-frame {
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  padding: 10px;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-whisper);
-  transition: box-shadow var(--dur-base) var(--ease-smooth), transform var(--dur-slow) var(--ease-out-expo), border-color var(--dur-fast) var(--ease-smooth);
- }
- .photo-card:hover .photo-frame {
-  border-color: var(--color-line-strong);
-  box-shadow: var(--shadow-lift);
-  transform: translateY(-4px);
- }
- .photo-frame img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 6px;
- }
- .photo-wide .photo-frame img { max-height: 78vh; object-fit: contain; width: auto; max-width: 100%; margin: 0 auto; }
- figcaption {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 0 4px;
-  font-size: 14px;
-  color: var(--color-ink);
- }
- .photo-no {
-  font-family: var(--font-editorial);
-  font-style: italic;
-  font-size: 12px;
-  color: var(--color-accent);
- }
+ .gallery-head { display: flex; justify-content: space-between; align-items: end; gap: 32px; padding-block: 56px 32px; }
+ .gallery-head h1 { margin-top: 12px; font-size: clamp(32px,4vw,48px); }
+ .gallery-head > p { color: var(--color-ink-soft); font-size: 14px; line-height: 1.9; }
+ .gallery-head > p span { display: block; margin-top: 10px; font-size: 13px; }
+ .gallery-grid { columns: 2; column-gap: 32px; }
+ .photo-card { break-inside: avoid; margin-bottom: 32px; }
+ .photo-frame { display: block; padding: 8px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; cursor: zoom-in; }
+ .photo-frame:hover { border-color: var(--color-line-strong); }
+ .photo-frame img { width: 100%; height: auto; display: block; border-radius: 4px; }
+ figcaption { padding: 12px 2px 0; color: var(--color-ink-soft); font-size: 14px; }
+ :global(html.photo-is-open) { overflow: hidden; }
+ .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-line-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-ink); }
+ .photo-dialog[open] { display: flex; flex-direction: column; }
+ .photo-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
+ .photo-toolbar,.photo-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; font-size: 14px; }
+ .photo-toolbar { padding-bottom: 8px; }
+ .photo-controls { padding-top: 8px; }
+ .photo-controls span { color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+ .photo-dialog button { min-height: 44px; padding: 8px 12px; border-radius: 6px; }
+ .photo-dialog button:hover { background: var(--color-accent-soft); }
+ .photo-stage { min-height: 0; display: flex; justify-content: center; }
+ .photo-stage img { max-width: 100%; max-height: calc(94dvh - 144px); width: auto; height: auto; object-fit: contain; }
  @media (max-width: 640px) {
-  .gallery-grid { grid-template-columns: 1fr; gap: 22px; }
+  .gallery-head { display: block; padding-top: 36px; }
+  .gallery-head > p { margin-top: 16px; }
+  .gallery-grid { columns: 1; }
+  .photo-card { margin-bottom: 24px; }
+  .photo-dialog { padding-inline: 10px; }
  }
 </style>

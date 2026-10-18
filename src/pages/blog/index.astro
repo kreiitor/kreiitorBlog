@@ -15,8 +15,8 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
  <div data-pagefind-ignore>
   <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>从一篇札记开始，也可以沿着一条学习路径读下去。</p></section>
   <section class="page-shell blog-content">
-   <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? posts.length : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 ↗</a></div>
-   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">LEARNING PATHS</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true">＋</span></summary><div class="series-grid">{series.map(group => <SeriesCard series={group} compact/>)}</div></details>
+   <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? posts.length : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 →</a></div>
+   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">LEARNING PATHS</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true">⌄</span></summary><div class="series-grid">{series.map(group => <SeriesCard headingLevel="h2" series={group} compact/>)}</div></details>
    <p class="filter-status" data-filter-status aria-live="polite">{posts.filter(post => !post.data.series).length} 篇独立札记 · 系列章节可从上方专题阅读</p>
    <PostList posts={posts} interactive/>
    <nav class="list-pagination" data-list-pagination aria-label="文章列表翻页"><button type="button" class="zen-btn zen-btn-secondary" data-list-previous disabled>← 上一页</button><span data-list-page>1 / 2</span><button type="button" class="zen-btn zen-btn-secondary" data-list-next>下一页 →</button></nav>
@@ -77,13 +77,13 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
  .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-line); background: var(--color-accent-soft); }
  .filter-tabs span { font-size: 12px; }
  .blog-series { margin-top: 24px; padding: 16px 0; border-block: 1px solid var(--color-line); }
- .blog-series summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; list-style: none; min-height: 44px; }
+ .blog-series summary { display: flex; align-items: center; justify-content: flex-start; gap: 16px; cursor: pointer; list-style: none; min-height: 44px; }
  .blog-series summary::-webkit-details-marker { display: none; }
  .blog-series summary > span:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
  .blog-series summary .eyebrow { font-size: 11px; }
  .series-summary-title { font-size: 14px; color: var(--color-ink); }
  .series-disclosure { color: var(--color-sage); font-size: 22px; transition: transform var(--dur-base) var(--ease-smooth); }
- .blog-series[open] .series-disclosure { transform: rotate(45deg); }
+ .blog-series[open] .series-disclosure { transform: rotate(180deg); }
  .blog-series .series-grid { margin-top: 18px; }
  .filter-status { font-size: 12px; color: var(--color-ink-soft); margin: 24px 0 8px; }
  .list-pagination { display: flex; justify-content: center; align-items: center; gap: 24px; padding-top: 32px; font-size: 12px; }
@@ -92,8 +92,8 @@ const categories = [{ key:'all', label:'全部札记' },{ key:'writing', label:'
   .blog-content { padding-top: 18px; }
   .blog-toolbar { display: block; }
   .blog-toolbar > a { display: none; }
-  .filter-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
-  .filter-tabs button { justify-content: space-between; padding-inline: 12px; border-color: var(--color-line); }
+  .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filter-tabs button { justify-content: flex-start; gap: 8px; padding-inline: 12px; border-color: var(--color-line); }
   .blog-series { margin-top: 18px; padding-block: 8px; }
   .blog-series summary > span:first-child { gap: 4px 12px; }
   .blog-series summary .eyebrow { font-size: 10px; }

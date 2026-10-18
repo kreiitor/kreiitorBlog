@@ -70,5 +70,10 @@
  @media (hover: hover) and (prefers-reduced-motion: no-preference) { .research-art:hover .art-layer-note { translate: 3px -3px; rotate: 1deg; } .research-art:hover .art-layer-paper { translate: 0 -3px; } .research-art:hover .art-layer-badges { translate: -2px 1px; } }
  @media (prefers-reduced-motion: reduce) { .art-layer,.art-orbit,.art-route { animation: none; translate: none; rotate: none; } }
  /* SVG colors inherit both the manual theme and the system preference. */
- @media (max-width: 700px) { .research-art { padding: 12px 18px; display: grid; grid-template-columns: minmax(0, 1fr) 72px; align-items: center; border-radius: 4px; } .art-top { display: block; font-size: 10px; letter-spacing: .04em; } .art-top span:last-child { display: none; } svg { grid-column: 2; grid-row: 1 / 3; width: 88px; max-width: none; margin: 0 -8px; } .art-detail { display: none; } .art-mobile-mark { display: block; } figcaption { grid-column: 1; display: block; font-size: 11px; line-height: 1.7; border: 0; padding-top: 4px; } figcaption span { display: block; } }
+ /* On small screens the notebook becomes a readable caption, not a cropped miniature. */
+ @media (max-width: 900px) {
+  .research-art { padding: 16px 20px; border-left: 3px solid var(--color-counterpoint); box-shadow: none; }
+  .art-top,svg { display: none; }
+  figcaption { display: flex; flex-wrap: wrap; gap: 4px 20px; border: 0; padding: 0; font-size: 13px; line-height: 1.8; }
+ }
 </style>

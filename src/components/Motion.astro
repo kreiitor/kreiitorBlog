@@ -28,7 +28,7 @@ import Icon from './Icon.astro';
     topLink.tabIndex = visible ? 0 : -1;
    }
   }
-  if (art) art.style.translate = preference.matches || innerWidth < 700 ? '0 0' : `0 ${-Math.min(10,y*.03)}px`;
+  if (art) art.style.translate = preference.matches || innerWidth <= 900 ? '0 0' : `0 ${-Math.min(10,y*.03)}px`;
  }
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
  window.addEventListener('scroll',schedule,{passive:true});

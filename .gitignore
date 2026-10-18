@@ -29,3 +29,5 @@ _site-research/
 test-results/
 playwright-report/
 .playwright-cli/
+
+output/playwright/

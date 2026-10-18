@@ -5,8 +5,8 @@ test('Quick search stays on the article, supports keyboard selection and restore
  const trigger=page.locator('[data-search-link]');await trigger.focus();await trigger.press('ControlOrMeta+k');
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  const input=dialog.getByRole('searchbox');await expect(input).toBeFocused();await input.fill('线性模型');
- await expect(dialog.locator('.search-result h2 a').first()).toHaveText('线性模型：从最小二乘到 Lasso');
- await input.press('ArrowDown');await expect(dialog.locator('.search-result h2 a').first()).toBeFocused();
+ await expect(dialog.locator('.search-result a').first()).toHaveText('线性模型：从最小二乘到 Lasso');
+ await input.press('ArrowDown');await expect(dialog.locator('.search-result a').first()).toBeFocused();
  await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(trigger).toBeFocused();
  await expect(page).toHaveURL(/uv-package-manager-guide\/$/);
  await trigger.click();await expect(input).toHaveValue('线性模型');

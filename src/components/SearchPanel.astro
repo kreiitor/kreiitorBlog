@@ -1,8 +1,14 @@
 ---
+import { getCollection } from 'astro:content';
+import { getPublishedPosts, getTagSummaries } from '../utils/content';
+import { withBase } from '../utils/url';
 interface Props { title?: string; description?: string; modal?: boolean; }
 const { title='寻找一条线索。', description='从标题、摘要与正文中，找到你想读的内容。', modal=false } = Astro.props;
 const queryId = modal ? 'quick-query' : 'journal-query';
 const resultId = modal ? 'quick-results' : 'search-results';
+const posts = modal ? [] : await getCollection('posts');
+const recent = getPublishedPosts(posts).slice(0,3);
+const topics = getTagSummaries(posts,[]).slice(0,6);
 ---
 <section class="search-panel">
  <p class="eyebrow">寻找线索</p>{modal ? <h2 id="quick-search-title">{title}</h2> : <h1>{title}</h1>}<p class="search-description">{description}</p>
@@ -13,11 +19,15 @@ const resultId = modal ? 'quick-results' : 'search-results';
   <button type="button" data-search-retry class="text-link" hidden>重试搜索 →</button>
   <div data-search-results class="search-results" id={resultId}></div>
   <button type="button" data-search-more class="zen-btn zen-btn-secondary more-results" hidden>查看更多结果 ↓</button>
+  {!modal && <div class="search-discovery" data-search-discovery>
+   <section><h2>最近更新</h2>{recent.map(post => <a class="discovery-post" href={withBase(`/blog/${post.id}/`)}>{post.data.title}<span aria-hidden="true">→</span></a>)}</section>
+   <section><h2>常写的话题</h2><div class="discovery-topics">{topics.map(topic => <a class="zen-tag" href={withBase(`/tags/${encodeURIComponent(topic.tag)}/`)}>{topic.tag}</a>)}</div></section>
+  </div>}
  </div>
 </section>
 <script>
- import { rankSearchEntries, titleMatchScore } from '../utils/search.mjs';
- interface Entry { slug:string; title:string; description:string; type:string; url:string; }
+ import { rankSearchEntries, searchEntryScore } from '../utils/search.mjs';
+ interface Entry { slug:string; title:string; description:string; type:string; url:string; content?:string; }
  const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
  let enginePromise:Promise<any> | undefined, catalogPromise:Promise<Entry[]> | undefined;
  document.querySelectorAll<HTMLElement>('[data-search-root]').forEach(root => {
@@ -28,6 +38,7 @@ const resultId = modal ? 'quick-results' : 'search-results';
  const results = root?.querySelector<HTMLElement>('[data-search-results]');
  const more = root?.querySelector<HTMLButtonElement>('[data-search-more]');
  const retry = root.querySelector<HTMLButtonElement>('[data-search-retry]');
+ const discovery = root.querySelector<HTMLElement>('[data-search-discovery]');
  let generation = 0, timer:ReturnType<typeof setTimeout>, query = '', limit = 12, cursor = 0;
  let hits:any[] = [], entries = new Map<string,Entry>(), catalog = new Map<string,Entry>();
  let loadingMore = false;
@@ -45,7 +56,7 @@ const resultId = modal ? 'quick-results' : 'search-results';
   for (const item of ranked.slice(0,limit)) {
    const article = document.createElement('article'); article.className = 'search-result';
    const type = document.createElement('p'); type.className = 'eyebrow'; type.textContent = item.type;
-   const heading = document.createElement('h2'); const link = document.createElement('a'); link.href = item.url; highlight(link,item.title,query); heading.append(link);
+   const heading = document.createElement(modal ? 'h3' : 'h2'); const link = document.createElement('a'); link.href = item.url; highlight(link,item.title,query); heading.append(link);
    const summary = document.createElement('p'); summary.textContent = item.description;
    article.append(type,heading,summary); fragment.append(article);
   }
@@ -53,7 +64,7 @@ const resultId = modal ? 'quick-results' : 'search-results';
   results.removeAttribute('aria-busy');
   more.hidden = ranked.length <= limit && cursor >= hits.length;
   more.disabled = false;
-  setStatus(ranked.length ? `已找到 ${ranked.length} 条结果${cursor < hits.length ? '，可继续查看更多' : ''} · 显示 ${Math.min(limit,ranked.length)} 条。` : '没有找到匹配内容，试试换一个关键词。');
+  setStatus(ranked.length ? (cursor < hits.length ? `已显示 ${Math.min(limit,ranked.length)} 条匹配结果，可加载更多。` : `找到 ${ranked.length} 条结果，显示 ${Math.min(limit,ranked.length)} 条。`) : '没有找到匹配内容，试试换一个关键词。');
  }
  async function collect(request:number) {
   while (entries.size < limit && cursor < hits.length) {
@@ -65,13 +76,15 @@ const resultId = modal ? 'quick-results' : 'search-results';
     const slug = item.meta?.slug;
     const known = catalog.get(slug);
     if (!known || entries.has(slug)) continue;
-    entries.set(slug,{ ...known, url:item.url || known.url });
+    const candidate = { ...known, content:item.content, url:item.url || known.url };
+    if (searchEntryScore(candidate, query) > 0) entries.set(slug,candidate);
    }
   }
  }
  async function runSearch(value:string) {
   const request = ++generation;
   query = value.trim(); limit = 12; cursor = 0; hits = []; entries = new Map();
+  if (discovery) discovery.hidden = query.length >= 2;
   try { sessionStorage.setItem('garden-search-query', query); } catch {}
   if (!modal) { const url = new URL(location.href); if (query) url.searchParams.set('q',query); else url.searchParams.delete('q'); url.searchParams.delete('focus'); history.replaceState(null,'',url); }
   if (retry) retry.hidden = true;
@@ -84,7 +97,7 @@ const resultId = modal ? 'quick-results' : 'search-results';
    const response = await engine.search(query);
    if (request !== generation) return;
    catalog = new Map(data.map((entry:Entry) => [entry.slug,entry]));
-   entries = new Map(data.filter((entry:Entry) => titleMatchScore(entry.title,query) > 0).map((entry:Entry) => [entry.slug,entry]));
+   entries = new Map(data.filter((entry:Entry) => searchEntryScore(entry,query) > 0).map((entry:Entry) => [entry.slug,entry]));
    hits = response?.results ?? [];
    await collect(request);
    if (request === generation) renderResults();
@@ -108,7 +121,7 @@ const resultId = modal ? 'quick-results' : 'search-results';
   root?.addEventListener('keydown',event => {
    if (event.key === 'Escape' && !modal) { event.preventDefault(); clearTimeout(timer); input.value = ''; runSearch(''); input.focus(); }
    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-    const links = Array.from(results?.querySelectorAll<HTMLAnchorElement>('h2 a') ?? []);
+    const links = Array.from(results?.querySelectorAll<HTMLAnchorElement>('.search-result a') ?? []);
     if (!links.length) return;
     event.preventDefault(); const index = links.indexOf(document.activeElement as HTMLAnchorElement);
     const target = event.key === 'ArrowDown' ? (index + 1) % links.length : (index < 0 ? links.length - 1 : (index - 1 + links.length) % links.length);
@@ -129,13 +142,19 @@ const resultId = modal ? 'quick-results' : 'search-results';
  .search-form { display: flex; gap: 10px; margin-top: 30px; } .search-form button { flex-shrink: 0; }
  .search-form input { font-size: 16px; }
  .search-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--color-ink-soft); }
- .search-suggestions button { min-height: 36px; border: 1px solid var(--color-line); border-radius: 4px; padding: 5px 10px; }
+ .search-suggestions button { min-height: 44px; border: 1px solid var(--color-line); border-radius: 4px; padding: 5px 10px; }
  .search-suggestions button:hover { background: var(--color-accent-soft); }
  .search-status { border-top: 1px solid var(--color-line); margin-top: 28px; padding-top: 20px; font-size: 13px; color: var(--color-ink-soft); }
  .search-result { padding: 24px 0; border-bottom: 1px solid var(--color-line); }
- .search-result h2 { margin-top: 8px; font-size: 21px; line-height: 1.8; }
+ .search-result :is(h2,h3) { margin-top: 8px; font-size: 21px; line-height: 1.8; }
  .search-result > p:last-child { color: var(--color-ink-soft); font-size: 14px; line-height: 1.9; margin-top: 10px; }
  .search-result mark { color: var(--color-accent-strong); background: var(--color-accent-soft); border-radius: 2px; padding-inline: 2px; }
  .more-results { margin-top: 28px; }
- @media (max-width: 600px) { .search-form button { padding-inline: 14px; } .search-result h2 { font-size: 20px; } }
+ .search-discovery { display: grid; gap: 28px; margin-top: 28px; }
+ .search-discovery h2 { font-family: var(--font-sans); font-size: 14px; margin-bottom: 8px; }
+ .discovery-post { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--color-line); font-size: 14px; }
+ .discovery-post:hover { color: var(--color-accent); }
+ .discovery-post span { color: var(--color-accent); }
+ .discovery-topics { display: flex; flex-wrap: wrap; gap: 8px; }
+ @media (max-width: 600px) { .search-form button { padding-inline: 14px; } .search-result :is(h2,h3) { font-size: 20px; } }
 </style>

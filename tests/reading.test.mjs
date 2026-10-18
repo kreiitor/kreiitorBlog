@@ -38,3 +38,16 @@ test('Exact Chinese title matches outrank broad full-text hits without losing C+
  assert.equal(titleMatchScore('从代码出发','C++'),0);
  assert.equal(titleMatchScore('AI Infra：系统设计','ai infra'),3);
 });
+
+test('Search rejects normalized false positives and retains summary and body-only matches',()=>{
+ const rows=[
+  {title:'优化误差',description:'梯度下降',content:'对任意 ZZZ，有如下结论'},
+  {title:'矩阵分析',description:'分解方法',content:'Courant Fischer theorem'},
+  {title:'阅读记录',description:'论文阅读与复盘'},
+ ];
+ assert.deepEqual(rankSearchEntries(rows,'zzzzzzzz'),[]);
+ assert.deepEqual(rankSearchEntries(rows,'Fischer'),[rows[1]]);
+ assert.deepEqual(rankSearchEntries(rows,'论文阅读'),[rows[2]]);
+ assert.deepEqual(rankSearchEntries(rows,'Courant Fischer'),[rows[1]]);
+ assert.deepEqual(rankSearchEntries(rows,' '),[]);
+});

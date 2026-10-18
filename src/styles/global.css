@@ -23,7 +23,7 @@
  --color-sage: #48578a; --color-sage-soft: #e9ecf8;
  --color-counterpoint: #e65d3b; --color-counterpoint-ink: #a63b25;
  --color-highlight: #f6b18f; --color-highlight-soft: #f8e5d9; --color-on-highlight: #482a24;
- --color-hero-panel: #293ccb; --color-hero-paper: #ffdfb2; --color-hero-ink: #232739; --color-hero-line: #a6b0ee;
+ --color-hero-panel: #2a3f70; --color-hero-paper: #ffdfb2; --color-hero-ink: #232739; --color-hero-line: #a6b0ee;
  --color-primary: #293ccb; --color-primary-strong: #1d2d9c; --color-on-primary: #fffdf8;
  --shadow-whisper: 0 2px 8px #35382f04; --shadow-soft: 0 10px 28px #35382f0a; --shadow-lift: 0 14px 34px #35382f14;
 
@@ -76,6 +76,7 @@
  html { background: var(--color-paper); scroll-padding-top: 110px; -webkit-font-smoothing: antialiased; }
  body { min-width: 0; color: var(--color-ink); font-family: var(--font-sans); font-size: var(--text-body); line-height: 1.75; font-optical-sizing: auto; }
  h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.5; text-wrap: pretty; line-break: strict; overflow-wrap: anywhere; }
+ h1 { font-size: clamp(32px,2rem + 1vw,48px); font-weight: 600; }
  h2,h3,h4 { font-family: var(--font-title); font-weight: 600; }
  a { color: inherit; text-decoration: none; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
  button,input { font: inherit; } button { cursor: pointer; } img { max-width: 100%; }
@@ -102,17 +103,18 @@
  .zen-btn-secondary:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
  .zen-btn-ghost { color: var(--color-ink-soft); padding-inline: 0; }
  .zen-btn-ghost:hover { color: var(--color-accent-strong); }
- .zen-tag { display: inline-flex; align-items: center; gap: var(--space-2xs); border: 1px solid var(--color-line); border-radius: 20px; padding: 4px 10px; font-size: var(--text-caption); color: var(--color-ink-soft); background: var(--color-paper); }
+ .zen-tag { display: inline-flex; align-items: center; min-height: 32px; gap: var(--space-2xs); border: 1px solid var(--color-line); border-radius: 20px; padding: 4px 10px; font-size: var(--text-caption); color: var(--color-ink-soft); background: var(--color-paper); }
  .zen-tag:hover { color: var(--color-accent-strong); border-color: var(--color-accent); background: var(--color-accent-soft); }
  .zen-input { width: 100%; min-width: 0; min-height: 48px; padding: 11px var(--space-s); border: 1px solid var(--color-control-line); border-radius: 6px; background: var(--color-paper); color: var(--color-ink); transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-base) var(--ease-smooth); }
  .zen-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
  .section-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--space-m); }
- .section-heading { display: flex; justify-content: space-between; align-items: end; gap: var(--space-m); padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
+ .section-heading { display: flex; justify-content: space-between; align-items: start; gap: var(--space-m); padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
+ .section-heading:has(.eyebrow) > .text-link { margin-top: 24px; }
  .section-heading > div { min-width: 0; }
  .section-heading h2 { font-size: 28px; line-height: 1.5; text-wrap: balance; }
  .section-heading .eyebrow + h2 { margin-top: var(--space-2xs); }
  .section-heading .section-description { margin-top: var(--space-2xs); font-size: var(--text-body); color: var(--color-ink-soft); }
- .text-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 32px; font-size: var(--text-caption); white-space: nowrap; }
+ .text-link { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 44px; font-size: var(--text-caption); white-space: nowrap; }
  .text-link:hover { color: var(--color-accent); }
  .editorial-section { margin-top: 64px; }
  .editorial-section .section-grid { margin-top: 28px; }
@@ -131,7 +133,7 @@
  .card-content h3 a:hover { color: var(--color-accent); background-size: 100% 1px; }
  .card-description { font-size: var(--text-body); line-height: 1.85; color: var(--color-ink-soft); }
  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: var(--space-2xs); }
- .card-arrow { display: grid; place-items: center; min-width: 40px; min-height: 40px; border: 1px solid var(--color-line); border-radius: 50%; font-size: 20px; color: var(--color-accent); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),border-color var(--dur-base),color var(--dur-base); }
+ .card-arrow { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid var(--color-line); border-radius: 50%; font-size: 20px; color: var(--color-accent); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),border-color var(--dur-base),color var(--dur-base); }
  .card-arrow:is(:hover,:focus-visible) { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
  .zen-card:is(:hover,:focus-within) .card-arrow { transform: translateX(3px); }
  /* 正文：CJK 断行规则与标题一致；overflow-wrap 用 break-word 而非 anywhere
@@ -188,10 +190,11 @@
  .rich-content section[data-footnotes] li + li { margin-top: .6em; }
  .rich-content [data-footnote-backref] { text-decoration: none; margin-left: .35em; color: var(--color-accent); }
 
- .article-layout { display: grid; grid-template-columns: minmax(0,760px) 220px; gap: var(--space-xl); justify-content: space-between; }
+ .article-layout { display: grid; grid-template-columns: minmax(0,800px) minmax(220px,1fr); gap: var(--space-xl); }
+ .article-layout > article { min-width: 0; }
  .article-layout > aside { min-width: 0; }
  .article-header { padding-bottom: 20px; border-bottom: 1px solid var(--color-line); }
- .article-header h1 { font-family: var(--font-title); font-size: clamp(28px,3.2vw,40px); line-height: 1.5; margin: 14px 0; }
+ .article-header h1 { font-family: var(--font-title); font-weight: 600; font-size: clamp(30px,1.25rem + 2vw,48px); line-height: 1.5; margin: 14px 0; }
  .article-summary { font-size: 15px; color: var(--color-ink-soft); margin-bottom: 22px; }
  .article-cover { width: 100%; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); border-radius: 10px; border: 1px solid var(--color-line); }
  .article-body { margin-block: 40px; }
@@ -204,13 +207,13 @@
  .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
  .reading-progress { position: fixed; top: 0; left: 0; z-index: 60; height: 3px; width: 100%; background: var(--color-counterpoint); transform: scaleX(0); transform-origin: left; }
  .mobile-toc { border-bottom: 1px solid var(--color-line); padding: 10px 0; margin-bottom: 20px; }
- .mobile-toc summary { cursor: pointer; font-size: 13px; }
+ .mobile-toc summary { cursor: pointer; font-size: 13px; min-height: 44px; align-content: center; }
  .mobile-toc nav { padding-top: var(--space-xs); display: grid; gap: 10px; font-size: var(--text-caption); color: var(--color-ink-soft); }
  .back-link { margin-bottom: 22px; }
  /* 标题永久链接：hover / 聚焦时出现，触屏常显。
     用 ink-mute 而非 line-strong —— 它的唯一识别特征就是颜色，
     必须自己达到对比度（浅 5.41:1 / 暗 6.28:1），不能依赖 line-strong（两侧都 <3:1）。 */
- .heading-anchor { margin-left: .35em; color: var(--color-ink-muted); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-smooth),color var(--dur-fast) var(--ease-smooth); }
+ .heading-anchor { display: inline-flex; min-width: 24px; min-height: 32px; align-items: center; justify-content: center; margin-left: .35em; color: var(--color-ink-muted); font-weight: 400; text-decoration: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-smooth),color var(--dur-fast) var(--ease-smooth); }
  :is(h2,h3,h4):hover > .heading-anchor, .heading-anchor:focus-visible { opacity: 1; }
  .heading-anchor:hover { color: var(--color-accent); text-decoration: none; }
  @media (hover: none) { .heading-anchor { opacity: 1; } }
@@ -246,6 +249,7 @@
  .section-heading h2 { font-size: 23px; }
  .section-heading > div { width: 100%; }
  .section-description { max-width: 100%; text-wrap: pretty; }
+ .section-heading:has(.eyebrow) > .text-link { margin-top: 0; }
  .section-heading .text-link { min-height: 44px; padding-top: 0; font-size: var(--text-caption); gap: 7px; }
  .editorial-section { margin-top: 54px; }
  .page-intro { padding-top: 42px; }
@@ -256,7 +260,7 @@
 }
 @media (pointer: coarse) {
  .text-link,.card-arrow { min-width: 44px; min-height: 44px; }
- .zen-tag { min-height: 36px; }
+ .zen-tag,.heading-anchor { min-height: 44px; } .heading-anchor { min-width: 44px; }
 }
 @layer base {
  a,button,summary { touch-action: manipulation; -webkit-tap-highlight-color: rgb(41 60 203 / .15); }
@@ -297,13 +301,13 @@
   --color-highlight: #f6b18f;
   --color-highlight-soft: #402e31;
   --color-on-highlight: #482a24;
-  --color-hero-panel: #2c36a5;
+  --color-hero-panel: #22315f;
   --color-hero-paper: #f6d1a3;
   --color-hero-ink: #232739;
   --color-hero-line: #a6b0ee;
-  --color-primary: #b7c0ff;
-  --color-primary-strong: #d9deff;
-  --color-on-primary: #171927;
+  --color-primary: #3d5ee8;
+  --color-primary-strong: #304dcc;
+  --color-on-primary: #ffffff;
   --color-on-accent: #171927;
   --color-header-bg: rgb(23 25 39 / .94);
   --color-selection-bg: #485880;
@@ -349,13 +353,13 @@
   --color-highlight: #f6b18f;
   --color-highlight-soft: #402e31;
   --color-on-highlight: #482a24;
-  --color-hero-panel: #2c36a5;
+  --color-hero-panel: #22315f;
   --color-hero-paper: #f6d1a3;
   --color-hero-ink: #232739;
   --color-hero-line: #a6b0ee;
-  --color-primary: #b7c0ff;
-  --color-primary-strong: #d9deff;
-  --color-on-primary: #171927;
+  --color-primary: #3d5ee8;
+  --color-primary-strong: #304dcc;
+  --color-on-primary: #ffffff;
   --color-on-accent: #171927;
   --color-header-bg: rgb(23 25 39 / .94);
   --color-selection-bg: #485880;
@@ -433,7 +437,7 @@
     scroll-behavior: auto !important;
   }
 }
-@media (max-width: 800px) { html.menu-is-open { overflow: hidden; } }
+@media (max-width: 900px) { html.menu-is-open { overflow: hidden; } }
 .mobile-toc[open] nav { animation: reveal var(--dur-base) var(--ease-out-expo); }
 @media print {
   html,body { background: white; color: black; }

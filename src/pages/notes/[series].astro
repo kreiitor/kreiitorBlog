@@ -23,7 +23,7 @@ const cover = entry.data.cover ?? DEFAULT_SERIES_COVER;
    <div class="chapter-list">
     {entry.body?.trim() && <div class="rich-content series-overview"><Content/></div>}
     <h2 class="eyebrow chapter-label">CONTENTS / 按章节阅读</h2>
-    {chapters.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index+1).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-arrow" aria-hidden="true">↗</span></a>)}
+    {chapters.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index+1).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-arrow" aria-hidden="true">→</span></a>)}
    </div>
   </section>
  </div>

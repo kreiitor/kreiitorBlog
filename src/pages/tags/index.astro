@@ -7,15 +7,18 @@ const tags = getTagSummaries(await getCollection('posts'),await getCollection('p
 ---
 <BaseLayout title="话题索引" description="沿着研究、数学与工程实践的话题，找到下一篇值得读的札记。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><p class="eyebrow">TOPICS / FOLLOW YOUR CURIOSITY</p><h1>循着好奇心，继续读。</h1><p>从一个熟悉的话题出发，也许会遇见另一个值得追问的问题。</p></section>
-  <section class="page-shell topics-grid" aria-label="全部话题">{tags.map(tag => <a class="topic-entry" href={withBase(`/tags/${encodeURIComponent(tag.tag)}/`)}><h2>{tag.tag}</h2><p>{tag.postCount} 篇札记{tag.projectCount > 0 && ` · ${tag.projectCount} 个项目`}</p><span aria-hidden="true">↗</span></a>)}</section>
+  <section class="page-shell topic-intro"><h1>话题索引</h1><p>从 {tags.length} 个话题中，找到下一条线索。</p></section>
+  <section class="page-shell topics-grid" aria-label="全部话题">{tags.map(tag => <a class="topic-entry" href={withBase(`/tags/${encodeURIComponent(tag.tag)}/`)}><h2>{tag.tag}</h2><p>{[tag.postCount > 0 && `${tag.postCount} 篇札记`,tag.projectCount > 0 && `${tag.projectCount} 个项目`].filter(Boolean).join(' · ')}</p><span aria-hidden="true">→</span></a>)}</section>
  </div>
 </BaseLayout>
 <style>
- .topics-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 18px; margin-top: 36px; }
- .topic-entry { position: relative; min-width: 0; border: 1px solid var(--color-line); border-radius: 8px; padding: 24px; background: var(--color-surface); transition: background-color .2s,border-color .2s; }
- .topic-entry:hover { background: var(--color-accent-soft); border-color: var(--color-line-strong); }
- .topic-entry h2 { padding-right: 24px; font-size: 22px; }
- .topic-entry p { font-size: 12px; color: var(--color-ink-soft); margin-top: 12px; }
- .topic-entry > span { position: absolute; right: 24px; top: 24px; color: var(--color-accent); }
+ .topic-intro { padding-block: 48px 32px; display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+ .topic-intro h1 { font-size: 34px; }
+ .topic-intro p { font-size: 14px; color: var(--color-ink-soft); }
+ .topics-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); column-gap: 36px; }
+ .topic-entry { position: relative; min-width: 0; border-top: 1px solid var(--color-line); padding: 24px 28px 24px 0; transition: color var(--dur-base); }
+ .topic-entry:hover h2 { color: var(--color-accent); }
+ .topic-entry h2 { font-size: 23px; }
+ .topic-entry p { font-size: 13px; color: var(--color-ink-soft); margin-top: 8px; }
+ .topic-entry > span { position: absolute; right: 4px; top: 28px; color: var(--color-accent); }
 </style>

@@ -31,10 +31,11 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
    </a>
    <details class="mobile-menu">
     <summary aria-label="展开导航"><Icon name="menu"/></summary>
-    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}<span aria-hidden="true">↗</span></a>)}<a href={withBase('/archive/')}>文章归档<span aria-hidden="true">↗</span></a></nav>
+    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>文章归档</a></nav>
    </details>
   </div>
  </div>
+ <button type="button" class="menu-backdrop" aria-label="关闭导航" tabindex="-1"></button>
 </header>
 <script>
  const searchLink = document.querySelector<HTMLAnchorElement>('[data-search-link]');
@@ -51,10 +52,12 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
    event.preventDefault();
    search();
   }
-  if (event.key === 'Escape') { const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu'); if(menu?.open){menu.open=false;menu.querySelector('summary')?.focus();} }
+  if (event.key === 'Escape') { const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu');
+ matchMedia('(min-width: 901px)').addEventListener('change',event=>{if(event.matches&&menu)menu.open=false;}); if(menu?.open){menu.open=false;menu.querySelector('summary')?.focus();} }
  });
  const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu');
- menu?.addEventListener('toggle',()=>{menu.querySelector('summary')?.setAttribute('aria-expanded',String(menu.open));document.documentElement.classList.toggle('menu-is-open',menu.open);});
+ matchMedia('(min-width: 901px)').addEventListener('change',event=>{if(event.matches&&menu)menu.open=false;});
+ menu?.addEventListener('toggle',()=>{menu.querySelector('summary')?.setAttribute('aria-expanded',String(menu.open));menu.querySelector('summary')?.setAttribute('aria-label',menu.open?'收起导航':'展开导航');document.documentElement.classList.toggle('menu-is-open',menu.open);});
  menu?.addEventListener('focusout',()=>{setTimeout(()=>{if(menu.open&&!menu.contains(document.activeElement))menu.open=false;},0);});
  menu?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{menu.open=false;}));
  document.addEventListener('click', event => {
@@ -97,10 +100,10 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .desktop-nav a:is(:hover,:focus-visible)::after,.desktop-nav a[aria-current]::after { transform: scaleX(1); }
  .desktop-nav a[aria-current] { color: var(--color-ink); font-weight: 500; }
  .header-actions { display: flex; align-items: center; gap: 20px; }
- .header-search { display: flex; min-height: 44px; gap: 10px; align-items: center; font-size: 12px; color: var(--color-ink-soft); padding: 8px 10px; margin: -8px -10px; border-radius: 6px; transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth); }
+ .header-search { display: flex; min-width: 44px; justify-content: center; min-height: 44px; gap: 10px; align-items: center; font-size: 12px; color: var(--color-ink-soft); padding: 8px 10px; border-radius: 6px; transition: color .2s var(--ease-smooth),background-color .2s var(--ease-smooth); }
  .header-search:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); }
  kbd { font-family: var(--font-sans); font-size: var(--text-caption); border: 1px solid var(--color-line); border-radius: 3px; padding: 1px 5px; }
- .header-github { border-left: 1px solid var(--color-line); padding-left: 20px; }
+ .header-github { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-left: 1px solid var(--color-line); padding-left: 20px; }
  /* 两态主题切换：浅色 / 深色。
     data-pref 未设置时默认显示 light 图标，避免 JS 未跑时按钮空白。 */
  .theme-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 8px; border-radius: 6px; color: var(--color-ink-soft); transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth); }
@@ -111,7 +114,8 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .theme-toggle[data-pref="dark"] .icon-light { display: none; }
  .theme-toggle[data-pref="dark"] .icon-dark { display: block; }
  .mobile-menu { display: none; }
- @media (max-width: 800px) {
+ .menu-backdrop { display: none; }
+ @media (max-width: 900px) {
   .header-inner { height: 74px; gap: 16px; }
   .brand-name { font-size: 18px; } .brand-mark :global(svg) { width: 32px; height: 32px; }
   .brand-detail { display: none; }
@@ -121,7 +125,8 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   .mobile-menu summary { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 10px; cursor: pointer; list-style: none; border-radius: 6px; transition: background-color .2s var(--ease-smooth); }
   .mobile-menu summary:hover { background: var(--color-accent-soft); }
   .mobile-menu summary::-webkit-details-marker { display: none; }
-  .mobile-menu nav { position: absolute; top: 73px; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 74px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
+  .site-header:has(.mobile-menu[open]) .menu-backdrop { display: block; position: absolute; top: 100%; left: 0; width: 100%; height: calc(100dvh - 75px); background: var(--color-overlay); z-index: -1; }
+  .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 75px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
   .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; transition: color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
   .mobile-menu nav a:is(:hover,:focus-visible) { color: var(--color-accent-strong); border-bottom-color: var(--color-accent); }
   .mobile-menu nav a[aria-current] { color: var(--color-accent); border-bottom-color: var(--color-accent); }

@@ -1,6 +1,6 @@
 <div class="reading-progress" data-reading-progress role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 <span class="sr-only" data-copy-status role="status" aria-live="polite"></span>
-<div class="reading-memory" data-reading-memory data-pagefind-ignore>
+<div class="reading-memory" data-reading-memory data-pagefind-ignore hidden>
  <span data-memory-status role="status" aria-live="polite">在本机记录阅读位置</span>
  <div><button type="button" data-memory-toggle aria-pressed="false" disabled>开启记录</button><button type="button" data-memory-resume hidden>继续上次阅读 →</button><button type="button" data-memory-clear hidden>清除记录</button></div>
 </div>
@@ -187,9 +187,9 @@
  window.addEventListener('resize', scheduleVisibleMath, { passive: true });
 </script>
 <style is:global>
- .reading-memory { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 6px 0; margin-bottom: 10px; font-size: 12px; color: var(--color-ink-muted); }
+ .reading-memory { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: center; padding: 6px 0; margin-bottom: 10px; font-size: 13px; color: var(--color-ink-muted); }
  .reading-memory > div { display: flex; flex-wrap: wrap; gap: 4px 12px; }
- .reading-memory button { min-height: 36px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
+ .reading-memory button { min-height: 44px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
  .rich-content .katex { font-size: 1.04em; overflow: visible; }
  .rich-content .katex-display { max-width: 100%; padding: 12px 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
  .rich-content .katex-display > .katex { white-space: nowrap; display: inline-block; width: max-content; max-width: none; overflow: visible; }

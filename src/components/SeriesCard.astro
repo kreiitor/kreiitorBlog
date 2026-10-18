@@ -1,17 +1,14 @@
 ---
 import type { LearningSeries } from '../utils/series';
-import { DEFAULT_SERIES_COVER } from '../utils/series';
 import { withBase } from '../utils/url';
 import Icon from './Icon.astro';
-interface Props { series: LearningSeries; compact?: boolean; presentation?: 'card' | 'index'; }
-const { series, compact = false, presentation = 'card' } = Astro.props;
+interface Props { series: LearningSeries; compact?: boolean; presentation?: 'card' | 'index'; headingLevel?: 'h2' | 'h3'; }
+const { series, compact = false, presentation = 'card', headingLevel: Heading = 'h3' } = Astro.props;
 const { entry, chapters } = series;
-const cover = entry.data.cover ?? DEFAULT_SERIES_COVER;
 const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
-const indexPresentation = presentation === 'index' && !compact;
 ---
 <a href={withBase(`/notes/${entry.id}/`)} class:list={['zen-card','series-card',{'series-compact':compact,'series-index':presentation === 'index' && !compact}]} data-series={entry.id}>
- {indexPresentation ? <svg class="series-illustration series-thumbnail" viewBox="0 0 128 88" width="128" height="88" aria-hidden="true" focusable="false">
+ {!compact && <svg class="series-illustration series-thumbnail" viewBox="0 0 128 88" width="128" height="88" aria-hidden="true" focusable="false">
   <rect width="128" height="88" rx="4" fill="var(--color-sage-soft)"/>
   {entry.data.icon === 'branch' ? <g fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
    <path d="M32 44h17m30 0h17M64 30V17h28M64 58v13"/>
@@ -32,14 +29,15 @@ const indexPresentation = presentation === 'index' && !compact;
    <path d="m28 60 34-15 40-26" stroke="var(--color-counterpoint-ink)" stroke-width="2"/>
    <circle cx="68" cy="26" r="4" fill="var(--color-highlight)" stroke="var(--color-counterpoint-ink)" stroke-width="1.5"/>
   </g>}
- </svg> : !compact && <img class="series-illustration" src={withBase(cover)} alt="" width="800" height="420" loading="lazy"/>}
- <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'STRUCTURED LEARNING'}</p><h3>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</h3></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
+ </svg>}
+ <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'STRUCTURED LEARNING'}</p><Heading>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
  <p class="series-description">{entry.data.description}</p>
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>
 <style>
  .series-card { position: relative; display: flex; flex-direction: column; padding: 24px 24px 24px 28px; border-radius: 3px 10px 10px 3px; border-left: 4px solid var(--color-card-deco-1); background: var(--color-surface); transition: border-color 200ms var(--ease-smooth),background-color 200ms var(--ease-smooth),translate 320ms var(--ease-out-expo),box-shadow 280ms var(--ease-smooth); overflow: hidden; }
  .series-illustration { width: calc(100% + 52px); max-width: none; height: auto; aspect-ratio: 800 / 420; object-fit: contain; background: var(--color-paper); margin: -24px -24px 22px -28px; border-bottom: 1px solid var(--color-line); transition: transform var(--dur-slower) var(--ease-out-expo); }
+ .series-card:not(.series-index) .series-thumbnail { width: 72px; height: 50px; margin: 0 0 18px; border: 0; border-radius: 4px; }
  .series-card:hover .series-illustration { transform: scale(1.015); }
  .series-card:hover { border-color: var(--color-line-strong); background: var(--color-surface-soft); }
  .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; }
@@ -48,42 +46,42 @@ const indexPresentation = presentation === 'index' && !compact;
  .series-arrow { grid-column: 2; grid-row: 1; }
  .series-heading > div { min-width: 0; }
  .series-heading .eyebrow { font-size: 12px; letter-spacing: .04em; overflow-wrap: anywhere; }
- .series-heading h3 { margin-top: 9px; font-size: 25px; }
+ .series-heading :is(h2,h3) { margin-top: 9px; font-size: 25px; }
  .series-emblem { font-family: var(--font-editorial); font-size: 46px; color: var(--color-accent); line-height: 1; width: 58px; height: 58px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface-soft); font-size: 26px; font-style: normal; transition: border-color var(--dur-base) var(--ease-smooth),transform var(--dur-slow) var(--ease-out-expo); }
  .series-card:hover .series-emblem { border-color: var(--color-accent); transform: rotate(-6deg); }
  .series-arrow { margin-left: auto; align-self: start; color: var(--color-sage); transition: transform var(--dur-base) var(--ease-smooth); }
  .series-card:hover .series-arrow { transform: translateX(3px); }
- .series-heading h3 > span { display: block; }
+ .series-heading :is(h2,h3) > span { display: block; }
  .series-heading .series-subtitle { margin-top: 6px; font-size: 18px; font-weight: 400; color: var(--color-ink-soft); text-wrap: balance; }
  .series-description { color: var(--color-ink-soft); font-size: 15px; line-height: 1.85; margin: 18px 0; max-width: 65ch; }
  .series-bottom { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--color-line); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; font-size: 12px; color: var(--color-ink-soft); }
  .series-bottom > span:last-child { color: var(--color-sage); }
  @media (hover: hover) { .series-card:hover { translate: 0 -4px; border-left-color: var(--color-accent); box-shadow: var(--shadow-soft); } }
- @media (max-width: 600px) { .series-card { padding: 24px; } .series-illustration { width: calc(100% + 48px); margin: -24px -24px 22px; } .series-heading { gap: 14px; } .series-heading h3 { font-size: 22px; } }
+ @media (max-width: 600px) { .series-card { padding: 24px; } .series-illustration { width: calc(100% + 48px); margin: -24px -24px 22px; } .series-heading { gap: 14px; } .series-heading :is(h2,h3) { font-size: 22px; } }
  .series-compact { padding: 20px 22px; }
  .series-compact .series-heading { display: flex; align-items: center; gap: 14px; min-height: 50px; }
  .series-compact .series-heading > div { flex: 1; }
  .series-compact .series-heading .eyebrow,.series-compact .series-description { display: none; }
  .series-compact .series-emblem { width: 40px; height: 40px; font-size: 20px; }
  .series-compact .series-emblem { display: grid; color: var(--color-sage); background: var(--color-sage-soft); border-color: var(--color-line); }
- .series-compact .series-heading h3 { margin-top: 0; font-size: 21px; }
+ .series-compact .series-heading :is(h2,h3) { margin-top: 0; font-size: 21px; }
  .series-compact .series-subtitle { font-size: 16px; }
  .series-compact .series-arrow { align-self: center; }
  .series-compact .series-bottom { margin-top: 10px; padding-top: 0; border-top: 0; gap: 6px; }
  .series-compact .series-bottom > span:last-child { display: none; }
- @media (max-width: 600px) { .series-card:not(.series-compact) .series-heading .eyebrow { display: none; } .series-card:not(.series-compact) .series-heading h3 { margin-top: 0; } }
+ @media (max-width: 600px) { .series-card:not(.series-compact) .series-heading .eyebrow { display: none; } .series-card:not(.series-compact) .series-heading :is(h2,h3) { margin-top: 0; } }
  .series-index { display: grid; grid-template-columns: 128px minmax(180px,230px) minmax(0,1fr) 152px; align-items: center; gap: 28px; padding: 26px 0; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; overflow: visible; }
  .series-index > * { min-width: 0; }
  .series-index .series-illustration { width: 128px; max-width: 100%; height: 88px; margin: 0; border: 0; border-radius: 3px; object-fit: contain; background: var(--color-sage-soft); }
  .series-index .series-heading { display: block; }
  .series-index .series-heading .eyebrow,.series-index .series-arrow { display: none; }
- .series-index .series-heading h3 { margin-top: 0; font-size: 23px; line-height: 1.5; }
+ .series-index .series-heading :is(h2,h3) { margin-top: 0; font-size: 23px; line-height: 1.5; }
  .series-index .series-heading .series-subtitle { margin-top: 4px; font-size: 16px; line-height: 1.6; }
  .series-index .series-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 0; max-width: none; font-size: 14px; line-height: 1.85; }
  .series-index .series-bottom { flex-direction: column; align-items: flex-end; justify-content: center; gap: 12px; margin: 0; padding: 0; border: 0; text-align: right; line-height: 1.8; }
  .series-index .series-bottom > span:last-child { color: var(--color-accent); white-space: nowrap; }
  .series-index:is(:hover,:focus-visible) { background: transparent; border-color: var(--color-line-strong); translate: 0 0; box-shadow: none; }
- .series-index:is(:hover,:focus-visible) h3 { color: var(--color-accent); }
+ .series-index:is(:hover,:focus-visible) :is(h2,h3) { color: var(--color-accent); }
  .series-index:is(:hover,:focus-visible) .series-bottom > span:last-child { color: var(--color-counterpoint-ink,var(--color-accent-strong)); }
  .series-index:hover .series-illustration { transform: none; }
  @media (min-width: 601px) and (max-width: 900px) {
@@ -97,7 +95,7 @@ const indexPresentation = presentation === 'index' && !compact;
   .series-index { grid-template-columns: 88px minmax(0,1fr); align-items: center; gap: 16px 20px; padding: 24px 0; }
   .series-index .series-illustration { grid-column: 1; grid-row: 1; width: 88px; height: 76px; }
   .series-index .series-heading { grid-column: 2; grid-row: 1; }
-  .series-index .series-heading h3 { font-size: 21px; }
+  .series-index .series-heading :is(h2,h3) { font-size: 21px; }
   .series-index .series-heading .series-subtitle { font-size: 15px; }
   .series-index .series-description { grid-column: 1 / -1; -webkit-line-clamp: 2; }
   .series-index .series-bottom { grid-column: 1 / -1; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 12px 20px; text-align: left; }

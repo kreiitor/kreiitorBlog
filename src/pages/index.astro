@@ -44,7 +44,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   </section>
   <section class="page-shell journal-strip" aria-label="站点概况">
    <p>以问题为线索<span class="strip-subtitle">论文、实验与持续学习</span></p>
-   <div class="journal-counts"><a href={withBase('/blog/')}><strong>{String(publishedPosts.length).padStart(2,'0')}</strong> 篇札记</a><a href={withBase('/projects/')}><strong>{String(sortedProjects.length).padStart(2,'0')}</strong> 个项目</a><a href={withBase('/tags/')}><strong>{String(allTags.length).padStart(2,'0')}</strong> 个话题</a></div>
+   <div class="journal-counts"><a href={withBase('/blog/')}><strong>{publishedPosts.length}</strong> 篇札记</a><a href={withBase('/projects/')}><strong>{sortedProjects.length}</strong> 个项目</a><a href={withBase('/tags/')}><strong>{allTags.length}</strong> 个话题</a></div>
   </section>
   <section class="page-shell editorial-section writing-section">
    <SectionHeading title="精选札记" description="从问题出发，把方法与实践写清楚。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
@@ -65,11 +65,11 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   <section class="page-shell editorial-section lower-grid">
    <div>
     <SectionHeading title="最近写下" linkHref={withBase('/archive/')} linkLabel="时间归档"/>
-    <div class="recent-list">{recentPosts.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><Icon name="external" size={18}/></a>)}</div>
+    <div class="recent-list">{recentPosts.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><Icon name="arrow" size={18}/></a>)}</div>
    </div>
    <aside class="garden-aside">
     <p class="aside-kicker">话题索引</p><h2>循着好奇心，<br/>找到下一个问题。</h2>
-    <div class="topic-list">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}><span>{item.tag}</span><span>{String(item.count).padStart(2,'0')} ↗</span></a>)}</div>
+    <div class="topic-list">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}><span>{item.tag}</span><span>{item.count} →</span></a>)}</div>
     <div class="aside-note"><span aria-hidden="true">↳</span><p>不急于给出答案。<br/>先把值得追问的问题留下来。</p></div>
     <a href={withBase('/rss.xml')} class="text-link rss-link">用 RSS 订阅新札记 <span aria-hidden="true">↗</span></a>
    </aside>
@@ -96,7 +96,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .selected-row:is(:hover,:focus-visible)::after { transform: scaleX(1); }
  .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
  .selected-invitation span:last-child { color: var(--color-accent); }
- @media (max-width: 700px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
+ @media (max-width: 900px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
  .hero-kicker { display: flex; align-items: center; gap: 10px; font-size: var(--text-caption); color: var(--color-accent); }
  .hero-kicker span { width: 22px; height: 2px; background: var(--color-counterpoint); }
  .hero-copy h1 { font-family: var(--font-title); font-size: clamp(38px,4.3vw,62px); font-weight: 600; line-height: 1.35; letter-spacing: -.045em; margin-top: 24px; text-wrap: balance; }
@@ -141,7 +141,7 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: var(--text-caption); }
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .selected-writing { gap: 32px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
  @media (max-width: 900px) { .hero-copy h1 { font-size: 34px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { gap: 24px; } .selected-writing :global(.card-content h3) { font-size: 23px; } }
- @media (max-width: 700px) {
+ @media (max-width: 900px) {
   .home-hero { grid-template-columns: 1fr; padding-block: 28px 24px; gap: 24px; }
   .hero-copy h1 { font-size: clamp(29px,8vw,44px); margin-top: 18px; line-height: 1.5; }
   .hero-description { font-size: 14px; margin-top: 18px; }
