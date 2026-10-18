@@ -276,8 +276,7 @@
    两个通道（显式选择 / 跟随系统）必须存在同样的令牌集合。
    这确实是重复的——benmyers、mollywhite、craigmod、taniarascia 都是这个结构；
    mollywhite 就曾漏掉 --secondary-text-color 造成某一态回退。
-   我们用一个校验脚本守住两块一致（scripts/check-theme-tokens.mjs）。
-   每个色值的实测对比度见 docs/SITE-STUDY-2026-10-14.md §1.6。
+   修改任一侧时同步另一侧；tests/browser/theme.spec.mjs 会检查实际渲染与对比度。
    =========================================================================== */
 
 /* 通道一：用户显式选择暗色（系统为亮色时也生效） */
@@ -387,7 +386,7 @@
 
 /* ===========================================================================
    代码高亮：Shiki 双主题
-   实测机制（对 124 个产物 HTML 做变量名普查，见 docs/SITE-STUDY-2026-10-14.md）：
+   对构建产物 HTML 做变量名普查后可见：
      实际只存在 4 个变量：--shiki-dark、--shiki-dark-bg、
      --shiki-dark-font-style、--shiki-light-font-style。
      **没有 --shiki-light，也没有 --shiki-light-bg**——因为 defaultColor='light'，
