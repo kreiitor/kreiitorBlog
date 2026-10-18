@@ -59,7 +59,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .reading-shell { padding-top: 32px; }
  .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
  .article-tags :global(.zen-tag) { padding: 2px 9px; font-size: 12px; }
- .article-cover { margin-top: 22px; max-height: 240px; }
+ .article-cover { margin-top: 22px; }
  .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-line); padding: 26px 0; margin-bottom: 36px; }
  .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
  .chapter-nav strong { font-weight: 500; font-size: 15px; line-height: 1.8; }
@@ -69,7 +69,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .chapter-nav-single > div:empty { display: none; }
  .chapter-nav-single > div:last-child { text-align: left; }
  .toc-series { margin-top: 24px; }
- .mobile-toc nav a { min-width: 0; padding-block: 4px; overflow-wrap: anywhere; }
+ .mobile-toc nav a { display: flex; align-items: center; min-width: 0; min-height: 44px; padding-block: 4px; overflow-wrap: anywhere; }
  .mobile-toc .toc-h3 { padding-left: 16px; }
  .mobile-toc a[aria-current="location"] { color: var(--color-accent-strong); font-weight: 600; }
  .related-posts { margin-bottom: 36px; }

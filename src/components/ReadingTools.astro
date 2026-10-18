@@ -64,6 +64,17 @@
   if (current !== activeId) {
    for (const link of linksById.get(activeId ?? '') ?? []) link.removeAttribute('aria-current');
    for (const link of linksById.get(current ?? '') ?? []) link.setAttribute('aria-current', 'location');
+   // Keep the highlighted entry inside the desktop TOC's own scroll area.
+   // Adjusting the nav's scrollTop avoids scrolling the article itself.
+   const activeLink = (linksById.get(current ?? '') ?? []).find(link => link.closest('.article-toc'));
+   const toc = activeLink?.closest<HTMLElement>('.article-toc');
+   if (activeLink && toc) {
+    const linkRect = activeLink.getBoundingClientRect();
+    const tocRect = toc.getBoundingClientRect();
+    if (linkRect.top < tocRect.top + 12 || linkRect.bottom > tocRect.bottom - 12) {
+     toc.scrollTop += linkRect.top - tocRect.top - Math.min(64, toc.clientHeight * .2);
+    }
+   }
   }
   activeId = current;
  }
@@ -138,6 +149,27 @@
   pre.classList.add('has-copy-button'); pre.append(button);
  });
 
+ // Make horizontally overflowing technical content discoverable and keyboard-scrollable.
+ const scrollRegions = Array.from(document.querySelectorAll<HTMLElement>('.rich-content pre, .rich-content table'));
+ function syncScrollRegion(element: HTMLElement) {
+  const scrollable = element.scrollWidth > element.clientWidth + 1;
+  element.classList.toggle('is-scrollable', scrollable);
+  if (scrollable) {
+   element.tabIndex = 0;
+   if (element.tagName === 'PRE') { element.setAttribute('role','region'); element.setAttribute('aria-label','代码块，可横向滚动查看'); }
+   else { element.removeAttribute('role'); element.setAttribute('aria-label','数据表格，可横向滚动查看'); }
+  } else {
+   element.removeAttribute('tabindex'); element.removeAttribute('role'); element.removeAttribute('aria-label');
+  }
+ }
+ scrollRegions.forEach(syncScrollRegion);
+ window.addEventListener('resize',()=>scrollRegions.forEach(syncScrollRegion),{passive:true});
+ document.fonts.ready.then(()=>scrollRegions.forEach(syncScrollRegion));
+ if ('ResizeObserver' in window) {
+  const scrollObserver = new ResizeObserver(entries=>entries.forEach(entry=>syncScrollRegion(entry.target as HTMLElement)));
+  scrollRegions.forEach(element=>scrollObserver.observe(element));
+ }
+
  const regions = Array.from(body?.querySelectorAll<HTMLElement>('.katex') ?? [], element =>
   element.parentElement?.classList.contains('katex-display') ? element.parentElement : element);
  const visible = new Set<HTMLElement>();
@@ -200,4 +232,7 @@
  .rich-content .is-overflowing:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
  .code-copy { position: absolute; top: 10px; right: 12px; min-height: 34px; padding: 4px 12px; font-family: var(--font-sans); font-size: 12px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 5px; color: var(--color-ink-soft); background: var(--color-paper); }
  .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
+ .rich-content :is(pre,table).is-scrollable { box-shadow: inset -18px 0 14px -14px var(--color-ink-muted); }
+ .rich-content :is(pre,table).is-scrollable:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+ @media (pointer: coarse) { .code-copy { min-height: 44px; } }
 </style>

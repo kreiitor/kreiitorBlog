@@ -14,7 +14,7 @@ const cover = project.data.cover ?? '/covers/project-benchmark.svg';
   <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
   <Heading><a href={href}>{project.data.title}</a></Heading>
   <p class="card-description zen-truncate">{project.data.summary}</p>
-  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{project.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`查看项目：${project.data.title}`}><Icon name="arrow"/></a></div>
+  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{project.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" tabindex="-1" aria-hidden="true"><Icon name="arrow"/></a></div>
  </div>
 </article>
 <style>

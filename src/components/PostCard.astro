@@ -17,7 +17,7 @@ const cover = getPostCover(post);
   <div class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span></div>
   <h3><a href={href}>{post.data.title}</a></h3>
   <p class="card-description zen-truncate">{post.data.description}</p>
-  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" aria-label={`阅读：${post.data.title}`}><Icon name="arrow"/></a></div>
+  <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" tabindex="-1" aria-hidden="true"><Icon name="arrow"/></a></div>
  </div>
 </article>
 <style>
@@ -28,9 +28,9 @@ const cover = getPostCover(post);
  .post-featured .card-bottom { order: 2; }
  .post-featured h3 { color: var(--color-ink); }
  .post-featured .card-cover { order: -1; aspect-ratio: 2 / 1; border: 1px solid var(--color-line); border-radius: 4px; }
+ .post-featured .card-cover img { object-fit: cover; }
  @media (hover: hover) { .post-featured:hover { translate: none; box-shadow: none; border-color: transparent; } }
  @media (max-width: 700px) {
   .post-featured .card-content { order: -2; gap: 10px; padding: 0 0 20px; }
-  .post-featured .card-cover { max-height: 180px; }
  }
 </style>

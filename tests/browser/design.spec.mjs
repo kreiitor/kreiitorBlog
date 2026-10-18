@@ -27,7 +27,7 @@ test('Mobile blog keeps articles ahead of expandable learning paths and opens pa
  await expect(paths).toHaveAttribute('open', '');
  await page.reload();
  await expect(paths).toHaveAttribute('open', '');
- await page.getByRole('button', { name: /全部札记/ }).click();
+ await page.getByRole('button', { name: /独立札记/ }).click();
  await expect(paths).not.toHaveAttribute('open', '');
 });
 

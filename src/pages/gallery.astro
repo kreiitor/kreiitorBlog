@@ -9,6 +9,10 @@ const photos = [
  { file: '官宣图.jpg', title: '官宣图', width: 1200, height: 1600 },
  { file: '碰杯.jpg', title: '碰杯', width: 1003, height: 1600 },
 ];
+const stem = (file: string) => file.replace(/\.jpe?g$/i, '');
+const variantWidths = (width: number) => [...new Set([480, 800, Math.min(1200, width)].filter(value => value > 0 && value <= width))].sort((a, b) => a - b);
+const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
+ variantWidths(photo.width).map(width => `${withBase(`/gallery/optimized/${stem(photo.file)}-${width}.${format}`)} ${width}w`).join(', ');
 ---
 <BaseLayout title="有意义的图" description="一些值得留下的瞬间。">
  <div data-pagefind-ignore>
@@ -17,9 +21,13 @@ const photos = [
    <p>有些瞬间无需展开成文，<br/>也值得好好收藏。<span>点击照片，放大看看。</span></p>
   </section>
   <section class="page-shell gallery-grid" aria-label="照片集">
-   {photos.map(p => <figure class="photo-card">
+   {photos.map((p, index) => <figure class="photo-card">
     <a class="photo-frame" href={withBase(`/gallery/${p.file}`)} data-photo aria-label={`放大查看：${p.title}`}>
-     <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async"/>
+     <picture>
+      <source type="image/avif" srcset={srcset(p, 'avif')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
+      <source type="image/webp" srcset={srcset(p, 'webp')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
+      <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading={index < 2 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} decoding="async"/>
+     </picture>
     </a><figcaption>{p.title}</figcaption>
    </figure>)}
   </section>
@@ -73,6 +81,7 @@ const photos = [
  .gallery-grid { columns: 2; column-gap: 32px; }
  .photo-card { break-inside: avoid; margin-bottom: 32px; }
  .photo-frame { display: block; padding: 8px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; cursor: zoom-in; }
+ .photo-frame picture { display: block; }
  .photo-frame:hover { border-color: var(--color-line-strong); }
  .photo-frame img { width: 100%; height: auto; display: block; border-radius: 4px; }
  figcaption { padding: 12px 2px 0; color: var(--color-ink-soft); font-size: 14px; }

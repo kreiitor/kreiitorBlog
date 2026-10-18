@@ -101,6 +101,7 @@ test('Copy announces its result without changing the host clipboard',async({page
 });
 test('Back to top reaches the document start',async({page})=>{
  await page.goto('');await page.mouse.wheel(0,1800);
+ await page.mouse.wheel(0,-160);
  await expect(page.locator('[data-back-to-top]')).toBeVisible();
  await page.locator('[data-back-to-top]').click();
  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);

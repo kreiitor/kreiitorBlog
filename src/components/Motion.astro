@@ -12,6 +12,7 @@ import Icon from './Icon.astro';
  let framePending = false;
  let lastScrolled: boolean | null = null;
  let lastVisible: boolean | null = null;
+ let lastY = window.scrollY;
  function updateScroll() {
   framePending = false;
   const y = window.scrollY;
@@ -20,7 +21,10 @@ import Icon from './Icon.astro';
    if (scrolled !== lastScrolled) { lastScrolled = scrolled; header.dataset.scrolled = String(scrolled); }
   }
   if (topLink) {
-   const visible = y > 650;
+   // Avoid covering article text while reading down; reveal it on the way back up
+   // and near the end of the page, where returning to the top is the likely action.
+   const nearBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 8;
+   const visible = y > 650 && (y < lastY || nearBottom);
    if (visible !== lastVisible) {
     lastVisible = visible;
     topLink.dataset.visible = String(visible);
@@ -29,6 +33,7 @@ import Icon from './Icon.astro';
    }
   }
   if (art) art.style.translate = preference.matches || innerWidth <= 900 ? '0 0' : `0 ${-Math.min(10,y*.03)}px`;
+  lastY = y;
  }
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
  window.addEventListener('scroll',schedule,{passive:true});

@@ -178,16 +178,16 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
  .aside-note { display: flex; gap: 14px; margin-top: 28px; color: var(--color-ink-soft); font-size: var(--text-caption); line-height: 2; }
  .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: var(--text-caption); }
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .selected-writing { gap: 32px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
- @media (max-width: 900px) { .hero-copy h1 { font-size: 34px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { gap: 24px; } .selected-writing :global(.card-content h3) { font-size: 23px; } }
+ @media (max-width: 900px) { .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { gap: 24px; } .selected-writing :global(.card-content h3) { font-size: 23px; } }
  @media (max-width: 900px) {
   .learning-section { display: block; padding: 24px; }
   .learning-section :global(.section-heading) { margin-bottom: 24px; }
   .home-hero { grid-template-columns: 1fr; padding-block: 28px 24px; gap: 24px; }
-  .hero-copy h1 { font-size: clamp(29px,8vw,44px); margin-top: 18px; line-height: 1.5; }
+  .hero-copy h1 { font-size: clamp(29px,8vw,40px); margin-top: 18px; line-height: 1.5; }
   .hero-description { font-size: 14px; margin-top: 18px; }
   .hero-actions { margin-top: 20px; gap: 12px 20px; }
   .hero-caption { display: none; }
-  .hero-visual { max-width: none; width: calc(100% - 8px); justify-self: start; margin-right: 0; }
+  .hero-visual { max-width: 420px; width: min(calc(100% - 8px),420px); justify-self: center; margin-right: 0; }
   .journal-strip { padding-block: 6px; }
   .journal-strip > p { display: none; }
   .journal-counts { justify-content: space-between; gap: 12px; width: 100%; }
@@ -196,6 +196,8 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
   .journal-strip + .editorial-section { margin-top: 32px; }
   .selected-writing { margin-top: 20px; }
   .home-page :global(.section-heading h2) { font-size: 25px; }
+ }
+ @media (max-width: 700px) {
   .project-grid { grid-template-columns: minmax(0,1fr); }
   .project-grid :global(.project-showcase:nth-child(2)) { margin-top: 0; }
  }

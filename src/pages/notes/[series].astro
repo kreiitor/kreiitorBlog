@@ -14,12 +14,13 @@ const { group } = Astro.props;
 const { entry, chapters } = group;
 const { Content } = await render(entry);
 const cover = entry.data.cover ?? DEFAULT_SERIES_COVER;
+const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 ---
 <BaseLayout title={entry.data.title} description={entry.data.description} image={cover}>
  <div data-pagefind-ignore>
   <section class="page-shell pt-10 sm:pt-14"><a href={withBase('/notes/')} class="text-link back-link">← 全部学习专题</a></section>
   <section class="page-shell learning-layout" aria-label={`${entry.data.title}学习路径`}>
-   <aside class="course-intro"><p class="eyebrow">学习路径</p><img class="course-art" src={withBase(cover)} alt="" width="800" height="420"/><span class="course-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={28}/></span><h1>{entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
+   <aside class="course-intro"><p class="eyebrow">学习路径</p><img class="course-art" src={withBase(cover)} alt="" width="800" height="420"/><span class="course-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={28}/></span><h1>{titleParts ? <><span>{titleParts[1]}</span>{' '}<span>{titleParts[2]}</span></> : entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
    <div class="chapter-list">
     {entry.body?.trim() && <div class="rich-content series-overview"><Content/></div>}
     <h2 class="eyebrow chapter-label">CONTENTS / 按章节阅读</h2>
@@ -33,9 +34,10 @@ const cover = entry.data.cover ?? DEFAULT_SERIES_COVER;
  .course-intro { padding: 32px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper-warm); position: sticky; top: 118px; }
  .course-art { display: block; width: 100%; margin-top: 18px; border-radius: 6px; }
  .course-emblem { color: var(--color-sage); display: grid; place-items: center; width: 48px; height: 48px; margin-top: 22px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface); }
- .course-intro h1 { font-size: 25px; margin-top: 10px; }
- .course-english { font-family: var(--font-editorial); font-size: 24px; line-height: 1.35; color: var(--color-accent); margin-top: 10px; }
- .course-description { margin-top: 25px; font-size: 12px; line-height: 2; color: var(--color-ink-soft); }
+ .course-intro h1 { font-size: 23px; line-height: 1.4; margin-top: 10px; text-wrap: balance; }
+ .course-intro h1 > span { display: block; }
+ .course-english { font-family: var(--font-editorial); font-size: 18px; line-height: 1.4; color: var(--color-accent); margin-top: 10px; }
+ .course-description { margin-top: 25px; font-size: 14px; line-height: 1.9; color: var(--color-ink-soft); }
  .course-facts { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--text-caption); margin: 20px 0; color: var(--color-ink-soft); }
  .course-intro .zen-btn { width: 100%; }
  .source-note { margin-top: 23px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
@@ -44,8 +46,8 @@ const cover = entry.data.cover ?? DEFAULT_SERIES_COVER;
  .chapter-row { padding: 22px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 8px; transition: background-color .2s var(--ease-smooth); }
  .chapter-row:hover { background: var(--color-surface-hover); }
  .chapter-number { font-family: var(--font-editorial); font-size: 24px; color: var(--color-accent); line-height: 1.4; }
- .chapter-row h3 { font-family: var(--font-sans); font-size: 14px; font-weight: 500; transition: color .2s var(--ease-smooth); }
- .chapter-row p { margin-top: 7px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
+ .chapter-row h3 { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; font-weight: 500; transition: color .2s var(--ease-smooth); }
+ .chapter-row p { margin-top: 7px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); }
  .chapter-arrow { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
  .chapter-row:hover h3 { color: var(--color-accent); }
  .chapter-row:hover .chapter-arrow { transform: translate(3px,-3px); }

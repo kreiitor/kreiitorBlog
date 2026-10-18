@@ -75,6 +75,8 @@ cover: /covers/post-math.svg
 
 SVG 插画和封面在 `public/` 中维护，不依赖外部图片服务。字体资产与 Fontsource 代码字体随网站构建部署，按字符范围按需加载；系统中文字体作为最终回退，读者访问网站时不需要连接 Google Fonts。
 
+画廊原图位于 `public/gallery/`。新增或替换照片后运行 `npm run gallery:prepare`，生成 480/800/1200 宽的 WebP 与 AVIF 候选图；页面使用 `<picture>` 按视口选择文件，原图仍保留给放大查看。
+
 标题使用 Lora / 思源宋体，阅读正文使用 Source Serif 4 / 思源宋体，界面使用 DM Sans / 系统中文字体，代码使用 JetBrains Mono。中文字体按当前语料生成子集，界面不下载另一套中文字体。字体层级与字号在 `src/styles/global.css` 中统一维护；数学字体样式仅随阅读页面加载。
 
 每篇文章完整呈现在同一页面，保留正文、MathML、原有地址和章节锚点。目录、浏览器查找、复制和打印沿用全文阅读。博客列表仍按学习专题与紧凑条目组织，每页展示 12 篇独立札记。

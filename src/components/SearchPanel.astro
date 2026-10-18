@@ -27,7 +27,7 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
 </section>
 <script>
  import { rankSearchEntries, searchEntryScore } from '../utils/search.mjs';
- interface Entry { slug:string; title:string; description:string; type:string; url:string; content?:string; }
+ interface Entry { slug:string; title:string; description:string; type:string; url:string; content?:string; excerpt?:string; }
  const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
  let enginePromise:Promise<any> | undefined, catalogPromise:Promise<Entry[]> | undefined;
  document.querySelectorAll<HTMLElement>('[data-search-root]').forEach(root => {
@@ -57,14 +57,17 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
    const article = document.createElement('article'); article.className = 'search-result';
    const type = document.createElement('p'); type.className = 'eyebrow'; type.textContent = item.type;
    const heading = document.createElement(modal ? 'h3' : 'h2'); const link = document.createElement('a'); link.href = item.url; highlight(link,item.title,query); heading.append(link);
-   const summary = document.createElement('p'); summary.textContent = item.description;
+   const summary = document.createElement('p');
+   const term = query.toLocaleLowerCase();
+   const curated = item.title.toLocaleLowerCase().includes(term) || item.description.toLocaleLowerCase().includes(term);
+   if (!curated && item.excerpt) summary.innerHTML = item.excerpt; else summary.textContent = item.description;
    article.append(type,heading,summary); fragment.append(article);
   }
   results.replaceChildren(fragment);
   results.removeAttribute('aria-busy');
   more.hidden = ranked.length <= limit && cursor >= hits.length;
   more.disabled = false;
-  setStatus(ranked.length ? (cursor < hits.length ? `已显示 ${Math.min(limit,ranked.length)} 条匹配结果，可加载更多。` : `找到 ${ranked.length} 条结果，显示 ${Math.min(limit,ranked.length)} 条。`) : '没有找到匹配内容，试试换一个关键词。');
+  setStatus(ranked.length ? (cursor < hits.length ? `已显示 ${Math.min(limit,ranked.length)} 条匹配结果，向下滚动查看，可继续加载。` : `找到 ${ranked.length} 条结果，显示 ${Math.min(limit,ranked.length)} 条。`) : '没有找到匹配内容，试试换一个关键词。');
  }
  async function collect(request:number) {
   while (entries.size < limit && cursor < hits.length) {
@@ -76,7 +79,7 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
     const slug = item.meta?.slug;
     const known = catalog.get(slug);
     if (!known || entries.has(slug)) continue;
-    const candidate = { ...known, content:item.content, url:item.url || known.url };
+    const candidate = { ...known, content:item.content, url:item.url || known.url, excerpt:typeof item.excerpt === 'string' ? item.excerpt : '' };
     if (searchEntryScore(candidate, query) > 0) entries.set(slug,candidate);
    }
   }

@@ -30,7 +30,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
    </a>
    <details class="mobile-menu">
-    <summary aria-label="展开导航"><Icon name="menu"/></summary>
+    <summary aria-label="展开导航"><span class="menu-icon menu-icon-open"><Icon name="menu"/></span><span class="menu-icon menu-icon-close"><Icon name="close"/></span></summary>
     <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>文章归档</a></nav>
    </details>
   </div>
@@ -124,6 +124,10 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   .mobile-menu summary { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 10px; cursor: pointer; list-style: none; border-radius: 6px; transition: background-color .2s var(--ease-smooth); }
   .mobile-menu summary:hover { background: var(--color-accent-soft); }
   .mobile-menu summary::-webkit-details-marker { display: none; }
+  .mobile-menu .menu-icon { display: flex; align-items: center; justify-content: center; }
+  .mobile-menu .menu-icon-close { display: none; }
+  .mobile-menu[open] .menu-icon-open { display: none; }
+  .mobile-menu[open] .menu-icon-close { display: flex; }
   .site-header:has(.mobile-menu[open]) .menu-backdrop { display: block; position: absolute; top: 100%; left: 0; width: 100%; height: calc(100dvh - 75px); background: var(--color-overlay); z-index: -1; }
   .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 75px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide .2s var(--ease-out-expo); }
   .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-line); font-size: 13px; transition: color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }

@@ -45,6 +45,9 @@ for (const route of routes) {
   await page.evaluate(() => document.fonts.ready);
   for (const method of ['wheel', 'floating link', 'footer link', 'keyboard']) {
    await page.evaluate(() => scrollTo({ top: 1600, behavior: 'instant' }));
+   // The floating top link intentionally appears on upward scroll (and near
+   // the end of the document), not while the reader is scrolling down.
+   await page.evaluate(() => scrollTo({ top: 1400, behavior: 'instant' }));
    await expect(page.locator('[data-back-to-top]')).toBeVisible();
    if (method === 'wheel') {
     await page.mouse.move(100, 400);

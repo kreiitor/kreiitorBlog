@@ -32,7 +32,11 @@ import { withBase } from '../utils/url';
  .search-is-open { overflow: hidden; }
  .search-dialog { position: fixed; inset: 10vh 0 auto; margin-inline: auto; width: min(720px,calc(100% - 32px)); max-height: 80dvh; padding: 0; border: 1px solid var(--color-line-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-ink); box-shadow: 0 24px 100px var(--color-dialog-shadow); overflow: hidden; }
  .search-dialog[open] { display: flex; flex-direction: column; }
- .dialog-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px 32px; scrollbar-gutter: stable; }
+ .dialog-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px 32px; scrollbar-gutter: stable; display: flex; flex-direction: column; }
+ .search-dialog .search-panel { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+ .search-dialog [data-search-root] { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+ .search-dialog .search-form,.search-dialog .search-suggestions,.search-dialog .search-status,.search-dialog .more-results { flex-shrink: 0; }
+ .search-dialog .search-results { max-height: min(36dvh,360px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 4px; }
  .search-dialog .search-panel > .eyebrow,.search-dialog .search-description { display: none; }
  .search-dialog .search-panel h2#quick-search-title { font-family: var(--font-sans); font-size: 18px; margin: 0 48px 0 0; }
  .search-dialog .search-form { margin-top: 18px; }
