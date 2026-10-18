@@ -1,6 +1,6 @@
 ---
 title: "远程服务器 SSH 连接与 CLI AI 代理使用指南"
-description: "系统整理远程服务器 SSH 连接最佳实践、tmux 持久化会话、VS Code Remote 工作流、SSH 密钥管理，以及 opencode、codex、claude-code 等 CLI AI 代理在远程服务器上的使用方案和安全配置。"
+description: "整理远程服务器 SSH、tmux、VS Code Remote 与 CLI AI 代理的配置、密钥管理和安全实践。"
 pubDate: 2026-06-04
 updatedDate: 2026-10-11
 tags:
@@ -70,20 +70,6 @@ New-Item -ItemType File -Path "$sshDir\config" -Force
 
 ```ssh-config
 # ═══════════════════════════════════════════
-# 全局默认（放在文件最后，对所有 Host 生效）
-# ═══════════════════════════════════════════
-Host *
-    ServerAliveInterval 60
-    ServerAliveCountMax 5
-    TCPKeepAlive yes
-    Compression yes
-    ForwardAgent no
-    ForwardX11 no
-    IdentitiesOnly yes
-    AddKeysToAgent yes
-    StrictHostKeyChecking ask
-
-# ═══════════════════════════════════════════
 # 生产服务器
 # ═══════════════════════════════════════════
 Host prod-web
@@ -136,6 +122,21 @@ Host gitlab.com
     User git
     IdentityFile ~/.ssh/id_ed25519_gitlab
     IdentitiesOnly yes
+
+# ═══════════════════════════════════════════
+# 全局默认（放在文件末尾；OpenSSH 取第一个匹配值，主机专属配置应在前）
+# ═══════════════════════════════════════════
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 5
+    TCPKeepAlive yes
+    Compression yes
+    ForwardAgent no
+    ForwardX11 no
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+    StrictHostKeyChecking ask
+
 ```
 
 ### 1.4 关键配置项说明
@@ -165,6 +166,8 @@ Host *
     ControlPath ~/.ssh/sockets/%r@%h:%p
     ControlPersist 10m
 ```
+
+> 注意：连接复用依赖 Unix 域套接字，Windows 自带的 OpenSSH 客户端不支持 ControlMaster/ControlPath；Windows 用户可在 WSL 内使用 OpenSSH。
 
 先创建 socket 目录：
 
@@ -599,7 +602,7 @@ opencode serve                 ◄─── VS Code 插件（多个开发者）
 
 ### 6.2 OpenCode 在远程服务器上
 
-#### 安装
+#### 安装 OpenCode
 
 ```bash
 # Linux 服务器（推荐安装脚本）
@@ -694,7 +697,7 @@ opencode run -f json "列出项目中的所有 TODO 注释"
 
 ### 6.3 Codex CLI 在远程服务器上
 
-#### 安装
+#### 安装 Codex CLI
 
 ```bash
 npm install -g @openai/codex

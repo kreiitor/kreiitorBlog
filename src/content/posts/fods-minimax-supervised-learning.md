@@ -1,6 +1,6 @@
 ---
-title: "Minimax 下界与监督学习方法"
-description: "理解统计学习的最优速率，以及分类、SVM、核方法与 RKHS。"
+title: Minimax 下界与监督学习方法
+description: 理解统计学习的最优速率，以及分类、SVM、核方法与 RKHS。
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,12 +12,10 @@ order: 5
 cover: /covers/post-math.svg
 ---
 
-对应讲义：`Fods_26.pdf` p.46–63。前半 Lec2（`02a`–`02c`）给的是**上界**：统计误差、逼近误差、优化误差「最多这么大」。这一份做两件事：
-
 1. **下界**：再聪明的估计，在最坏的 Hölder 回归上也不可能比 $n^{-2\alpha/(2\alpha+d)}$ 更快；
 2. **监督方法**：0-1 损失不可训，所以要凸化；然后是 plugin、LDA/QDA、SVM、核与 RKHS。
 
-本章目标：把幻灯片里跳掉的 KL、变分式、共轭、左右导数、对偶、KKT、Moore–Aronszajn、表示定理全部写成可跟的证明。
+本章目标：把内容里跳掉的 KL、变分式、共轭、左右导数、对偶、KKT、Moore–Aronszajn、表示定理全部写成可跟的证明。
 
 你会得到：
 
@@ -52,7 +50,7 @@ cover: /covers/post-math.svg
 - Hölder 类 $\mathcal{H}^\alpha$、$L^2(\mu)$ packing 数：`02b`；本节会把用到的那一条熵写出来。
 - Hilbert 空间、Riesz 表示：附录 A。
 
-幻灯片这一段排版很挤，有几处符号被挤断。下面以**能算对**为准，并标明和幻灯片不一致的地方。
+内容这一段排版很挤，有几处符号被挤断。下面以**能算对**为准，并标明和内容不一致的地方。
 
 ---
 
@@ -64,7 +62,7 @@ cover: /covers/post-math.svg
 
 ---
 
-## 1. 非参回归的 minimax 下界（p.46–50）
+## 1. 非参回归的 minimax 下界
 
 ### 1.1 人话：上界说「我能做到」，下界说「没人能更好」
 
@@ -85,7 +83,7 @@ $$
 
 $\inf_{\widehat f}$ 是「你随便用什么算法」，$\sup_{P^*}$ 是「世界可以选对你最狠的那个分布」。$T$ 小，说明存在一个算法，对所有允许的 $P^*$ 都好；$T$ 大，说明再聪明也会在某个 $P^*$ 上惨。
 
-### 1.2 模型（p.47）
+### 1.2 模型
 
 观测 $(X,Y)\sim P^*$，取值在 $[0,1]^d\times[-B,B]$，$B\ge 1$，
 
@@ -95,7 +93,7 @@ Y \;=\; f^*(X)+\epsilon,\qquad
 \mathrm{Var}[\epsilon]\le\sigma^2,
 $$
 
-并且 $|Y|\le B$，$\|f^*\|_{L^\infty}\le B/2$，$|\epsilon|\le B/2$。记 $\mu=P^*_X$（$X$ 的边缘，讲义把它固定下来，所以难度全在回归函数）。函数类
+并且 $|Y|\le B$，$\|f^*\|_{L^\infty}\le B/2$，$|\epsilon|\le B/2$。记 $\mu=P^*_X$（$X$ 的边缘，内容把它固定下来，所以难度全在回归函数）。函数类
 
 $$
 \mathcal{X} \;\subseteq\; L^2([0,1]^d,\mu)\cap L^\infty_{B/2}([0,1]^d,\mu).
@@ -114,13 +112,13 @@ $$
 
 估计 $\widehat f$ 是数据 $D=\{(X_i,Y_i)\}_{i=1}^n\sim (P^*)^n$ 的函数。目标是下界 $T$。
 
-**讲义符号的一处尺度。** 下面 packing 的是满足 $\|f_i\|_{L^\infty}\le 1/2$ 的函数，两点分布的条件期望是 $B f_i$。若坚持 $T$ 里比较的是回归函数 $Bf_i$，事件 $A_i$ 应写成 $\{\|\widehat f-Bf_i\|_{L^2}<Bc\xi/2\}$，下界多一个因子 $B^2$。$B$ 是固定常数，**不改变 $n$ 的幂次**。下文完全按讲义：距离用 $\|f_i-f_j\|_{L^2}$，事件用 $\|\widehat f-f_i\|_{L^2}$。
+**内容符号的一处尺度。** 下面 packing 的是满足 $\|f_i\|_{L^\infty}\le 1/2$ 的函数，两点分布的条件期望是 $B f_i$。若坚持 $T$ 里比较的是回归函数 $Bf_i$，事件 $A_i$ 应写成 $\{\|\widehat f-Bf_i\|_{L^2}<Bc\xi/2\}$，下界多一个因子 $B^2$。$B$ 是固定常数，**不改变 $n$ 的幂次**。下文完全按内容：距离用 $\|f_i-f_j\|_{L^2}$，事件用 $\|\widehat f-f_i\|_{L^2}$。
 
 ### 1.3 packing 集
 
 **定义（$\xi$-packing）。** 度量空间 $(\mathcal{X},\|\cdot\|_{L^2(\mu)})$ 的一个 $\xi$-packing 是有限子集 $\{f_1,\ldots,f_N\}$，满足 $i\neq j\Rightarrow \|f_i-f_j\|_{L^2}\ge\xi$。最大基数记成 $N(\xi)$（packing 数）。
 
-讲义取一个**最大** $\xi$-packing $\mathcal{C}=\{f_1,\ldots,f_N\}$，并且把距离夹在两常数之间（最大 packing 里最近的一对不会比 $\xi$ 大很多；上界 $C\xi$ 是为了把 KL 用 $\xi^2$ 控制）：
+内容取一个**最大** $\xi$-packing $\mathcal{C}=\{f_1,\ldots,f_N\}$，并且把距离夹在两常数之间（最大 packing 里最近的一对不会比 $\xi$ 大很多；上界 $C\xi$ 是为了把 KL 用 $\xi^2$ 控制）：
 
 $$
 c\xi \;\le\; \|f_i-f_j\|_{L^2(\mu)} \;\le\; C\xi,
@@ -132,7 +130,7 @@ $c,C>0$ 只依赖函数类，不依赖 $n,\xi$。$\|f_i\|_{L^\infty}\le 1/2$ 是
 
 **人话：** $N$ 个函数两两在 $L^2$ 里隔开至少 $c\xi$。任何估计 $\widehat f$ 的 $c\xi/2$-球最多罩住其中一个，所以 $\widehat f$ 没法同时靠近两个 $f_i$。若数据又几乎分不清这些 $f_i$（KL 小），估计就不得不猜错。
 
-### 1.4 两点分布 $P_i$（p.47）
+### 1.4 两点分布 $P_i$
 
 对每个 packing 函数 $f_i$，造一个联合分布：$X\sim\mu$，给定 $X=x$，
 
@@ -164,7 +162,7 @@ $$
 = B f_i(x).
 $$
 
-$|Bf_i|\le B/2$，$|Y|=B$，噪声 $\epsilon=Y-Bf_i(X)$ 满足 $|\epsilon|\le B+B/2$ 量级（讲义写 $|\epsilon|\le B/2$ 是在「回归函数已是 $f^*$、$|Y|\le B$」的原模型里；两点构造里 $Y=\pm B$ 是为了让 KL 好算，有界性足够）。只要 $Bf_i$ 落在工作类 $\mathcal{X}$ 里（Hölder 球时把 bump 高度取得足够小即可），就有 $P_i\in\mathcal{M}$。$\square$
+$|Bf_i|\le B/2$，$|Y|=B$，噪声 $\epsilon=Y-Bf_i(X)$ 满足 $|\epsilon|\le B+B/2$ 量级（内容写 $|\epsilon|\le B/2$ 是在「回归函数已是 $f^*$、$|Y|\le B$」的原模型里；两点构造里 $Y=\pm B$ 是为了让 KL 好算，有界性足够）。只要 $Bf_i$ 落在工作类 $\mathcal{X}$ 里（Hölder 球时把 bump 高度取得足够小即可），就有 $P_i\in\mathcal{M}$。$\square$
 
 $n$ 个 i.i.d. 样本的联合是乘积测度 $P_i^n$。KL 的张量化：
 
@@ -203,60 +201,8 @@ $$
 \end{aligned}
 $$
 
-（用了 $\frac{1+f_i}{1+f_j}=1+\frac{f_i-f_j}{1+f_j}$，以及 $\frac{1-f_i}{1-f_j}=1-\frac{f_i-f_j}{1-f_j}$。）  
-对任意 $u>-1$ 有 $\log(1+u)\le u$。记 $f_i,f_j$ 为 $x$ 处的值，则
-
-$$
-(1+f_i)\log\Bigl(1+\frac{f_i-f_j}{1+f_j}\Bigr)
-\le (1+f_i)\frac{f_i-f_j}{1+f_j},
-$$
-
-$$
-(1-f_i)\log\Bigl(1-\frac{f_i-f_j}{1-f_j}\Bigr)
-\le -(1-f_i)\frac{f_i-f_j}{1-f_j}.
-$$
-
-两式相加，右边是
-
-$$
-(f_i-f_j)\Biggl[
-\frac{1+f_i}{1+f_j}-\frac{1-f_i}{1-f_j}
-\Biggr].
-$$
-
-通分，分子：
-
-$$
-\begin{aligned}
-(1+f_i)(1-f_j)-(1-f_i)(1+f_j)
-&= 1+f_i-f_j-f_if_j-1-f_j+f_i+f_if_j\\
-&= 2(f_i-f_j).
-\end{aligned}
-$$
-
-分母是 $1-f_j^2$，故
-
-$$
-\frac{1+f_i}{1+f_j}-\frac{1-f_i}{1-f_j}
-= \frac{2(f_i-f_j)}{1-f_j^2}.
-$$
-
-于是
-
-$$
-(1+f_i)\log(\cdots)+(1-f_i)\log(\cdots)
-\le (f_i-f_j)\cdot\frac{2(f_i-f_j)}{1-f_j^2}
-= \frac{2(f_i-f_j)^2}{1-f_j^2}.
-$$
-
-乘 $\frac12$ 再对 $X\sim\mu$ 取期望：
-
-$$
-\mathrm{KL}(P_i,P_j)
-\le \mathbb{E}_\mu\Biggl[\frac{(f_i-f_j)^2}{1-f_j^2}\Biggr].
-$$
-
-$|f_j|\le\frac12$ 故 $1-f_j^2=1-|f_j|^2\ge 1-\frac14=\frac34$（原片写 $1-|f_j|^2$），从而 $\frac{1}{1-f_j^2}\le\frac43$。因此
+（用了 $\frac{1+f_i}{1+f_j}=1+\frac{f_i-f_j}{1+f_j}$，以及 $\frac{1-f_i}{1-f_j}=1-\frac{f_i-f_j}{1-f_j}$。）
+对任意 $u>-1$ 有 $\log(1+u)\le u$。因此
 
 $$
 \mathrm{KL}(P_i,P_j)
@@ -268,9 +214,9 @@ $\square$
 
 **误区：** 这里用的是 $\log(1+u)\le u$，得到的是 KL 的**上界**。下界证明里，对「数据有多像」要上界（KL 小），对「检验函数能分多开」要下界（下一小节的变分式）。方向不要反。
 
-### 1.6 KL 变分式（完整证明，p.48）
+### 1.6 KL 变分式
 
-**定理 1.3（Donsker–Varadhan 型）。** 设 $P\ll Q$。则对一切使下式有意义的可测函数 $g$（讲义取有界，避免 $\mathbb{E}_Q e^g=\infty$），
+**定理 1.3（Donsker–Varadhan 型）。** 设 $P\ll Q$。则对一切使下式有意义的可测函数 $g$（内容取有界，避免 $\mathbb{E}_Q e^g=\infty$），
 
 $$
 \mathrm{KL}(P,Q)
@@ -381,7 +327,7 @@ $$
 
 这是 $\sup$ 的达到值。$\square$
 
-### 1.8 不交事件 $A_i$ 与 $\bar p$（p.48）
+### 1.8 不交事件 $A_i$ 与 $\bar p$
 
 估计 $\widehat f=\widehat f(D)$ 已固定。定义
 
@@ -443,7 +389,7 @@ $$
 \frac{1}{N-1}\sum_{i\neq j}m(p_{j,i},\lambda).
 $$
 
-第一项：$p_{i,i}=P_i^n(A_i)=1-P_i^n(A_i^c)\ge 1-\bar p$，故平均 $\ge 1-\bar p$。  
+第一项：$p_{i,i}=P_i^n(A_i)=1-P_i^n(A_i^c)\ge 1-\bar p$，故平均 $\ge 1-\bar p$。
 第二项：$m(\cdot,\lambda)$ 凹，Jensen 给出
 
 $$
@@ -471,7 +417,7 @@ $$
 
 再结合定理 1.2：右边 $\le \frac{4C^2 n\xi^2}{3}$。
 
-### 1.9 要么 $\bar p\ge 1/2$，要么与 packing 基数矛盾（p.49）
+### 1.9 要么 $\bar p\ge 1/2$，要么与 packing 基数矛盾
 
 先把 $m^*$ 写成显式并降到能用的下界。
 
@@ -495,7 +441,7 @@ m^*\Bigl(\frac{\bar p}{N-1},\,1-\bar p\Bigr)
 \frac12\log(N-1)-\log\bar p-2.
 $$
 
-**证明。** 第一行是共轭公式。第二行：把 $\log\frac{\bar p}{1-\bar p/(N-1)}=\log\bar p-\log\frac{N-1-\bar p}{N-1}$ 代入，$\log(N-1)$ 的系数合成 $1$，即讲义的展开。
+**证明。** 第一行是共轭公式。第二行：把 $\log\frac{\bar p}{1-\bar p/(N-1)}=\log\bar p-\log\frac{N-1-\bar p}{N-1}$ 代入，$\log(N-1)$ 的系数合成 $1$，即内容的展开。
 
 下界：$\bar p\log\frac{N-1}{N-1-\bar p}\ge 0$，故
 
@@ -511,7 +457,7 @@ $$
 \ge -2e^{-1}-e^{-1}=-3e^{-1}>-2.
 $$
 
-（讲义写 $\min x\log x\ge -e^{-1}\ge -1/3$。前半对，后半不对：$-1/e\approx-0.368<-1/3$。他们随后用 $-1$ 包住这些项，但 $h(\bar p)=2\bar p\log\bar p+(1-\bar p)\log(1-\bar p)$ 在 $\bar p=1/2$ 处约是 $-1.04$，$-1$ 不够。用 $-2$ 就严了。）于是
+（内容写 $\min x\log x\ge -e^{-1}\ge -1/3$。前半对，后半不对：$-1/e\approx-0.368<-1/3$。他们随后用 $-1$ 包住这些项，但 $h(\bar p)=2\bar p\log\bar p+(1-\bar p)\log(1-\bar p)$ 在 $\bar p=1/2$ 处约是 $-1.04$，$-1$ 不够。用 $-2$ 就严了。）于是
 
 $$
 m^* \;\ge\; \tfrac12\log(N-1)-\log\bar p-2.
@@ -568,10 +514,10 @@ $$
 
 $$
 \frac{\log(N-1)}{n}
-\;\ge\; \frac{8C^2\xi^2}{3}+\frac{4+2\log 2}{n},
+\;\ge\; \frac{8C^2\xi^2}{3}+\frac{4-2\log 2}{n},
 $$
 
-则 $\bar p\ge 1/2$，矛盾。$N\ge 2$ 时 $\log(N-1)$ 与 $\log N$ 同阶；$O(1/n)$ 被略大的前导常数吃掉。这就是讲义的工作条件 $\frac{\log N(\xi^*)}{n}\ge \frac{8C^2}{3}(\xi^*)^2$。
+则 $\bar p\ge 1/2$，矛盾。$N\ge 2$ 时 $\log(N-1)$ 与 $\log N$ 同阶；$O(1/n)$ 被略大的前导常数吃掉。这就是内容的工作条件 $\frac{\log N(\xi^*)}{n}\ge \frac{8C^2}{3}(\xi^*)^2$。
 
 于是 $\bar p\ge 1/2$：存在 $k$ 使 $P_k^n(A_k^c)\ge 1/2$，即 $\|\widehat f-f_k\|_{L^2}\ge c\xi^*/2$ 的概率至少一半。令 $Z=\|\widehat f-f_k\|_{L^2}^2\ge 0$，$a=(c\xi^*/2)^2$。则 $\mathbb{P}(Z\ge a)\ge 1/2$，从而对一切 $t\in[0,a]$ 有 $\mathbb{P}(Z\ge t)\ge 1/2$。层公式：
 
@@ -583,38 +529,11 @@ $$
 = \frac{c^2(\xi^*)^2}{8}.
 $$
 
-$\widehat f$ 任意，$T$ 是最坏风险的下确界，故 $T\ge c^2(\xi^*)^2/8$。$\square$
-
-**原片题面（p.49，照印，不改老师的式子）。**
-
-$$
-\sqrt{N(\xi^*)-1}
-\;\ge\;
-\frac{1}{2}\exp\Bigl(-1+\frac{4C^2 n(\xi^*)^2}{3}\Bigr),
-$$
-
-$$
-\bar p
-\;\ge\;
-\sqrt{N-1}\;
-\exp\Bigl(1-\frac{4C^2 n^2\xi^2}{3}\Bigr),
-$$
-
-$$
-\frac{\log\bigl(N(\xi^*)-1\bigr)}{n}
-\;\ge\;
-\frac{8C^2}{3}(\xi^*)^2
--\frac{2+\ln 4}{n}.
-$$
-
-**原片排版（这三处确实印成这样）。**
+$\widehat f$ 任意，$T$ 是最坏风险的下确界，故 $T\ge c^2(\xi^*)^2/8$。**
 
 - 指数里的 $n^2\xi^2$：同一页上一行工作条件写的是 $n(\xi^*)^2$，这里多出来的 $n$ 是 $n\xi^2$ 被挤断。正确是 $n\xi^2$。
-- $\exp(1-\cdots)$ 与 $\exp(-1+\cdots)$：从 $\tfrac12\log(N-1)-1-\log\bar p\le \frac{4C^2 n\xi^2}{3}$ 移项，指数必须是 $-1-\frac{4C^2 n\xi^2}{3}$。原片把 $-1$ 写成了 $+1$；第一行的 $-1+4C^2 n(\xi^*)^2/3$ 是跟着这个符号走的，内部自洽，但与正确代数相反。
-- 因而原片反推 $\log(N-1)/n$ 时 $O(1/n)$ 带减号。正确的 $O(1/n)$ 是加号，见上面对 $\bar p\ge\sqrt{N-1}\exp(-2-4C^2 n\xi^2/3)$ 的整理。
-- 同一页 $\min_{x\in[0,1]}x\log x\ge -e^{-1}\ge -1/3$：前半对，后半不对（$-1/e\approx-0.368<-1/3$）。用 $-1$ 包 $2\bar p\log\bar p+(1-\bar p)\log(1-\bar p)$ 也不够（$\bar p=1/2$ 处约 $-1.04$），所以上面改用 $-2$。
-
-**正确式（证明用这个；速率与原片相同）。**
+- $\exp(1-\cdots)$ 与 $\exp(-1+\cdots)$：从 $\tfrac12\log(N-1)-1-\log\bar p\le \frac{4C^2 n\xi^2}{3}$ 移项，指数必须是 $-1-\frac{4C^2 n\xi^2}{3}$。正确的 $O(1/n)$ 是加号，见上面对 $\bar p\ge\sqrt{N-1}\exp(-2-4C^2 n\xi^2/3)$ 的整理。
+- 同一页 $\min_{x\in[0,1]}x\log x\ge -e^{-1}\ge -1/3$：前半对，后半不对（$-1/e\approx-0.368<-1/3$）。用 $-1$ 包 $2\bar p\log\bar p+(1-\bar p)\log(1-\bar p)$ 也不够（$\bar p=1/2$ 处约 $-1.04$），所以上面改用 $-2$。**
 
 $$
 \bar p
@@ -628,7 +547,7 @@ $$
 $$
 \frac{\log(N-1)}{n}
 \;\ge\;
-\frac{8C^2\xi^2}{3}+\frac{4+2\log 2}{n}.
+\frac{8C^2\xi^2}{3}+\frac{4-2\log 2}{n}.
 $$
 
 无论加减 $O(1/n)$，平衡 $\log N\sim n\xi^2$ 给出的 $\xi^*$ 幂次相同，故 $T\gtrsim n^{-2\alpha/(2\alpha+d)}$ 不受排版影响。
@@ -643,7 +562,7 @@ $$
 \log N(\xi) \;\asymp\; \xi^{-d/\alpha}.
 $$
 
-讲义直接写 $\log N(\xi^*)=(\xi^*)^{-d/\alpha}$（把常数吞进 $\xi$ 的刻度里）。
+内容直接写 $\log N(\xi^*)=(\xi^*)^{-d/\alpha}$（把常数吞进 $\xi$ 的刻度里）。
 
 **构造提纲（为了相信 $\xi^{-d/\alpha}$ 不是天上掉的）。**
 
@@ -683,7 +602,7 @@ $$
 
 这与 `02a`+`02b` 的上界同阶，故 Hölder 非参回归的 minimax 速率是 $n^{-2\alpha/(2\alpha+d)}$。
 
-### 1.11 一般框架（p.50）
+### 1.11 一般框架
 
 把「回归函数 + $L^2$」换成任意参数空间 $(\Theta,d(\cdot,\cdot))$，观测 $\sim P_{\theta^*}^n$，估计 $\widehat\theta$，
 
@@ -699,9 +618,7 @@ $$
 
 则 $n\mathrm{KL}\le C_\Theta C^2 n\xi^2$。第 1.8–1.9 节一字不改（事件 $A_i=\{d(\widehat\theta,\theta_i)<c\xi/2\}$，变分式里的 $C_\Theta$ 取代 $\frac43$），得到：
 
-**定理 1.9。** 若 $N(\xi^*)\ge 2$ 且 $\dfrac{\log N(\xi^*)}{n}\ge 2C_\Theta(\xi^*)^2$，则 $T\ge c^2(\xi^*)^2/8$。
-
-（讲义把 $\bar p\ge 1/2$ 的阈值写成 $\sqrt{N-1}\ge e^{-1+C_\Theta n(\xi^*)^2}/2$，与 p.49 同一处原片排版：指数符号和 $O(1/n)$ 的减号。工作条件就是 $\log N/n \gtrsim C_\Theta\xi^2$。）
+**定理 1.9。** 若 $N(\xi^*)\ge 2$ 且 $\dfrac{\log N(\xi^*)}{n}\ge 2C_\Theta(\xi^*)^2$，则 $T\ge c^2(\xi^*)^2/8$。工作条件就是 $\log N/n \gtrsim C_\Theta\xi^2$。）
 
 **怎么用：** 只要你会 (i) 给 $\Theta$ 的 packing 熵，(ii) 验证 KL 被 $d^2$ 控制，下界就变成「解 $\log N(\xi)\sim n\xi^2$」。Lec1 的有限维 $\Theta=\mathbb{R}^d$、$d(\theta,\theta')=\|\theta-\theta'\|_\Sigma$ 时 $\log N(\xi)\sim d\log(1/\xi)$，平衡后 $\xi^2\sim d/n$，回到 $\frac{d\sigma^2}{n}$。
 
@@ -745,7 +662,7 @@ $$
 
 ---
 
-## 2. 凸化损失（p.51–53）
+## 2. 凸化损失
 
 从这里起，任务换成分类。回归的平方损失本身就凸、可导；0-1 损失不是。
 
@@ -780,7 +697,7 @@ $$
 \mathbb{E}[Y\mid X=x] \;=\; 2\eta(x)-1.
 $$
 
-Bayes 分类器是 $\mathrm{sign}(2\eta-1)$（$\eta>1/2$ 预测 $+1$）。讲义写 $g^*(x)=2\eta(x)-1$，则 $g^*\in\arg\min L$（在「用 $\mathrm{sign}(g)$ 做预测」的意义下，$g^*$ 的符号最优；$g^*$ 本身不必取值 $\pm 1$）。
+Bayes 分类器是 $\mathrm{sign}(2\eta-1)$（$\eta>1/2$ 预测 $+1$）。内容写 $g^*(x)=2\eta(x)-1$，则 $g^*\in\arg\min L$（在「用 $\mathrm{sign}(g)$ 做预测」的意义下，$g^*$ 的符号最优；$g^*$ 本身不必取值 $\pm 1$）。
 
 给定 $X$，$\ell$-风险的条件版本只依赖 $\alpha=g(X)$：
 
@@ -806,18 +723,18 @@ $$
 **定义（classification-calibrated）。** $\ell$ 称为 classification-calibrated，若
 
 $$
-\eta > \tfrac12 \;\Longleftrightarrow\; \arg\min_{\alpha\in\mathbb{R}} C_\eta(\alpha)\;\subset\; \mathbb{R}_+,
+\eta > \tfrac12 \;\Longleftrightarrow\; \arg\min_{\alpha\in\mathbb{R}} C_\eta(\alpha)\;\subset\; \mathbb{R}_{++},
 $$
 
 $$
-\eta < \tfrac12 \;\Longleftrightarrow\; \arg\min_{\alpha\in\mathbb{R}} C_\eta(\alpha)\;\subset\; \mathbb{R}_-,
+\eta < \tfrac12 \;\Longleftrightarrow\; \arg\min_{\alpha\in\mathbb{R}} C_\eta(\alpha)\;\subset\; \mathbb{R}_{--},
 $$
 
-其中 $\mathbb{R}_+=[0,+\infty)$，$\mathbb{R}_-=(-\infty,0]$。（$\eta=1/2$ 时两类一样好，不约束。）
+其中 $\mathbb{R}_{++}=(0,+\infty)$，$\mathbb{R}_{--}=(-\infty,0)$。（$\eta=1/2$ 时两类一样好，不约束。）
 
 **人话：** $\eta>1/2$ 时，凸风险的最优 $\alpha$ 不许是负数；预测符号自动等于 Bayes。否则你可能把 $L_\ell$ 降到最低，符号却整类翻错。
 
-### 2.3 凸损失校准 $\iff$ 在 $0$ 可微且 $\ell'(0)<0$（p.53 写全）
+### 2.3 凸损失校准 $\iff$ 在 $0$ 可微且 $\ell'(0)<0$
 
 以下设 $\ell:\mathbb{R}\to\mathbb{R}$ **凸**（因而处处有左右导数 $\ell'_-\le\ell'_+$，且二者非降）。
 
@@ -885,7 +802,7 @@ $$
 
 **$\Rightarrow$（几乎，边界要单独说）。** 若 $C'(0+)>0$，则对 $\alpha>0$ 有 $C'(\alpha-)\ge C'(0+)>0$，正半轴内部没有最小点。此时要么 $C'(0-)>0$（$C$ 在负半轴也在升，最小点在 $\mathbb{R}_-$），要么 $C'(0-)\le 0<C'(0+)$（$0\in\partial C(0)$，$\arg\min=\{0\}$）。
 
-$0\in\mathbb{R}_+\cap\mathbb{R}_-$，所以 $\arg\min=\{0\}$ 时两边的 $\subset$ 都成立，讲义把「$\subset\mathbb{R}_+$」与 $C'(0+)\le 0$ 写成 $\iff$ 在这一点上过强。校准定义在 $\eta\neq 1/2$ 时要的是**符号**：后面必须 $\ell'(0)<0$，把 $0$ 从 $\arg\min C_\eta$ 里赶走，最小点才真正落到 $(0,+\infty)$ 或 $(-\infty,0)$。$\square$
+$0\in\mathbb{R}_+\cap\mathbb{R}_-$，所以 $\arg\min=\{0\}$ 时两边的 $\subset$ 都成立，内容把「$\subset\mathbb{R}_+$」与 $C'(0+)\le 0$ 写成 $\iff$ 在这一点上过强。校准定义在 $\eta\neq 1/2$ 时要的是**符号**：后面必须 $\ell'(0)<0$，把 $0$ 从 $\arg\min C_\eta$ 里赶走，最小点才真正落到 $(0,+\infty)$ 或 $(-\infty,0)$。$\square$
 
 因而
 
@@ -901,7 +818,7 @@ $$
 \eta\,\ell'(0-)-(1-\eta)\,\ell'(0+)\;\ge\; 0.
 $$
 
-**定理 2.3（讲义 p.53）。** 凸函数 $\ell$ 是 classification-calibrated，当且仅当 $\ell$ 在 $0$ 可微且 $\ell'(0)<0$。
+**定理 2.3。** 凸函数 $\ell$ 是 classification-calibrated，当且仅当 $\ell$ 在 $0$ 可微且 $\ell'(0)<0$。
 
 **证明（$\Rightarrow$）。** 设 $\ell$ 已校准。令 $\eta\downarrow 1/2$ 从上方，校准要求 $\arg\min C_\eta\subset\mathbb{R}_+$，故 $C_\eta'(0+)\le 0$。取极限
 
@@ -940,15 +857,15 @@ hinge 在 $u=1$ 不可导，但在 $u=0$ 可导，定理用的只是 $0$ 处。$
 
 ---
 
-## 3. 二分类超额风险（p.54）
+## 3. 二分类超额风险
 
-这一节标签改回 $Y\in\{0,1\}$（讲义就是这样切的）。预测 $f:\mathcal{X}\to\{0,1\}$，0-1 损失 $\ell(f,Y)=\mathbf{1}_{\{f\neq Y\}}$，$L(f)=\mathbb{P}(f(X)\neq Y)$。后验 $\eta(x)=\mathbb{P}(Y=1\mid X=x)$，Bayes 规则
+这一节标签改回 $Y\in\{0,1\}$（内容就是这样切的）。预测 $f:\mathcal{X}\to\{0,1\}$，0-1 损失 $\ell(f,Y)=\mathbf{1}_{\{f\neq Y\}}$，$L(f)=\mathbb{P}(f(X)\neq Y)$。后验 $\eta(x)=\mathbb{P}(Y=1\mid X=x)$，Bayes 规则
 
 $$
 f^*(x) \;=\; \mathbf{1}_{\{\eta(x)\ge 1/2\}}.
 $$
 
-超额风险 $\mathcal{E}(f)=L(f)-L(f^*)$（讲义记 $E(f)$，这里用 $\mathcal{E}$ 以免和期望混淆）。
+超额风险 $\mathcal{E}(f)=L(f)-L(f^*)$（内容记 $E(f)$，这里用 $\mathcal{E}$ 以免和期望混淆）。
 
 ### 3.1 两个 $\{0,1\}$ 变量的恒等式
 
@@ -998,7 +915,7 @@ $$
 
 ### 3.3 Bayes 风险 $L^*=\mathbb{E}|f^*-\eta|$
 
-讲义写 $L^*=L(f^*)=\mathbb{E}[f^*(X)-\eta(X)]$，漏了绝对值。下面按他们自己的条件概率计算写成正确的式子。
+内容写 $L^*=L(f^*)=\mathbb{E}[f^*(X)-\eta(X)]$，漏了绝对值。下面按他们自己的条件概率计算写成正确的式子。
 
 **命题 3.2。** $L(f^*)=\mathbb{E}\bigl[|f^*(X)-\eta(X)|\bigr]=\mathbb{E}\bigl[\min\bigl\{\eta(X),1-\eta(X)\bigr\}\bigr]$。
 
@@ -1019,7 +936,7 @@ $\mathbb{E}[f^*-\eta]$ 在 $f^*=0$ 的区域是负的，不是风险。
 
 ---
 
-## 4. Plugin 估计（p.55–56）
+## 4. Plugin 估计
 
 ### 4.1 定义与 $L^1$ 界
 
@@ -1054,7 +971,7 @@ $$
 
 **充分但不必要。** $\hat\eta$ 在 $L^1$ 靠近 $\eta$ $\Rightarrow$ 分类超额风险小。反过来不必：分类只关心 $\eta-1/2$ 的符号。
 
-反例（讲义）：设 $\eta\in\{0,1\}$ a.s.（无噪声，两类完全可分）。取 $\hat\eta$ 与 $\eta$ 在 $1/2$ 同侧，但
+反例（内容）：设 $\eta\in\{0,1\}$ a.s.（无噪声，两类完全可分）。取 $\hat\eta$ 与 $\eta$ 在 $1/2$ 同侧，但
 
 $$
 |\hat\eta(X)-\eta(X)| \;=\; \frac{1-\varepsilon}{2}\quad\text{a.s.}
@@ -1064,9 +981,9 @@ $$
 
 **误区：** 「先把后验学准再分类」在有噪声、$\eta$ 贴着 $1/2$ 时是对的；在大间隔（$\eta$ 远离 $1/2$）时，你只需要符号，不必把 $\eta$ 估到小数点后三位。
 
-### 4.2 Logistic MLE（讲义 HW，两种约定）
+### 4.2 Logistic MLE（内容 HW，两种约定）
 
-**题面（p.55，照印）。** 参数模型 $\mathbb{P}(Y=1\mid X=x)=\sigma(\theta^\top x)$，$\sigma(t)=1/(1+e^{-t})$。用 MLE 估 $\theta$：
+**题面。** 参数模型 $\mathbb{P}(Y=1\mid X=x)=\sigma(\theta^\top x)$，$\sigma(t)=1/(1+e^{-t})$。用 MLE 估 $\theta$：
 
 $$
 \widehat\theta
@@ -1098,7 +1015,7 @@ $$
 \end{aligned}
 $$
 
-这就是讲义的
+这就是内容的
 
 $$
 \ell_{\mathrm{lg}}(y,t) \;=\; -y t + \log(1+e^t).
@@ -1119,7 +1036,7 @@ $$
 - $y=1\Leftrightarrow\tilde y=+1$：$\ell_{\mathrm{lg}}(1,t)=-t+\log(1+e^t)=\log(1+e^{-t})=\ell_{\pm}(+1,t)$；
 - $y=0\Leftrightarrow\tilde y=-1$：$\ell_{\mathrm{lg}}(0,t)=\log(1+e^t)=\ell_{\pm}(-1,t)$。
 
-所以作业里写 $\ell_{\mathrm{lg}}(y,t)=-yt+\log(1+e^t)$ 默认 $y\in\{0,1\}$；写 $\log(1+e^{-yt})$ 默认 $y\in\{\pm 1\}$。不要混用（混用时 $y=-1$ 代入 $-yt+\log(1+e^t)$ 会得到 $t+\log(1+e^t)$，多了一个 $t$，错）。
+所以习题里写 $\ell_{\mathrm{lg}}(y,t)=-yt+\log(1+e^t)$ 默认 $y\in\{0,1\}$；写 $\log(1+e^{-yt})$ 默认 $y\in\{\pm 1\}$。不要混用（混用时 $y=-1$ 代入 $-yt+\log(1+e^t)$ 会得到 $t+\log(1+e^t)$，多了一个 $t$，错）。
 
 作为 margin 损失，$\ell(u)=\log(1+e^{-u})$ 凸、在 $0$ 可微、$\ell'(0)=-1/2<0$，定理 2.3 保证校准。最小化 logistic 风险，最优符号仍是 Bayes。
 
@@ -1209,7 +1126,7 @@ $$
 
 ---
 
-## 5. SVM（p.57–60）
+## 5. SVM
 
 标签 $y_i\in\{-1,+1\}$，特征 $x_i\in\mathbb{R}^d$。
 
@@ -1259,7 +1176,7 @@ $$
 
 这是凸二次规划（可行域是半空间交，凸）。几何间隔 $=1/\|w\|$：$\|w\|$ 越小，间隔越大。
 
-**题面（p.57 红字：not linearly separable）。** 若数据不是线性可分，引进松弛 $\xi_i\ge 0$，并把硬间隔换成
+**题面。** 若数据不是线性可分，引进松弛 $\xi_i\ge 0$，并把硬间隔换成
 
 $$
 \min_{w,b,\xi}\;
@@ -1268,7 +1185,7 @@ $$
 y_i(w^\top x_i+b)\ge 1-\xi_i,\;\;\xi_i\ge 0.
 $$
 
-**展开：硬间隔何时可行。** 硬间隔约束 $y_i(w^\top x_i+b)\ge 1$（全体 $i$）有解，当且仅当数据线性可分：若存在 $(w,b)$ 使 $y_i(w^\top x_i+b)>0$ 对一切 $i$，令 $\gamma=\min_i y_i(w^\top x_i+b)>0$，把 $(w,b)$ 除以 $\gamma$ 就得到间隔至少为 $1$ 的可行点；反过来，间隔 $\ge 1$ 的点已经给出严格的符号分离。因此**不是线性可分 $\iff$ 硬间隔 QP 的可行域是空集**，目标是 $+\infty$，没有解。这就是红字那一行必须改问题的原因。
+**展开：硬间隔何时可行。** 硬间隔约束 $y_i(w^\top x_i+b)\ge 1$（全体 $i$）有解，当且仅当数据线性可分：若存在 $(w,b)$ 使 $y_i(w^\top x_i+b)>0$ 对一切 $i$，令 $\gamma=\min_i y_i(w^\top x_i+b)>0$，把 $(w,b)$ 除以 $\gamma$ 就得到间隔至少为 $1$ 的可行点；反过来，间隔 $\ge 1$ 的点已经给出严格的符号分离。因此**不是线性可分 $\iff$ 硬间隔 QP 的可行域是空集**，目标是 $+\infty$，没有解。这就是重点那一行必须改问题的原因。
 
 **软间隔。** 允许点落到带子里甚至分错：把约束改成 $y_i(w^\top x_i+b)\ge 1-\xi_i$，$\xi_i\ge 0$。几何：
 
@@ -1352,21 +1269,21 @@ $$
 **对 $w,\xi,b$ 求 $\inf$。**
 
 - 对 $w$：$\nabla_w\mathcal{L}=w-\sum_i\alpha_i y_i x_i=0$，故
-  
+
 $$
 w^* \;=\; \sum_{i=1}^n \alpha_i y_i x_i.
 $$
 
   代入 $\frac12\|w\|^2-w^\top(\sum\alpha_i y_i x_i)=-\frac12\bigl\|\sum\alpha_i y_i x_i\bigr\|^2$。
 - 对 $b$：$\partial_b\mathcal{L}=-\sum_i\alpha_i y_i$。若 $\sum\alpha_i y_i\neq 0$，令 $b\to\pm\infty$ 可使 $\mathcal{L}\to-\infty$。故可行对偶点必须
-  
+
 $$
 \sum_{i=1}^n \alpha_i y_i \;=\; 0,
 $$
 
   此时 $b$ 项消失。
 - 对 $\xi_i$：$\xi_i$ 的系数是 $C-\mu_i-\alpha_i$，且 $\xi_i\ge 0$。若 $C-\mu_i-\alpha_i<0$，令 $\xi_i\to+\infty$ 会使 $\mathcal{L}\to-\infty$。故 $\inf$ 有限必须 $C-\mu_i-\alpha_i\ge 0$。鞍点还要求驻点：$\partial_{\xi_i}\mathcal{L}=0$（非负约束已经交给乘子 $\mu_i\ge 0$），即
-  
+
 $$
 C-\mu_i-\alpha_i \;=\; 0\qquad\forall i.
 $$
@@ -1410,7 +1327,7 @@ $$
 f^*(x) \;=\; \langle w^*,x\rangle+b^* \;=\; \sum_{i=1}^n\alpha_i^* y_i\langle x_i,x\rangle + b^*.
 $$
 
-### 5.4 KKT 与「支持向量」这个名字（p.60）
+### 5.4 KKT 与「支持向量」这个名字
 
 令 $f^*(x)=\langle w^*,x\rangle+b^*$。KKT（原可行、对偶可行、驻点、互补松弛）在强对偶下是充要的：
 
@@ -1439,7 +1356,7 @@ $$
 
 ---
 
-## 6. 核技巧与 RKHS（p.61–63）
+## 6. 核技巧与 RKHS
 
 对偶里数据只以 $\langle x_i,x_j\rangle$ 出现。若先把 $x$ 映到某个 $\phi(x)\in\mathcal{H}$，再在 $\mathcal{H}$ 里做线性 SVM，对偶里只会出现 $\langle\phi(x_i),\phi(x_j)\rangle$。若这个内积有闭式 $K(x_i,x_j)$，就不必真的造 $\phi(x)$。这是核技巧。
 
@@ -1527,7 +1444,7 @@ $$
 
 ### 6.3 每个 RKHS 有唯一核；每个核有唯一 RKHS（HW：Moore–Aronszajn）
 
-**题面（p.62，照印）。** Every RKHS has unique kernel $K(x,y)=\sum_{j\in J}e_j(x)e_j(y)$，其中 $(e_j)$ 是任意 ONB。Every kernel has a unique RKHS（HW）。
+**题面。** Every RKHS has unique kernel $K(x,y)=\sum_{j\in J}e_j(x)e_j(y)$，其中 $(e_j)$ 是任意 ONB。Every kernel has a unique RKHS（HW）。
 
 **命题 6.2（RKHS $\Rightarrow$ 唯一核）。** 再生核唯一。若 $(e_j)_{j\in J}$ 是 $\mathcal{H}$ 的标准正交基，则
 
@@ -1539,7 +1456,7 @@ $$
 
 ONB 展开：$K(\cdot,y)=\sum_j\langle K(\cdot,y),e_j\rangle_{\mathcal{H}} e_j=\sum_j e_j(y)\,e_j$（再生性 $\langle K(\cdot,y),e_j\rangle=e_j(y)$）。级数在 $\mathcal{H}$ 中收敛；赋值连续，故在每个 $x$ 处 $K(x,y)=\sum_j e_j(x)e_j(y)$。平方可和：$\sum_j e_j(y)^2=\|K(\cdot,y)\|_{\mathcal{H}}^2=K(y,y)<\infty$。$\square$
 
-**定理 6.3（Moore–Aronszajn；讲义 HW）。** 每个 PSD 核 $K$ 存在唯一的 RKHS 以 $K$ 为再生核。
+**定理 6.3（Moore–Aronszajn；内容 HW）。** 每个 PSD 核 $K$ 存在唯一的 RKHS 以 $K$ 为再生核。
 
 RKHS $\Rightarrow$ 唯一核已是命题 6.2。下面写核 $\Rightarrow$ 唯一 RKHS。先处理「同一个函数两个展开」时双线性型是否良定义，否则后面的再生性会循环。
 
@@ -1601,7 +1518,7 @@ $$
 
 $\mathcal{H}_0$ 在 $\mathcal{H}$ 中稠密：若 $f\in\mathcal{H}$ 满足 $f\perp\mathcal{H}_0$，则 $f(x)=\langle f,K(\cdot,x)\rangle_{\mathcal{H}}=0$ 对一切 $x$，故 $f=0$。同理 $\mathcal{H}_0$ 在 $\mathcal{H}'$ 中稠密。因此 $\mathcal{H}$ 与 $\mathcal{H}'$ 都是同一预 Hilbert 空间 $\mathcal{H}_0$ 的完备化；逐点实现也唯一（Cauchy 列的逐点极限）。作为函数空间 $\mathcal{H}=\mathcal{H}'$，内积重合。$\square$
 
-### 6.4 表示定理（完整证明，p.63）
+### 6.4 表示定理
 
 **定理 6.4（Representer theorem）。** 设 $\mathcal{H}$ 是 $\mathcal{X}$ 上的 RKHS，核为 $K$。$L:\mathbb{R}^n\to\mathbb{R}$ 任意，$\omega:[0,+\infty)\to\mathbb{R}$ 递增。考虑
 
@@ -1610,7 +1527,7 @@ $$
 \; L\bigl(f(x_1),\ldots,f(x_n)\bigr) + \omega\bigl(\|f\|_{\mathcal{H}}^2\bigr).
 $$
 
-若最小点存在，则任一最小点 $f^*$ 都落在 $\mathrm{span}\{K(\cdot,x_1),\ldots,K(\cdot,x_n)\}$ 里。若 $\omega$ 严格递增，则最小点（若存在）必在这个有限维子空间中（正交补分量为 $0$）。
+若最小点存在，则存在一个最小点落在 $\mathrm{span}\{K(\cdot,x_1),\ldots,K(\cdot,x_n)\}$ 里；若 $\omega$ 严格递增，则所有最小点都在这个有限维子空间中（正交补分量为 $0$）。
 
 **证明。** 记 $\ell_x(f)=L(f(x_1),\ldots,f(x_n))$，
 
@@ -1636,7 +1553,7 @@ $\omega$ 递增，故 $\omega(\|f\|^2)\ge\omega(\|f_1\|^2)$。目标函数在 $f
 
 ### 6.5 HW：从 RKHS 正则 hinge 推出核 SVM 对偶
 
-**题面（p.63，照印）。** (HW!) SVM with kernels can be derived from
+**题面。** (HW!) SVM with kernels can be derived from
 
 $$
 \min_{f\in\mathcal{H}}
@@ -1646,7 +1563,7 @@ $$
 \ell_{\mathrm{hinge}}(y,t)=(1-yt)_+=\max\{0,1-yt\}.
 $$
 
-这是**没有显式偏置 $b$** 的版本。p.59、p.61 的核 SVM 把 $b$ 单独留下、不进 $\|f\|_{\mathcal{H}}$。两种都写。
+这是**没有显式偏置 $b$** 的版本。、 的核 SVM 把 $b$ 单独留下、不进 $\|f\|_{\mathcal{H}}$。两种都写。
 
 **展开（无偏置）。** 表示定理：最优 $f$ 可取 $f=\sum_{j=1}^n \beta_j K(\cdot,x_j)$。先把无约束 hinge 写成带松弛的约束问题，与 5.2 节同一换算：令 $\xi_i\ge(1-y_i f(x_i))_+$，目标对 $\xi$ 递增，最优 $\xi_i=(1-y_i f(x_i))_+$。原目标乘 $nC$（不改 $\arg\min$）：
 
@@ -1706,7 +1623,7 @@ $$
 
 决策 $f^*(x)=\sum_i\alpha_i^* y_i K(x,x_i)$。
 
-**展开（有偏置；与 p.59、p.61 的核 SVM 对偶一致）。**
+**展开。**
 
 $$
 \min_{f\in\mathcal{H},\,b,\,\xi}
@@ -1736,7 +1653,7 @@ $$
 | 有界密度 | $\mathrm{KL}(p,q)\le\int(p-q)^2/q$ | Jensen + $\log(1+u)\le u$ |
 | 凸化 | 凸 $\ell$ 校准 $\iff$ $\ell'(0)$ 存在且 $<0$ | 看 $C_\eta$ 在 $0$ 的左右导 |
 | 超额风险 | $\mathcal{E}(f)=\mathbb{E}[|2\eta-1|\,|f^*-f|]$ | $\mathbf{1}_{Y\neq Z}=Y+Z-2YZ$ |
-| Bayes 风险 | $L^*=\mathbb{E}|f^*-\eta|=\mathbb{E}\min(\eta,1-\eta)$ | 幻灯片漏了绝对值 |
+| Bayes 风险 | $L^*=\mathbb{E}|f^*-\eta|=\mathbb{E}\min(\eta,1-\eta)$ | 内容漏了绝对值 |
 | plugin | $\mathcal{E}(f_{\hat\eta})\le 2\|\eta-\hat\eta\|_{L^1}$ | 充分不必需；可分时只需符号 |
 | logistic | $\ell_{\mathrm{lg}}=-yt+\log(1+e^t)$（$y\in\{0,1\}$） | $\{\pm 1\}$ 时写 $\log(1+e^{-yt})$ |
 | QDA / LDA | Bayes + 高斯 $\Rightarrow$ 二次 / 线性边界 | $\Sigma_k=\Sigma$ 时 $x^\top\Sigma^{-1}x$ 消掉 |

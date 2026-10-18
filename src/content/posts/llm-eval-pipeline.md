@@ -67,6 +67,61 @@ export function summarizeRun(record: RunRecord) {
 }
 ```
 
+## 一个最小端到端示例
+
+样本文件使用 JSONL，一行一个任务。字段至少包含稳定 ID、输入、标签和切分，避免结果只能用文件名对应：
+
+```jsonl
+{"id":"issue-001","input":"...","label":"src/auth/session.py:42","split":"dev"}
+{"id":"issue-002","input":"...","label":"src/api/orders.py:17","split":"test"}
+```
+
+运行器只做三件事：读取样本、调用模型、把原始响应和评分一起写入 `runs/`。目录按 `promptVersion/model/split` 分层，每次运行保留一个 `run.json`，记录模型版本、温度、最大 token、随机种子和代码提交号。
+
+```ts
+for (const sample of samples) {
+  const output = await runModel(sample, { model, promptVersion, temperature, seed });
+  const result = { sampleId: sample.id, output, score: score(output, sample.label) };
+  await appendJsonl(`runs/${promptVersion}/${model}/${sample.split}.jsonl`, result);
+}
+```
+
+汇总阶段不要只看平均值。至少同时输出：
+
+- 每个 split 的均值、中位数和 p95；
+- 失败样例按错误类型分组的数量；
+- 同一 prompt 版本在不同模型上的配对比较；
+- 与上一次运行的差值，以及差值是否超过评测集本身的波动。
+
+复现检查清单：固定 prompt 与模型版本；固定样本切分；记录温度、种子和最大 token；保存原始输出；让评分脚本可单独重跑；在改动 prompt 或模型后重新跑完整测试集，而不是只挑几个成功案例。
+
+## 评分与失败分类
+
+评分函数要尽量小、可测试，并且与任务定义对齐。下面是一个文件定位任务的例子：完全命中、文件级命中、行级部分命中分别给不同分数。
+
+```ts
+type Sample = { id: string; input: string; label: string; split: 'dev' | 'test' };
+
+export function score(output: string, label: string) {
+  const predicted = output.trim();
+  if (predicted === label) return 1;
+  const [predFile] = predicted.split(':');
+  const [labelFile] = label.split(':');
+  if (predFile === labelFile) return 0.5;
+  return 0;
+}
+```
+
+评分之后，把失败样本按类型归档，不要只留一个总分。常见的分类是：
+
+- 检索失败：没有找到相关文件或上下文；
+- 推理失败：找到了证据，但结论错误；
+- 工具使用失败：命令、参数或调用顺序不对；
+- 格式失败：答案正确，但不符合解析格式；
+- 拒答失败：应该回答却拒答，或应该说明不确定却编造。
+
+失败分类的价值在于，它直接指向下一步该改哪里：检索失败改召回，推理失败改 prompt 或模型，格式失败改解析器或约束，拒答失败改安全提示和评估标准。
+
 ## 小结
 
 毕业论文阶段写博客，不必追求每篇都“很完整”，但需要让每篇文章都能回到一个稳定的实验体系里。这也是我把博客和项目展示站放在一起建设的原因。

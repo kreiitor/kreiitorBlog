@@ -58,7 +58,7 @@ Windows 上的中文编码问题，通常不是单一工具的问题，而是多
 可执行文件通常是：
 
 ```text
-C:/Projects/example
+%SystemRoot%System32WindowsPowerShell1.0powershell.exe
 ```
 
 ### PowerShell 7
@@ -94,6 +94,29 @@ pwsh.exe
 
 - 你主动开的终端默认走新壳
 - 某些外部工具如果还偷偷调用旧壳，也不至于马上乱码
+
+---
+
+## 可直接使用的 profile 片段
+
+PowerShell 7（`$PROFILE.CurrentUserAllHosts`）：
+
+```powershell
+$utf8 = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = $utf8
+[Console]::OutputEncoding = $utf8
+$OutputEncoding = $utf8
+```
+
+Windows PowerShell 5.1（同样写入 `$PROFILE.CurrentUserAllHosts`）：
+
+```powershell
+$utf8 = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = $utf8
+$OutputEncoding = $utf8
+```
+
+注意：5.1 的 `Set-Content -Encoding utf8` 会写入 BOM，PowerShell 7 的 `utf8` 默认不写 BOM；需要无 BOM 时，7 用 `-Encoding utf8NoBOM`，5.1 应改用 .NET 的 `[System.IO.File]::WriteAllText`。
 
 ---
 
@@ -175,7 +198,7 @@ Active code page: 65001
 
 实际测试文件：
 
-[中文说明.md](<C:/Projects/example>)
+`中文说明.md`
 
 结果：
 
@@ -215,7 +238,7 @@ git log --oneline -1
 
 测试文件：
 
-[print_zh.py](<C:/Projects/example>)
+`print_zh.py`
 
 结果：
 
@@ -225,7 +248,7 @@ git log --oneline -1
 
 测试文件：
 
-[print_zh.js](<C:/Projects/example>)
+`print_zh.js`
 
 结果：
 
@@ -235,8 +258,8 @@ git log --oneline -1
 
 测试文件：
 
-[read_zh.py](<C:/Projects/example>)
-[read_zh.js](<C:/Projects/example>)
+`read_zh.py`
+`read_zh.js`
 
 结果：
 
@@ -371,27 +394,30 @@ false
 
 如果你想回退这次改动，可以按下面处理。
 
-### 1. 回滚 Windows Terminal 设置
+### 1. 回滚 profile 设置
 
-把备份文件覆盖回去：
+把备份的 profile 覆盖回去：
 
 ```powershell
-Copy-Item `
-  'C:/Projects/example' `
-  'C:/Projects/example' `
-  -Force
+$profilePath = $PROFILE.CurrentUserAllHosts
+$backupPath = "$profilePath.bak"
+if (Test-Path $backupPath) { Copy-Item $backupPath $profilePath -Force }
 ```
 
 ### 2. 删除 `pwsh` profile
 
 ```powershell
-Remove-Item 'C:/Projects/example'
+$profilePath = $PROFILE.CurrentUserAllHosts
+if (Test-Path $profilePath) { Remove-Item $profilePath }
 ```
 
 ### 3. 删除旧版 PowerShell 5.1 的 profile
 
+在 Windows PowerShell 5.1 中执行：
+
 ```powershell
-Remove-Item 'C:/Projects/example'
+$profilePath = $PROFILE.CurrentUserAllHosts
+if (Test-Path $profilePath) { Remove-Item $profilePath }
 ```
 
 ### 4. 取消 Git 全局设置

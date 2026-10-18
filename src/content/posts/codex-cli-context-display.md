@@ -38,7 +38,7 @@ Codex CLI 默认不会在终端里常驻显示上下文占用、token 使用量�
 - 作用：启动 Codex，并在 `tmux` 里打开一个侧窗监视上下文信息
 - 数据来源：读取 `~/.codex/sessions/**/*.jsonl`
 - 关键事件：`token_count`
-- 分屏参数：使用 `tmux split-window -l 18%`，避免部分 tmux 版本对 `-p 18` 报 `size missing`
+- 分屏参数：使用 `tmux split-window -l 18%`；`-p` 也是百分比参数的简写，关键是不要漏写尺寸
 
 Codex 的 session 文件里本来就会写出类似字段：
 
@@ -74,8 +74,8 @@ Codex 的 session 文件里本来就会写出类似字段：
 tmux split-window -v -l 18%
 ```
 
-这里不使用 `-p 18`。  
-原因是部分 tmux 版本已经不再接受 `-p` 作为百分比分屏参数，会报：
+这里使用 `-l 18%` 更直观。  
+`size missing` 通常是因为没有提供尺寸或百分比参数，而不是 `-p` 被移除：
 
 ```text
 size missing
@@ -93,6 +93,41 @@ size missing
 
 然后找最近的会话文件，从中提取 `token_count` 事件。  
 如果当前不在 `tmux` 中，它会退回普通 `codex`，不影响原有用法。
+
+下面是一份最小骨架。不同 Codex 版本的字段名可能不同，按实际 JSONL 调整 `jq` 过滤条件即可：
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 没有 tmux 时保持原样运行
+if ! command -v tmux >/dev/null 2>&1; then
+  exec codex "$@"
+fi
+
+# 侧窗模式：只读最新 session 文件，打印最近的 token_count
+if [ "${1:-}" = "--watch" ]; then
+  root="${CODEX_HOME:-$HOME/.codex}/sessions"
+  while true; do
+    file=$(find "$root" -name '*.jsonl' -type f -print0 2>/dev/null \
+      | xargs -0 ls -t 2>/dev/null | head -1)
+    if [ -n "${file:-}" ]; then
+      tail -n 50 "$file" \
+        | jq -r 'select(.type == "token_count" or .payload?.type == "token_count") | .payload // .' \
+        | tail -1
+    fi
+    sleep 1
+  done
+fi
+
+# 不在 tmux 里时，先建一个会话再回来
+if [ -z "${TMUX:-}" ]; then
+  exec tmux new-session -A -s codex-usage "$0" "$@"
+fi
+
+tmux split-window -v -l 18% "$0" --watch
+exec codex "$@"
+```
 
 ### 3. 保持可回滚
 
@@ -188,7 +223,7 @@ tmux split-window -t "$s:0" -v -l 18% 'sleep 1'
 tmux kill-session -t "$s"
 ```
 
-这一步如果没有输出 `size missing`，说明当前 tmux 支持这个写法。
+这一步如果没有输出 `size missing`，说明分屏参数已被正确接受。
 
 ---
 

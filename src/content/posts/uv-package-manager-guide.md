@@ -1,6 +1,6 @@
 ---
 title: "uv 包管理工具实践哲学与完整使用流程"
-description: "详细讲解 uv 的核心实践哲学、完整使用流程、与其他工具的对比，以及在实际项目中的应用。uv 是现代 Python 开发的最佳选择，速度快、配置简单、完全兼容 Python 生态。"
+description: "讲解 uv 的实践哲学、完整使用流程、与其他工具的对比，以及在实际项目中的应用。"
 pubDate: 2026-06-02
 updatedDate: 2026-10-11
 tags:
@@ -97,8 +97,10 @@ uv add numpy pandas
 
 ### 第 1 步：创建项目
 
+安装 uv（Windows：`winget install --id=astral-sh.uv -e`；macOS/Linux：`curl -LsSf https://astral.sh/uv/install.sh | sh`），然后创建应用项目：
+
 ```powershell
-uv init my_project
+uv init --app my_project
 cd my_project
 ```
 
@@ -147,7 +149,7 @@ uv run python main.py
 ## 常用命令速查
 
 ```powershell
-uv init my_project          # 创建新项目
+uv init --app my_project     # 创建应用项目（含 main.py）
 uv add numpy pandas         # 添加依赖
 uv remove numpy             # 移除依赖
 uv sync                     # 同步依赖

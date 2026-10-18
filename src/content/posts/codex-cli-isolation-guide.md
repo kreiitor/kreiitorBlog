@@ -1,6 +1,6 @@
 ---
 title: "Codex CLI 当前目录隔离与中转服务配置指南"
-description: "记录在 Linux 远程服务器的共享环境中，如何通过项目内 .codex-home 隔离 Codex CLI 的配置、认证、日志与会话，并使用中转服务 base_url 和 API key 启动 Codex，避免读取同门或外部目录的 ~/.codex 配置。"
+description: "在 Linux 共享服务器上用项目内 .codex-home 隔离 Codex CLI 的配置、认证、日志与会话，并通过中转服务启动。"
 pubDate: 2026-05-20
 updatedDate: 2026-10-11
 tags:

@@ -1,6 +1,6 @@
 ---
-title: "数学附录 B：概率论与集中不等式"
-description: "从概率空间与条件期望到次高斯变量、Hoeffding、Bernstein 与 McDiarmid。"
+title: 数学附录 B：概率论与集中不等式
+description: 从概率空间与条件期望到次高斯变量、Hoeffding、Bernstein 与 McDiarmid。
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,23 +12,21 @@ order: 9
 cover: /covers/post-math.svg
 ---
 
-对应讲义：`Fods_26.pdf` p.169–192（Review of probability：Basic definitions + Concentration inequalities）。
-
 这份附录是给**完全零基础**的同学写的。目标不是把你变成测度论专家，而是让你以后看见 $\mathbb{E}$、$\mathrm{Var}$、$\sim N$、次高斯、Hoeffding、Bernstein、覆盖数时，知道它们从哪来、怎么用、证明卡在哪一步。
 
 你会得到：
 
 1. 为什么「成功次数 / 总次数」当概率不够用，公理怎么补；
-2. $\sigma$-代数、概率空间 $(S,\mathcal{F},\mathbb{P})$ 是什么（用武大课堂点名当例子）；
+2. $\sigma$-代数、概率空间 $(S,\mathcal{F},\mathbb{P})$ 是什么（用点名例子当例子）；
 3. 条件概率、Bayes、独立（含两两独立但非相互独立的反例）；
 4. 随机变量、分布函数、密度、PMF、定律（pushforward）；
 5. 期望、方差、MGF、$L^p$、条件期望的塔性质；
 6. 高斯尾与次高斯 $\Leftrightarrow$ 指数尾（两边都证）；
-7. Hoeffding 引理 / 不等式、次指数、Bernstein、McDiarmid（p.190 写全）；
+7. Hoeffding 引理 / 不等式、次指数、Bernstein、McDiarmid；
 8. 有限最大值、凸多面体顶点、覆盖数的体积证明；
 9. 这些工具如何接到 Lec1 的并集界和 Lec2 的 Dudley。
 
-讲义上所有 **Hint** 都写成完整证明。幻灯片后几页公式挤在一起，已对照 PDF 补全。
+内容上所有 **Hint** 都写成完整证明。内容后几页公式挤在一起，已对照 PDF 补全。
 
 需要的预备：高中集合（并、交、补）、求和、一点定积分。不会 $\sigma$-代数也可以从第 0 节读。
 
@@ -36,7 +34,7 @@ cover: /covers/post-math.svg
 
 ## 0. 先用抛硬币把语言钉死
 
-问：一枚公平硬币朝上是正面的概率是多少？直觉说 $\frac12$。要把这句话变成数学，需要几个词（讲义 p.170）。
+问：一枚公平硬币朝上是正面的概率是多少？直觉说 $\frac12$。要把这句话变成数学，需要几个词。
 
 | 词 | 意思 | 硬币例子 |
 |----|------|----------|
@@ -47,7 +45,7 @@ cover: /covers/post-math.svg
 | **事件** event | 样本空间的一个子集 | $\{H\}$（「朝上是正面」） |
 | **事件发生** | 实际结果落在这个子集里 | 抛出 $H$ 则 $\{H\}$ 发生 |
 
-再看掷骰子（讲义红字：What is the outcome / sample space / event?）。一次试验 = 掷一枚公平六面骰。
+再看掷骰子（内容重点：What is the outcome / sample space / event?）。一次试验 = 掷一枚公平六面骰。
 
 | 问 | 答 |
 |----|----|
@@ -61,7 +59,7 @@ cover: /covers/post-math.svg
 
 ---
 
-## 1. 朴素定义及其缺陷（p.170–171）
+## 1. 朴素定义及其缺陷
 
 对硬币，自然的赋值是
 
@@ -79,16 +77,16 @@ $$
 \mathbb{P}(A)\;=\;\frac{|A|}{|S|}.
 $$
 
-它有两条硬伤（讲义 p.171 原话）：
+它有两条硬伤：
 
 1. **只适用于有限样本空间。** 往 $[0,1]$ 上随机扔一个点，「落在 $[0,1/2]$」的概率该是 $\frac12$，但 $|[0,1]|=\infty$，$|A|/|S|$ 没有意义。可列无限也麻烦：自然数上「每个点等可能」会迫使每个单点概率为 $0$，可列可加又迫使总概率为 $0$，矛盾。
 2. **默认所有结果等可能。** 偏硬币 $\mathbb{P}(\{H\})=0.9$ 完全合理，但 $|\{H\}|/|S|=\frac12$，对不上。
 
-还有第三件讲义在 p.172 说的事：就算你放弃「数个数」，想对 $S$ 的**每一个**子集都指定满足下面三条公理的 $\mathbb{P}$，当 $S$ 不可数时，这样的 $\mathbb{P}$ **一般不存在**（Vitali 不可测集）。所以必须先规定：哪些子集才允许被问「概率是多少」。这就是 $\sigma$-代数。
+还有第三件内容在 说的事：就算你放弃「数个数」，想对 $S$ 的**每一个**子集都指定满足下面三条公理的 $\mathbb{P}$，当 $S$ 不可数时，这样的 $\mathbb{P}$ **一般不存在**（Vitali 不可测集）。所以必须先规定：哪些子集才允许被问「概率是多少」。这就是 $\sigma$-代数。
 
 ---
 
-## 2. 公理、$\sigma$-代数、概率空间（p.172–174）
+## 2. 公理、$\sigma$-代数、概率空间
 
 ### 2.1 我们仍想保留的三条性质
 
@@ -122,7 +120,7 @@ $$
 
 **人话：** $\sigma$-代数 =「你被允许谈论的那些事件」。它在「补」和「可列并」下关上门，避免问出没有定义的概率。
 
-### 2.3 武大课堂例子（讲义 p.174）
+### 2.3 点名例子
 
 令 $S=\{\mathrm{St}1,\ldots,\mathrm{St}33\}$ 为本班 $33$ 名同学（带学号）。
 
@@ -132,8 +130,8 @@ $$
 
 **补全：它们确实是 $\sigma$-代数。**
 
-$\mathcal{F}_0$：$\emptyset^c=S$，$S^c=\emptyset$，并只有 $\emptyset$ 或 $S$。  
-$\mathcal{F}_1$：boys 与 girls 互补（假设按性别二分、无第三类），它们的并是 $S$、交是 $\emptyset$。可列并重复取仍在这四个里。  
+$\mathcal{F}_0$：$\emptyset^c=S$，$S^c=\emptyset$，并只有 $\emptyset$ 或 $S$。
+$\mathcal{F}_1$：boys 与 girls 互补（假设按性别二分、无第三类），它们的并是 $S$、交是 $\emptyset$。可列并重复取仍在这四个里。
 $\mathcal{F}_2$：任意子集的补、并还是子集。
 
 信息量：$\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$。$\sigma$-代数越大，能分辨的事件越细。
@@ -146,15 +144,15 @@ $S$ 是样本空间，$\mathcal{F}$ 是其上 $\sigma$-代数。映射 $\mathbb{
 - $\mathbb{P}(S)=1$；
 - 可列可加：$A_j$ 两两不交时 $\mathbb{P}(\bigcup_j A_j)=\sum_j\mathbb{P}(A_j)$。
 
-三元组 $(S,\mathcal{F},\mathbb{P})$ 称为**概率空间**。讲义原话：这是我们谈论一切随机性的平台。
+三元组 $(S,\mathcal{F},\mathbb{P})$ 称为**概率空间**。内容原话：这是我们谈论一切随机性的平台。
 
-定义域必须是 $\sigma$-代数，否则 (A3) 左边的并可能根本不在定义域里。类比：函数 $1/x$ 不能在 $0$ 处取值（讲义红字 domain）。
+定义域必须是 $\sigma$-代数，否则 (A3) 左边的并可能根本不在定义域里。类比：函数 $1/x$ 不能在 $0$ 处取值（内容重点 domain）。
 
-更精确：若坚持 $\mathbb{P}$ 对 $S$ 的**任意子集**都有定义且满足 (A1)–(A3)，当 $S=[0,1]$（或任何不可数完备度量空间）时这样的 $\mathbb{P}$ **一般不存在**——Vitali 不可测集用选择公理造出，Lebesgue 测度无法在其上既平移不变又 $\sigma$-可加。所以必须先规定「哪些子集允许被问概率」，这就是 $\sigma$-代数。课堂三个例子 $\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$ 都是合法定义域；选哪个取决于你愿意分辨多细的事件。
+更精确：若坚持 $\mathbb{P}$ 对 $S$ 的**任意子集**都有定义且满足 (A1)–(A3)，当 $S=[0,1]$（或任何不可数完备度量空间）时这样的 $\mathbb{P}$ **一般不存在**——Vitali 不可测集用选择公理造出，Lebesgue 测度无法在其上既平移不变又 $\sigma$-可加。所以必须先规定「哪些子集允许被问概率」，这就是 $\sigma$-代数。三个例子 $\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$ 都是合法定义域；选哪个取决于你愿意分辨多细的事件。
 
 ---
 
-## 3. 概率的八条性质（p.175，Hint 全部写成证明）
+## 3. 概率的八条性质
 
 以下始终在一个概率空间 $(S,\mathcal{F},\mathbb{P})$ 上，$A,B,A_j\in\mathcal{F}$。
 
@@ -168,7 +166,7 @@ $$
 \mathbb{P}(\emptyset)=\sum_{j=1}^\infty\mathbb{P}(\emptyset).
 $$
 
-若 $\mathbb{P}(\emptyset)=c>0$，右边是 $\infty$，左边有限，矛盾。故 $c=0$。  
+若 $\mathbb{P}(\emptyset)=c>0$，右边是 $\infty$，左边有限，矛盾。故 $c=0$。
 （等价写法：$S=S\cup\emptyset\cup\emptyset\cup\cdots$，故 $1=1+\sum\mathbb{P}(\emptyset)$。）$\square$
 
 ### (2) 有限可加：$A\cap B=\emptyset\Rightarrow\mathbb{P}(A\cup B)=\mathbb{P}(A)+\mathbb{P}(B)$
@@ -187,7 +185,7 @@ $$
 
 **Hint：** 用 (2)、$\mathbb{P}(S)=1$，以及 $A=(A\cap B)\cup(A\cap B^c)$。
 
-**证明。** $S=A\cup A^c$ 不交，故 $1=\mathbb{P}(A)+\mathbb{P}(A^c)$。  
+**证明。** $S=A\cup A^c$ 不交，故 $1=\mathbb{P}(A)+\mathbb{P}(A^c)$。
 又 $A\cap B$ 与 $A\cap B^c$ 不交，并是 $A$，再用 (2)。$\square$
 
 ### (4) 单调：$A\subseteq B\Rightarrow\mathbb{P}(A)\le\mathbb{P}(B)$
@@ -212,7 +210,7 @@ $\square$
 
 **Hint：** $A\cup B=B\cup(A\cap B^c)$，$A=(A\cap B)\cup(A\cap B^c)$，(2) 用两次。
 
-**证明。** $B$ 与 $A\cap B^c$ 不交，并是 $A\cup B$，故 $\mathbb{P}(A\cup B)=\mathbb{P}(B)+\mathbb{P}(A\cap B^c)$。  
+**证明。** $B$ 与 $A\cap B^c$ 不交，并是 $A\cup B$，故 $\mathbb{P}(A\cup B)=\mathbb{P}(B)+\mathbb{P}(A\cap B^c)$。
 又 $\mathbb{P}(A)=\mathbb{P}(A\cap B)+\mathbb{P}(A\cap B^c)$，所以 $\mathbb{P}(A\cap B^c)=\mathbb{P}(A)-\mathbb{P}(A\cap B)$。代入即得。$\square$
 
 ### (7) 次可加（并集界的源头）
@@ -225,7 +223,7 @@ $$
 \sum_{j=1}^\infty\mathbb{P}(A_j).
 $$
 
-**证明（讲义没写 Hint，这里补全）。** 不交化：令 $B_1=A_1$，
+**证明（内容没写 Hint，这里补全）。** 不交化：令 $B_1=A_1$，
 
 $$
 B_n\;=\;A_n\setminus\bigcup_{i=1}^{n-1}A_i
@@ -271,9 +269,9 @@ $$
 
 ---
 
-## 4. 条件概率、乘法、全概率、Bayes（p.176–177）
+## 4. 条件概率、乘法、全概率、Bayes
 
-### 4.1 吸烟与肺癌，以及课堂点名
+### 4.1 吸烟与肺癌，以及点名例子
 
 无条件的「得肺癌」和「在吸烟者里得肺癌」可以差很远：
 
@@ -281,7 +279,7 @@ $$
 \mathbb{P}(\text{lung cancer})\;\neq\;\mathbb{P}(\text{lung cancer}\mid\text{smoker}).
 $$
 
-课堂例子（讲义 p.176）。$S=\{\mathrm{St}1,\ldots,33\}$，$\mathcal{F}=2^S$，均匀 $\mathbb{P}(A)=|A|/33$。有 $M$ 个男生、$33-M$ 个女生。老师说：「我要请一个男生自我介绍。」你被点到的概率是多少？
+例子。$S=\{\mathrm{St}1,\ldots,33\}$，$\mathcal{F}=2^S$，均匀 $\mathbb{P}(A)=|A|/33$。有 $M$ 个男生、$33-M$ 个女生。这里说：「我要请一个男生自我介绍。」你被点到的概率是多少？
 
 令 $B=\{\text{boys}\}$，$A=\{\text{you}\}$，$\mathbb{P}(B)=M/33$。
 
@@ -308,7 +306,7 @@ $$
 
 ### 4.3 $\mathbb{P}(\,\cdot\mid B)$ 仍是 $\mathcal{F}$ 上的概率（定义域还是 $\mathcal{F}$）
 
-讲义红字强调 $\mathbb{P}(B)>0$，并且 $\mathbb{P}(\,\cdot\mid B)$ 是**同一个** $\sigma$-代数 $\mathcal{F}$ 上的概率（不是改到 $B$ 的子集上去）。分母 $\mathbb{P}(B)>0$ 保证除法合法；分子 $\mathbb{P}(A\cap B)$ 有定义是因为 $\mathcal{F}$ 对交封闭。
+内容重点强调 $\mathbb{P}(B)>0$，并且 $\mathbb{P}(\,\cdot\mid B)$ 是**同一个** $\sigma$-代数 $\mathcal{F}$ 上的概率（不是改到 $B$ 的子集上去）。分母 $\mathbb{P}(B)>0$ 保证除法合法；分子 $\mathbb{P}(A\cap B)$ 有定义是因为 $\mathcal{F}$ 对交封闭。
 
 非负显然。$\mathbb{P}(S\mid B)=\mathbb{P}(B)/\mathbb{P}(B)=1$。若 $A_j$ 两两不交，则 $A_j\cap B$ 两两不交，
 
@@ -365,7 +363,7 @@ $$
 
 ---
 
-## 5. 独立（p.178）
+## 5. 独立
 
 ### 5.1 两个事件
 
@@ -397,7 +395,7 @@ $$
 
 只要求 $|I|=2$ 时，称为**两两独立**。相互独立 $\Rightarrow$ 两两独立；反过来不对。
 
-**反例（讲义 p.178，补全计算）。** 独立抛两次公平硬币。样本空间 $\{HH,HT,TH,TT\}$，各概率 $\frac14$。令
+**反例。** 独立抛两次公平硬币。样本空间 $\{HH,HT,TH,TT\}$，各概率 $\frac14$。令
 
 $$
 \begin{aligned}
@@ -427,8 +425,8 @@ $$
 
 **补全：$A\perp B$，但 $A$ 与 $C$ 相依；给定 $C$ 后 $A,B$ 不独立。**
 
-$\mathbb{P}(A)=\mathbb{P}(B)=\frac16$，$\mathbb{P}(A\cap B)=\frac1{36}=\mathbb{P}(A)\mathbb{P}(B)$，故 $A\perp B$。  
-$C=\{(1,4),(2,3),(3,2),(4,1)\}$，$\mathbb{P}(C)=\frac4{36}=\frac19$。  
+$\mathbb{P}(A)=\mathbb{P}(B)=\frac16$，$\mathbb{P}(A\cap B)=\frac1{36}=\mathbb{P}(A)\mathbb{P}(B)$，故 $A\perp B$。
+$C=\{(1,4),(2,3),(3,2),(4,1)\}$，$\mathbb{P}(C)=\frac4{36}=\frac19$。
 $A\cap C=\{(1,4)\}$，$\mathbb{P}(A\cap C)=\frac1{36}\neq\frac1{54}=\mathbb{P}(A)\mathbb{P}(C)$，故 $A\not\perp C$。
 
 $$
@@ -449,7 +447,7 @@ $$
 
 （默认 $\mathbb{P}(C\cap B)>0$，从而 $\mathbb{P}(C)>0$。）
 
-**证明。** 左边 $\mathbb{P}(A\mid C\cap B)=\mathbb{P}(A\cap B\cap C)/\mathbb{P}(B\cap C)$。  
+**证明。** 左边 $\mathbb{P}(A\mid C\cap B)=\mathbb{P}(A\cap B\cap C)/\mathbb{P}(B\cap C)$。
 若 $A\perp B\mid C$，则 $\mathbb{P}(A\cap B\cap C)=\mathbb{P}(A\cap C)\mathbb{P}(B\cap C)/\mathbb{P}(C)$，代入得
 
 $$
@@ -458,7 +456,7 @@ $$
 
 反之，由 $\mathbb{P}(A\cap B\cap C)=\mathbb{P}(A\mid C\cap B)\mathbb{P}(B\cap C)=\mathbb{P}(A\mid C)\mathbb{P}(B\cap C)$，两边除以 $\mathbb{P}(C)$ 即得条件独立。$\square$
 
-**人话：** 条件独立是因果/图模型的基本语言。无条件独立可以变成条件相依（两骰子之和），无条件相依也可以变成条件独立。后一个讲义的例子：随机选一周中的一天，
+**人话：** 条件独立是因果/图模型的基本语言。无条件独立可以变成条件相依（两骰子之和），无条件相依也可以变成条件独立。后一个内容的例子：随机选一周中的一天，
 
 $$
 A=\{\text{不是周一}\},\quad
@@ -470,7 +468,7 @@ $\mathbb{P}(A\cap B)=\frac17\neq\frac6{49}=\mathbb{P}(A)\mathbb{P}(B)$，故相�
 
 ---
 
-## 6. 随机变量、分布函数、密度、PMF、定律（p.179–181）
+## 6. 随机变量、分布函数、密度、PMF、定律
 
 ### 6.1 从事件到数字
 
@@ -526,7 +524,7 @@ $$
 
 ### 6.3 定律（law）= pushforward
 
-对 Borel 集 $A\in\mathcal{B}(\mathbb{R})$（讲义说「先把 $\mathcal{B}$ 理解成开集生成的那些集合」），定义
+对 Borel 集 $A\in\mathcal{B}(\mathbb{R})$（内容说「先把 $\mathcal{B}$ 理解成开集生成的那些集合」），定义
 
 $$
 \mathbb{P}_X(A)\;:=\;\mathbb{P}\bigl(X^{-1}(A)\bigr)\;=\;\mathbb{P}(X\in A).
@@ -534,7 +532,7 @@ $$
 
 则 $\mathbb{P}_X$ 是 $(\mathbb{R},\mathcal{B}(\mathbb{R}))$ 上的概率。称 $\mathbb{P}_X$ 为 $X$ 的**定律 / 分布**，记 $X\sim\mathbb{P}_X$。
 
-讲义 p.181 的交换图：
+内容 的交换图：
 
 $$
 \begin{array}{ccc}
@@ -585,7 +583,7 @@ $$
 
 ---
 
-## 7. Borel–Cantelli（p.181）
+## 7. Borel–Cantelli
 
 记 $\limsup_n A_n:=\bigcap_{N\ge 1}\bigcup_{n\ge N}A_n=\{\text{无穷多个 }A_n\text{ 发生}\}$。
 
@@ -609,16 +607,16 @@ $$
 
 ---
 
-## 8. 期望、方差、MGF、$L^p$（p.182）
+## 8. 期望、方差、MGF、$L^p$
 
 ### 8.1 期望怎么定义（小白版）
 
-离散（绝对收敛时）：$\mathbb{E}[X]=\sum_i x_i\,p_X(x_i)$。  
-有密度：$\mathbb{E}[X]=\int_{-\infty}^\infty x f_X(x)\,dx$。  
+离散（绝对收敛时）：$\mathbb{E}[X]=\sum_i x_i\,p_X(x_i)$。
+有密度：$\mathbb{E}[X]=\int_{-\infty}^\infty x f_X(x)\,dx$。
 一般：非负 RV 先用简单函数（有限值可测函数）从下面逼近，再对 $X=X^+-X^-$ 分开；$\mathbb{E}|X|<\infty$ 时称 $X$ 可积。示性函数：$\mathbb{E}[\mathbf{1}_A]=\mathbb{P}(A)$。线性对几乎处处成立的等式自动成立。
 
-**方差：** $\mathrm{Var}(X)=\mathbb{E}[(X-\mathbb{E}X)^2]$（需 $\mathbb{E}X^2<\infty$）。  
-**MGF：** $M_X(t)=\mathbb{E}[e^{tX}]$（在使期望存在的 $t$ 上）。  
+**方差：** $\mathrm{Var}(X)=\mathbb{E}[(X-\mathbb{E}X)^2]$（需 $\mathbb{E}X^2<\infty$）。
+**MGF：** $M_X(t)=\mathbb{E}[e^{tX}]$（在使期望存在的 $t$ 上）。
 **$L^p$ 范数：** 对 $p\in(0,\infty)$，
 
 $$
@@ -664,14 +662,14 @@ $$
 
 ---
 
-## 9. 期望与条件期望的性质（p.183）
+## 9. 期望与条件期望的性质
 
 以下期望均假设存在（绝对值可积，或非负）。
 
 ### 9.1 三条基本性质
 
-**(a) $\mathbb{E}|X|=0\ \Leftrightarrow\ X=0$ a.s.**  
-「$\Rightarrow$」：Markov 型估计 $\mathbb{P}(|X|\ge 1/n)\le n\mathbb{E}|X|=0$，故对每个 $n$，$\mathbb{P}(|X|\ge 1/n)=0$。于是 $\mathbb{P}(|X|>0)=\mathbb{P}(\bigcup_n\{|X|\ge 1/n\})=0$。  
+**(a) $\mathbb{E}|X|=0\ \Leftrightarrow\ X=0$ a.s.**
+「$\Rightarrow$」：Markov 型估计 $\mathbb{P}(|X|\ge 1/n)\le n\mathbb{E}|X|=0$，故对每个 $n$，$\mathbb{P}(|X|\ge 1/n)=0$。于是 $\mathbb{P}(|X|>0)=\mathbb{P}(\bigcup_n\{|X|\ge 1/n\})=0$。
 「$\Leftarrow$」：$X=0$ a.s. 则 $|X|=0$ a.s.，期望为 $0$。
 
 **(b) 单调：** $\mathbb{P}(X\ge Y)=1\Rightarrow\mathbb{E}X\ge\mathbb{E}Y$。因为 $X-Y\ge 0$ a.s.，非负 RV 的期望 $\ge 0$（从简单函数逼近，或从 $\mathbb{E}Z=\int_0^\infty\mathbb{P}(Z>t)\,dt$）。
@@ -690,7 +688,7 @@ $$
 
 **证明（Fubini）。** $\int_0^\infty\mathbb{P}(X>x)\,dx=\int_0^\infty\mathbb{E}[\mathbf{1}_{X>x}]\,dx=\mathbb{E}\int_0^\infty\mathbf{1}_{X>x}\,dx=\mathbb{E}\int_0^X dt=\mathbb{E}X$。$\square$
 
-讲义对有密度的情形用换序：$\int_0^\infty(1-F(x))\,dx=\int_0^\infty\int_x^\infty f(t)\,dt\,dx=\int_0^\infty f(t)\bigl(\int_0^t dx\bigr)dt=\int_0^\infty t f(t)\,dt$。
+内容对有密度的情形用换序：$\int_0^\infty(1-F(x))\,dx=\int_0^\infty\int_x^\infty f(t)\,dt\,dx=\int_0^\infty f(t)\bigl(\int_0^t dx\bigr)dt=\int_0^\infty t f(t)\,dt$。
 
 **一般（可正可负）：**
 
@@ -722,7 +720,7 @@ $$
 \mathbb{E}\bigl[\mathbf{1}_{\{Y\in B\}}\mathbb{E}[X\mid Y]\bigr]=\mathbb{E}\bigl[\mathbf{1}_{\{Y\in B\}}X\bigr].
 $$
 
-$g$ 可测时 $\mathbb{E}[X\mid g(Y)]$ 理解为对 $\sigma(g(Y))$ 条件。讲义列出的性质（存在时）：
+$g$ 可测时 $\mathbb{E}[X\mid g(Y)]$ 理解为对 $\sigma(g(Y))$ 条件。内容列出的性质（存在时）：
 
 | 性质 | 式子 | 人话 |
 |------|------|------|
@@ -757,7 +755,7 @@ $$
 
 ---
 
-## 10. 高斯：密度、MGF、尾（p.184）
+## 10. 高斯：密度、MGF、尾
 
 ### 10.1 密度
 
@@ -772,9 +770,9 @@ $\mu=\mathbb{E}Z$，$\sigma^2=\mathrm{Var}(Z)$。标准正态：$\mu=0,\sigma^2=
 
 标准化：若 $Z\sim N(\mu,\sigma^2)$，则 $(Z-\mu)/\sigma\sim N(0,1)$。
 
-### 10.2 Mills 尾（讲义的 $\sqrt{2/\pi}$ 界）
+### 10.2 Mills 尾（内容的 $\sqrt{2/\pi}$ 界）
 
-讲义（对照 PDF p.184）：
+内容：
 
 $$
 \mathbb{P}\bigl(|X-\mu|>t\bigr)
@@ -782,7 +780,7 @@ $$
 \sqrt{\frac{2}{\pi}}\,\frac{\sigma}{t}\,\exp\Bigl(-\frac{t^2}{2\sigma^2}\Bigr),\qquad t>0.
 $$
 
-（幻灯片把 $\sigma/t$ 挤在分母上，对照 PDF 后的正确缩放就是这一式。）
+（内容把 $\sigma/t$ 挤在分母上，对照 PDF 后的正确缩放就是这一式。）
 
 **证明。** 先证 $Z\sim N(0,1)$。对 $x\ge t>0$ 有 $x/t\ge 1$，且 $\frac{d}{dx}e^{-x^2/2}=-x e^{-x^2/2}$，故
 
@@ -804,7 +802,7 @@ $$
 
 一般 $X\sim N(\mu,\sigma^2)$：$\mathbb{P}(|X-\mu|>t)=\mathbb{P}(|Z|>t/\sigma)$，代入即得 $\sqrt{2/\pi}\,(\sigma/t)\,e^{-t^2/(2\sigma^2)}$。$\square$
 
-这个界在 $t\to 0$ 时炸掉（右边 $\to\infty$），所以小 $t$ 时用平凡界 $1$ 即可。讲义红字里的指数正是 $e^{-t^2/(2\sigma^2)}$（前面的 $\sqrt{2/\pi}\,\sigma/t$ 是 Mills 比）。后面 Chernoff 给出不带 $1/t$、处处有效的同指数界 $\mathbb{P}(|X-\mu|>t)\le 2e^{-t^2/(2\sigma^2)}$。
+这个界在 $t\to 0$ 时炸掉（右边 $\to\infty$），所以小 $t$ 时用平凡界 $1$ 即可。内容重点里的指数正是 $e^{-t^2/(2\sigma^2)}$（前面的 $\sqrt{2/\pi}\,\sigma/t$ 是 Mills 比）。后面 Chernoff 给出不带 $1/t$、处处有效的同指数界 $\mathbb{P}(|X-\mu|>t)\le 2e^{-t^2/(2\sigma^2)}$。
 
 ### 10.3 MGF
 
@@ -837,7 +835,7 @@ $$
 
 ---
 
-## 11. 次高斯（p.184）
+## 11. 次高斯
 
 ### 11.1 一维
 
@@ -867,7 +865,7 @@ $$
 
 ---
 
-## 12. 次高斯 $\Leftrightarrow$ 指数尾（p.185，两边都证）
+## 12. 次高斯 $\Leftrightarrow$ 指数尾
 
 ### 12.1 Markov 与 Chernoff
 
@@ -939,9 +937,9 @@ $k=1$：$\Gamma(1/2)=\sqrt{\pi}$，故 $\mathbb{E}|X|\le\sqrt{2}\,\sigma\cdot\sq
 
 ### 12.4 指数尾 $\Rightarrow$ 次高斯（积分尾推 MGF）
 
-讲义结论：若 $\mathbb{P}(|X|>t)\le 2\exp(-t^2/(2\sigma^2))$，则 $X\sim\mathrm{subG}(8\sigma^2)$（定义里还要 $\mathbb{E}X=0$；若未中心化，对 $X-\mathbb{E}X$ 做同一件事，因为 $\mathbb{E}|X|<\infty$）。
+内容结论：若 $\mathbb{P}(|X|>t)\le 2\exp(-t^2/(2\sigma^2))$，则 $X\sim\mathrm{subG}(8\sigma^2)$（定义里还要 $\mathbb{E}X=0$；若未中心化，对 $X-\mathbb{E}X$ 做同一件事，因为 $\mathbb{E}|X|<\infty$）。
 
-下面把「积分尾 $\to$ MGF」写全，并处理讲义最后一步对小 $s$ 偏松的问题。
+下面把「积分尾 $\to$ MGF」写全，并处理内容最后一步对小 $s$ 偏松的问题。
 
 **第一步：中心化后 Taylor 从二次开始。** $\mathbb{E}X=0$ 时 $e^{sX}$ 的一阶项期望为 $0$，故
 
@@ -998,9 +996,9 @@ $$
 
 令 $\tau=\sigma s\ge 1$。右边 $=1+2\sqrt{2\pi}\,\tau\,e^{\tau^2/2}$。而 $e^{4\tau^2}$ 在 $\tau\ge 1$ 时远大于它（$\tau=1$：左边 $\approx 8.3$，右边 $e^4\approx 54$）。故 $\mathbb{E}[e^{sX}]\le\exp(4\sigma^2 s^2)$。
 
-两段合并：$\mathbb{E}[e^{sX}]\le\exp(5\sigma^2 s^2)=\exp\bigl((10\sigma^2)s^2/2\bigr)$，即 $X\sim\mathrm{subG}(10\sigma^2)$。讲义写 $\mathrm{subG}(8\sigma^2)$，来自下面的矩级数（常数不重要，后面只用「某个常数倍的 $\sigma^2$」）。
+两段合并：$\mathbb{E}[e^{sX}]\le\exp(5\sigma^2 s^2)=\exp\bigl((10\sigma^2)s^2/2\bigr)$，即 $X\sim\mathrm{subG}(10\sigma^2)$。内容写 $\mathrm{subG}(8\sigma^2)$，来自下面的矩级数（常数不重要，后面只用「某个常数倍的 $\sigma^2$」）。
 
-**讲义上的矩级数（对照 PDF p.185）。** 他们用 $e^{sX}\le\sum |s|^k|X|^k/k!$（含 $k=1$）以及 12.3，再按偶/奇 $k=2m$ / $2m+1$ 拆开：
+**内容上的矩级数。** 他们用 $e^{sX}\le\sum |s|^k|X|^k/k!$（含 $k=1$）以及 12.3，再按偶/奇 $k=2m$ / $2m+1$ 拆开：
 
 $$
 \begin{aligned}
@@ -1024,11 +1022,11 @@ $$
 \sum_{m\ge 1}\frac{a^m m!}{(2m)!}\le e^{a}-1,\qquad a=2\sigma^2 s^2,
 $$
 
-从而 $\le 1+2\bigl(1+\sqrt{2\sigma^2 s^2}\bigr)(e^{2\sigma^2 s^2}-1)$。讲义最后写 $\le e^{4\sigma^2 s^2}$。这一步对**很小的 $s$** 并不自动成立（右边二次、左边若保留 $k=1$ 的绝对矩会冒出 $O(|s|)$）。正确做法就是上面「从 $k=2$ 开始 + 分段」。结论不变：尾条件 $\Rightarrow$ 次高斯，方差代理 $O(\sigma^2)$。
+从而 $\le 1+2\bigl(1+\sqrt{2\sigma^2 s^2}\bigr)(e^{2\sigma^2 s^2}-1)$。内容最后写 $\le e^{4\sigma^2 s^2}$。这一步对**很小的 $s$** 并不自动成立（右边二次、左边若保留 $k=1$ 的绝对矩会冒出 $O(|s|)$）。正确做法就是上面「从 $k=2$ 开始 + 分段」。结论不变：尾条件 $\Rightarrow$ 次高斯，方差代理 $O(\sigma^2)$。
 
 ---
 
-## 13. 独立和与线性组合（p.186）
+## 13. 独立和与线性组合
 
 ### 13.1 高斯的线性组合仍是高斯
 
@@ -1076,7 +1074,7 @@ $$
 
 ---
 
-## 14. Hoeffding 引理与不等式（p.186–187）
+## 14. Hoeffding 引理与不等式
 
 ### 14.1 引理（有界 $\Rightarrow$ 次高斯）
 
@@ -1088,7 +1086,7 @@ $$
 
 特别地 $X\sim\mathrm{subG}\bigl((b-a)^2/4\bigr)$（因为定义里是 $e^{\sigma^2 s^2/2}$，所以 $\sigma^2/2=(b-a)^2/8$）。
 
-下面给两个完整证明：用户要的凸组合，以及讲义的指数倾斜。
+下面给两个完整证明：用户要的凸组合，以及内容的指数倾斜。
 
 #### 证法 A（凸组合：$e^{sx}$ 不超过端点线性）
 
@@ -1131,7 +1129,7 @@ $$
 
 这里 $v=pe^{u}/(1-p+pe^{u})\in(0,1)$，而 $v(1-v)\le 1/4$。Taylor：$\varphi(u)=\varphi''(\xi)u^2/2\le u^2/8$。故 $\mathbb{E}[e^{sX}]\le\exp(s^2(b-a)^2/8)$。$\square$
 
-#### 证法 B（讲义：cumulant 的二阶导 = 倾斜方差）
+#### 证法 B（内容：cumulant 的二阶导 = 倾斜方差）
 
 令 $\psi(s)=\log\mathbb{E}[e^{sX}]$。则 $\psi(0)=\log 1=0$，$\psi'(0)=\mathbb{E}X=0$，且
 
@@ -1198,7 +1196,7 @@ $$
 
 等价地，对和 $S=\sum_i X_i$：$\mathbb{P}(S-\mathbb{E}S>u)\le\exp\bigl(-2u^2/\sum(b_i-a_i)^2\bigr)$（$u=nt$）。
 
-讲义还写了向量版：对 $w=u\mathbf{1}$ 不必；对任意 $u\in\mathbb{R}^n$，
+内容还写了向量版：对 $w=u\mathbf{1}$ 不必；对任意 $u\in\mathbb{R}^n$，
 
 $$
 \mathbb{E}\bigl[e^{s u^\top X}\bigr]
@@ -1212,7 +1210,7 @@ $$
 
 ---
 
-## 15. 次指数与 Bernstein（p.187–189）
+## 15. 次指数与 Bernstein
 
 ### 15.1 Laplace：比高斯重的尾
 
@@ -1250,7 +1248,7 @@ $$
 =2^{1-k}\lambda^k k!.
 $$
 
-讲义用更松的 $2(\lambda/2)^k k\Gamma(k)\le\lambda^k k!$（$k\Gamma(k)=k!$，且 $2^{1-k}\le 1$ 对 $k\ge 1$ 在 $k=1$ 时是 $1$，对 $k\ge 2$ 更小；他们写 $\le\lambda^k k\Gamma(k)=\lambda^k k!$）。
+内容用更松的 $2(\lambda/2)^k k\Gamma(k)\le\lambda^k k!$（$k\Gamma(k)=k!$，且 $2^{1-k}\le 1$ 对 $k\ge 1$ 在 $k=1$ 时是 $1$，对 $k\ge 2$ 更小；他们写 $\le\lambda^k k\Gamma(k)=\lambda^k k!$）。
 
 MGF：$\mathbb{E}X=0$ 故从 $k=2$ 起，
 
@@ -1315,7 +1313,7 @@ $$
 
 把 $X$ 换成 $-X$：$\mathbb{P}[\mu-X\ge t]\le\exp\bigl(-t^2/(2(\sigma^2+bt))\bigr)$。
 
-**证明（对照 PDF p.188）。** 令 $Y=X-\mu$，$\mathbb{E}Y=0$，$\mathbb{E}Y^2=\sigma^2$，$|Y|\le b$。对 $k\ge 3$，
+**证明。** 令 $Y=X-\mu$，$\mathbb{E}Y=0$，$\mathbb{E}Y^2=\sigma^2$，$|Y|\le b$。对 $k\ge 3$，
 
 $$
 \bigl|\mathbb{E}[Y^k]\bigr|\le\mathbb{E}[|Y|^k]=\mathbb{E}[|Y|^{k-2}Y^2]\le b^{k-2}\sigma^2.
@@ -1361,7 +1359,7 @@ $$
 
 $\square$
 
-**i.i.d. 平均（讲义 p.189）。** 设 $X_1,\ldots,X_n$ 为 $X$ 的 i.i.d. 拷贝，$Y_i=X_i-\mu$。独立给出
+**i.i.d. 平均。** 设 $X_1,\ldots,X_n$ 为 $X$ 的 i.i.d. 拷贝，$Y_i=X_i-\mu$。独立给出
 
 $$
 \mathbb{E}\bigl[e^{\lambda\sum_i Y_i}\bigr]
@@ -1382,7 +1380,7 @@ $t$ 较小时分母 $\approx 2\sigma^2$，回到次高斯；$t$ 较大时分母 
 
 ---
 
-## 16. McDiarmid / 有界差分（p.189–190，证明写全）
+## 16. McDiarmid / 有界差分
 
 ### 16.1 定理
 
@@ -1444,7 +1442,7 @@ $$
 
 （独立性：给定前 $i-1$ 个坐标并把第 $i$ 个钉死，后面 $X_{i+1:n}$ 的条件律就是自己的边际。）被积函数绝对值 $\le c_i$，故积分 $\le c_i$。$\square$
 
-### 16.4 条件 Hoeffding + 迭代（p.190）
+### 16.4 条件 Hoeffding + 迭代
 
 给定 $X_{1:i-1}$，$V_i$ 是中心化的、取值在长度为 $\le c_i$ 的随机区间 $[L_i,U_i]$ 里的 RV。Hoeffding 引理对**条件分布**给出
 
@@ -1486,7 +1484,7 @@ $$
 
 ---
 
-## 17. 有限最大值（p.190）
+## 17. 有限最大值
 
 设 $X_1,\ldots,X_N$ 各 $\sim\mathrm{subG}(\sigma^2)$（**不必独立**），$Z=\max_{1\le i\le N}X_i$，$Y=\max_{1\le i\le N}|X_i|$。则
 
@@ -1531,11 +1529,11 @@ $$
 
 $Y$ 对 $\pm X_i$ 共 $2N$ 项。
 
-讲义最后写 $Y-\mathbb{E}[Y]\sim\mathrm{subG}(\sigma^2)$。严格说：仅由「每个 $X_i$ 次高斯」**不能**推出 $\max$ 中心化后有完全相同的方差代理（可以任意相关；$\psi_2$ 范数其实是 $\sigma\sqrt{\log N}$ 量级）。能无条件写下的是：均值已经是 $\sigma\sqrt{\log N}$，再往上走 $u$ 的概率 $\le 2N e^{-(\mathbb{E}Y+u)^2/(2\sigma^2)}$，对数只进均值、涨落仍是一个次高斯那么宽。这正是下一节覆盖数论证、以及 Lec2 Dudley 的输入。
+内容最后写 $Y-\mathbb{E}[Y]\sim\mathrm{subG}(\sigma^2)$。严格说：仅由「每个 $X_i$ 次高斯」**不能**推出 $\max$ 中心化后有完全相同的方差代理（可以任意相关；$\psi_2$ 范数其实是 $\sigma\sqrt{\log N}$ 量级）。能无条件写下的是：均值已经是 $\sigma\sqrt{\log N}$，再往上走 $u$ 的概率 $\le 2N e^{-(\mathbb{E}Y+u)^2/(2\sigma^2)}$，对数只进均值、涨落仍是一个次高斯那么宽。这正是下一节覆盖数论证、以及 Lec2 Dudley 的输入。
 
 ---
 
-## 18. 凸多面体上的最大值（p.191）
+## 18. 凸多面体上的最大值
 
 设紧凸集 $P=\mathrm{conv}(V(P))$，顶点 $v^1,\ldots,v^N$。令
 
@@ -1575,7 +1573,7 @@ $$
 
 ---
 
-## 19. 覆盖数、packing、欧氏球上的最大值（p.191–192）
+## 19. 覆盖数、packing、欧氏球上的最大值
 
 ### 19.1 $\varepsilon$-网与覆盖数
 
@@ -1583,7 +1581,7 @@ $K\subset\mathbb{R}^d$，距离 $d(\cdot,\cdot)$。集合 $\mathcal{N}$ 称为 $
 
 **覆盖数** $N(K,d,\varepsilon)$：最小 $\varepsilon$-网的基数。欧氏球上常写 $N(B_2,\|\cdot\|_2,\varepsilon)$。
 
-讲义先用一个稍松的界：$N(B_2,\|\cdot\|_2,\varepsilon)\le(3/\varepsilon)^d$（$\varepsilon\le 1$ 时由下面的 $(1+2/\varepsilon)^d\le(3/\varepsilon)^d$ 得到）。
+内容先用一个稍松的界：$N(B_2,\|\cdot\|_2,\varepsilon)\le(3/\varepsilon)^d$（$\varepsilon\le 1$ 时由下面的 $(1+2/\varepsilon)^d\le(3/\varepsilon)^d$ 得到）。
 
 ### 19.2 packing vs covering
 
@@ -1650,7 +1648,7 @@ $$
 
 由命题 2，$N\le P\le(1+2/\varepsilon)^d$。$\square$
 
-$\varepsilon=\frac12$ 时 $N(B_2,\frac12)\le 5^d$；讲义用 $(3/\varepsilon)^d$ 写成 $6^d$。Lec1 高概率 OLS 用的是 $5^r$ 这一档。
+$\varepsilon=\frac12$ 时 $N(B_2,\frac12)\le 5^d$；内容用 $(3/\varepsilon)^d$ 写成 $6^d$。Lec1 高概率 OLS 用的是 $5^r$ 这一档。
 
 ### 19.4 欧氏球上的最大值
 
@@ -1691,7 +1689,7 @@ $$
 
 $\sqrt{2\log 6}\le 2$，故 $\le 4\sigma\sqrt{d}$。
 
-尾：$\mathbb{P}(\max_{B_2}\theta^\top X>t)\le\mathbb{P}(2\max_{\mathcal{N}}z^\top X>t)\le|\mathcal{N}|\exp\bigl(-(t/2)^2/(2\sigma^2)\bigr)=|\mathcal{N}|e^{-t^2/(8\sigma^2)}$。  
+尾：$\mathbb{P}(\max_{B_2}\theta^\top X>t)\le\mathbb{P}(2\max_{\mathcal{N}}z^\top X>t)\le|\mathcal{N}|\exp\bigl(-(t/2)^2/(2\sigma^2)\bigr)=|\mathcal{N}|e^{-t^2/(8\sigma^2)}$。
 令 $t=4\sigma\sqrt{d}+2\sigma\sqrt{2\log(1/\delta)}$。因为 $\max\le 2\max_{\mathcal{N}}$，等价于控制 $\max_{\mathcal{N}}>u$，$u=t/2=2\sigma\sqrt{d}+\sigma\sqrt{2\log(1/\delta)}$：
 
 $$
@@ -1699,7 +1697,7 @@ $$
 \le 6^d\exp\Bigl(-\frac{u^2}{2\sigma^2}\Bigr).
 $$
 
-$u^2/(2\sigma^2)\ge d\log 6+\log(1/\delta)$（用 $\sqrt{A+B}\ge\sqrt{A}$ 的反向：$(a+b)^2\ge a^2+b^2$，$a=2\sigma\sqrt{d}$，$a^2/(2\sigma^2)=2d\ge d\log 6$ 因为 $\log 6<2$；交叉项再吸收 $\log(1/\delta)$）。讲义把这件事缩写成「$\le\delta$」。更干净的写法：取 $u=\sigma\sqrt{2\log(6^d/\delta)}$，则并集界恰好 $\delta$，再
+$u^2/(2\sigma^2)\ge d\log 6+\log(1/\delta)$（用 $\sqrt{A+B}\ge\sqrt{A}$ 的反向：$(a+b)^2\ge a^2+b^2$，$a=2\sigma\sqrt{d}$，$a^2/(2\sigma^2)=2d\ge d\log 6$ 因为 $\log 6<2$；交叉项再吸收 $\log(1/\delta)$）。内容把这件事缩写成「$\le\delta$」。更干净的写法：取 $u=\sigma\sqrt{2\log(6^d/\delta)}$，则并集界恰好 $\delta$，再
 
 $$
 u\le\sigma\sqrt{2d\log 6}+\sigma\sqrt{2\log(1/\delta)}\le 2\sigma\sqrt{d}+\sigma\sqrt{2\log(1/\delta)},
@@ -1711,7 +1709,7 @@ $$
 
 ---
 
-## 20. HW：次高斯矩阵的算子范数（p.192，补全）
+## 20. HW：次高斯矩阵的算子范数
 
 **题目。** $X\sim\mathrm{subG}_{m\times n}(\sigma^2)$。则存在绝对常数 $C$，对任意 $t>0$，
 
@@ -1761,17 +1759,15 @@ $$
 
 ---
 
-## 21. 核对：次高斯 MGF、Hoeffding / Bernstein 分母（对照讲义）
+## 21. 核对：次高斯 MGF、Hoeffding / Bernstein 分母（对照内容）
 
-以下与 `Fods_26.pdf` p.184–189 **逐字对齐**，避免和 Vershynin / Boucheron 的另一种归一化搞混。
-
-**次高斯。** 讲义：$\mathbb{E}[X]=0$ 且 $\mathbb{E}[e^{sX}]\le\exp(\sigma^2 s^2/2)$（对一切 $s\in\mathbb{R}$），记 $X\sim\mathrm{subG}(\sigma^2)$。Chernoff 在 $s=t/\sigma^2$ 处给出
+**次高斯。** 内容：$\mathbb{E}[X]=0$ 且 $\mathbb{E}[e^{sX}]\le\exp(\sigma^2 s^2/2)$（对一切 $s\in\mathbb{R}$），记 $X\sim\mathrm{subG}(\sigma^2)$。Chernoff 在 $s=t/\sigma^2$ 处给出
 
 $$
 \mathbb{P}(|X|>t)\le 2\exp\Bigl(-\frac{t^2}{2\sigma^2}\Bigr).
 $$
 
-指数里的 $2$ 在分母，来自 MGF 里的 $1/2$。若把定义改成 $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2}$（无 $1/2$），尾会变成 $e^{-t^2/4\sigma^2}$，**不是**讲义。
+指数里的 $2$ 在分母，来自 MGF 里的 $1/2$。若把定义改成 $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2}$（无 $1/2$），尾会变成 $e^{-t^2/4\sigma^2}$，**不是**内容。
 
 **Hoeffding 引理。** $\mathbb{E}e^{sX}\le e^{s^2(b-a)^2/8}$，因此 $\sigma^2/2=(b-a)^2/8$，即 $X\sim\mathrm{subG}((b-a)^2/4)$。$8$ 来自区间上方差 $\le((b-a)/2)^2$ 再积分两次。
 

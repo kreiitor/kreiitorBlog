@@ -1,6 +1,6 @@
 ---
-title: "生成学习与 LLM：从 GAN 到扩散与 Transformer"
-description: "沿着分布建模与采样的主线，理解 GAN、Langevin、扩散模型和大语言模型。"
+title: 生成学习与 LLM：从 GAN 到扩散与 Transformer
+description: 沿着分布建模与采样的主线，理解 GAN、Langevin、扩散模型和大语言模型。
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,8 +12,6 @@ order: 7
 cover: /covers/post-math.svg
 ---
 
-对应讲义：`Fods_26.pdf` p.79–137。
-
 本章目标：把「从噪声变成数据」这件事，从 GAN 的对偶（IPM / min-max），写到梯度流的原问题（推送映射），再写到 Langevin / 扩散的 SDE，最后写到 **ODE 流的一步生成** 和 **Transformer / LLM 的误差**。全程用同一把尺子：两个概率分布有多像，以及你学到的生成器 / 速度场 / 条件概率有多准。
 
 你会得到：
@@ -24,20 +22,11 @@ cover: /covers/post-math.svg
 4. 密度比二次损失的完整配方；EPT 算法；连续性方程、Otto 梯度流、LogSob 下 KL 指数衰减；与 Langevin / Fokker–Planck 的改写；
 5. Stein 引理、去噪 autoencoder $\Rightarrow$ score matching 的完整计算；时间反转 OU / Song et al. 训练；
 6. 高斯插值流 / Föllmer：条件期望速度场、MC 采样误差、回归损失 (10) 为何是条件期望、特征学习一步生成、潜空间误差分解、CIFAR FID、用条件生成做 UQ；
-7. Transformer 的精确定义；Hölder $\to$ Transformer 的深度 $O(1)$ 上界与 VC 下界；$\beta$-mixing 滑动窗口 ERM；预训练与 in-context learning 为何像隐式贝叶斯。
-
-需要的预备（看不懂就去附录，现场也会再讲一遍）：
-
-- 推送 $g_\sharp\mu$、KL、$W_1/W_2$：本节会从零定义
-- 高斯、条件期望、分部积分：附录 B
-- 神经网络类 $\mathrm{NN}(W,L)$、Hölder 类 $\mathcal{H}^\beta$、覆盖数 / Rademacher：Lec2
-- Lipschitz、Jacobian、$\det$、散度定理：附录 A
-
-讲义印刷 / 提取时常见的词：`takehome massage` = message，`Langevian` = Langevin，`Controlabel` = controllable，`quanlify the uncertanty` = quantify the uncertainty，`SycleGAN` = CycleGAN，`Supperresolution` = Super-resolution。Huang et al. JMLR 论文里源分布叫 $\nu$、目标叫 $\mu$，讲义相反（源 $\mu$、目标 $\nu$）。本文**跟讲义**：目标是 $\nu$（或密度 $p$），源 / 参考是 $\mu$（或密度 $q$）。
+7. Transformer 的精确定义；Hölder $\to$ Transformer 的深度 $O(1)$ 上界与 VC 下界；$\beta$-mixing 滑动窗口 ERM；预训练与 in-context learning 为何像隐式贝叶斯。Huang et al. JMLR 论文里源分布叫 $\nu$、目标叫 $\mu$，内容相反（源 $\mu$、目标 $\nu$）。本文**跟内容**：目标是 $\nu$（或密度 $p$），源 / 参考是 $\mu$（或密度 $q$）。
 
 ---
 
-## 第一部分 生成学习动机（p.79–89）
+## 第一部分 生成学习动机
 
 ## 0. 先用一张图把任务钉死
 
@@ -57,13 +46,13 @@ $$
 q\bigl(g^{-1}(x)\bigr)\,\bigl|\det\nabla g^{-1}(x)\bigr|.
 $$
 
-讲义 p.79–85 的图（领域自适应 CycleGAN、扩散超分、Schrödinger Bridge 修复、文生图 / Stable Diffusion）都是这件事的特效版：不是预测一个数，而是**再画出一张和训练数据同分布的新图**。
+内容 的图（领域自适应 CycleGAN、扩散超分、Schrödinger Bridge 修复、文生图 / Stable Diffusion）都是这件事的特效版：不是预测一个数，而是**再画出一张和训练数据同分布的新图**。
 
-条件生成更进一步：有成对数据 $(X_i,Y_i)$，学的不是 $\mathbb{E}[Y\mid X=x]$，而是整条条件分布 $\nu(\cdot\mid X=x)$。有了条件分布才能做不确定性量化（UQ）：给出 90% 预测区间，而不是一个点。p.127 的 wine 数据就是这个。
+条件生成更进一步：有成对数据 $(X_i,Y_i)$，学的不是 $\mathbb{E}[Y\mid X=x]$，而是整条条件分布 $\nu(\cdot\mid X=x)$。有了条件分布才能做不确定性量化（UQ）：给出 90% 预测区间，而不是一个点。 的 wine 数据就是这个。
 
 ---
 
-## 1. 生成学习在统计里是什么（p.86–87）
+## 1. 生成学习在统计里是什么
 
 无条件：从 $X_1,\ldots,X_n\stackrel{\mathrm{iid}}{\sim}\nu$ 学习高维分布 $\nu$ 或其密度 $p$——这是非参数密度估计，维数 $d$ 一大，直方图 / 核密度直接崩。
 
@@ -77,11 +66,11 @@ $$
 | GAN | Goodfellow et al. 2014 | 深度非线性因子分析 + 可微的「两样本检验」对着打 |
 | SDE / 扩散 | Song–Ermon，Ho et al.，Song et al. | 根子是不精确 Langevin、Schrödinger Bridge、Nelson 随机力学 |
 
-Yann LeCun 说 GAN 是「过去十年深度学习最酷的想法」；引用量讲义写 83K。Stable Diffusion（Rombach et al. 2022）和 Sora 的关键是：**在 autoencoder 的潜空间里做扩散 / 流**，而不是直接在像素空间。
+Yann LeCun 说 GAN 是「过去十年深度学习最酷的想法」；引用量内容写 83K。Stable Diffusion（Rombach et al. 2022）和 Sora 的关键是：**在 autoencoder 的潜空间里做扩散 / 流**，而不是直接在像素空间。
 
 ---
 
-## 2. 经典采样为什么不够：metastability 与维数灾难（p.88）
+## 2. 经典采样为什么不够：metastability 与维数灾难
 
 假设你已经知道目标（差一个归一化常数）$p(x)=e^{-U(x)}/Z$，只想抽样本。经典工具：
 
@@ -125,21 +114,21 @@ $$
 
 ---
 
-## 3. 三条 takehome（p.89）
+## 3. 三条 takehome
 
 **GAN。** 模型本身好：IPM 误差有非参最优速率（Liang 21，Huang–Jiao–Li–Liu–Wang–Yang JMLR 22，Jiao–Wang–Yang ACHA 23，Chakraborty–Bartlett 24）。训练不稳是**算法**（min-max、Lipschitz 约束、mode collapse），不是模型定义错了。
 
 **SDE 生成。** 训练稳（回归 score，不是对着打），但贵：要模拟一条长时间 SDE，NFE（函数求值次数）成百上千（Wang–Jiao–Xu–Wang–Yang ICML 21，Chen–Huang–Zhao–Wang 23，Oko–Akiyama–Suzuki 23，Jiao–Kang–Liu–Lin–Zuo arXiv:2404.13309）。
 
-**ODE 流。** 概率空间上的梯度流给出 ODE，原则上可**一步生成**（Gao–Jiao–Wang–Wang–Yang–Zhang ICML 19，Gao–Huang–Jiao–Liu–Lu–Yang MSML 21，Song–Dhariwal–Chen–Sutskever 23），早期分析不完整。讲义后续工作给出端到端（条件 / 无条件）可证明的一步生成：Gao–Huang–Jiao JMLR 24，Chang–Ding–Jiao–Li–Yang arXiv:2402.01460，Gao–Huang–Jiao–Zheng arXiv:2404.00551，以及特征学习 Ding–Duan–Jiao–Li–Yang–Zhang arXiv:2405.05512。
+**ODE 流。** 概率空间上的梯度流给出 ODE，原则上可**一步生成**（Gao–Jiao–Wang–Wang–Yang–Zhang ICML 19，Gao–Huang–Jiao–Liu–Lu–Yang MSML 21，Song–Dhariwal–Chen–Sutskever 23），早期分析不完整。内容后续工作给出端到端（条件 / 无条件）可证明的一步生成：Gao–Huang–Jiao JMLR 24，Chang–Ding–Jiao–Li–Yang arXiv:2402.01460，Gao–Huang–Jiao–Zheng arXiv:2404.00551，以及特征学习 Ding–Duan–Jiao–Li–Yang–Zhang arXiv:2405.05512。
 
 记这三句，后面每一部分都在给它们装上定理。
 
 ---
 
-## 第二部分 GAN 误差（p.90–93）
+## 第二部分 GAN 误差
 
-## 4. IPM：把「两分布有多像」写成对偶（p.91）
+## 4. IPM：把「两分布有多像」写成对偶
 
 ### 4.1 定义
 
@@ -162,7 +151,7 @@ $$
 
 - $\mathcal{F}=\mathrm{Lip}(1)$（Lipschitz 常数 $\le 1$）$\Rightarrow$ $d_{\mathcal{F}}=W_1$（Kantorovich–Rubinstein），即 Wasserstein GAN（Arjovsky et al. 2017）。
 - $\mathcal{F}$ 是 Sobolev 球 $\Rightarrow$ Sobolev GAN（Mroueh et al. 2018）。
-- 讲义主定理取 $\mathcal{F}=\mathcal{H}=\mathcal{H}^\beta(\mathbb{R}^d)$（Hölder-$\beta$ 球）。在 $[0,1]^d$、$\beta=1$ 时，讲义写
+- 内容主定理取 $\mathcal{F}=\mathcal{H}=\mathcal{H}^\beta(\mathbb{R}^d)$（Hölder-$\beta$ 球）。在 $[0,1]^d$、$\beta=1$ 时，内容写
 
 $$
 W_1(\nu,\widehat g_\sharp\mu)
@@ -208,7 +197,7 @@ $$
 
 ---
 
-## 5. 定理 Huang–Jiao–Li–Liu–Wang–Yang JMLR 22（p.92）
+## 5. 定理 Huang–Jiao–Li–Liu–Wang–Yang JMLR 22
 
 记 $\mathrm{NN}(W,L)$ 为宽度 $\le W$、深度 $\le L$ 的 ReLU 网络；$\mathrm{Lip}(\mathbb{R}^d,K,1)$ 为 Lipschitz $\le K$ 且 $\|f\|_\infty\le 1$ 的函数。
 
@@ -253,10 +242,10 @@ $$
 n^{-\beta/d}\vee n^{-1/2}\log n.
 $$
 
-**备注（讲义原文）。**
+**备注（内容这里）。**
 
 - $O(n^{-\beta/d})$ 对**没有密度**的 $\nu$、在 $d_{\mathcal{F}}$ 下是 minimax 最优的（Liang 21，Singh et al. 18）。多出来的 $n^{-1/2}\log n$ 是「经验过程的参数部分」，$\beta/d>1/2$ 时被它盖住。
-- 若 $\nu=\widetilde\nu\otimes\xi$，$\dim_M(\mathrm{supp}(\widetilde\nu))=d^*<d$（Minkowski 维），$\xi$ 零均值有界方差 $\sigma^2$，速率改进为 $O(n^{-\beta/d^*}+\sigma^2)$（讲义；论文里紧支撑低维集是 $O((n^{-\beta/d^*}\vee n^{-1/2})\log n)$）。**环境维数 $d$ 不出现，内在维数 $d^*$ 出现**——图像「看起来 $d=3072$，其实趴在低维流形上」。
+- 若 $\nu=\widetilde\nu\otimes\xi$，$\dim_M(\mathrm{supp}(\widetilde\nu))=d^*<d$（Minkowski 维），$\xi$ 零均值有界方差 $\sigma^2$，速率改进为 $O(n^{-\beta/d^*}+\sigma^2)$（内容；论文里紧支撑低维集是 $O((n^{-\beta/d^*}\vee n^{-1/2})\log n)$）。**环境维数 $d$ 不出现，内在维数 $d^*$ 出现**——图像「看起来 $d=3072$，其实趴在低维流形上」。
 - 若 $\nu$ 有密度 $p_\nu\in\mathcal{H}^\alpha([0,1]^d)$，用正则化的 $\widehat\nu$，最优速率 $O\bigl(n^{-(\beta+\alpha)/d}\vee n^{-1/2}\log n\bigr)$。有密度 = 多 $\alpha$ 阶光滑，分子多一个 $\alpha$。
 - 可延拓到无界支撑但次指数尾。
 
@@ -264,7 +253,7 @@ $$
 
 ---
 
-## 6. 证明骨架：$d_{\mathcal{F}}(\nu,\widehat g_\sharp\mu)\le 4E_1+E_2+E_3+2E_4$（p.93）
+## 6. 证明骨架：$d_{\mathcal{F}}(\nu,\widehat g_\sharp\mu)\le 4E_1+E_2+E_3+2E_4$
 
 ### 6.1 四项是什么
 
@@ -274,7 +263,7 @@ d_{\mathcal{F}}(\nu,\widehat g_\sharp\mu)
 4E_1+E_2+E_3+2E_4,
 $$
 
-| 符号 | 讲义定义 | 人话 |
+| 符号 | 内容定义 | 人话 |
 |------|----------|------|
 | $E_1=E(\mathcal{F},\mathcal{F}_{\mathrm{NN}})$ | 判别器类 $\mathcal{F}_{\mathrm{NN}}$ 对 $\mathcal{F}$ 的函数逼近误差（带 Lipschitz 控制） | 网络证人能不能扮演 Hölder 证人 |
 | $E_2=\inf_{g\in\mathcal{G}_{\mathrm{NN}}}\|g_\sharp\mu-\widehat\nu\|_{\mathcal{F}_{\mathrm{NN}}}$ | 生成器类把参考推到经验目标旁边的分布逼近误差 | 生成器够不够灵活 |
@@ -410,7 +399,7 @@ d_{\mathcal{F}}(\nu,\widehat g_\sharp\mu)
 4E_1+E_2+E_3+2E_4.
 $$
 
-这就是讲义的分解。$\square$
+这就是内容的分解。$\square$
 
 ### 6.3 系数 $4,1,1,2$ 从哪来（对照分解）
 
@@ -431,7 +420,7 @@ $$
 - **$E_3$：** 只出现一次——$n$ 个真样本的经验过程（已经写在 $\mathcal{F}$ 上）。
 - **$2E_4$：** 噪声样本出现两次：三角不等式的「假经验 vs 假总体」，以及最优性里「任意 $g$ 的 $g_\sharp Q_m$ vs $g_\sharp\mu$」。同一类 $\mathcal{F}_{\mathrm{NN}}\circ\mathcal{G}_{\mathrm{NN}}$，故系数 $2$。
 
-没有优化误差时这就是讲义的 $4E_1+E_2+E_3+2E_4$。实践里再加 $\varepsilon_{\mathrm{opt}}$，它往往比统计项大——takehome「模型好、算法不稳」。
+没有优化误差时这就是内容的 $4E_1+E_2+E_3+2E_4$。实践里再加 $\varepsilon_{\mathrm{opt}}$，它往往比统计项大——takehome「模型好、算法不稳」。
 
 ### 6.4 $E_1$：带 Lipschitz 控制的判别器逼近
 
@@ -451,12 +440,12 @@ $$
 2. **经验过程的复杂度。** $\mathcal{F}_{\mathrm{NN}}\circ\mathcal{G}_{\mathrm{NN}}$ 的伪维数可以估，但若权重／Lip 不受控，覆盖数爆炸，$E_4$ 的 $m$ 会不够。
 3. **一致逼近 $\neq$ IPM 逼近。** 两个函数 $\|f-\varphi\|_\infty$ 小，它们作为证人已经够（这是引理 A 的 $2E_1$）；但若构造出的 $\varphi$ 不在 $\mathcal{F}_{\mathrm{NN}}$ 的 Lip 约束里，它根本不是合法证人。
 
-**构造思想（讲义层面，Huang et al. JMLR 22 Lemma 11）。** 写 $\beta=s+r$，$s\in\mathbb{N}_0$，$r\in(0,1]$。
+**构造思想（内容层面，Huang et al. JMLR 22 Lemma 11）。** 写 $\beta=s+r$，$s\in\mathbb{N}_0$，$r\in(0,1]$。
 
 - 把 $[0,1]^d$ 切成边长 $N^{-1}$ 的小立方体，$N\asymp(WL)^{2/d}$。
 - 每个立方体上用 $h$ 的 $s$ 阶 Taylor 多项式 $P_s$ 代替 $h$；Hölder-$\beta$ 给出 $\|h-P_s\|_\infty\lesssim N^{-\beta}$。
 - ReLU 网实现：局部多项式、划分的单位（cutoff）、以及把它们加起来。这是 Daubechies–DeVore–Foucart–Hanin–Petrova 2019 / Shen–Yang–Zhang 2021 / Lu–Shen–Yang–Zhang 2021 的「分片多项式 $\to$ ReLU」路线。
-- **额外跟踪 Lipschitz：** 每个仿射层的算子范数、每个 cutoff 的斜率、深度 $L$ 次复合。复合 Lip 的包络是讲义写的
+- **额外跟踪 Lipschitz：** 每个仿射层的算子范数、每个 cutoff 的斜率、深度 $L$ 次复合。复合 Lip 的包络是内容写的
 
 $$
 K
@@ -473,7 +462,7 @@ $$
 
 $P_n$ 最多 $n$ 个原子。$E_2=\inf_{g\in\mathcal{G}_{\mathrm{NN}}}d_{\mathcal{F}_{\mathrm{NN}}}(g_\sharp\mu,P_n)$ 问的是：ReLU 生成器能不能把**绝对连续**的源 $\mu$（维数 $k$ 可以 $<d$）推到这堆原子上。
 
-**几何事实。** 一维绝对连续的 $\mu$ 可以先仿射投到 $\mathbb{R}$（讲义 / 论文 Remark：$k$ 维绝对连续先线性投到 1 维，仍绝对连续）。目标是任意
+**几何事实。** 一维绝对连续的 $\mu$ 可以先仿射投到 $\mathbb{R}$（内容 / 论文 Remark：$k$ 维绝对连续先线性投到 1 维，仍绝对连续）。目标是任意
 
 $$
 \gamma
@@ -484,11 +473,11 @@ $$
 x_i\in[0,1]^d.
 $$
 
-**构造（Yunfei Yang 的分布逼近，讲义层）。**
+**构造（Yunfei Yang 的分布逼近，内容层）。**
 
 1. 把源轴 $\mathbb{R}$ 切成 $n$ 段 $I_1,\ldots,I_n$，使 $\mu(I_i)=p_i$（绝对连续 $\Rightarrow$ 分位数存在）。
 2. 在 $I_i$ 上把 $g$ 做成常值 $x_i$（或极窄的仿射过渡，ReLU 的 $\min\{\max\{x,-1\},1\}=\sigma(x+1)-\sigma(x-1)-1$ 再平移缩放到 $[0,1]$）。
-3. 分段常数 / 分段仿射映射是浅 ReLU 网：$n$ 个断点 $\Rightarrow$ 宽度 $\asymp n$、深度 $O(1)$，或按讲义的配额 $W_1^2 L_1\asymp n$（参数个数够 $n$ 段）。输出再 clip 进 $[0,1]^d$。
+3. 分段常数 / 分段仿射映射是浅 ReLU 网：$n$ 个断点 $\Rightarrow$ 宽度 $\asymp n$、深度 $O(1)$，或按内容的配额 $W_1^2 L_1\asymp n$（参数个数够 $n$ 段）。输出再 clip 进 $[0,1]^d$。
 
 于是存在 $g\in\mathcal{G}_{\mathrm{NN}}$ 使 $g_\sharp\mu=P_n$（或 $W_1$ 误差 $0$）。又 $\mathcal{F}_{\mathrm{NN}}\subset\mathrm{Lip}(K)$，
 
@@ -516,7 +505,7 @@ $$
 
 $c(\beta,d)=1$ 当 $2\beta=d$，否则可取 $0$。这就是无密度时 $d_{\mathcal{F}}$ 的 minimax 最优速率（Liang 21，Singh et al. 18）。
 
-- **$E_4$。** 复合类 $\mathcal{F}_{\mathrm{NN}}\circ\mathcal{G}_{\mathrm{NN}}$ 的伪维数由网络规模控制（Bartlett–Harvey–Liaw–Mehrabian 2019）。Rademacher / Dudley 给出经验过程；要它被主项盖住，讲义取 $m\gtrsim n^{2+2\beta/d}\log^6 n$（噪声样本必须比真样本多一个多项式，因为证人是「判别器$\circ$生成器」，类更大）。
+- **$E_4$。** 复合类 $\mathcal{F}_{\mathrm{NN}}\circ\mathcal{G}_{\mathrm{NN}}$ 的伪维数由网络规模控制（Bartlett–Harvey–Liaw–Mehrabian 2019）。Rademacher / Dudley 给出经验过程；要它被主项盖住，内容取 $m\gtrsim n^{2+2\beta/d}\log^6 n$（噪声样本必须比真样本多一个多项式，因为证人是「判别器$\circ$生成器」，类更大）。
 
 四项对齐：$E_2=0$，$E_1,E_3,E_4$ 都 $\lesssim n^{-\beta/d}\vee n^{-1/2}\log n$，即主定理。
 
@@ -524,11 +513,11 @@ $c(\beta,d)=1$ 当 $2\beta=d$，否则可取 $0$。这就是无密度时 $d_{\ma
 
 ---
 
-## 第三部分 梯度流 / EPT（p.94–106）
+## 第三部分 梯度流 / EPT
 
 GAN 在**对偶**里打：证人 $f$ 越大越好，生成器 $g$ 越小越好。这一部分改在**原空间**动粒子：给当前密度 $q$，找一个运输映射 $T$，让 $T_\sharp q$ 比 $q$ 更靠近目标 $p$。
 
-## 7. 原问题：沿向量场微扰恒等映射（p.95）
+## 7. 原问题：沿向量场微扰恒等映射
 
 $x\sim q$，$T$ 可逆时 $T_\sharp q(x)=q(T^{-1}x)\,|\det\nabla T^{-1}(x)|$。取
 
@@ -559,7 +548,7 @@ $$
 
 ---
 
-## 8. 第一变分：完整计算（p.96）
+## 8. 第一变分：完整计算
 
 ### 8.1 第一变分的定义
 
@@ -581,7 +570,7 @@ T^\sharp p(x)
 p\bigl(T(x)\bigr)\,\bigl|\det\nabla T(x)\bigr|.
 $$
 
-**引理（KL 的推送–拉回）。** $D_{\mathrm{KL}}(T_\sharp q\,\|\,p)=D_{\mathrm{KL}}(q\,\|\,T^\sharp p)$。（讲义两边都写成 #；Typora 公式里不能直接写 #，拉回用 $T^\sharp$，推送用 $T_\sharp$。）
+**引理（KL 的推送–拉回）。** $D_{\mathrm{KL}}(T_\sharp q\,\|\,p)=D_{\mathrm{KL}}(q\,\|\,T^\sharp p)$。
 
 **证明。** $T_\sharp q$ 在 $y=T(x)$ 处的密度是 $q(x)/|\det\nabla T(x)|$。换元 $\mathrm{d}y=|\det\nabla T|\,\mathrm{d}x$：
 
@@ -614,9 +603,9 @@ $$
 \Bigr].
 $$
 
-### 8.3 红字 Observing：两个 Taylor
+### 8.3 重点 Observing：两个 Taylor
 
-讲义红字 **Observing for small $t$**：
+内容重点 **Observing for small $t$**：
 
 $$
 \begin{aligned}
@@ -714,7 +703,7 @@ $$
 \int_{B_R}\langle\nabla q,\,g\rangle\,\mathrm{d}x.
 $$
 
-讲义假设 $\lim_{\|x\|_2\to\infty}\|g(x)q(x)\|=0$（$q$ 次高斯尾、$g$ 多项式增长就够）。球面面积 $\asymp R^{d-1}$，被积函数是 $qg\cdot n$，极限把边界积分送到 $0$。剩下
+内容假设 $\lim_{\|x\|_2\to\infty}\|g(x)q(x)\|=0$（$q$ 次高斯尾、$g$ 多项式增长就够）。球面面积 $\asymp R^{d-1}$，被积函数是 $qg\cdot n$，极限把边界积分送到 $0$。剩下
 
 $$
 \mathbb{E}_q\bigl[\mathrm{tr}(\nabla g)\bigr]
@@ -722,7 +711,7 @@ $$
 -\mathbb{E}_q\langle\nabla\log q,\,g\rangle.
 $$
 
-这就是红字里「as long as $\lim\|g q\|=0$」那一句：没有它，散度定理会留下一个边界，第一变分对不上 $\nabla\log(p/q)$。
+这就是重点里「as long as $\lim\|g q\|=0$」那一句：没有它，散度定理会留下一个边界，第一变分对不上 $\nabla\log(p/q)$。
 
 ### 8.5 拼起来：$\langle\nabla\log(p/q),g\rangle$
 
@@ -765,11 +754,11 @@ v
 r^*=p/q.
 $$
 
-（讲义 p.95 把同一式写成 $\langle-\partial L_q(0),g\rangle_{L^2(q)}=\langle\nabla\log(p/q),g\rangle_{L^2(q)}$。）未知 $p,q$ 时不能直接写这个梯度，所以下一节先估密度比 $r^*$，再取 $\widehat v=\nabla\log\widehat r$。
+,g\rangle_{L^2(q)}=\langle\nabla\log(p/q),g\rangle_{L^2(q)}$。）未知 $p,q$ 时不能直接写这个梯度，所以下一节先估密度比 $r^*$，再取 $\widehat v=\nabla\log\widehat r$。
 
 ---
 
-## 9. 密度比的二次损失：完整配方（p.97）
+## 9. 密度比的二次损失：完整配方
 
 未知 $p,q$ 时不能直接写 $\nabla\log(p/q)$。先估密度比。
 
@@ -832,7 +821,7 @@ $$
 
 ---
 
-## 10. 算法：inexact Riemannian GD / EPT（p.97）
+## 10. 算法：inexact Riemannian GD / EPT
 
 Gao–Jiao–Wang–Wang–Yang–Zhang ICML 19，Gao–Huang–Jiao–Liu–Lu–Yang MSML 21。
 
@@ -844,13 +833,11 @@ Gao–Jiao–Wang–Wang–Yang–Zhang ICML 19，Gao–Huang–Jiao–Liu–Lu�
 2. 更新粒子：$Y_i\leftarrow\widehat T(Y_i)$。
 3. 拟合生成器：$\min_\theta n^{-1}\sum_i\|G_\theta(Z_i)-Y_i\|_2^2$。
 
-人话：估密度比 $\to$ 它的 score 当向量场 $\to$ 把粒子沿这个场推一小步 $\to$ 用网络记住「噪声到新粒子」的映射。这是概率空间上的不精确黎曼梯度下降，不是 min-max。
-
-p.98–105 的实验（2D 多峰、4 正方形$\to$5 正方形、MNIST / Fashion-MNIST / CIFAR Inception Score 对外环稳定、粒子在 $\mathbb{R}^{2352}$ / $\mathbb{R}^{3072}$ 里走、CelebA 视觉对比）说明：用 Jeffrey / JS / KL 当外层损失时 IS 能稳住，不像 GAN 那样抖。细节略，理论在下一节。
+人话：估密度比 $\to$ 它的 score 当向量场 $\to$ 把粒子沿这个场推一小步 $\to$ 用网络记住「噪声到新粒子」的映射。这是概率空间上的不精确黎曼梯度下降，不是 min-max。 的实验（2D 多峰、4 正方形$\to$5 正方形、MNIST / Fashion-MNIST / CIFAR Inception Score 对外环稳定、粒子在 $\mathbb{R}^{2352}$ / $\mathbb{R}^{3072}$ 里走、CelebA 视觉对比）说明：用 Jeffrey / JS / KL 当外层损失时 IS 能稳住，不像 GAN 那样抖。细节略，理论在下一节。
 
 ---
 
-## 11. 连续极限：连续性方程、Otto 梯度流、LogSob（p.106）
+## 11. 连续极限：连续性方程、Otto 梯度流、LogSob
 
 粒子 $x_{t+\mathrm{d}t}=x_t+v_t(x_t)\,\mathrm{d}t$，$v_t=\nabla\log(p/q_t)$。密度 $q_t$ 满足**连续性方程**
 
@@ -863,7 +850,7 @@ q_0=q.
 \tag{3}
 $$
 
-**从粒子 $x_{t+\mathrm{d}t}=x_t+v_t(x_t)\,\mathrm{d}t$ 推连续性方程（按讲义 p.106 的顺序写全）。**
+**从粒子 $x_{t+\mathrm{d}t}=x_t+v_t(x_t)\,\mathrm{d}t$ 推连续性方程。**
 
 粒子更新就是瞬时推送 $T(x)=x+v_t(x)\,\mathrm{d}t$。$\mathrm{d}t$ 无穷小时 $T^{-1}(x)=x-v_t(x)\,\mathrm{d}t+o(\mathrm{d}t)$，Jacobian $\nabla T^{-1}=I-\mathrm{d}t\,\nabla v_t+o(\mathrm{d}t)$。密度的推送公式
 
@@ -874,7 +861,7 @@ q_t\bigl(T^{-1}(x)\bigr)\,
 \bigl|\det\nabla T^{-1}(x)\bigr|,
 $$
 
-取对数（讲义把 $o(\mathrm{d}t)$ 写在 log 这一层）：
+取对数（内容把 $o(\mathrm{d}t)$ 写在 log 这一层）：
 
 $$
 \log q_{t+\mathrm{d}t}(x)
@@ -927,7 +914,7 @@ o(\mathrm{d}t)
 o(\mathrm{d}t).
 $$
 
-讲义再用一次 $\log$ 的一阶：$\log(q+\Delta q)-\log q=\Delta q/q+o(\Delta q)$，即
+内容再用一次 $\log$ 的一阶：$\log(q+\Delta q)-\log q=\Delta q/q+o(\Delta q)$，即
 
 $$
 \log q_{t+\mathrm{d}t}-\log q_t
@@ -945,7 +932,7 @@ q_{t+\mathrm{d}t}(x)-q_t(x)
 o(\mathrm{d}t).
 $$
 
-除以 $\mathrm{d}t$ 取极限即 (3)。粒子形式（讲义 (4)）就是 ODE
+除以 $\mathrm{d}t$ 取极限即 (3)。粒子形式（内容 (4)）就是 ODE
 
 $$
 \frac{\mathrm{d}}{\mathrm{d}t}x_t=v_t(x_t),\qquad t>0,\qquad x_0\sim q.
@@ -977,7 +964,7 @@ D_{\mathrm{KL}}(q\|p)
 \quad\text{（Fisher 信息）},
 $$
 
-则 $\frac{\mathrm{d}}{\mathrm{d}t}L\le -2c\, L$，故 $L[q_t]=O(e^{-ct})$（Otto–Villani 2000；讲义写 $\exp(-ct)$，常数 2 被吸收进 $c$ 的定义）。
+则 $\frac{\mathrm{d}}{\mathrm{d}t}L\le -2c\, L$，故 $L[q_t]=O(e^{-ct})$（Otto–Villani 2000；内容写 $\exp(-ct)$，常数 2 被吸收进 $c$ 的定义）。
 
 EPT 是不精确黎曼 GD：
 
@@ -1021,9 +1008,9 @@ $$
 
 ---
 
-## 第四部分 Langevin 与扩散（p.107–112）
+## 第四部分 Langevin 与扩散
 
-## 13. Langevin SDE 与 ULA（p.108）
+## 13. Langevin SDE 与 ULA
 
 目标 $p(x)=e^{-U(x)}/Z$，$\nabla U$ Lipschitz。**Langevin 扩散**（Arnold 1974）
 
@@ -1058,7 +1045,7 @@ $$
 
 ---
 
-## 14. 去噪 autoencoder 与模糊 score（p.109）
+## 14. 去噪 autoencoder 与模糊 score
 
 直接学 $s=\nabla\log p$ 需要 $\nabla\log p$ 的标签，没有。Tweedie / 去噪给出可回归的代理。
 
@@ -1098,7 +1085,7 @@ $$
 
 ---
 
-## 15. Stein 引理：完整证明（p.110）
+## 15. Stein 引理：完整证明
 
 **Stein 引理。** $\xi\sim N(0,I_d)$，$f:\mathbb{R}^d\to\mathbb{R}$ 几乎处处可微，$\mathbb{E}[\|\nabla f(\xi)\|]<\infty$，且对每个坐标 $\lim_{|x_i|\to\infty}f(x)\,e^{-x_i^2/2}=0$。则
 
@@ -1108,7 +1095,7 @@ $$
 \mathbb{E}\bigl[\nabla f(\xi)\bigr].
 $$
 
-**一维证明（分部积分，按讲义写全）。** $\xi\sim N(0,1)$，密度 $\phi(x)=(2\pi)^{-1/2}e^{-x^2/2}$。高斯的关键代数是 $\phi'(x)=-x\phi(x)$，即 $x\phi(x)=-\phi'(x)$。于是
+**一维证明（分部积分，按内容写全）。** $\xi\sim N(0,1)$，密度 $\phi(x)=(2\pi)^{-1/2}e^{-x^2/2}$。高斯的关键代数是 $\phi'(x)=-x\phi(x)$，即 $x\phi(x)=-\phi'(x)$。于是
 
 $$
 \mathbb{E}[f(\xi)\xi]
@@ -1128,7 +1115,7 @@ $$
 \int_{-\infty}^{\infty} f'(x)\phi(x)\,\mathrm{d}x.
 $$
 
-边界项：$\phi(x)\propto e^{-x^2/2}$，讲义假设 $\lim_{|x|\to\infty}f(x)\,e^{-x^2/2}=0$，故 $[-f\phi]_{-\infty}^{\infty}=0$。剩下 $\mathbb{E}[f'(\xi)]$。$\square$
+边界项：$\phi(x)\propto e^{-x^2/2}$，内容假设 $\lim_{|x|\to\infty}f(x)\,e^{-x^2/2}=0$，故 $[-f\phi]_{-\infty}^{\infty}=0$。剩下 $\mathbb{E}[f'(\xi)]$。$\square$
 
 （高维每个坐标的边界是 $\lim_{|x_i|\to\infty}f(x)\,e^{-x_i^2/2}=0$，对其余坐标积分后回到一维。）
 
@@ -1150,9 +1137,9 @@ $$
 
 ---
 
-## 16. 从 $\mathbb{E}\mathbb{E}\|v(X+Z)-X\|^2$ 到 score matching（p.110，补全）
+## 16. 从 $\mathbb{E}\mathbb{E}\|v(X+Z)-X\|^2$ 到 score matching
 
-记 $Y=X+Z$，$w(y)=v(y)-y$。讲义把被积函数写成 $V(y)-y+z$，即 $w(y)+z$：
+记 $Y=X+Z$，$w(y)=v(y)-y$。内容把被积函数写成 $V(y)-y+z$，即 $w(y)+z$：
 
 $$
 v(X+Z)-X
@@ -1174,7 +1161,7 @@ $$
 \mathbb{E}\|Z\|^2.
 $$
 
-第三项是常数 $C=d\sigma^2$。换元 $y=x+z$（讲义写 $V(y)-y+z$，即 $w(y)+z$）：
+第三项是常数 $C=d\sigma^2$。换元 $y=x+z$（内容写 $V(y)-y+z$，即 $w(y)+z$）：
 
 $$
 \mathbb{E}\|w(Y)\|^2
@@ -1247,7 +1234,7 @@ $$
 
 ---
 
-## 17. Inexact Langevin 与 Schrödinger Bridge（p.111）
+## 17. Inexact Langevin 与 Schrödinger Bridge
 
 **算法（Inexact Langevin）。** 输入 $X_1,\ldots,X_n$、$\sigma$、$K$。
 
@@ -1283,11 +1270,11 @@ $X_0\sim p_\sigma$，则 $X_1\sim p$：从模糊分布走回干净分布，漂�
 
 ---
 
-## 18. 时间反转：OU 过程与 Song et al.（p.112）
+## 18. 时间反转：OU 过程与 Song et al.
 
 ### 18.1 正向 OU 的显式解
 
-Ornstein–Uhlenbeck（讲义）
+Ornstein–Uhlenbeck（内容）
 
 $$
 \mathrm{d}X_t=-X_t\,\mathrm{d}t+\sqrt{2}\,\mathrm{d}B_t,
@@ -1329,11 +1316,11 @@ e^{-2t}\bigl(e^{2t}-1\bigr)
 1-e^{-2t}.
 $$
 
-故 $X_t\mid X_0\sim N(e^{-t}X_0,\,(1-e^{-2t})I)$，与讲义一致。
+故 $X_t\mid X_0\sim N(e^{-t}X_0,\,(1-e^{-2t})I)$，与内容一致。
 
 ### 18.2 时间换元 $\varphi(t)=1-e^{-t}$
 
-讲义：$\varphi(t)=1-e^{-t}$ 把 OU 时钟 $[0,\infty)$ 映到新时钟 $[0,1)$。**新过程是旧过程在逆时钟上的取值**，不是 $X_{\varphi(t)}$（那会给出均值 $e^{-(1-e^{-t})}X_0$，对不上 $(1-t)X_0$）。正确的是
+内容：$\varphi(t)=1-e^{-t}$ 把 OU 时钟 $[0,\infty)$ 映到新时钟 $[0,1)$。**新过程是旧过程在逆时钟上的取值**，不是 $X_{\varphi(t)}$（那会给出均值 $e^{-(1-e^{-t})}X_0$，对不上 $(1-t)X_0$）。正确的是
 
 $$
 \tau(t)
@@ -1371,7 +1358,7 @@ $$
 \int_0^t\sqrt{\frac{2}{(1-u)^3}}\,\mathrm{d}W_u.
 $$
 
-这就是讲义
+这就是内容
 
 $$
 \widetilde X_t
@@ -1409,7 +1396,7 @@ $$
 \sqrt{\frac{2}{1-t}}\,\mathrm{d}B_t
 $$
 
-的唯一强解（与讲义逐字一致）。
+的唯一强解（与内容逐字一致）。
 
 **边际。** $\widetilde X_t\mid X_0$ 仍高斯，均值 $(1-t)X_0$。方差用 Itô 等距：
 
@@ -1434,7 +1421,7 @@ $$
 
 ### 18.3 反向 SDE（Haussmann–Pardoux 86）
 
-$\varepsilon\in(0,1]$，定义 $X^*_t:=\widetilde X_{1-t}$，$t\in[\varepsilon,1]$。讲义：$\widetilde X$ 在 $[0,1-\varepsilon]$ 上满足 Haussmann–Pardoux 86 的全部条件，故反向过程存在。
+$\varepsilon\in(0,1]$，定义 $X^*_t:=\widetilde X_{1-t}$，$t\in[\varepsilon,1]$。内容：$\widetilde X$ 在 $[0,1-\varepsilon]$ 上满足 Haussmann–Pardoux 86 的全部条件，故反向过程存在。
 
 **一般公式。** 正向 $\mathrm{d}X_u=b(u,X_u)\,\mathrm{d}u+\sigma(u,X_u)\,\mathrm{d}B_u$，扩散矩阵 $a=\sigma\sigma^\top$。时间反转到 $Y_s=X_{T-s}$ 的漂移是
 
@@ -1487,7 +1474,7 @@ a(1-t)\nabla\log p_{1-t}(X^*_t)
 \frac{X^*_t+2\nabla\log p_{1-t}(X^*_t)}{t}.
 $$
 
-这就是讲义
+这就是内容
 
 $$
 \mathrm{d}X^*_t
@@ -1541,15 +1528,15 @@ $$
 \Bigr\|_2^2.
 $$
 
-这就是讲义的等价损失（对每个固定 $t$，因子 $1/\sigma_t^2$ 不影响 $\arg\min$）。训练 $s_\theta(t,x)$，Euler–Maruyama 插进反向 SDE：Song et al. 2021（score-SDE / NCSN++）。
+这就是内容的等价损失（对每个固定 $t$，因子 $1/\sigma_t^2$ 不影响 $\arg\min$）。训练 $s_\theta(t,x)$，Euler–Maruyama 插进反向 SDE：Song et al. 2021（score-SDE / NCSN++）。
 
 ---
 
-## 第五部分 一步生成 / Föllmer（p.113–127）
+## 第五部分 一步生成 / Föllmer
 
 扩散要模拟整条 SDE，NFE 大。ODE 流：单位时间把高斯运到 $\nu$，离散后可蒸馏成**一步**映射。
 
-## 19. 三种插值（p.114）
+## 19. 三种插值
 
 **测地线 / Benamou–Brenier。**
 
@@ -1582,7 +1569,7 @@ X_t=a(t)X_0+b(t)X_1,
 \tag{7}
 $$
 
-$X_0\sim\mu$，$X_1\sim\nu$ 独立，$a,b\in C^1([0,1])$，讲义 (8)：
+$X_0\sim\mu$，$X_1\sim\nu$ 独立，$a,b\in C^1([0,1])$，内容 (8)：
 
 $$
 \begin{aligned}
@@ -1595,13 +1582,11 @@ b(t)>0\text{ 在 }(0,1].
 \tag{8}
 $$
 
-端点的人话：$t=0$ 时 $X_0=1\cdot X_0+0\cdot X_1$，纯噪声；$t=1$ 时 $X_1=0\cdot X_0+1\cdot X_1$，纯数据。$a$ 单调降、$b$ 单调升，中间严格为正，避免方差在开区间里退化。$\mu_t=\mathrm{Law}(X_t)$。直线插值，不求 OT，但诱导的 ODE 仍然把 $\mu_0$ 运到 $\nu$。
-
-p.115 的表把 (8) 放宽到 $a_0>0$、$b_0\ge 0$（VE 的起点已经是卷积），Föllmer / Linear / Trig / Sqrt 仍满足原来的 $a(0)=1,\,b(0)=0$。
+端点的人话：$t=0$ 时 $X_0=1\cdot X_0+0\cdot X_1$，纯噪声；$t=1$ 时 $X_1=0\cdot X_0+1\cdot X_1$，纯数据。$a$ 单调降、$b$ 单调升，中间严格为正，避免方差在开区间里退化。$\mu_t=\mathrm{Law}(X_t)$。直线插值，不求 OT，但诱导的 ODE 仍然把 $\mu_0$ 运到 $\nu$。 的表把 (8) 放宽到 $a_0>0$、$b_0\ge 0$（VE 的起点已经是卷积），Föllmer / Linear / Trig / Sqrt 仍满足原来的 $a(0)=1,\,b(0)=0$。
 
 ---
 
-## 20. 高斯插值流：ODE、速度场、对照表（p.115）
+## 20. 高斯插值流：ODE、速度场、对照表
 
 目标写成高斯卷积 $\nu=\gamma_{d,\sigma}*\rho$，$\rho$ 支撑在半径 $R$ 的球上（任何分布加一点点噪声都属此类）。ODE
 
@@ -1648,7 +1633,7 @@ $$
 
 ---
 
-## 21. 定理 Gao–Huang–Jiao JMLR 24（p.116）
+## 21. 定理 Gao–Huang–Jiao JMLR 24
 
 **假设。** $\nu=\gamma_{d,\sigma}*\rho$，$\rho$ 支撑在半径 $R$ 的球上；$(a_t,b_t)$ 如上。$X_t$ 是 ODE (9) 从 $X_0\sim\mu=\mathrm{Law}(a_0 Z+b_0 X_1)$ 出发的流。
 
@@ -1692,7 +1677,7 @@ $$
 
 ---
 
-## 22. 采样：归一化未知时 MC 估 $V$（p.117）
+## 22. 采样：归一化未知时 MC 估 $V$
 
 Föllmer 特例：$\mu=\gamma_d$，$a(t)=\sqrt{1-t^2}$，$b(t)=t$。目标 $\nu(\mathrm{d}x)=C^{-1}e^{-U(x)}\mathrm{d}x$，$C$ 未知。
 
@@ -1708,7 +1693,7 @@ X_1-\frac{t}{\sqrt{1-t^2}}Z
 \Bigr].
 $$
 
-归一化常数 $C$ 未知，不能直接从 $\nu$ 抽样。讲义改用
+归一化常数 $C$ 未知，不能直接从 $\nu$ 抽样。内容改用
 
 $$
 g(x)
@@ -1716,7 +1701,7 @@ g(x)
 \exp\bigl(-U(x)+\|x\|_2^2/2\bigr)
 $$
 
-（即 $\mathrm{d}\nu/\mathrm{d}\gamma_d$ 的未归一化版本）把 $V$ 写成**只对标准高斯求期望**的商。幻灯片把 $\sqrt{1-t^2}$ 写在**分母期望之后**（不是分子）：
+（即 $\mathrm{d}\nu/\mathrm{d}\gamma_d$ 的未归一化版本）把 $V$ 写成**只对标准高斯求期望**的商。内容把 $\sqrt{1-t^2}$ 写在**分母期望之后**（不是分子）：
 
 $$
 V(t,x)
@@ -1860,9 +1845,9 @@ V(t,x)
 {\mathbb{E}_{Z\sim\gamma_d}[g(tx+\sqrt{1-t^2}Z)]}.
 $$
 
-**检查 $t=0$：** $a=1$，$V(0,x)=\mathbb{E}[Z g(Z)]/\mathbb{E}[g(Z)]=\mathbb{E}_\nu[X]$，与 p.121 的 $V(0,x)=\mathbb{E}[X_1]$（与 $x$ 无关）一致。
+**检查 $t=0$：** $a=1$，$V(0,x)=\mathbb{E}[Z g(Z)]/\mathbb{E}[g(Z)]=\mathbb{E}_\nu[X]$，与 的 $V(0,x)=\mathbb{E}[X_1]$（与 $x$ 无关）一致。
 
-**Stein 看法（同一式）。** 对高斯用 Stein 把 $\nabla g$ 换成 $Z g$，同样得到分子里的 $Z g$。作业跟讲义：用 $g=\exp(-U+\|x\|_2^2/2)$ 的高斯商。
+**Stein 看法（同一式）。** 对高斯用 Stein 把 $\nabla g$ 换成 $Z g$，同样得到分子里的 $Z g$。习题跟内容：用 $g=\exp(-U+\|x\|_2^2/2)$ 的高斯商。
 
 **算法。** $t_k=k/K$，$s=1/K$，$X_{t_0}\sim\gamma_d$，
 
@@ -1884,13 +1869,13 @@ O\bigl((d/K^2)^{1/3}\bigr)
 O\bigl(d/(mK)\bigr).
 $$
 
-讲义只给这两项，不把论文里的中间阶再拆细。不靠遍历、单位时间、多峰数值上比 ULA 稳（p.118–119：高斯混合、$m=200d$、$d=1,\ldots,10$）。
+内容只给这两项，不把论文里的中间阶再拆细。不靠遍历、单位时间、多峰数值上比 ULA 稳。
 
-确定性轨迹还可再拟合一步生成器 $\widehat g_\psi\in\arg\min N^{-1}\sum_i\|\widehat g_\psi(X_{t_0}^{(i)})-X_{t_K}^{(i)}\|_2^2$（p.120，像高维逆变换）。
+确定性轨迹还可再拟合一步生成器 $\widehat g_\psi\in\arg\min N^{-1}\sum_i\|\widehat g_\psi(X_{t_0}^{(i)})-X_{t_K}^{(i)}\|_2^2$。
 
 ---
 
-## 23. 生成学习：回归损失 (10) 是条件期望（p.121）
+## 23. 生成学习：回归损失 (10) 是条件期望
 
 现在 $p$ 未知，只有 $X_1,\ldots,X_n\sim\nu$。仍学 $V$，Euler 模拟 (9)。
 
@@ -1913,7 +1898,7 @@ v\bigl(t,\,\sqrt{1-t^2}Z+t X_1\bigr)
 \end{aligned}
 $$
 
-则 $V\in\arg\min_v L(v)$，且对几乎处处的 $(t,x)$，$V(t,x)$ 等于上述条件期望。这就是讲义把 $V(t,x)$ 直接写成 $\arg\min_v L(v(t,x))$ 的理由。
+则 $V\in\arg\min_v L(v)$，且对几乎处处的 $(t,x)$，$V(t,x)$ 等于上述条件期望。这就是内容把 $V(t,x)$ 直接写成 $\arg\min_v L(v(t,x))$ 的理由。
 
 **证明（$L^2$ 投影 = 条件期望）。** 记瞬时速度标签
 
@@ -1976,7 +1961,7 @@ V_\theta\Bigl(t_i,\,\sqrt{1-t_i^2}Z_i+t_i X_i\Bigr)
 \tag{10}
 $$
 
-这是标准监督回归：输入 $(t_i,\,a_{t_i}Z_i+b_{t_i}X_i)$，标签 $Y_i=\dot a_{t_i}Z_i+\dot b_{t_i}X_i$，网络拟合条件均值。不需要 $U$、不需要归一化常数、没有内层 max。$t=0$ 时标签退化为 $X_i$、输入退化为 $Z_i$，$V(0,\cdot)$ 与 $x$ 无关，经验版就是 $\widehat V(0,\cdot)=n^{-1}\sum_i X_i$，与讲义一致。
+这是标准监督回归：输入 $(t_i,\,a_{t_i}Z_i+b_{t_i}X_i)$，标签 $Y_i=\dot a_{t_i}Z_i+\dot b_{t_i}X_i$，网络拟合条件均值。不需要 $U$、不需要归一化常数、没有内层 max。$t=0$ 时标签退化为 $X_i$、输入退化为 $Z_i$，$V(0,\cdot)$ 与 $x$ 无关，经验版就是 $\widehat V(0,\cdot)=n^{-1}\sum_i X_i$，与内容一致。
 
 **算法（Föllmer flow）。** $s=(1-a)/K$（早停 $a>0$，避免 $t\to 1$ 时条件方差 $\to 0$），$X_{t_0}\sim\gamma_d$，
 
@@ -1986,7 +1971,7 @@ $$
 
 ---
 
-## 24. 特征学习一步生成与速率（p.122）
+## 24. 特征学习一步生成与速率
 
 **特征学习（characteristic learning）。** 并行跑 $N$ 条 Euler 轨迹 $\{X_{t_k}^{(i)}\}$，学
 
@@ -2033,7 +2018,7 @@ $$
 
 ---
 
-## 25. 潜空间 Föllmer + autoencoder 误差分解（p.123）
+## 25. 潜空间 Föllmer + autoencoder 误差分解
 
 像素 $d=3072$ 时 $n^{-1/(d+5)}$ 没意义。先 autoencoder，再在 $d^*\ll d$ 的潜空间做流。
 
@@ -2070,7 +2055,7 @@ $$
 
 ---
 
-## 26. CIFAR-10：NFE vs FID（p.126）
+## 26. CIFAR-10：NFE vs FID
 
 | 模型 | NFE $\downarrow$ | FID $\downarrow$ |
 |------|--------------------|---------------------|
@@ -2088,13 +2073,11 @@ $$
 | **CG (ours)** | **2** | **3.50** |
 | **CG (ours)** | **4** | **2.83** |
 
-NFE = 每张图的网络前向次数。GAN 一步但训练不稳；DDPM 一千步才 3.17；特征学习 / CG 一步 4.59，四步 2.83，进入 StyleGAN-Ada 的球。takehome 的定量版：ODE 流可以又稳又少步。
-
-p.124–125：swissroll / MNIST 上 $\widehat g_\psi$ 随 $1-t$ 的轨迹，粒子从噪声走到数据流形。
+NFE = 每张图的网络前向次数。GAN 一步但训练不稳；DDPM 一千步才 3.17；特征学习 / CG 一步 4.59，四步 2.83，进入 StyleGAN-Ada 的球。takehome 的定量版：ODE 流可以又稳又少步。：swissroll / MNIST 上 $\widehat g_\psi$ 随 $1-t$ 的轨迹，粒子从噪声走到数据流形。
 
 ---
 
-## 27. 条件生成做 UQ（p.127）
+## 27. 条件生成做 UQ
 
 学 $\nu(\cdot\mid X=x)$：条件 GAN（Zhou–Jiao–Liu–Huang JASA 23）、条件扩散（Jiao–Kang–Liu–Peng–Zuo TIT 25+）、条件 ODE 流（Chang–Ding–Jiao–Li–Yang arXiv:2402.01460）。
 
@@ -2102,11 +2085,11 @@ UCI wine quality：$n=6497$，$X_i\in\mathbb{R}^{11}$，75% / 15% / 10% 训练 /
 
 ---
 
-## 第六部分 LLM 的误差分析（p.128–137）
+## 第六部分 LLM 的误差分析
 
 生成学习的「下一个 token」版本：学的是条件分布 $p^*(x\mid h)$，架构是 Transformer。
 
-## 28. Transformer 类 $\mathcal{T}$ 的精确定义（p.129）
+## 28. Transformer 类 $\mathcal{T}$ 的精确定义
 
 输入 $X\in\mathbb{R}^{d_x\times n}$（$d_x$ 是 token 维，$n$ 是长度；列是 token）。类
 
@@ -2118,7 +2101,7 @@ E_{\mathrm{out}}\circ F_L^{(\mathrm{FF})}\circ F_L^{(\mathrm{SA})}\circ\cdots\ci
 \Bigr\}.
 $$
 
-（讲义还留了一个容量参数 $N$；下面上界主要用 $D,H,S,W,L$。）
+（内容还留了一个容量参数 $N$；下面上界主要用 $D,H,S,W,L$。）
 
 **嵌入。** $E_{\mathrm{in}}(X)=E_{\mathrm{in}}X+P\in\mathbb{R}^{D\times n}$（可学习 + 位置编码 $P$），$E_{\mathrm{out}}(Y)=E_{\mathrm{out}}Y\in\mathbb{R}^{d_y\times n}$。
 
@@ -2145,7 +2128,7 @@ $$
 
 权重：$W_{h,\ell}^{(V)},W_{h,\ell}^{(K)},W_{h,\ell}^{(Q)}\in\mathbb{R}^{S\times D}$，$W_{h,\ell}^{(O)}\in\mathbb{R}^{D\times S}$。
 
-**Softmax（写全，跟讲义的 $K^\top Q$ 乘法顺序）。** 令 $Q=W^{(Q)}Z\in\mathbb{R}^{S\times n}$，$K=W^{(K)}Z\in\mathbb{R}^{S\times n}$，$V=W^{(V)}Z\in\mathbb{R}^{S\times n}$。$K^\top Q\in\mathbb{R}^{n\times n}$，$(K^\top Q)_{ij}=\langle K_{:i},Q_{:j}\rangle$（第 $i$ 个 key 与第 $j$ 个 query）。$\sigma_S$ **对每个 query 列在 key 上归一化**（列和为 1）：
+**Softmax（写全，跟内容的 $K^\top Q$ 乘法顺序）。** 令 $Q=W^{(Q)}Z\in\mathbb{R}^{S\times n}$，$K=W^{(K)}Z\in\mathbb{R}^{S\times n}$，$V=W^{(V)}Z\in\mathbb{R}^{S\times n}$。$K^\top Q\in\mathbb{R}^{n\times n}$，$(K^\top Q)_{ij}=\langle K_{:i},Q_{:j}\rangle$（第 $i$ 个 key 与第 $j$ 个 query）。$\sigma_S$ **对每个 query 列在 key 上归一化**（列和为 1）：
 
 $$
 \sigma_S(A)_{ij}
@@ -2155,7 +2138,7 @@ $$
 i,j\in[n].
 $$
 
-于是第 $j$ 列是 query $j$ 对所有 key 的权重，$(V\,\sigma_S(K^\top Q))_{:j}=\sum_i V_{:i}\,(\sigma_S)_{ij}$，再经 $W^{(O)}$ 回到 $\mathbb{R}^{D\times n}$，残差加上 $Z$。这与讲义
+于是第 $j$ 列是 query $j$ 对所有 key 的权重，$(V\,\sigma_S(K^\top Q))_{:j}=\sum_i V_{:i}\,(\sigma_S)_{ij}$，再经 $W^{(O)}$ 回到 $\mathbb{R}^{D\times n}$，残差加上 $Z$。这与内容
 
 $$
 F_\ell^{(\mathrm{SA})}(Z)
@@ -2191,7 +2174,7 @@ $W_\ell^{(1)}\in\mathbb{R}^{W\times D}$，$W_\ell^{(2)}\in\mathbb{R}^{D\times W}
 
 ---
 
-## 29. 逼近上界：Hölder $\to$ Transformer，深度 $O(1)$（p.130–131）
+## 29. 逼近上界：Hölder $\to$ Transformer，深度 $O(1)$
 
 **定理 Jiao–Lai–Sun–Wang–Yan arXiv:2504.12175。** $\gamma\in(0,1]$，$K_H>0$。目标 $F:[0,1]^{d_x\times n}\to\mathbb{R}^{d_x\times n}$ 的每个分量 $F_{i,j}\in\mathcal{H}^\gamma([0,1]^{d_x\times n},K_H)$。则对任意 $\varepsilon\in(0,1)$、$p\in[1,\infty]$，存在
 
@@ -2217,11 +2200,11 @@ $$
 
 骨架：若 SA 能做列平均（注意力均匀时 $VZ$ 乘 $\frac1n 11^\top$），再经 FF 实现 Kolmogorov–Arnold 型叠加，把高维 Hölder 拆成一元函数；一元函数用宽度 $\varepsilon^{-1/\gamma}$ 的固定深度网络逼近。$p=\infty$ 需要更宽的网格与更多头。
 
-**与已有上界（p.131）。** Yun et al. 19 / Tokio–Issei 24 / Fang et al. 22 / Cheng et al. 25：$C^0$ 的万能逼近，无速率。Jiao–Lai–Wang–Yan 24：$\mathcal{H}^\gamma$、$L^\infty$、激活 $X\odot\sigma_H(X)$，宽度 $O(\varepsilon^{-d_x n/\gamma})$、深度 $O(\log(1/\varepsilon))$。Havrilla–Liao 24：ReLU 注意力，同样宽度、深度对数。**本文：标准 softmax 注意力 $\sigma_S$，深度 $O(1)$。**
+**与已有上界。** Yun et al. 19 / Tokio–Issei 24 / Fang et al. 22 / Cheng et al. 25：$C^0$ 的万能逼近，无速率。Jiao–Lai–Wang–Yan 24：$\mathcal{H}^\gamma$、$L^\infty$、激活 $X\odot\sigma_H(X)$，宽度 $O(\varepsilon^{-d_x n/\gamma})$、深度 $O(\log(1/\varepsilon))$。Havrilla–Liao 24：ReLU 注意力，同样宽度、深度对数。**本文：标准 softmax 注意力 $\sigma_S$，深度 $O(1)$。**
 
 ---
 
-## 30. 下界与 VC 维（p.130）
+## 30. 下界与 VC 维
 
 **定理 He–Jiao–Lu–Yang 25。** 若某 Transformer 架构 $\mathcal{T}_{d_x,d_y}(D,H,S,W,L,N)$ 深度 $L\lesssim\varepsilon^{-d_x n/\gamma}$，且能把任意 $F\in\mathcal{H}^\gamma([0,1]^{d_x\times n},K_H)$ 逼近到精度 $\varepsilon$，则参数个数 $N$ 必须满足
 
@@ -2240,7 +2223,7 @@ $$
 
 ---
 
-## 31. 非参回归、$\beta$-mixing、滑动窗口 ERM（p.132–133）
+## 31. 非参回归、$\beta$-mixing、滑动窗口 ERM
 
 **模型。**
 
@@ -2317,7 +2300,7 @@ $$
 
 ---
 
-## 32. 预训练：next-token，$\sup|\widehat p-p^*|\le O(\delta)$（p.134）
+## 32. 预训练：next-token，$\sup|\widehat p-p^*|\le O(\delta)$
 
 语料 $X=\{x^{(1)},\ldots,x^{(n)}\}$，$x^{(i)}=\{x^{(i)}_1,\ldots,x^{(i)}_{n_i}\}$，token $x^{(i)}_j\in\mathbb{R}^d$。One-hot 时 $d=|V|$（词表）；N-gram 时 $d$ 是超参。历史 $h\in\mathbb{R}^{d(T-1)}$：最多 $T-1$ 个 token（不足则 padding）。数据
 
@@ -2327,7 +2310,7 @@ $$
 \bigl\{\bigl(h^{(i)}_{1:j-1},\,x^{(i)}_j\bigr)\bigr\}_{i\in[n],\,j\in[n_i]}.
 $$
 
-目标条件分布 $p^*(x\mid h)$。Next-token 的经验风险是交叉熵（负对数似然）。讲义把 $\widehat L$ 写成了 $\sum\log p$ 却仍标 $\arg\min$，漏了负号；正确的是
+目标条件分布 $p^*(x\mid h)$。Next-token 的经验风险是交叉熵（负对数似然）。内容把 $\widehat L$ 写成了 $\sum\log p$ 却仍标 $\arg\min$，漏了负号；正确的是
 
 $$
 \widehat p
@@ -2367,9 +2350,9 @@ $$
 
 ---
 
-## 33. 潜在概念、理解能力（p.135–136）
+## 33. 潜在概念、理解能力
 
-预训练时模型隐式推断潜在概念（讲义例子：wiki bios）。概率图：
+预训练时模型隐式推断潜在概念（内容例子：wiki bios）。概率图：
 
 1. $\theta\in\Theta$（「国家 / 类型」等共享概念），$\widetilde\theta\in\widetilde\Theta$（个体信息）。需要 $\widetilde\theta$，是因为 $\theta$ **不能**恢复 $x$ 的全部信息。
 2. $x\sim p^*(x\mid\theta,\widetilde\theta)$，$\theta_x=\arg\max_{\theta\in\Theta}p^*(\theta\mid x)$。
@@ -2389,7 +2372,7 @@ $$
 
 ---
 
-## 34. ICL：为什么像隐式贝叶斯（p.137）
+## 34. ICL：为什么像隐式贝叶斯
 
 In-context learning：prompt 里给 $(x_1,y_1),\ldots,(x_m,y_m)$，预测 $y\mid x_{m+1}$，**不更新参数**。假设背后有不可见的 $\theta$，图
 
@@ -2401,7 +2384,7 @@ x_i
 y_i.
 $$
 
-先验 $p^*(\theta)$ 均匀。对每一对示范，讲义定义
+先验 $p^*(\theta)$ 均匀。对每一对示范，内容定义
 
 $$
 \varepsilon_0(x_k,y_k)
@@ -2416,7 +2399,7 @@ p^*(\theta_k=\theta\mid x_k,y_k)
 \varepsilon_0\in(0,1)
 $$
 
-刻画「这一对上下文有多像真 $\theta$ 而不是别的概念」。误差式按讲义：
+刻画「这一对上下文有多像真 $\theta$ 而不是别的概念」。误差式按内容：
 
 $$
 \bigl|
@@ -2425,7 +2408,7 @@ $$
 p^*(y\mid x_{m+1},\,\theta_{m+1}=\theta)
 \bigr|
 \;\le\;
-\varepsilon(x_m)\,\varepsilon_0^m
+\varepsilon(x_{m+1})\,\varepsilon_0^m
 +
 T\delta.
 $$
@@ -2499,12 +2482,12 @@ p^*(y\mid x_{m+1},\theta')\,
 p^*(\theta'\mid\text{data}).
 $$
 
-与「已知真 $\theta$」的 $p^*(y\mid x_{m+1},\theta)$ 相比，差被错概念的后验质量控制；再把最后一个输入的 $\varepsilon$-歧义 $\varepsilon(x_m)$（p.136：$p^*(\theta_x\mid x)\ge 1-\varepsilon(x)$）乘上去，讲义写成 $\varepsilon(x_m)\varepsilon_0^m$。不发明更细的常数。
+与「已知真 $\theta$」的 $p^*(y\mid x_{m+1},\theta)$ 相比，差被错概念的后验质量控制；再把查询点的 $\varepsilon$-歧义 $\varepsilon(x_{m+1})$\ge 1-\varepsilon(x)$）乘上去，内容写成 $\varepsilon(x_{m+1})\varepsilon_0^m$。不发明更细的常数。
 
-预训练只给我们 $\widehat p$，$\sup|\widehat p-p^*|\le O(\delta)$。把长度为 $T$ 的条件链上每一步的 $p^*$ 换成 $\widehat p$，每步最多加 $\delta$，三角不等式累积 $T\delta$。两段相加即讲义的
+预训练只给我们 $\widehat p$，$\sup|\widehat p-p^*|\le O(\delta)$。把长度为 $T$ 的条件链上每一步的 $p^*$ 换成 $\widehat p$，每步最多加 $\delta$，三角不等式累积 $T\delta$。两段相加即内容的
 
 $$
-\varepsilon(x_m)\,\varepsilon_0^m+T\delta.
+\varepsilon(x_{m+1})\,\varepsilon_0^m+T\delta.
 $$
 
 人话：ICL 不是魔法。Transformer 在上下文里做的事，统计上等于「用 $m$ 条示范当似然、对潜在概念做贝叶斯更新，再按后验预测」。示范越像同一个 $\theta$（$\varepsilon_0$ 小）、条数 $m$ 越大，指数项消失；预训练越准（$\delta$ 小），加性误差越小。这把「prompt 里多写几个例子就变聪明」写成可证明的误差。
@@ -2527,7 +2510,7 @@ $$
 | Transformer 逼近 Hölder-$\gamma$ | $L^p$ | 宽度 $\varepsilon^{-d_x n/\gamma}$，深度 $O(1)$ | softmax SA + FF + 残差 |
 | 滑动窗口回归 | 超额风险 | $m^{-2\gamma/(2\gamma+2d_x n)}(\log m)^{\cdots}$ | $\beta$-mixing |
 | 预训练 next-token | $\sup\|\widehat p-p^*\|$ | $(\sum n_i)^{-2\gamma/(2\gamma+4dT)}$ | $\delta$ 预算 |
-| ICL | 条件概率 | $\varepsilon(x_m)\varepsilon_0^m+T\delta$ | 隐式贝叶斯 |
+| ICL | 条件概率 | $\varepsilon(x_{m+1})\varepsilon_0^m+T\delta$ | 隐式贝叶斯 |
 
 三条 takehome 的闭环：GAN 的统计误差可以最优，不稳在算法；SDE 把 min-max 换成 score 回归，稳但贵；ODE / Föllmer 给出可证明的一步生成，再在潜空间和条件分布上接到 UQ 与 LLM。
 

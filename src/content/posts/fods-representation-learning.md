@@ -1,6 +1,6 @@
 ---
-title: "表示学习：降维、对比学习与分布匹配"
-description: "从特征工程到表示学习，理解充分降维、自监督与对比学习。"
+title: 表示学习：降维、对比学习与分布匹配
+description: 从特征工程到表示学习，理解充分降维、自监督与对比学习。
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,8 +12,6 @@ order: 6
 cover: /covers/post-math.svg
 ---
 
-对应讲义：`Fods_26.pdf` p.65–77。
-
 本章目标：搞清楚「复杂数据为什么不能直接丢给 Lec1 的线性模型」，以及**没有标签、或标签很少**时，怎样先学一个低维特征，再在特征上做简单分类。
 
 你会得到：
@@ -23,7 +21,7 @@ cover: /covers/post-math.svg
 3. 有监督表示 / 充分降维（SDR）：$\dim(f^*(X))\ll\dim(X)$ 和条件独立 $X\perp Y\mid f^*(X)$；
 4. 预训练 + 微调：先学表示，再在低维拟合；
 5. 自监督学习（SSL）：数据增广、正样本对、两个力（类内拉近 vs 防崩塌）；
-6. SimCLR 的 NT-Xent 损失（讲义没写公式，这里补全）和温度 $\tau$；
+6. SimCLR 的 NT-Xent 损失（内容没写公式，这里补全）和温度 $\tau$；
 7. ACT：$\min_f\max_G L(f,G)$，对抗项如何强迫二阶矩接近 $I$；
 8. 下游预测规则（类均值）和测试误差；
 9. Distribution Matching：把表示的分布推到「概念高斯混合」上，为什么比硬聚类成 $K$ 类弱；
@@ -36,12 +34,12 @@ cover: /covers/post-math.svg
 - 附录 B：期望、条件分布、条件独立；
 - Wasserstein-1（$W_1$）：这里先当「把一堆沙子搬成另一堆的平均代价」；Lec4 会正式讲 IPM / GAN。
 
-讲义印刷事故（提取/排版会乱）：
+内容事故（提取/排版会乱）：
 
 - `leaning` = learning；`papulation` = population；`NeruIPS` = NeurIPS；
-- p.66「Last layer is loss」= 最后一层仍是线性 / logistic **分类器**；
-- p.68 的 $X\,Y\mid f^*(X)$ 中间掉了独立符号，应为 $X\perp Y\mid f^*(X)$；
-- p.72 的 $\widehat G(f)$ 里范数写成了两截，完整式见第 7 节；
+-「Last layer is loss」= 最后一层仍是线性 / logistic **分类器**；
+- 的 $X\,Y\mid f^*(X)$ 中间掉了独立符号，应为 $X\perp Y\mid f^*(X)$；
+- 的 $\widehat G(f)$ 里范数写成了两截，完整式见第 7 节；
 - 网络稀疏度与类别数都叫 $K$，下文会拆开。
 
 ---
@@ -53,7 +51,7 @@ Lec1、Lec2 默认：你已经拿到了「能用的特征」$X\in\mathbb{R}^d$�
 现在 $X$ 是一张 $32\times 32$ 的彩色图，原始坐标是 $32\times 32\times 3=3072$ 维像素。两个麻烦同时出现：
 
 1. **维数太高、样本相对太少。** 非参回归的速率里有 $n^{-\alpha/(2\alpha+d)}$（Lec2）。$d=3072$ 时，这个指数几乎是 $0$：像素空间里「光滑函数」根本学不动。
-2. **欧氏距离不懂语义。** 同一只猫的两张裁剪，像素差可以很大；一只黑猫和一只黑狗，像素差反而可以很小。讲义 p.67 左边那张图就是这个意思：按像素聚类，你会按毛色而不是按物种把动物分开。
+2. **欧氏距离不懂语义。** 同一只猫的两张裁剪，像素差可以很大；一只黑猫和一只黑狗，像素差反而可以很小。内容 左边那张图就是这个意思：按像素聚类，你会按毛色而不是按物种把动物分开。
 
 所以必须先把 $X$ 映成一个低维向量 $f(X)\in\mathbb{R}^{d^*}$，$d^*\ll d$，让
 
@@ -65,9 +63,9 @@ Lec1、Lec2 默认：你已经拿到了「能用的特征」$X\in\mathbb{R}^d$�
 
 ---
 
-## 1. 分类流水线（p.66）
+## 1. 分类流水线
 
-讲义把分类画成三条越来越「端到端」的管道。最后一层的角色始终没变。
+内容把分类画成三条越来越「端到端」的管道。最后一层的角色始终没变。
 
 ### 1.1 浅层模型 + 简单数据
 
@@ -106,11 +104,11 @@ $$
 
 **人话：** 深度学习并没有把线性分类扔掉。它把「人做特征工程」换成「网络自己学特征」，最后仍然在一个更好的坐标系里做超平面分类。
 
-这一点 Deep Learning Book 写得很直白（讲义 p.67 引用，原文在 Goodfellow–Bengio–Courville《Deep Learning》表示学习一章；幻灯片标 “Deep Learning Book 16”）：
+这一点 Deep Learning Book 写得很直白：
 
 > Feedforward networks trained by supervised learning as performing a kind of representation learning. Specially, the last layer of the networks typically a linear classifier, such as a softmax regression classifier. The rest of the network learns to provide a representation to this classifier…. **Supervised training of feedforward networks does not involve explicitly imposing any condition on the learned intermediate features.**
 
-前半句是流水线；后半句（讲义 p.67 **标红**）是本章的动机，值得单独钉死。
+前半句是流水线；后半句是本章的动机，值得单独钉死。
 
 **这句话为什么重要。** 有监督端到端只优化最后一层的分类风险 $\ell(Q(h_\theta(X)),Y)$。对中间特征 $h_\theta(X)$ **不显式加任何统计条件**：不要求低维、不要求坐标解耦、不要求「给定 $h_\theta(X)$ 之后 $Y$ 不再依赖原始 $X$」。只要 $Q\circ h_\theta$ 在当前标签上好用，训练就结束。后果有三：
 
@@ -120,7 +118,7 @@ $$
 
 所以「网络在学表示」只是副产品，不是定理。要把表示当成一个可分析的对象，必须**自己写下**中间层该满足的条件。
 
-**接到 SDR。** 下一页（p.68）给的条件正是被这句话点名要补的东西：
+**接到 SDR。** 下一页给的条件正是被这句话点名要补的东西：
 
 $$
 \dim\bigl(f^*(X)\bigr)\ll\dim(X)
@@ -133,16 +131,16 @@ $$
 
 ---
 
-## 2. 什么是好表示（p.67）
+## 2. 什么是好表示
 
 ### 2.1 像素 vs encoder（人话 + 图意）
 
-讲义放了两幅猫狗示意图（左：Default Representation；右：Semantic Representation；图源常见于表示学习综述）。
+内容放了两幅猫狗示意图（左：Default Representation；右：Semantic Representation；图源常见于表示学习综述）。
 
-**左边：用像素当表示。**  
+**左边：用像素当表示。**
 横轴可以想成「颜色 / 亮度」，纵轴想成「纹理」。黑猫和黑狗离得很近（都黑），白猫和白狗离得很近（都白）。线性分类器若想分猫/狗，必须画一条弯得很厉害的边界，浅层模型做不到。
 
-**右边：一个好的 DNN encoder。**  
+**右边：一个好的 DNN encoder。**
 同一只猫的不同照片被收成一小团，猫和狗被拉开，团与团之间出现空隙。最后一层的线性分类器只要在这些团之间切几刀。
 
 好表示的最低标准，用大白话说就三句：
@@ -151,7 +149,7 @@ $$
 2. **保信息：** 对当前（或下游）任务有用的东西还在；
 3. **好几何：** 同类近、异类远，最好再有一点「坐标之间别高度相关」（后面 ACT / Barlow / VICReg 都在干这件事）。
 
-经典出处（讲义点名，读思想即可）：Hinton 1986；Bengio–Courville–Vincent 2013（表示学习综述）；LeCun–Bengio–Hinton 2015（Nature 深度学习综述）。ICLR 从 2013 年起专门开「学表示」这个会，和 ICML、NeurIPS 同一档。
+经典出处（内容点名，读思想即可）：Hinton 1986；Bengio–Courville–Vincent 2013（表示学习综述）；LeCun–Bengio–Hinton 2015（Nature 深度学习综述）。ICLR 从 2013 年起专门开「学表示」这个会，和 ICML、NeurIPS 同一档。
 
 ### 2.2 和全课误差分解的关系
 
@@ -171,11 +169,11 @@ $$
 
 ---
 
-## 3. 有监督表示与充分降维 SDR（p.68）
+## 3. 有监督表示与充分降维 SDR
 
 ### 3.1 目标：又短、又够用的摘要
 
-有标签时，理想表示 $f^*$ 应满足两条（讲义两行公式）：
+有标签时，理想表示 $f^*$ 应满足两条（内容两行公式）：
 
 $$
 \dim\bigl(f^*(X)\bigr) \;\ll\; \dim(X),
@@ -193,7 +191,7 @@ $$
 
 第二行是本章必须补全的条件独立，见下一小节。
 
-讲义把这件事放到充分降维（Sufficient Dimension Reduction, SDR）的语言里，并指向
+内容把这件事放到充分降维（Sufficient Dimension Reduction, SDR）的语言里，并指向
 
 - Chen–Jiao–Qiu–Yu, *Annals of Statistics* 2024（深度非线性 SDR）；
 - Huang–Jiao–Liao–Liu–Yu, *IEEE TIT* 2024（有监督表示 / 深度降维）。
@@ -248,27 +246,27 @@ $$
 
 - $X\perp Y\mid f(X)$ 不是 $f(X)\perp Y$。后者叫「表示里没标签信息」。
 - 充分性不唯一。恒等映射 $f(x)=x$ 永远充分，但 $\dim$ 没降。SDR 要的是**维数尽量低的充分表示**（中心子空间 / 中心 $\sigma$-域的非线性版）。
-- 经验上用有监督损失训出来的网络，最后一层好用，并不自动推出中间层满足条件独立。这正是 p.67 红字：监督训练不对中间特征显式加条件；SDR 把该加的条件写成 $X\perp Y\mid f^*(X)$。
+- 经验上用有监督损失训出来的网络，最后一层好用，并不自动推出中间层满足条件独立。这正是 重点：监督训练不对中间特征显式加条件；SDR 把该加的条件写成 $X\perp Y\mid f^*(X)$。
 
-### 3.3 预训练 + 微调（p.68 下半）
+### 3.3 预训练 + 微调
 
-讲义第二块：用 SDR 的眼光看迁移学习（Jiao–Lin–Luo–Yang arXiv:2410.09383；Duan–Jiao–Kang–Yang–Zhou *Pattern Recognition* 2025）。幻灯片那张流程图（大源数据 → 预训练模型 → 目标小数据上微调）可以读成两步：
+内容第二块：用 SDR 的眼光看迁移学习（Jiao–Lin–Luo–Yang arXiv:2410.09383；Duan–Jiao–Kang–Yang–Zhou *Pattern Recognition* 2025）。内容那张流程图（大源数据 → 预训练模型 → 目标小数据上微调）可以读成两步：
 
 | 阶段 | 数据 | 在干什么 | 维数 |
 |------|------|----------|------|
 | 预训练 | 源域大量 $(X,Y)$，或至少大量 $X$ | 学一个好表示 $f$ | 输入 $d$ 很大，输出 $d^*$ 很小 |
 | 微调 | 目标域少量带标签样本 | 在 $f(X)$ 上拟合线性 / logistic / 浅层网络 | 在 $\mathbb{R}^{d^*}$ 里做 Lec1 |
 
-**为什么有效（直觉）：**  
+**为什么有效（直觉）：**
 源域若与目标共享「语义坐标系」（都是自然图像），充分表示 $f^*$ 在两个域上差不多。目标样本很少时，你不能在 $3072$ 维里估一个非参分类器，但可以在 $d^*\sim 128$ 维里估一个线性头——Lec1 的速率是 $d^*/n_t$，$n_t$ 小也可以。
 
 SSL 把「源域的 $Y$」也拿掉：用增广代替标签来学 $f$，微调阶段才用目标标签。这是第 4 节以后的主题。
 
 ---
 
-## 4. 无标签表示：SSL 与数据增广（p.69–70）
+## 4. 无标签表示：SSL 与数据增广
 
-### 4.1 LeCun 的蛋糕（p.69，NeurIPS 2016 幻灯片）
+### 4.1 LeCun 的蛋糕
 
 Yann LeCun 用蛋糕比喻「学习时机器到底吃到多少信息」：
 
@@ -280,7 +278,7 @@ Yann LeCun 用蛋糕比喻「学习时机器到底吃到多少信息」：
 
 SSL 的野心：标签昂贵，但原始输入自己含有丰富结构；用「预测自己」榨出表示，比等标签划算。
 
-### 4.2 数据增广与正样本对（p.70）
+### 4.2 数据增广与正样本对
 
 记增广族
 
@@ -310,9 +308,9 @@ $(x^{(i)}_1,x^{(i)}_2)$ 叫**正对**：同一图像的两种看法，模型应�
 
 **人话：** 你没有「猫/狗」标签，但你有一条弱监督：一张图的两种瞎裁，语义应当相同。SSL 把这条弱监督写成损失。
 
-### 4.3 两个力：增广不变 vs 防崩塌（p.70 末）
+### 4.3 两个力：增广不变 vs 防崩塌
 
-讲义一句把 SSL 说成
+内容一句把 SSL 说成
 
 $$
 \text{SSL}
@@ -320,12 +318,12 @@ $$
 \text{clustering aided classification},
 $$
 
-原因是同时有两种力（讲义蓝字）：
+原因是同时有两种力（内容蓝字）：
 
 1. **增广不变（类内拉近）。** 正对的表示 $\|f(x_1)-f(x_2)\|$ 要小。同一物体的不同看法走进同一团——这是在做聚类的「连边」。
 2. **防止模型崩塌（类间推开）。** 若只有 1，最优解是常数映射 $f\equiv 0$（或 $f\equiv c$）：所有点叠在一起，正对距离确实是 $0$，但表示废了。必须把不同图像推开，或强迫表示的协方差 / 二阶矩不要退化。
 
-讲义 p.70 那张双栏图（图源 Weiran Huang）：
+内容 那张双栏图（图源 Weiran Huang）：
 
 - 左栏 **有负样本**：encoder 之后，正对拉近，同时和其他图（负样本）推开。SimCLR 的 NT-Xent（下一节）就是这一栏：分母里的 $k\neq i$ 项是负样本。
 - 右栏 **无负样本**：只看见正对，防崩塌改用预测器、滑动平均、白化、方差约束等。ACT 走这一栏：没有 NT-Xent 那种分母，改用 $\|A(f)\|_F^2$。
@@ -344,7 +342,7 @@ $$
 
 ---
 
-## 5. SimCLR 与 NT-Xent（p.71，公式为补全）
+## 5. SimCLR 与 NT-Xent
 
 ### 5.1 算法在干什么
 
@@ -355,11 +353,11 @@ SimCLR（Chen–Kornblith–Norouzi–Hinton, ICML 2020）是「有负样本」�
 3. 再过一个小的投影头 $g$（MLP），$z=g(h)$。对比损失加在 $z$ 上；下游分类常用 $h$（投影头可以扔掉）；
 4. 对每个正对，把 batch 里其余 $2N-2$ 个视图当负样本。
 
-经验事实（讲义 p.71 图）：ImageNet 上线性探测的 Top-1 可以和有监督 ResNet-50 比；只用 $1\%$ 标签微调时，Top-5 超过 AlexNet。理论工作把这件事看成「总体层的聚类辅助分类」或「样本层的参数模型」（Arora et al. 2019；HaoChen et al. 2021/22/23；Huang–Yi–Zhao–Jiang 2023；Lei–Yang–Ying–Zhou 2023）。讲义的评论是：我们需要**既好用、又有端到端理论保证**的方法——这是 ACT 出场的理由。
+经验事实：ImageNet 上线性探测的 Top-1 可以和有监督 ResNet-50 比；只用 $1\%$ 标签微调时，Top-5 超过 AlexNet。理论工作把这件事看成「总体层的聚类辅助分类」或「样本层的参数模型」（Arora et al. 2019；HaoChen et al. 2021/22/23；Huang–Yi–Zhao–Jiang 2023；Lei–Yang–Ying–Zhou 2023）。内容的评论是：我们需要**既好用、又有端到端理论保证**的方法——这是 ACT 出场的理由。
 
-### 5.2 NT-Xent 损失（讲义没写；这就是 p.70 **有负样本** 那一栏的公式）
+### 5.2 NT-Xent 损失
 
-SimCLR 走的是 p.70 左栏：**正对拉近，同时和 batch 里其它视图（负样本）推开**。NT-Xent 的分母就是这些负样本；没有分母就退化成右栏的「只看见正对」，常数映射会把损失打到 $0$。后面 ACT 故意不用这个分母，改用二阶矩对抗防崩塌。
+SimCLR 走的是 左栏：**正对拉近，同时和 batch 里其它视图（负样本）推开**。NT-Xent 的分母就是这些负样本；没有分母就退化成右栏的「只看见正对」，常数映射会把损失打到 $0$。后面 ACT 故意不用这个分母，改用二阶矩对抗防崩塌。
 
 记 $\mathrm{sim}$ 为余弦相似度
 
@@ -379,7 +377,7 @@ $$
 {\sum_{k\neq i}\exp\bigl(\mathrm{sim}(z_i,z_k)/\tau\bigr)}.
 $$
 
-这就是讲义省略、需要补上的公式。分母里 $k$ 跑遍当前对比集合中除自己以外的所有视图（SimCLR 的 minibatch 里一共 $2N$ 个 $z$，故有 $2N-1$ 项）。最终损失对每个正对的两个方向 $(i,j)$ 和 $(j,i)$ 取平均。
+这就是内容省略、需要补上的公式。分母里 $k$ 跑遍当前对比集合中除自己以外的所有视图（SimCLR 的 minibatch 里一共 $2N$ 个 $z$，故有 $2N-1$ 项）。最终损失对每个正对的两个方向 $(i,j)$ 和 $(j,i)$ 取平均。
 
 **这就是带温度的 softmax 交叉熵：** 把「认出谁是我的正样本」当成一个 $2N-1$ 类分类问题，正样本是唯一正确类。分子大、分母里负样本的贡献小，损失才小。
 
@@ -389,7 +387,7 @@ $\tau>0$ 把相似度除完再送进 softmax。
 
 - $\tau\to 0^+$：softmax 越来越尖。只有「当前最像的几个」还有梯度，模型被迫处理**难负样本**（和锚点很像但不是同一张图的视图）。太小会训飘。
 - $\tau$ 太大：$\mathrm{sim}/\tau$ 都接近 $0$，正负差被抹平，拉近 / 推开的信号都弱。
-- SimCLR 原文常用 $\tau\approx 0.5$（ImageNet 上再偏小一些）。数量级直觉：余弦在 $[-1,1]$，除以 $0.5$ 后进指数函数，差别会被放大到可用的程度。
+- SimCLR 这里常用 $\tau\approx 0.5$（ImageNet 上再偏小一些）。数量级直觉：余弦在 $[-1,1]$，除以 $0.5$ 后进指数函数，差别会被放大到可用的程度。
 
 **对齐–均匀分解（帮助直觉，Wang–Isola 2020）。** 把 $-\ell_{i,j}$ 拆开：分子是正对对齐 $\mathrm{sim}(z_i,z_j)/\tau$；分母的 $\log\sum\exp$ 鼓励 $z_i$ 不要和所有人（含负样本）都像，在超球面上接近均匀。这正是第 4.3 节的两个力。
 
@@ -397,9 +395,9 @@ $\tau>0$ 把相似度除完再送进 softmax。
 
 ---
 
-## 6. ACT 模型（p.72）
+## 6. ACT 模型
 
-Adversarial Contrastive Training（Duan–Jiao–Lin–Ma–Yang, NeurIPS 2025；讲义拼成 NeruIPS）走无负样本路线，但把防崩塌写成一个**对二阶矩残差的对抗 / IPM 问题**，以便套 GAN 的误差分析（Lec4 的工具）。
+Adversarial Contrastive Training（Duan–Jiao–Lin–Ma–Yang, NeurIPS 2025；内容拼成 NeruIPS）走无负样本路线，但把防崩塌写成一个**对二阶矩残差的对抗 / IPM 问题**，以便套 GAN 的误差分析（Lec4 的工具）。
 
 ### 6.1 总体想法
 
@@ -426,10 +424,10 @@ B_1\le \|f_\theta\|_2 \le B_2
 $$
 
 - $d_1=d$ 输入维，$d_2=d^*$ 表示维；
-- $W$ 宽、$L$ 深、$K_{\mathrm{nn}}$ 非零参数个数。讲义把 $K_{\mathrm{nn}}$ 写成 $K$，与类别数撞名；
+- $W$ 宽、$L$ 深、$K_{\mathrm{nn}}$ 非零参数个数。内容把 $K_{\mathrm{nn}}$ 写成 $K$，与类别数撞名；
 - $B_1\le\|f\|_2\le B_2$：表示既不能缩成 $0$，也不能爆掉。常在球壳上。
 
-经验损失（把幻灯片两截符号拼回来）：
+经验损失（把内容两截符号拼回来）：
 
 $$
 \widehat L(f,G)
@@ -477,7 +475,7 @@ $$
 
 ### 6.3 内层 $\max_G$ 在强迫二阶矩接近 $I$（$\widehat G(f)$ 写全）
 
-讲义把判别器可行集写成 $\widehat G(f)$（排版拆成两截）。完整定义就是上一小节的 $\widehat{\mathcal{G}}(f)$：$G\in\mathbb{R}^{d^*\times d^*}$ 且 $\|G\|_F\le\|A(f)\|_F$，其中
+内容把判别器可行集写成 $\widehat G(f)$（排版拆成两截）。完整定义就是上一小节的 $\widehat{\mathcal{G}}(f)$：$G\in\mathbb{R}^{d^*\times d^*}$ 且 $\|G\|_F\le\|A(f)\|_F$，其中
 
 $$
 A(f)
@@ -508,7 +506,7 @@ $$
 
 Frobenius 是 Hilbert 内积，Cauchy–Schwarz：$\langle A,G\rangle_F\le\|A\|_F\|G\|_F$，等号当且仅当 $G=\tau A$ 且 $\tau\ge 0$。约束 $\|G\|_F\le\|A\|_F$ 把 $\tau\|A\|_F\le\|A\|_F$ 压成 $\tau\le 1$。于是最大值在 $G^*=A$（$A=0$ 时任意 $G=0$）达到，值为 $\|A\|_F^2$。
 
-**为什么把球半径取成 $\|A\|_F$ 而不是 $1$。** 若 $\|G\|_F\le 1$，内层 max 是 $\|A\|_F$，罚的是残差的范数；半径取 $\|A\|_F$ 时罚的是残差的平方，和 Barlow 的 $\|C-I\|_F^2$ 同型，又仍是 $\sup_G\langle A,G\rangle$ 这种 IPM，方便套 GAN 的经验过程。两种都防崩塌；讲义选后者。
+**为什么把球半径取成 $\|A\|_F$ 而不是 $1$。** 若 $\|G\|_F\le 1$，内层 max 是 $\|A\|_F$，罚的是残差的范数；半径取 $\|A\|_F$ 时罚的是残差的平方，和 Barlow 的 $\|C-I\|_F^2$ 同型，又仍是 $\sup_G\langle A,G\rangle$ 这种 IPM，方便套 GAN 的经验过程。两种都防崩塌；内容选后者。
 
 因此内层最大化之后，ACT 等价于（对 $f$）最小化
 
@@ -541,7 +539,7 @@ $$
 
 ---
 
-## 7. 预测规则 $Q_{\widehat f}$ 与测试误差（p.72）
+## 7. 预测规则 $Q_{\widehat f}$ 与测试误差
 
 表示 $\widehat f$ 在**无标签源域**上训好。下游是**带标签的目标域**（可以很少）：
 
@@ -564,7 +562,7 @@ $$
 \bigl\{\widehat f(z^{(i)}_1),\;\widehat f(z^{(i)}_2):y_i=k\bigr\}.
 $$
 
-经验类均值（讲义 $\widehat W(k,:)$，分母的 $2n_t(k)$ 来自「两个视图都算进去」）
+经验类均值（内容 $\widehat W(k,:)$，分母的 $2n_t(k)$ 来自「两个视图都算进去」）
 
 $$
 \widehat\mu_k
@@ -605,9 +603,9 @@ $$
 \|\widehat f(z)\|_2^2+\|\widehat\mu_k\|_2^2-2\langle\widehat\mu_k,\widehat f(z)\rangle.
 $$
 
-$\|\widehat f(z)\|^2$ 与 $k$ 无关；二阶矩 $\approx I$ 再加源域剖分（第 9.5 节）让各类均值能量差不多，于是 $\arg\max_k\langle\widehat\mu_k,\widehat f(z)\rangle$ 与最近类均值 $\arg\min_k\|\widehat f(z)-\widehat\mu_k\|$ 一致。讲义小图：平面被 $K$ 条类均值向量分成 $K$ 个锥。
+$\|\widehat f(z)\|^2$ 与 $k$ 无关；二阶矩 $\approx I$ 再加源域剖分（第 9.5 节）让各类均值能量差不多，于是 $\arg\max_k\langle\widehat\mu_k,\widehat f(z)\rangle$ 与最近类均值 $\arg\min_k\|\widehat f(z)-\widehat\mu_k\|$ 一致。内容小图：平面被 $K$ 条类均值向量分成 $K$ 个锥。
 
-参数个数只有 $K\cdot d^*$，而且是样本均值、没有迭代。类均值用了 $2n_t(k)$ 个有界向量，随 $n_t(k)$ 集中。幻灯片把这块失败概率写成 $O(d^*/\sqrt{\min_k n_t(k)})$（p.75；没有更细的 Hoeffding 常数，这里不另编），few-shot 只依赖每类标签数。
+参数个数只有 $K\cdot d^*$，而且是样本均值、没有迭代。类均值用了 $2n_t(k)$ 个有界向量，随 $n_t(k)$ 集中。内容把这块失败概率写成 $O(d^*/\sqrt{\min_k n_t(k)})$，few-shot 只依赖每类标签数。
 
 **没有再训一个复杂头。** 表示若真的已经按类成团，均值就够了。这对应「微调 = 在低维拟合参数模型」，而且参数少到只有 $K$ 个均值。
 
@@ -629,9 +627,9 @@ $$
 
 ---
 
-## 8. 数值：只作表引用（p.73）
+## 8. 数值：只作表引用
 
-讲义在 CIFAR-10 / CIFAR-100 / Tiny ImageNet 上比较线性探测与 5-NN（同一套复现设定）。数字以幻灯片为准。
+内容在 CIFAR-10 / CIFAR-100 / Tiny ImageNet 上比较线性探测与 5-NN（同一套复现设定）。数字以内容为准。
 
 | Method | CIFAR-10 linear | CIFAR-10 5-NN | CIFAR-100 linear | CIFAR-100 5-NN | Tiny ImageNet linear | Tiny ImageNet 5-NN |
 |--------|----------------:|--------------:|-----------------:|---------------:|---------------------:|-------------------:|
@@ -648,7 +646,7 @@ $$
 
 ---
 
-## 9. ACT 误差分析：假设先翻成白话（p.74）
+## 9. ACT 误差分析：假设先翻成白话
 
 定理之前有一长串假设。下面按「人话 → 符号」对照。$f^*$ 是总体 min-max 的解（在 $B_1\le\|f\|_2\le B_2$ 里），$f^*_i$ 是它的第 $i$ 个坐标，$i\in[d^*]$。
 
@@ -717,7 +715,7 @@ P_t\bigl(z\in C^*_t(k)\bigr)
 \sigma_t\, P_t\bigl(z\in C_t(k)\bigr),
 $$
 
-$\sigma_s,\sigma_t\in(0,1]$。（原片把目标侧写成 $P_t(z\in C_t^*(k))\ge\sigma_t P_t(z\in C_t^*(k))$，右边重复了核心集，是排版；应按源侧对称，右边是 $C_t(k)$。）增广直径
+$\sigma_s,\sigma_t\in(0,1]$。）增广直径
 
 $$
 d_{\mathcal{A},C}
@@ -733,7 +731,7 @@ $$
 P_t\Bigl(\bigcup_{k=1}^K C^*_t(k)\Bigr)\ge\sigma_t.
 $$
 
-（幻灯片把 $d_{\mathcal{A},C}$ 写成了带 $(u_1,u_2)$ 的函数；它其实是核心上的一个数：最坏一对点的「最好增广配对」距离。）
+（内容把 $d_{\mathcal{A},C}$ 写成了带 $(u_1,u_2)$ 的函数；它其实是核心上的一个数：最坏一对点的「最好增广配对」距离。）
 
 ### 9.5 源域的剖分，质量别太偏
 
@@ -749,11 +747,11 @@ P_s(P_i)
 \frac1{B_1^2}.
 $$
 
-（$B_1,B_2$ 正是 $\|f\|_2$ 的上下界。讲义把分数排成了两截。）
+（$B_1,B_2$ 正是 $\|f\|_2$ 的上下界。内容把分数排成了两截。）
 
 ---
 
-## 10. 定理与证明骨架（p.75）
+## 10. 定理与证明骨架
 
 ### 10.1 定理（Duan–Jiao–Lin–Ma–Yang, NeurIPS 2025）
 
@@ -802,15 +800,15 @@ $$
 - $d^*/\sqrt{\min_k n_t(k)}$：目标域用类均值，每类几个标签就有 $\sqrt{n_t(k)}$ 的均值误差。**这就是 few-shot：** 表示一旦好，目标不需要很多标签。
 - 宽度 $W$ 随 $n_s$ 多项式增长、深度只需对数：正是 Lec2「用够宽的 ReLU 网去逼 Hölder」那一档。
 
-讲义结论句：若数据足够规则（$\sigma_s,\sigma_t\approx 1$，$\epsilon\approx 0$）且 $n_s$ 够大，则 **ACT 在很小的目标集上仍然够用**。
+内容结论句：若数据足够规则（$\sigma_s,\sigma_t\approx 1$，$\epsilon\approx 0$）且 $n_s$ 够大，则 **ACT 在很小的目标集上仍然够用**。
 
 ### 10.2 证明骨架：对比 → 聚类 → 分类
 
-完整证明是论文篇幅，课堂只跟下面这条不等式链（Huang–Yi–Zhao–Jiang 2023 的「对比 = 聚类辅助分类」，加上 Huang–Jiao–Li–Liu–Wang–Yang JMLR 2022、Jiao–Wang–Yang ACHA 2023 的 GAN / IPM 经验过程）。不抄技术引理，但每一步都要看到「谁小 ⇒ 谁小」。
+完整证明是论文篇幅，这里只跟下面这条不等式链（Huang–Yi–Zhao–Jiang 2023 的「对比 = 聚类辅助分类」，加上 Huang–Jiao–Li–Liu–Wang–Yang JMLR 2022、Jiao–Wang–Yang ACHA 2023 的 GAN / IPM 经验过程）。不抄技术引理，但每一步都要看到「谁小 ⇒ 谁小」。
 
 记总体对齐 $\varepsilon_{\mathrm{ic}}(f)=\mathbb{E}\|f(x_1)-f(x_2)\|_2^2$，残差 $A(f)=\mathbb{E}[f(x_1)f(x_2)^\top]-I_{d^*}$。$f$ 落在球壳上，网络 / Hölder 给出 Lipschitz 常数 $L_f$（对 $f^*$ 来自 $\mathcal{H}^\alpha$，对 $\widehat f$ 来自 $\mathrm{NN}$ 的权界）。
 
-**（i）对齐损失小 $\Rightarrow$ 增广几乎等距。**  
+**（i）对齐损失小 $\Rightarrow$ 增广几乎等距。**
 $\varepsilon_{\mathrm{ic}}(f)$ 小：同一张图的两个增广，表示距离 $\lesssim\sqrt{\varepsilon_{\mathrm{ic}}}$（Markov：对任意 $\eta$，$\mathbb{P}(\|f(x_1)-f(x_2)\|>\eta)\le\varepsilon_{\mathrm{ic}}/\eta^2$，核心上可把坏点并进 $1-\sigma_s$ 那笔）。再加增广 Lipschitz 与核心直径 $d_{\mathcal{A},C^*_s(k)}\le\delta_s$：对 $u,v\in C^*_s(k)$，存在 $u'\in\mathcal{A}(u)$、$v'\in\mathcal{A}(v)$ 使 $\|u'-v'\|\le\delta_s$，于是
 
 $$
@@ -829,7 +827,7 @@ $$
 
 同一类核心在表示空间里几乎是一个小团——增广把输入空间的「能被裁剪粘住」变成了特征空间的几乎等距 / 几乎不变。
 
-**（ii）几乎等距 + 二阶矩 $\approx I$ $\Rightarrow$ 源类可分。**  
+**（ii）几乎等距 + 二阶矩 $\approx I$ $\Rightarrow$ 源类可分。**
 $\|A(f)\|_F$ 小 $\Rightarrow$ 跨视图二阶矩 $\approx I$：每个坐标有能量，不能全体塌到一个点或一条直线。配上第 9.5 节的剖分（每块质量夹在 $B_2^{-2}$ 与 $B_1^{-2}$ 之间），大约 $d^*$ 个有质量的模式对着 $d^*$ 个近正交方向。不同类核心若都缩成直径 $\rho_s\lesssim\sqrt{\varepsilon_{\mathrm{ic}}}+L_f\delta_s$ 的团，而类均值间距是 $\Theta(1)$（白化后的尺度），则只要 $\rho_s$ 小于间距的一半，源核心线性可分：存在间隔 $\gamma>0$，使得 $x\in C^*_s(k)$、$\ell\neq k$ 时
 
 $$
@@ -840,7 +838,7 @@ $$
 
 常数映射、全体塌成一类，都会让 $\|A(f)\|_F$ 有一块下界（第 6.3 节崩塌检查），与「ACT 损失接近最优」矛盾。
 
-**（iii）源类可分 $+$ $W_1$ 小 $\Rightarrow$ 团迁到目标。**  
+**（iii）源类可分 $+$ $W_1$ 小 $\Rightarrow$ 团迁到目标。**
 $f$ 是 $L_f$-Lipschitz，$W_1$ 在 Lipschitz 函数下收缩：
 
 $$
@@ -853,7 +851,7 @@ $$
 
 类均值最多移动 $L_f\epsilon_{\mathrm{ds}}$；目标核心直径再被 $\delta_t$ 同样控制。因此 $C^*_t(k)$ 落在源团 $f(C^*_s(k))$ 的 $L_f(\epsilon_{\mathrm{ds}}+\delta_t)$ 邻域里。只要这个邻域还小于 $\gamma/2$，目标核心仍然落在第 $k$ 个 Voronoi 锥里。$\epsilon(\epsilon_{\mathrm{ds}},\delta_t,\delta_s)$ 收集的就是「邻域把间隔吃掉」的那一项；$\epsilon_{\mathrm{ds}},\delta_t,\delta_s\to 0$ 时它 $\to 0$。
 
-**（iv）团在目标上 $\Rightarrow$ 类均值分类器误差。**  
+**（iv）团在目标上 $\Rightarrow$ 类均值分类器误差。**
 把误差劈成核心以外 + 核心以内：
 
 $$
@@ -864,7 +862,7 @@ $$
 \sum_k P_t\bigl(Q_{\widehat f}(z)\neq k,\; z\in C^*_t(k)\bigr).
 $$
 
-核心以内：真均值 $\mu_t(k)$ 已分得开（iii）。经验均值 $\widehat\mu_k$ 是 $2n_t(k)$ 个有界向量的平均，偏离过大时会把间隔吃掉。幻灯片把这块并进概率里的 $O(d^*/\sqrt{\min_k n_t(k)})$（没有给出 $\sqrt{d^*/n}$ 型精细常数，这里不另编）。
+核心以内：真均值 $\mu_t(k)$ 已分得开（iii）。经验均值 $\widehat\mu_k$ 是 $2n_t(k)$ 个有界向量的平均，偏离过大时会把间隔吃掉。内容把这块并进概率里的 $O(d^*/\sqrt{\min_k n_t(k)})$（没有给出 $\sqrt{d^*/n}$ 型精细常数，这里不另编）。
 
 剩下的是「$\widehat f$ 有多接近总体 $f^*$」：$\varepsilon_{\mathrm{ic}}(\widehat f)$ 与 $\|A(\widehat f)\|_F$ 必须小到（i）（ii）能用。这一步拆成全课那三块——
 
@@ -874,7 +872,7 @@ $$
 | 逼近 | 网络类 $\mathcal{F}$ 够不够贴 $f^*\in(\mathcal{H}^\alpha)^{d^*}$ | Lec2：ReLU 逼近 Hölder，深度 $\log(d+r)$，宽度随 $n_s$ 涨 |
 | 优化 | $\widehat f$ 是否真是经验 min-max | 分析里当作近似 ERM；实践中交替梯度 |
 
-选讲义的 $W,L,K_{\mathrm{nn}}$，这一段贡献 $O(n_s^{-\alpha/(8(\alpha+d+1))})$（概率里再弱一档 $16$）。
+选内容的 $W,L,K_{\mathrm{nn}}$，这一段贡献 $O(n_s^{-\alpha/(8(\alpha+d+1))})$（概率里再弱一档 $16$）。
 
 **超额风险的形态没变，变的是损失是对比项 + 二阶矩 IPM，而不是 $\ell(\text{线性}(X),Y)$。**
 
@@ -882,13 +880,13 @@ $$
 
 ---
 
-## 11. Distribution Matching（p.76–77）
+## 11. Distribution Matching
 
 ACT 的防崩塌是「二阶矩 $\approx I$」，仍然是防御性的：告诉你别塌，但没说表示的分布**应该长成什么样**。Distribution Matching（Jiao–Ma–Sun–Wang–Wang, arXiv:2502.14424）把目标改成：**一边增广不变，一边让 $f$ 推出的分布去贴一个事先画好的参考分布 $R$。**
 
 ### 11.1 参考分布：概念高斯混合
 
-在半径约 $1$ 的超球面上放 $K'$ 个几乎正交的中心 $c_i$（可取带符号的标准基向量）。第 $i$ 个概念不是一个点，而是中心附近一小团：把各向同性高斯方向加到 $c_i$ 上再归一化。讲义写成
+在半径约 $1$ 的超球面上放 $K'$ 个几乎正交的中心 $c_i$（可取带符号的标准基向量）。第 $i$ 个概念不是一个点，而是中心附近一小团：把各向同性高斯方向加到 $c_i$ 上再归一化。内容写成
 
 $$
 R
@@ -910,7 +908,7 @@ $$
 
 **人话：** 你希望表示空间看起来像「球面上 $K'$ 朵分离的小云」。$K'$ 是**概念数**，不是下游类别数 $K$。一朵云可以是「侧卧的虎斑猫」，下游再把若干朵云合成标签「猫」。
 
-讲义左图：球面上一个中心 $c_i$，噪声把点涂成一小帽；右图：帽子里住着同一概念的图像。
+内容左图：球面上一个中心 $c_i$，噪声把点涂成一小帽；右图：帽子里住着同一概念的图像。
 
 ### 11.2 总体损失：对齐 + $W_1$
 
@@ -925,7 +923,7 @@ L(f)
 L_{\mathrm{ic}}(f) + \lambda\, W_1(P_f, P_R).
 $$
 
-对齐项（invariance / intra-class，讲义的 $L_{\mathrm{ic}}$）
+对齐项（invariance / intra-class，内容的 $L_{\mathrm{ic}}$）
 
 $$
 L_{\mathrm{ic}}(f)
@@ -934,7 +932,7 @@ L_{\mathrm{ic}}(f)
 \bigl\|f(x_1)-f(x_2)\bigr\|_2^2.
 $$
 
-$W_1$ 的 Kantorovich–Rubinstein 对偶（Lipschitz-1 函数当判别器，Lec4 的 IPM）给出讲义第二行：
+$W_1$ 的 Kantorovich–Rubinstein 对偶（Lipschitz-1 函数当判别器，Lec4 的 IPM）给出内容第二行：
 
 $$
 W_1(P_f,P_R)
@@ -961,13 +959,13 @@ DM 弱在三处：
 
 1. $K'$ 可以 $\neq K$，通常 $K'>K$：先在无标签阶段保留细结构，下游线性头再聚合；
 2. 匹配的是整个分布（$W_1$），不是每个点的硬标签；团可以有半径 $\varepsilon$，点不必钉死在 $c_i$；
-3. 参考分布在预训练之前就定好，**不依赖下游标签空间**，因此同一套 $f$ 可以迁到另一套标签（讲义写 Weaker assumptions）。
+3. 参考分布在预训练之前就定好，**不依赖下游标签空间**，因此同一套 $f$ 可以迁到另一套标签（内容写 Weaker assumptions）。
 
 这与第 3 节 SDR 的精神一致：预训练只负责「好几何 + 不丢信息」，不负责直接输出 $K$ 类后验。
 
-### 11.4 $K'$ 实验（p.77，CIFAR-100）
+### 11.4 $K'$ 实验
 
-讲义表：全部在 CIFAR-100 上，5-NN 的 $k=5$，表示维 $d^*=K'$。
+内容表：全部在 CIFAR-100 上，5-NN 的 $k=5$，表示维 $d^*=K'$。
 
 | 概念数 $K'$ | 64 | 128 | 256 | 384 | 512 |
 |---------------|-----|-----|-----|-----|-----|
@@ -980,7 +978,7 @@ CIFAR-100 的类别数是 $K=100$。$K'$ 从 64 加到 384，两种探测都在�
 
 ## 12. 收束：损失换了，误差分解没换
 
-把 Lec1 p.5 的分解原样搬过来。现在「模型」是 encoder $f$（外加 ACT 的 $G$ 或 DM 的 Lip 判别器），「损失」是
+把 Lec1 的分解原样搬过来。现在「模型」是 encoder $f$（外加 ACT 的 $G$ 或 DM 的 Lip 判别器），「损失」是
 
 $$
 \ell_{\mathrm{SSL}}(f)

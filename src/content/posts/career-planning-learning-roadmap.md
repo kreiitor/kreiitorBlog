@@ -1,6 +1,6 @@
 ---
 title: "就业方向规划与学习路线"
-description: "面向模型工程化的通用学习路线：从 Python 与 Linux 基础，到微调、推理、性能分析、部署与可观测性。已移除个人履历和具体求职安排。"
+description: "面向模型工程化的通用学习路线：从 Python 与 Linux 基础，到微调、推理、性能分析、部署与可观测性。"
 pubDate: 2026-06-02
 updatedDate: 2026-10-11
 tags:
@@ -136,7 +136,7 @@ cover: /covers/post-learning-path.svg
 | 八股文 | OS、网络、数据库、分布式系统核心概念 | 能流畅回答，结合 Infra 场景举例 |
 | 论文复习 | FlashAttention、PagedAttention、DeepSpeed ZeRO/FSDP、AWQ/GPTQ、Speculative Decoding | 能 3 分钟讲清每篇论文的核心 idea 和设计权衡 |
 | 模拟面试 | 找同学/学长 mock，覆盖项目深挖 + 系统设计 + 手撕代码 | 至少 5 次完整模拟 |
-| 简历 + 面试 | 项目包装、深挖准备，每个项目能讲清：为什么这样设计、踩过什么坑、性能提升数据 | STARR 法则（Situation-TaYOUR_API_KEY） |
+| 简历 + 面试 | 项目包装、深挖准备，每个项目能讲清：为什么这样设计、踩过什么坑、性能提升数据 | STARR 法则（Situation-Task-Action-Result-Reflection） |
 | 投递 | 阿里云 PAI、蚂蚁、网易、大模型创业公司 | 目标城市优先，备选字节/腾讯/百度 AI 平台，7 月起陆续投递 |
 
 ---

@@ -1,6 +1,6 @@
 ---
-title: "逼近误差：从 Hölder 函数到 ReLU 网络"
-description: "理解维数灾难、万能逼近与神经网络如何表达函数。"
+title: 逼近误差：从 Hölder 函数到 ReLU 网络
+description: 理解维数灾难、万能逼近与神经网络如何表达函数。
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,8 +12,6 @@ order: 3
 cover: /covers/post-math.svg
 ---
 
-对应讲义：`Fods_26.pdf` p.28–36。
-
 上一份把超额风险拆成了统计 / 逼近 / 优化。这一份只做中间那一块：
 
 $$
@@ -22,15 +20,15 @@ E_{\mathrm{app}}
 \inf_{f\in\mathcal{F}}\|f-f^*\|_{L^2(\mu_X)}^2.
 $$
 
-人话：**模型类 $\mathcal{F}$ 里，有没有一个函数离「上帝的回归函数 $f^*$」足够近？**  
+人话：**模型类 $\mathcal{F}$ 里，有没有一个函数离「上帝的回归函数 $f^*$」足够近？**
 神经网络的宽度、深度、权重有界，到底能逼近多光滑的函数、付多大的维数代价——这就是本节。
 
 你会得到：
 
 1. 平方损失下 $L(f)-L(f^*)=\|f-f^*\|_{L^2(\mu_X)}^2$ 的完整证明；
 2. 为什么「用复合去逼近」在历史上就很难（Hilbert 第 13 问题、Kolmogorov–Arnold），以及这对神经网络万能逼近的启示；
-3. 维数灾难：$C^\alpha([0,1]^d)$ 逼近到 $\varepsilon$，体积 / packing 给出规模必须 $\asymp\varepsilon^{-d/\alpha}$；讲义的 $O(\varepsilon^{-d/\alpha}\log(1/\varepsilon))$ 是同一指数的存在性上界；
-4. 讲义引用的三条现代定理（Jiao–Shen–Lin–Huang AoS 23，Jiao–Lai–Lu–Wang–Yang SIMA 23，Yarotsky / Lu–Shen–Yang–Zhang）的假设与结论；
+3. 维数灾难：$C^\alpha([0,1]^d)$ 逼近到 $\varepsilon$，体积 / packing 给出规模必须 $\asymp\varepsilon^{-d/\alpha}$；内容的 $O(\varepsilon^{-d/\alpha}\log(1/\varepsilon))$ 是同一指数的存在性上界；
+4. 内容引用的三条现代定理（Jiao–Shen–Lin–Huang AoS 23，Jiao–Lai–Lu–Wang–Yang SIMA 23，Yarotsky / Lu–Shen–Yang–Zhang）的假设与结论；
 5. Hölder 类 $\mathcal{H}^\zeta$ 的精确定义；
 6. 帽子函数单位分解 $\sum\psi_{\mathbf{n}}\equiv 1$ 的证明；
 7. 局部 Taylor + 积分余项：$|f-p|\le 2^d d^r N^{-\zeta}$；
@@ -39,7 +37,7 @@ $$
 10. 深度复合把平方误差打到 $(W/3)^{-D}$（Lemma 3）；
 11. 极化恒等式造乘法，二叉树造 $d$ 元乘积；
 12. 把局部多项式拼成网络 $\phi$，再选 $D=1+\zeta/d$、$N=W^{1/d}$ 得到 $|f-\phi|\le C_d W^{-\zeta/d}$；
-13. p.36 改进分析的四块积木（离散化、系数拟合、单项式、乘法）。
+13. 改进分析的四块积木（离散化、系数拟合、单项式、乘法）。
 
 需要的预备：
 
@@ -48,7 +46,7 @@ $$
 - ReLU $\sigma(t)=t\vee 0=\max\{t,0\}$；
 - 多指标 $\alpha=(\alpha_1,\ldots,\alpha_d)$：$\|\alpha\|_1=\sum_i\alpha_i$，$\partial^\alpha=\partial_1^{\alpha_1}\cdots\partial_d^{\alpha_d}$，$h^\alpha=h_1^{\alpha_1}\cdots h_d^{\alpha_d}$，$\alpha!=\alpha_1!\cdots\alpha_d!$。
 
-讲义排版里容易看错的地方：
+内容排版里容易看错的地方：
 
 - `H¨older` = Hölder；
 - Hölder 定义里的 $|\partial^s f(x)-\partial^s f(x)|$ 是 OCR 事故，分母上的另一个点是 $y$；
@@ -94,7 +92,7 @@ $$
 
 ---
 
-## 1. 逼近误差的定义，以及平方损失下的恒等式（p.29）
+## 1. 逼近误差的定义，以及平方损失下的恒等式
 
 ### 1.1 定义
 
@@ -108,11 +106,11 @@ E_{\mathrm{app}}
 \inf_{f\in\mathcal{F}}\mathbb{E}_{X\sim\mu_X}\bigl[(f(X)-f^*(X))^2\bigr].
 $$
 
-讲义这里直接用 $L^2(\mu_X)$ 范数的平方，而不是 $L(\bar f)-L(f^*)$。下面证明：在平方损失下，这两件事是同一件事。
+内容这里直接用 $L^2(\mu_X)$ 范数的平方，而不是 $L(\bar f)-L(f^*)$。下面证明：在平方损失下，这两件事是同一件事。
 
 ### 1.2 定理（平方损失 = $L^2$ 距离）
 
-取 $\ell(a,y)=(a-y)^2$。讲义前后页并不一样：p.14 setup 写 $\ell(a,y)=\frac12(a-y)^2$；**当页 p.29** 把 $E_{\mathrm{app}}$ 写成 $\inf\|f-f^*\|_{L^2(\mu_X)}^2$，与 p.4 / p.15 非参数框架的 $\ell(f,Z)=(f(X)-Y)^2$ 一致。本节跟当页，不用 $\frac12$（差一个与 $\arg\min$ 无关的常数；若用 $\frac12$，恒等式右边多 $\frac12$，阶不变）。总体风险
+取 $\ell(a,y)=(a-y)^2$。内容前后页并不一样： setup 写 $\ell(a,y)=\frac12(a-y)^2$；**当页** 把 $E_{\mathrm{app}}$ 写成 $\inf\|f-f^*\|_{L^2(\mu_X)}^2$，与 / 非参数框架的 $\ell(f,Z)=(f(X)-Y)^2$ 一致。本节跟当页，不用 $\frac12$（差一个与 $\arg\min$ 无关的常数；若用 $\frac12$，恒等式右边多 $\frac12$，阶不变）。总体风险
 
 $$
 L(f)=\mathbb{E}\bigl[(f(X)-Y)^2\bigr].
@@ -189,7 +187,7 @@ $$
 
 **几个立刻能用的推论。**
 
-1. $L(f)\ge L(f^*)$，超额风险永远非负。  
+1. $L(f)\ge L(f^*)$，超额风险永远非负。
 2. 若我们造出一个网络 $\phi\in\mathcal{F}$ 满足 $\|f^*-\phi\|_\infty\le\varepsilon$，且 $\mathrm{supp}(\mu_X)\subseteq[0,1]^d$，则
 
 $$
@@ -200,14 +198,14 @@ E_{\mathrm{app}}
 \varepsilon^2.
 $$
 
-   所以后面全部在 $\|\cdot\|_\infty$ 里干活，最后平方一下就回到风险。  
+   所以后面全部在 $\|\cdot\|_\infty$ 里干活，最后平方一下就回到风险。
 3. 若损失是 $\frac12(a-y)^2$，恒等式右边多一个 $\frac12$。阶（谁跟 $n$、$W$ 怎么走）完全不变。
 
 **为什么不直接在 $L^2(\mu_X)$ 里逼近？** 可以。但 $\mu_X$ 未知，均匀范数给出对一切 $\mu_X$ 都成立的界，后面做 covering number 也更干净。代价是：界可能比「只在 $\mu_X$ 的支撑上逼近」略松。
 
 ---
 
-## 2. 组合逼近很难：Hilbert 第 13 问题与 Kolmogorov–Arnold（p.29）
+## 2. 组合逼近很难：Hilbert 第 13 问题与 Kolmogorov–Arnold
 
 神经网络的本质是 **仿射变换与非线性的反复复合**。一个自然的问题是：复合到底有多强？这个问题比神经网络老得多。
 
@@ -225,7 +223,7 @@ $$
 
 ### 2.2 Kolmogorov–Arnold 叠加定理（KAT, 1957）
 
-**定理（Kolmogorov 1956 / Arnold 1957 / Kolmogorov 1957）。**  
+**定理（Kolmogorov 1956 / Arnold 1957 / Kolmogorov 1957）。**
 对任意 $d\ge 2$、任意连续函数 $f\in C([0,1]^d)$，存在连续的一元函数 $\psi_{p,q}:\mathbb{R}\to\mathbb{R}$（**可以不依赖 $f$**）以及连续的一元函数 $\varphi_q^f:\mathbb{R}\to\mathbb{R}$（依赖 $f$），使得
 
 $$
@@ -259,16 +257,16 @@ $$
 | Kůrková 1992 | 用 KAT 把万能逼近写成 2/3 层网络 | 内层函数极不光滑，不能直接当 ReLU 用 |
 | 本节后面 | ReLU 网络在 Hölder 球上的**定量**速率 | — |
 
-**关键警告（一定要记住）：**  
+**关键警告（一定要记住）：**
 KAT 的内层 $\psi_{p,q}$ 只有连续性，没有 Hölder / Lipschitz 控制。ReLU 网络的每一层都是 Lipschitz 的。所以
 
 - KAT **不**蕴含「ReLU 网络可以打破维数灾难」；
 - 对 **光滑函数类**，用 Lipschitz 积木去逼近，仍然会付出 $\varepsilon^{-d/\alpha}$ 这种维数代价（下节）；
 - KAT 只解释「复合 + 叠加」在连续范畴里是万能的，不解释深度、宽度怎样换精度。
 
-### 2.4 深度逼近的近代线索（讲义点名，不展开证明）
+### 2.4 深度逼近的近代线索（内容点名，不展开证明）
 
-讲义列了一串名字，各自解决的是「定量、有深度」的问题：
+内容列了一串名字，各自解决的是「定量、有深度」的问题：
 
 - Telgarsky 2016：反复复合锯齿，深度网络能造出浅层网络用相近参数数造不出的高频振荡；
 - Yarotsky 2017：Sobolev / Hölder 上 ReLU 网络的上、下界，size $\sim\varepsilon^{-d/\alpha}\log(1/\varepsilon)$；
@@ -281,17 +279,17 @@ KAT 的内层 $\psi_{p,q}$ 只有连续性，没有 Hölder / Lipschitz 控制�
 
 ---
 
-## 3. 维数灾难，以及讲义引用的三条定理（p.29）
+## 3. 维数灾难，以及内容引用的三条定理
 
 ### 3.1 经典图像：$C^\alpha([0,1]^d)$ 的维数灾难（CoD）
 
-讲义 p.29 红字写：逼近 $f\in C^\alpha([0,1]^d)$ 到误差 $\varepsilon$，需要 NN 规模
+内容 重点写：逼近 $f\in C^\alpha([0,1]^d)$ 到误差 $\varepsilon$，需要 NN 规模
 
 $$
 O\bigl(C_d\,(1/\varepsilon)^{d/\alpha}\log(1/\varepsilon)\bigr).
 $$
 
-这里的 $O$ 是**存在性上界**（有一张网能做到）。「Suffers CoD」说的是你**也必须付** $(1/\varepsilon)^{d/\alpha}$ 这一档——不能把「至少需要」和 $O$（至多）写在同一个等号里。下面用与 p.19 同一套**体积 / 覆盖 / packing** 把「为何是 $(1/\varepsilon)^{d/\alpha}$」写全。$C^\alpha$ 与 Hölder 球 $\mathcal{H}^\alpha$ 只差等价范数，指数相同。
+这里的 $O$ 是**存在性上界**（有一张网能做到）。「Suffers CoD」说的是你**也必须付** $(1/\varepsilon)^{d/\alpha}$ 这一档——不能把「至少需要」和 $O$（至多）写在同一个等号里。下面用与 同一套**体积 / 覆盖 / packing** 把「为何是 $(1/\varepsilon)^{d/\alpha}$」写全。$C^\alpha$ 与 Hölder 球 $\mathcal{H}^\alpha$ 只差等价范数，指数相同。
 
 #### 3.1.1 体积：局部尺度 $h\sim\varepsilon^{1/\alpha}$ 决定格子数
 
@@ -315,7 +313,7 @@ $$
 
 $\alpha$ 越大，同样 $\varepsilon$ 允许的 $h$ 越大，格子越少。真正的「任何逼近都少不了 $(1/\varepsilon)^{d/\alpha}$ 自由度」见 3.1.3 的 packing，不要把上面的 $M\asymp$ 当成 minimax 下界。
 
-#### 3.1.2 上界（讲义的 $O$）：局部 Taylor $\times$ 格子数
+#### 3.1.2 上界（内容的 $O$）：局部 Taylor $\times$ 格子数
 
 每个格子中心做 $r=\lfloor\alpha\rfloor$ 阶 Taylor，余项 $\le C_{d,\alpha}h^\alpha$（§6 会写成 $d^r N^{-\alpha}$，$N=1/h$）。取 $h\asymp\varepsilon^{1/\alpha}$ 则局部误差 $\le\varepsilon$。格子数 $M\asymp\varepsilon^{-d/\alpha}$。每个局部多项式有 $\binom{d+r}{d}=O_{d,\alpha}(1)$ 个系数，ReLU 实现乘法还要多一个 $\log(1/\varepsilon)$（§8–10 的锯齿 / 平方）。总规模
 
@@ -325,11 +323,11 @@ S
 O\bigl(C_d\,\varepsilon^{-d/\alpha}\log(1/\varepsilon)\bigr).
 $$
 
-这正是讲义写下的 $O$。后面 §5–12 把 $C^\alpha$ 换成 $\mathcal{H}^\zeta$、把 $S$ 换成宽度 $W$，得到 $\|f-\phi\|_\infty\lesssim W^{-\zeta/d}$，反解 $W\asymp\varepsilon^{-d/\zeta}$，同一指数。
+这正是内容写下的 $O$。后面 §5–12 把 $C^\alpha$ 换成 $\mathcal{H}^\zeta$、把 $S$ 换成宽度 $W$，得到 $\|f-\phi\|_\infty\lesssim W^{-\zeta/d}$，反解 $W\asymp\varepsilon^{-d/\zeta}$，同一指数。
 
 #### 3.1.3 下界（为何「需要」$(1/\varepsilon)^{d/\alpha}$）：packing + 覆盖数
 
-体积只说明「这套剖分有这么多格子」。要证明**任何**方法都少不了这些自由度，用 packing（与 p.19 的 $P(K,d,\varepsilon)$ 同一语言）。
+体积只说明「这套剖分有这么多格子」。要证明**任何**方法都少不了这些自由度，用 packing$ 同一语言）。
 
 取光滑 bump $\psi\in C_c^\infty(B_\infty(0,1/4))$，$\psi(0)>0$，$\|\psi\|_{C^\alpha}\le 1$。令 $h=\varepsilon^{1/\alpha}$。支撑半径 $h/4$：中心间距 $\ge h/2$ 则支撑不交。
 
@@ -359,7 +357,7 @@ h^\alpha\psi(0)/C'
 \varepsilon\cdot\psi(0)/C'.
 $$
 
-记 $\eta:=\varepsilon\cdot\psi(0)/C'$。一般 $\eta<\varepsilon$（$C'$ 可能大于 $\psi(0)$）。这是间距 $\eta$ 的 packing，基数 $2^M$。p.19：$N(K,d,\delta)\ge P(K,d,2\delta)$，取 $\delta=\eta/2$：
+记 $\eta:=\varepsilon\cdot\psi(0)/C'$。一般 $\eta<\varepsilon$（$C'$ 可能大于 $\psi(0)$）。这是间距 $\eta$ 的 packing，基数 $2^M$。：$N(K,d,\delta)\ge P(K,d,2\delta)$，取 $\delta=\eta/2$：
 
 $$
 \log N\bigl(\mathcal{H}^\alpha,\|\cdot\|_\infty,\eta/2\bigr)
@@ -375,7 +373,7 @@ $$
 
 这是函数类的度量熵，与「有没有神经网络」无关。
 
-现在把网络放进来。p.19：$S$ 个权、$\|\theta\|_\infty\le B$、参数到函数 Lipschitz 常数 $L$ 的 ReLU 网，函数 $\infty$-覆盖
+现在把网络放进来。：$S$ 个权、$\|\theta\|_\infty\le B$、参数到函数 Lipschitz 常数 $L$ 的 ReLU 网，函数 $\infty$-覆盖
 
 $$
 \log N(\text{网络类},\|\cdot\|_\infty,\varepsilon)
@@ -393,7 +391,7 @@ S\log\bigl(1+2BL/\varepsilon\bigr)
 \varepsilon^{-d/\alpha}.
 $$
 
-讲义最后一条还允许 $B\le c S^{\log_2(d+r)+2}$（多项式），$L$ 至多 $S$ 的指数型但对数后仍是 $\mathrm{poly}(\log S,\log(1/\varepsilon))$。因此
+内容最后一条还允许 $B\le c S^{\log_2(d+r)+2}$（多项式），$L$ 至多 $S$ 的指数型但对数后仍是 $\mathrm{poly}(\log S,\log(1/\varepsilon))$。因此
 
 $$
 S
@@ -403,7 +401,7 @@ $$
 
 即规模必须是 $(1/\varepsilon)^{d/\alpha}$ 量级（对数下）。这就是 CoD：**指数在 $d/\alpha$ 上，不是在 $\log d$ 上。**
 
-**人话。** 网格构造给出 $\varepsilon^{-d/\alpha}$ 个互不干涉的 bump（体积只禁止你装得更多）；packing 把它们变成覆盖数下界（尺度差常数，指数不变）；网络作为 $S$ 维参数族，覆盖数只有 $S\log(1/\varepsilon)$，所以 $S$ 必须跟上 $\varepsilon^{-d/\alpha}$。讲义的 $O(\cdots\log(1/\varepsilon))$ 是同一指数的上界（多一个实现乘法的对数）。
+**人话。** 网格构造给出 $\varepsilon^{-d/\alpha}$ 个互不干涉的 bump（体积只禁止你装得更多）；packing 把它们变成覆盖数下界（尺度差常数，指数不变）；网络作为 $S$ 维参数族，覆盖数只有 $S\log(1/\varepsilon)$，所以 $S$ 必须跟上 $\varepsilon^{-d/\alpha}$。内容的 $O(\cdots\log(1/\varepsilon))$ 是同一指数的上界（多一个实现乘法的对数）。
 
 后面 6–12 节把上界走成可跟的构造：$\|f-\phi\|_\infty\lesssim W^{-\zeta/d}$，$W\sim\varepsilon^{-d/\zeta}$。
 
@@ -411,11 +409,11 @@ $$
 
 文献：Yuling Jiao, Guohao Shen, Yuanyuan Lin, Jian Huang, *Deep nonparametric regression on approximate manifolds: Nonasymptotic error bounds with polynomial prefactors*, Ann. Statist. 51(2):691–716, 2023.
 
-讲义把作者顺序写成 Jiao–Shen–Lin–Huang，同一篇。
+内容把这里顺序写成 Jiao–Shen–Lin–Huang，同一篇。
 
-**函数类。** $\mathcal{H}_\mu^\alpha([0,1]^d)$ 表示 Hölder 球：$\alpha=r+s$，$r=\lfloor\alpha\rfloor$，$s\in(0,1]$，$\|\partial^\beta f\|_\infty\le\mu$（$\|\beta\|_1\le r$），且 $r$ 阶导数是 Hölder-$s$、常数 $\mu$。讲义在 p.30 先把 $\mu=1$ 的单位球写成 $\mathcal{H}^\zeta$；带 $\mu$ 只是把所有界乘上 $\mu$。
+**函数类。** $\mathcal{H}_\mu^\alpha([0,1]^d)$ 表示 Hölder 球：$\alpha=r+s$，$r=\lfloor\alpha\rfloor$，$s\in(0,1]$，$\|\partial^\beta f\|_\infty\le\mu$（$\|\beta\|_1\le r$），且 $r$ 阶导数是 Hölder-$s$、常数 $\mu$。内容在 先把 $\mu=1$ 的单位球写成 $\mathcal{H}^\zeta$；带 $\mu$ 只是把所有界乘上 $\mu$。
 
-**结论（讲义 p.29 的定量形式）。**  
+**结论。**
 $\forall f\in\mathcal{H}_\mu^\alpha([0,1]^d)$，存在 ReLU 网络 $f_\phi$，宽度、深度
 
 $$
@@ -429,7 +427,7 @@ D
 \end{aligned}
 $$
 
-使得对 $p\in[1,\infty]$（讲义写 $L^p$）
+使得对 $p\in[1,\infty]$（内容写 $L^p$）
 
 $$
 \|f-f_\phi\|_{L^p}
@@ -441,7 +439,7 @@ $$
 
 **怎么读。**
 
-- 误差里是 $(NM)^{-2\alpha/d}$：宽度资源 $N$ 和深度资源 $M$ **对称地** 进入，而且指数里有一个 $2$。这比本节 12 节「只用宽度、深度几乎固定」的 $W^{-\alpha/d}$ 更强，来自 p.36 那种「离散化 + 比特提取 / 点拟合」的改进构造。
+- 误差里是 $(NM)^{-2\alpha/d}$：宽度资源 $N$ 和深度资源 $M$ **对称地** 进入，而且指数里有一个 $2$。这比本节 12 节「只用宽度、深度几乎固定」的 $W^{-\alpha/d}$ 更强，来自 那种「离散化 + 比特提取 / 点拟合」的改进构造。
 - 前因子是 $d$ 的 **多项式**（$d^{\lfloor\alpha\rfloor+O(1)}$），不是 $2^d$ 或 $d^d$。这是该文相对 Yarotsky 2017 的要点之一，后面统计误差才不会被指数前因子吃掉。
 - $W\sim N\log N$，$D\sim M\log M$，所以用宽度、深度来写，误差大约是 $(WD)^{-2\alpha/d}$（忽略对数）。
 
@@ -453,7 +451,7 @@ $$
 
 **激活函数不是纯 ReLU**，而是 $\{\mathrm{ReLU},\;\sin,\;2^x\}$。
 
-**结论（讲义 p.29）。**  
+**结论。**
 $\forall\varepsilon>0$，存在深度为 **6**、宽度为
 
 $$
@@ -470,17 +468,17 @@ $$
 \Biggr\}
 $$
 
-的 ReLU–sine–$2^x$ 网络，在 $L^p$（$p\in[1,\infty)$）意义下把 $f\in\mathcal{H}_\mu^\alpha([0,1]^d)$ 逼近到 $\varepsilon$。原文对 $\alpha\in(0,1]$ 陈述（Hölder 连续）；宽度对 $d$ 是线性、对 $1/\varepsilon$ 是对数。
+的 ReLU–sine–$2^x$ 网络，在 $L^p$（$p\in[1,\infty)$）意义下把 $f\in\mathcal{H}_\mu^\alpha([0,1]^d)$ 逼近到 $\varepsilon$。这里对 $\alpha\in(0,1]$ 陈述（Hölder 连续）；宽度对 $d$ 是线性、对 $1/\varepsilon$ 是对数。
 
 **怎么读。**
 
 - 深度锁死为 6，宽度 $\sim d\log(1/\varepsilon)$：这是在 **打破维数灾难**。原因是 $\sin$ 和 $2^x$ 能以指数效率做「编码 / 位提取」，表达力远强于 Lipschitz 的 ReLU。
-- 这 **不能** 直接搬到纯 ReLU 网络，也不自动给出 SGD 可学性。讲义把它放在这里，是对照：CoD 是 ReLU + Hölder 的产物，不是「任何网络」的命运。
+- 这 **不能** 直接搬到纯 ReLU 网络，也不自动给出 SGD 可学性。内容把它放在这里，是对照：CoD 是 ReLU + Hölder 的产物，不是「任何网络」的命运。
 - 函数仍是广义可微的，形式上可以反传。这与 floor 激活的「超强但不可训」构造不同。
 
 ### 3.4 基于 Yarotsky 2017、Lu–Shen–Yang–Zhang 2021、Yang 2022 的「标准 CoD 速率」
 
-讲义最后一条（纯 ReLU，权有界）：
+内容最后一条（纯 ReLU，权有界）：
 
 **假设。** $f\in\mathcal{H}_\mu^\alpha([0,1]^d)$。
 
@@ -510,7 +508,7 @@ $$
 
 - 速率 $S^{-\alpha/d}$ 正是 3.1 的 CoD 上界；深度只需略大于 $1+\alpha/d$。这与 12 节的选参 $D=1+\zeta/d$、$N=W^{1/d}$ **同一档**。
 - 权的 $\infty$-范数可以随 $S$ 多项式增长。覆盖数估计里会出现 $\log B\sim \log S$，统计误差多一个对数，不改变主阶。
-- Yarotsky 2017 原文对 Sobolev 球 $W^{n,\infty}$ 给出 size $O(\varepsilon^{-d/n}\log(1/\varepsilon))$、深度 $O(\log(1/\varepsilon))$；Lu–Shen–Yang–Zhang, *Deep network approximation for smooth functions*, SIMA 2021 进一步把误差同时写成宽度和深度的 $\mathcal{O}(N^{-2s/d}L^{-2s/d})$。讲义这条是「规模 $S$、深度下限 $\alpha/d+1$」的打包陈述。
+- Yarotsky 2017 这里对 Sobolev 球 $W^{n,\infty}$ 给出 size $O(\varepsilon^{-d/n}\log(1/\varepsilon))$、深度 $O(\log(1/\varepsilon))$；Lu–Shen–Yang–Zhang, *Deep network approximation for smooth functions*, SIMA 2021 进一步把误差同时写成宽度和深度的 $\mathcal{O}(N^{-2s/d}L^{-2s/d})$。内容这条是「规模 $S$、深度下限 $\alpha/d+1$」的打包陈述。
 
 **三条定理对照。**
 
@@ -525,7 +523,7 @@ $$
 
 ---
 
-## 4. Hölder 类 $\mathcal{H}^\zeta$ 的精确定义（p.30）
+## 4. Hölder 类 $\mathcal{H}^\zeta$ 的精确定义
 
 ### 4.1 把光滑度拆成整数 + 小数
 
@@ -541,11 +539,11 @@ $$
 
 例子：$\zeta=0.7\Rightarrow r=0,s=0.7$（纯 Hölder）；$\zeta=1\Rightarrow r=0,s=1$（Lipschitz）；$\zeta=2.3\Rightarrow r=2,s=0.3$。
 
-**注意：** 当 $\zeta$ 是整数时，讲义的 $\mathcal{H}^\zeta$ 是「$r=\zeta-1$ 阶导数 Lipschitz」，比「$C^\zeta$ 且 $\zeta$ 阶导数有界」略弱。这是 Hölder 空间的标准惯例。
+**注意：** 当 $\zeta$ 是整数时，内容的 $\mathcal{H}^\zeta$ 是「$r=\zeta-1$ 阶导数 Lipschitz」，比「$C^\zeta$ 且 $\zeta$ 阶导数有界」略弱。这是 Hölder 空间的标准惯例。
 
 ### 4.2 定义（单位球）
 
-多重指标 $\alpha\in\mathbb{N}_0^d$，$\|\alpha\|_1=\sum_i\alpha_i$。讲义在这一页用字母 $s$ 既当小数光滑度、又当多重指标，阅读时极容易混。**笔记里：小数光滑度叫 $s$，多重指标叫 $\alpha$。** 讲义的 $p_{\mathbf{n},s}$、$c_{\mathbf{n},s}$ 仍保留原符号，那时的 $s$ 是多重指标。
+多重指标 $\alpha\in\mathbb{N}_0^d$，$\|\alpha\|_1=\sum_i\alpha_i$。内容在这一页用字母 $s$ 既当小数光滑度、又当多重指标，阅读时极容易混。**这里：小数光滑度叫 $s$，多重指标叫 $\alpha$。** 内容的 $p_{\mathbf{n},s}$、$c_{\mathbf{n},s}$ 仍保留原符号，那时的 $s$ 是多重指标。
 
 $$
 \mathcal{H}^\zeta(\mathbb{R}^d)
@@ -578,7 +576,7 @@ $$
 \|z\|_\infty\le\|z\|_2\le\sqrt{d}\,\|z\|_\infty,
 $$
 
-换成 $\|\cdot\|_2$ 只改常数（$d^{s/2}$ 这一档），不改 $N^{-\zeta}$ 的指数。讲义 p.36 改进分析里余项写成 $d^{s}\|x-x_0\|_2^{\beta}$，用的就是 2-范数。
+换成 $\|\cdot\|_2$ 只改常数（$d^{s/2}$ 这一档），不改 $N^{-\zeta}$ 的指数。内容 改进分析里余项写成 $d^{s}\|x-x_0\|_2^{\beta}$，用的就是 2-范数。
 
 ### 4.3 小白对照表
 
@@ -598,7 +596,7 @@ $$
 
 ---
 
-## 5. 帽子函数与单位分解（p.30）
+## 5. 帽子函数与单位分解
 
 目标：把 $[0,1]^d$ 盖住，每个点附近只有「几个」局部函数在干活，并且它们加起来恒等于 1。这样
 
@@ -732,11 +730,11 @@ $$
 
 ---
 
-## 6. 局部 Taylor 与积分余项（p.30–31）
+## 6. 局部 Taylor 与积分余项
 
 ### 6.1 局部多项式 $p$
 
-对 $\mathbf{n}\in\{0,1,\ldots,N\}^d$ 与多重指标 $\alpha$（讲义符号 $s$），令
+对 $\mathbf{n}\in\{0,1,\ldots,N\}^d$ 与多重指标 $\alpha$（内容符号 $s$），令
 
 $$
 p_{\mathbf{n},\alpha}(x)
@@ -807,9 +805,9 @@ $$
 
 若 $|g^{(r)}(t)-g^{(r)}(0)|\le t^{s}\le 1$，右边绝对值 $\le 1/r!$。多元把这条沿线段做一遍。
 
-### 6.3 多元 Taylor 余项（讲义用的 $d^r\|h\|_\infty^\zeta$）
+### 6.3 多元 Taylor 余项（内容用的 $d^r\|h\|_\infty^\zeta$）
 
-**引理（Hölder 函数的 Taylor 余项）。**  
+**引理（Hölder 函数的 Taylor 余项）。**
 设 $f\in\mathcal{H}^\zeta$，$x_0,x\in[0,1]^d$，$h=x-x_0$。记
 
 $$
@@ -904,9 +902,9 @@ $$
 d^r\|h\|_\infty^{\zeta},
 $$
 
-最后一步 $1/r!\le 1$，与讲义的粗界一致。证毕。
+最后一步 $1/r!\le 1$，与内容的粗界一致。证毕。
 
-**更紧但讲义没用的形式：** 保留 $1/r!$，或用 $\|h\|_2$ 写成 $C_{d,r}\|h\|_2^{\zeta}$。阶都是 $\|h\|^{\zeta}$。
+**更紧但内容没用的形式：** 保留 $1/r!$，或用 $\|h\|_2$ 写成 $C_{d,r}\|h\|_2^{\zeta}$。阶都是 $\|h\|^{\zeta}$。
 
 ### 6.4 从局部余项到 $|f-p|\le 2^d d^r N^{-\zeta}$
 
@@ -918,7 +916,7 @@ $$
 2^d d^r N^{-\zeta}.
 $$
 
-**证明（把讲义 p.31 的每一步补全）。**  
+**证明。**
 因为 $\sum_{\mathbf{n}}\psi_{\mathbf{n}}(x)=1$，
 
 $$
@@ -951,7 +949,7 @@ d^r\Bigl\|x-\frac{\mathbf{n}}{N}\Bigr\|_\infty^{\zeta}
 d^r N^{-\zeta}.
 $$
 
-讲义接下来把 $\psi_{\mathbf{n}}$ 丢掉、改成「支撑上的项数 $\times$ 每项上界」：
+内容接下来把 $\psi_{\mathbf{n}}$ 丢掉、改成「支撑上的项数 $\times$ 每项上界」：
 
 $$
 |f-p|
@@ -974,7 +972,7 @@ $$
 d^r N^{-\zeta},
 $$
 
-$2^d$ 可以省掉。后面所有地方出现 $2^d d^r N^{-\zeta}$ 时，你都可以在心里换成 $d^r N^{-\zeta}$；讲义保留 $2^d$ 不影响对 $N$ 的阶。
+$2^d$ 可以省掉。后面所有地方出现 $2^d d^r N^{-\zeta}$ 时，你都可以在心里换成 $d^r N^{-\zeta}$；内容保留 $2^d$ 不影响对 $N$ 的阶。
 
 ### 6.5 还剩什么？
 
@@ -984,28 +982,28 @@ $p$ 不是网络：它含有
 - 单项式 $(x-\mathbf{n}/N)^\alpha$；
 - 再与帽子相乘。
 
-ReLU 网络对 $x$ 是分段线性的，不能精确做乘法。策略（p.31 底部）：
+ReLU 网络对 $x$ 是分段线性的，不能精确做乘法。策略：
 
-1. 逼近平方 $x^2$；  
-2. 用极化恒等式造乘法 $xy$；  
-3. 二叉树复合造 $d$ 元乘积；  
+1. 逼近平方 $x^2$；
+2. 用极化恒等式造乘法 $xy$；
+3. 二叉树复合造 $d$ 元乘积；
 4. 从而逼近每个 $p_{\mathbf{n},\alpha}$，再线性组合。
 
 在此之前，先把「网络可以怎样拼装」写成 Lemma 1。
 
 ---
 
-## 7. Lemma 1：网络的四则运算（p.32）
+## 7. Lemma 1：网络的四则运算
 
 ### 7.1 记号
 
 $\mathrm{NN}_{(W,L,B)}(d,k)$ 表示满足下列条件的 ReLU 前馈网络全体（输入维 $d$，输出维 $k$）：
 
 - 隐层宽度不超过 $W$；
-- 深度（仿射层数 / 与讲义的 $L$ 一致）不超过 $L$；
+- 深度（仿射层数 / 与内容的 $L$ 一致）不超过 $L$；
 - 所有权、偏置的绝对值 $\le B$，即 $\|\theta\|_\infty\le B$。
 
-一层的写法：$z\mapsto \sigma(Az+b)$，最后一层通常不再套 $\sigma$（仿射输出）。覆盖数那一页（p.19）把网络写成
+一层的写法：$z\mapsto \sigma(Az+b)$，最后一层通常不再套 $\sigma$（仿射输出）。覆盖数那一页把网络写成
 
 $$
 f_\theta^D(x)
@@ -1055,21 +1053,21 @@ c_1\phi_1+c_2\phi_2
 \mathrm{NN}_{(W_1+W_2,\,\max\{L_1,L_2\},\,|c_1|B_1+|c_2|B_2)}(d_1,k_1).
 $$
 
-（讲义 (4) 把 $\mathrm{NN}$ 写成了 $\mathrm{N}$，印刷漏字。）
+（内容 (4) 把 $\mathrm{NN}$ 写成了 $\mathrm{N}$，漏字。）
 
 ### 7.3 证明（短，但把坑说清楚）
 
-**(1) 包含。**  
+**(1) 包含。**
 
-- 加宽：增加权全为 0 的死神经元，输出不变。  
-- 加大 $B$：额度用不满即可。  
+- 加宽：增加权全为 0 的死神经元，输出不变。
+- 加大 $B$：额度用不满即可。
 - 加深：ReLU 不是恒等。标准办法是插入
 
 $$
 z=\sigma(z)-\sigma(-z)
 $$
 
-把一条通道拆成正负两条再减回来。宽度至多翻倍。讲义的包含关系按「宽度差一个绝对常数因子」来理解；后面所有宽度本来就带着 $3$、$2^d$、$d^r$ 这种倍数，阶不受影响。另一种实现：若允许 skip / 恒等激活，加深是免费的。
+把一条通道拆成正负两条再减回来。宽度至多翻倍。内容的包含关系按「宽度差一个绝对常数因子」来理解；后面所有宽度本来就带着 $3$、$2^d$、$d^r$ 这种倍数，阶不受影响。另一种实现：若允许 skip / 恒等激活，加深是免费的。
 
 **(2) 复合。** 把 $\phi_1$ 的层栈在 $\phi_2$ 前面。宽度取 $\max$（两段各自不超过自己的宽度），深度相加。
 
@@ -1083,7 +1081,7 @@ $$
 \max\{W_1,W_2\}B_1 B_2.
 $$
 
-讲义用这个融合后的权界，后面估计 $\|\theta\|_\infty$ 时站在安全的一边。第二句 $\phi_2(Ax+b)$ 同理：先做 $A$，再与 $\phi_2$ 的第一层融合，多一个因子 $W_2 B_3$。
+内容用这个融合后的权界，后面估计 $\|\theta\|_\infty$ 时站在安全的一边。第二句 $\phi_2(Ax+b)$ 同理：先做 $A$，再与 $\phi_2$ 的第一层融合，多一个因子 $W_2 B_3$。
 
 **(3) 拼接。** 两个网络并排放，共享输入。宽度相加，深度取 $\max$（浅的那边用 (1) 垫到同样深度），权界取 $\max$。
 
@@ -1093,7 +1091,7 @@ $$
 
 ---
 
-## 8. 逼近 $x^2$：锯齿 $T_i$ 与插值 $I_k$（p.32–33）
+## 8. 逼近 $x^2$：锯齿 $T_i$ 与插值 $I_k$
 
 ReLU 网络是分段线性的，$x^2$ 是弯曲的。最老实的办法：在均匀格子上对 $x^2$ **做分段线性插值**。误差由二阶导数控制，格子越细误差按（段长）$^2$ 降——这已经是「用线性积木逼近二次」能达到的正确阶。
 
@@ -1256,7 +1254,7 @@ x-x^2
 x\in[0,1].
 $$
 
-讲义 p.33 的图按 Telgarsky 2015 画的是 $F(x)=x-x^2$ 的分段线性插值，与逼近 $x^2$ 是同一件事（差一个已知的恒等函数 $x$）。图中每一步，误差曲线都是「更密、更矮」的一排小帐篷，高度按 $1/4$ 缩小——这正是 $T_k/4^k$。
+内容 的图按 Telgarsky 2015 画的是 $F(x)=x-x^2$ 的分段线性插值，与逼近 $x^2$ 是同一件事（差一个已知的恒等函数 $x$）。图中每一步，误差曲线都是「更密、更矮」的一排小帐篷，高度按 $1/4$ 缩小——这正是 $T_k/4^k$。
 
 ### 8.4 $T_1$ 的 ReLU 实现，以及 $T_i$、$I_k$ 的规模
 
@@ -1274,7 +1272,7 @@ $$
 T_1\in\mathrm{NN}_{(2,2,2)}(1,1).
 $$
 
-（也常写成 $T_1(x)=2\sigma(x)-4\sigma(x-1/2)$，权出现 4；用绝对值实现可把权界压到 2，与讲义 $2^{2i-1}|_{i=1}=2$ 一致。）
+（也常写成 $T_1(x)=2\sigma(x)-4\sigma(x-1/2)$，权出现 4；用绝对值实现可把权界压到 2，与内容 $2^{2i-1}|_{i=1}=2$ 一致。）
 
 **深度复合版 $T_i$。** $T_i=T_1^{\circ i}$。反复用 Lemma 1(2)：宽仍为 2，深 $2i$，权界
 
@@ -1292,9 +1290,9 @@ $$
 
 故 $T_i\in\mathrm{NN}_{(2,\,2i,\,2^{2i-1})}(1,1)$。
 
-**浅而宽版 $T_i$。** $T_i$ 是有 $2^i$ 段的分段线性函数，单隐层宽 $O(2^i)$ 即可实现。讲义写 $T_i\in\mathrm{NN}_{(2^i,\,2,\,2^{2i-1})}$。
+**浅而宽版 $T_i$。** $T_i$ 是有 $2^i$ 段的分段线性函数，单隐层宽 $O(2^i)$ 即可实现。内容写 $T_i\in\mathrm{NN}_{(2^i,\,2,\,2^{2i-1})}$。
 
-**深度版 $I_k$。** 用 skip 把 $x$ 一直带着，依次算 $T_1,T_2=T_1(T_1),\ldots,T_k$，再做线性组合 $x-\sum 4^{-i}T_i$。深度 $2k$（$k$ 次 $T_1$），宽度 $2k+1$（通道：恒等、当前锯齿、累加器，再留一点余量），权界 2（系数 $4^{-i}\le 1$，锯齿的权若按层融合会变大，讲义取了规范化后的界 2）。故
+**深度版 $I_k$。** 用 skip 把 $x$ 一直带着，依次算 $T_1,T_2=T_1(T_1),\ldots,T_k$，再做线性组合 $x-\sum 4^{-i}T_i$。深度 $2k$（$k$ 次 $T_1$），宽度 $2k+1$（通道：恒等、当前锯齿、累加器，再留一点余量），权界 2（系数 $4^{-i}\le 1$，锯齿的权若按层融合会变大，内容取了规范化后的界 2）。故
 
 $$
 I_k\in\mathrm{NN}_{(2k+1,\,2k,\,2)}(1,1).
@@ -1318,14 +1316,14 @@ $$
 
 人话：
 
-- **加宽**（浅网、很多断点）：误差 $\sim W^{-2}$；  
+- **加宽**（浅网、很多断点）：误差 $\sim W^{-2}$；
 - **加深**（反复复合锯齿）：误差 $\sim 2^{-L}$ 指数下降。
 
 这已经能看见深度的好处。下一节把「任意宽 $W$、任意深 $D$」写成一条更整齐的界。
 
 ---
 
-## 9. Lemma 3（Lu–Shen–Yang–Zhang）：$|f-x^2|\le(W/3)^{-D}$（p.34）
+## 9. Lemma 3（Lu–Shen–Yang–Zhang）：$|f-x^2|\le(W/3)^{-D}$
 
 **引理 3。** 存在 ReLU 网络 $f\in\mathrm{NN}_{(W,D,2)}(1,1)$，使得在 $[0,1]$ 上
 
@@ -1359,7 +1357,7 @@ M^{-2D}
 (W/3)^{-2D}.
 $$
 
-当 $W/3\ge 1$ 时 $(W/3)^{-2D}\le(W/3)^{-D}$。讲义写成更松、更好记的 $(W/3)^{-D}$。Lu–Shen–Yang–Zhang 2021 原文对多项式给出宽 $O(N)$、深 $O(L)$、误差 $O(N^{-L})$，平方是特例：把 $W=3N$ 代入即 $(W/3)^{-D}$。
+当 $W/3\ge 1$ 时 $(W/3)^{-2D}\le(W/3)^{-D}$。内容写成更松、更好记的 $(W/3)^{-D}$。Lu–Shen–Yang–Zhang 2021 这里对多项式给出宽 $O(N)$、深 $O(L)$、误差 $O(N^{-L})$，平方是特例：把 $W=3N$ 代入即 $(W/3)^{-D}$。
 
 ### 9.2 把「齿数相乘」写清楚
 
@@ -1391,7 +1389,7 @@ $$
 
 ---
 
-## 10. 从平方到乘法，再到 $d$ 元乘积（p.34）
+## 10. 从平方到乘法，再到 $d$ 元乘积
 
 ### 10.1 极化恒等式
 
@@ -1457,7 +1455,7 @@ $$
 \end{aligned}
 $$
 
-其中 $u=\frac{x+y}{2}$ 等。网络结构：三个平方网络并排（Lemma 1(3)），宽度 $3W$，深度 $D$；前面的 $\frac12$ 与后面的系数 $2$ 融进第一层 / 最后一层。权界 12：平方网权界 2，再乘系数 2 与若干 $1/2$ 的融合（Lemma 1(2) 的 $W B_2 B_3$ 被讲义收成常数 12）。证毕。
+其中 $u=\frac{x+y}{2}$ 等。网络结构：三个平方网络并排（Lemma 1(3)），宽度 $3W$，深度 $D$；前面的 $\frac12$ 与后面的系数 $2$ 融进第一层 / 最后一层。权界 12：平方网权界 2，再乘系数 2 与若干 $1/2$ 的融合（Lemma 1(2) 的 $W B_2 B_3$ 被内容收成常数 12）。证毕。
 
 ### 10.3 Lemma 5（$d$ 元乘积，二叉树）
 
@@ -1519,17 +1517,17 @@ $$
 6d\,\delta.
 $$
 
-讲义写 $12d\,\delta$：多留 2 倍，覆盖「不夹紧、输出略超出 $[0,1]$」或 $d$ 不是 2 的幂（补 1 凑成 $2^{\lceil\log_2 d\rceil}$，$2^{\lceil\log_2 d\rceil}<2d$）。
+内容写 $12d\,\delta$：多留 2 倍，覆盖「不夹紧、输出略超出 $[0,1]$」或 $d$ 不是 2 的幂（补 1 凑成 $2^{\lceil\log_2 d\rceil}$，$2^{\lceil\log_2 d\rceil}<2d$）。
 
-**规模。** 每次复合用 Lemma 1(2)：深度乘上 $\log_2 d$ 档，变成 $D\log_2 d$。宽度：讲义取 $3\log_2 d\cdot W$（每一层乘法宽 $3W$，再把 $\log_2 d$ 层的常数乘进去；更省的实现是宽度 $\max\{3W,d\}$，只保留当前乘积与尚未使用的坐标）。权界按 Lemma 1(2) 每次乘上 $\mathrm{width}\cdot B\cdot B$ 这一档，$\log_2 d$ 次后变成 $(36W)^{\log_2 d}$ 型（$36\sim 3\times 12$）。
+**规模。** 每次复合用 Lemma 1(2)：深度乘上 $\log_2 d$ 档，变成 $D\log_2 d$。宽度：内容取 $3\log_2 d\cdot W$（每一层乘法宽 $3W$，再把 $\log_2 d$ 层的常数乘进去；更省的实现是宽度 $\max\{3W,d\}$，只保留当前乘积与尚未使用的坐标）。权界按 Lemma 1(2) 每次乘上 $\mathrm{width}\cdot B\cdot B$ 这一档，$\log_2 d$ 次后变成 $(36W)^{\log_2 d}$ 型（$36\sim 3\times 12$）。
 
 **$d$ 不是 2 的幂。** 用 1 把维数补到 $2^{\lceil\log_2 d\rceil}$（常数 1 是偏置，免费），或改成顺序乘法 $\phi_1(\phi_1(\cdots),\cdot)$：深度 $(d-1)D$，宽度 $3W+O(d)$，误差仍 $O(d\delta)$。阶不变。
 
-**输入可能为负。** 后面 $x_i-n_i/N\in(-1/N,1/N)$。极化恒等式对一切实数成立。平方在 $[-1,1]$ 上：$t^2=|t|^2$，$|t|=\sigma(t)+\sigma(-t)$，先折到 $[0,1]$ 再调用 Lemma 3。误差界同阶。笔记下文默认 $\phi_{d}$ 已对 $\|z\|_\infty\le 1$ 的输入校准过。
+**输入可能为负。** 后面 $x_i-n_i/N\in(-1/N,1/N)$。极化恒等式对一切实数成立。平方在 $[-1,1]$ 上：$t^2=|t|^2$，$|t|=\sigma(t)+\sigma(-t)$，先折到 $[0,1]$ 再调用 Lemma 3。误差界同阶。这里下文默认 $\phi_{d}$ 已对 $\|z\|_\infty\le 1$ 的输入校准过。
 
 ---
 
-## 11. 逼近 $p_{\mathbf{n},\alpha}$，再拼成 $\phi$（p.34–35）
+## 11. 逼近 $p_{\mathbf{n},\alpha}$，再拼成 $\phi$
 
 ### 11.1 每个局部单项式是一次多元乘法
 
@@ -1598,7 +1596,7 @@ $$
 12(d+r)(W/3)^{-D}.
 $$
 
-深度 $+2$ 来自 $\psi$ 的两层；宽度 $2(d+r)$ 来自「每个因子宽 2」。这是讲义 p.34 最后三行。
+深度 $+2$ 来自 $\psi$ 的两层；宽度 $2(d+r)$ 来自「每个因子宽 2」。这是内容 最后三行。
 
 ### 11.3 线性组合：$\phi=\sum c_{\mathbf{n},\alpha}\phi_{\mathbf{n},\alpha}$
 
@@ -1641,7 +1639,7 @@ c_{\mathbf{n},\alpha}
 \end{aligned}
 $$
 
-$p_{\mathbf{n},\alpha}$ 的支撑在 $\|x-\mathbf{n}/N\|_\infty<1/N$。在支撑外面，真的 $p_{\mathbf{n},\alpha}=0$，但网络 $\phi_{\mathbf{n},\alpha}$ 未必精确为零——讲义直接把求和限制在重叠的 $\mathbf{n}$ 上，等于默认我们在支撑外把 $\phi_{\mathbf{n},\alpha}$ 关掉，或吸收进 $12(d+r)$ 的常数。按讲义书写：
+$p_{\mathbf{n},\alpha}$ 的支撑在 $\|x-\mathbf{n}/N\|_\infty<1/N$。在支撑外面，真的 $p_{\mathbf{n},\alpha}=0$，但网络 $\phi_{\mathbf{n},\alpha}$ 未必精确为零——内容直接把求和限制在重叠的 $\mathbf{n}$ 上，等于默认我们在支撑外把 $\phi_{\mathbf{n},\alpha}$ 关掉，或吸收进 $12(d+r)$ 的常数。按内容书写：
 
 $$
 |p-\phi|
@@ -1680,7 +1678,7 @@ N^{-\zeta}
 \end{aligned}
 $$
 
-这是 p.35 的主不等式。两项的来源：
+这是 的主不等式。两项的来源：
 
 | 项 | 来源 | 怎么变小 |
 |----|------|----------|
@@ -1689,7 +1687,7 @@ $$
 
 ---
 
-## 12. 选参：$D=1+\zeta/d$，$N=W^{1/d}$，得到 $W^{-\zeta/d}$（p.35）
+## 12. 选参：$D=1+\zeta/d$，$N=W^{1/d}$，得到 $W^{-\zeta/d}$
 
 ### 12.1 让两项同阶
 
@@ -1735,7 +1733,7 @@ $$
 
 每个 $\phi_{\mathbf{n},\alpha}$ 的宽度 $\le\max\{3\log_2(d+r)\,W,\,2(d+r)\}$，深度 $\le D\log_2(d+r)+2$。
 
-把它们线性组合。**点数：** 讲义按「每个 $x$ 处至多 $2^d$ 个帽子非零 $\times$ 至多 $(r+1)d^r$ 个多重指标」来计，写出
+把它们线性组合。**点数：** 内容按「每个 $x$ 处至多 $2^d$ 个帽子非零 $\times$ 至多 $(r+1)d^r$ 个多重指标」来计，写出
 
 $$
 \begin{aligned}
@@ -1751,8 +1749,8 @@ $$
 
 对照我们的推导：
 
-- **深度。** $D\log_2(d+r)+2=(1+\zeta/d)\log_2(d+r)+2$。讲义写成 $(1+2\zeta/d)\log_2(d+r)+2$，多留了 $\zeta/d$ 的余量（融合层、夹紧、$d+r$ 不是 2 的幂时 $\lceil\log_2\rceil$ 等）。  
-- **宽度与 $2^d$。** 若把全部 $(N+1)^d$ 个格子的子网并排相加，宽度还应乘 $(N+1)^d$。取 $N=W^{1/d}$ 时 $(N+1)^d\asymp W$，朴素拼接的宽度仍是 $W$ 的多项式（再乘 $2^d d^r$）。讲义的 $2^d$ 是「点点活跃的枝数」；要在一个与 $x$ 无关的网络里只付 $2^d$ 而不是 $N^d$，需要 p.36 的离散化（先判断 $x$ 在哪个格子，再只算那个格子的 Taylor）。**对结论 $W^{-\zeta/d}$ 没有影响**：两种计数下宽度都是 $W\cdot\mathrm{poly}(d,r,2^d)$ 这一档。  
+- **深度。** $D\log_2(d+r)+2=(1+\zeta/d)\log_2(d+r)+2$。内容写成 $(1+2\zeta/d)\log_2(d+r)+2$，多留了 $\zeta/d$ 的余量（融合层、夹紧、$d+r$ 不是 2 的幂时 $\lceil\log_2\rceil$ 等）。
+- **宽度与 $2^d$。** 若把全部 $(N+1)^d$ 个格子的子网并排相加，宽度还应乘 $(N+1)^d$。取 $N=W^{1/d}$ 时 $(N+1)^d\asymp W$，朴素拼接的宽度仍是 $W$ 的多项式（再乘 $2^d d^r$）。内容的 $2^d$ 是「点点活跃的枝数」；要在一个与 $x$ 无关的网络里只付 $2^d$ 而不是 $N^d$，需要 的离散化（先判断 $x$ 在哪个格子，再只算那个格子的 Taylor）。**对结论 $W^{-\zeta/d}$ 没有影响**：两种计数下宽度都是 $W\cdot\mathrm{poly}(d,r,2^d)$ 这一档。
 - **权界。** 线性组合把权界乘上项数；每条枝上已有 $(36W)^{\log_2(d+r)}N$，再多两个 $W$ 的对数次幂被写成 $(36W)^{\log_2(d+r)+2}$。与 3.4 的 $\|\theta\|_\infty\le c S^{\log_2(d+r)+2}$ 同源。
 
 ### 12.3 回到 $E_{\mathrm{app}}$
@@ -1769,7 +1767,7 @@ E_{\mathrm{app}}
 C_d^2\,W^{-2\zeta/d}.
 $$
 
-统计误差那一侧，覆盖数 $\log\mathcal{N}\lesssim SD\log(BWD/\delta)$（p.19）。把 $W,D,B$ 代进去，才能和 $E_{\mathrm{app}}$ 对 $n$ 做权衡——那是 Lec2 统计误差份的事。本节只把 $E_{\mathrm{app}}$ 收成 $W^{-2\zeta/d}$。
+统计误差那一侧，覆盖数 $\log\mathcal{N}\lesssim SD\log(BWD/\delta)$。把 $W,D,B$ 代进去，才能和 $E_{\mathrm{app}}$ 对 $n$ 做权衡——那是 Lec2 统计误差份的事。本节只把 $E_{\mathrm{app}}$ 收成 $W^{-2\zeta/d}$。
 
 ### 12.4 一张图看整条链
 
@@ -1800,9 +1798,9 @@ $$
 
 ---
 
-## 13. p.36 改进分析的四块积木
+## 13. 改进分析的四块积木
 
-5–12 节的单位分解是 **连续的帽子**。帽子之间重叠 $2^d$，并且实现 $\prod_i\psi(Nx_i-n_i)$ 要真的做乘法。Lu–Shen–Yang–Zhang 2021 与 Jiao–Shen–Lin–Huang 2023 换了一种更「数字」的局部化：先把 $x$ **量化到格子中心**，再在中心做 Taylor。讲义 p.36 把积木拆成四块。
+5–12 节的单位分解是 **连续的帽子**。帽子之间重叠 $2^d$，并且实现 $\prod_i\psi(Nx_i-n_i)$ 要真的做乘法。Lu–Shen–Yang–Zhang 2021 与 Jiao–Shen–Lin–Huang 2023 换了一种更「数字」的局部化：先把 $x$ **量化到格子中心**，再在中心做 Taylor。内容 把积木拆成四块。
 
 ### 13.1 余项的 2-范数写法
 
@@ -1816,14 +1814,14 @@ f(x)
 \frac{\partial^\alpha f(x_0)}{\alpha!}(x-x_0)^\alpha
 \Biggr|
 \;\le\;
-d^{s}\,\|x-x_0\|_2^{\beta},
+d^{s}\,\|x-x_0\|_2^{s+\beta},
 $$
 
-其中 $s$ 是 Taylor 的整数阶，$\beta$ 是剩余的 Hölder 指数（与前面 $\zeta=r+s$ 同一套拆法，字母在这一页被重用了：这里的 $s$ 是整数阶）。$\|x-x_0\|_2\le\sqrt{d}/K$ 若格子边长 $1/K$，余项 $\sim K^{-\beta}$ 或 $K^{-(s+\beta)}$。
+其中 $s$ 是 Taylor 的整数阶，$\beta$ 是剩余的 Hölder 指数（与前面 $\zeta=r+s$ 同一套拆法，字母在这一页被重用了：这里的 $s$ 是整数阶）。$\|x-x_0\|_2\le\sqrt{d}/K$ 若格子边长 $1/K$，余项 $\sim K^{-(s+\beta)}$。
 
 ### 13.2 积木一：离散化网络 $\psi$
 
-把 $[0,1]^d$ 切成小立方体 $\bigcup_\theta Q_\theta$（讲义图是 $[0,1]^2$ 上的 $4\times 4$ 棋盘，每个 $Q_{(i,j)}$ 标了号）。构造网络 $\psi$，使得
+把 $[0,1]^d$ 切成小立方体 $\bigcup_\theta Q_\theta$（内容图是 $[0,1]^2$ 上的 $4\times 4$ 棋盘，每个 $Q_{(i,j)}$ 标了号）。构造网络 $\psi$，使得
 
 $$
 x\in Q_\theta
@@ -1901,7 +1899,7 @@ $$
 
 与 11 节对比：
 
-| | 帽子构造（§5–12） | 离散化构造（p.36） |
+| | 帽子构造（§5–12） | 离散化构造 |
 |--|-------------------|---------------------|
 | 局部化 | 连续单位分解 $\psi_{\mathbf{n}}$ | 量化 $\psi(x)\approx x_\theta$ |
 | 对格子求和 | 理论上 $(N+1)^d$ 项（活跃 $2^d$） | 每个 $x$ 一项 |
@@ -1955,14 +1953,14 @@ $$
 
 ### 14.2 和前后两份的接口
 
-- 上一份（统计误差）：$E_{\mathrm{sta}}$ / $E_{\mathrm{gen}}$ 通过覆盖数依赖 $\mathcal{F}$ 的 $W,D,B$。本节给出：同样的 $W,D,B$ 决定了 $E_{\mathrm{app}}$。  
+- 上一份（统计误差）：$E_{\mathrm{sta}}$ / $E_{\mathrm{gen}}$ 通过覆盖数依赖 $\mathcal{F}$ 的 $W,D,B$。本节给出：同样的 $W,D,B$ 决定了 $E_{\mathrm{app}}$。
 - 下一份（优化误差）：网络非凸，GD 不一定走到 $\bar f$。逼近论构造的 $\phi$ 只说明「类里有好函数」，不说明梯度下降找不找得到。
 
-### 14.3 读讲义时的常见坑
+### 14.3 读内容时的常见坑
 
-1. $E_{\mathrm{app}}=\inf\|f-f^*\|_{L^2}^2$ 已经是超额风险，不要再平方一次；若你先证了 $\|f-\phi\|_\infty\le\varepsilon$，风险那边才是 $\varepsilon^2$。  
-2. Hölder 定义里的 $s$ 有两个角色；多重指标请看成 $\alpha$。  
-3. Lemma 1 的权界在「融合相邻仿射层」时才会出现 $\mathrm{width}\cdot B_1 B_2$；只拼接不加融合则是 $\max B_i$。讲义全程用前者，所以 $B$ 看起来很大。  
-4. $(W/3)^{-D}$ 不是最优指数（可以 $^{-2D}$）；足够让 $D=1+\zeta/d$ 时这一项不超过 $W^{-\zeta/d}$。  
-5. p.35 宽度里的 $2^d$ 与朴素的 $(N+1)^d$ 不是一回事；阶都是 $W^{-\zeta/d}$，改进构造见 p.36。  
+1. $E_{\mathrm{app}}=\inf\|f-f^*\|_{L^2}^2$ 已经是超额风险，不要再平方一次；若你先证了 $\|f-\phi\|_\infty\le\varepsilon$，风险那边才是 $\varepsilon^2$。
+2. Hölder 定义里的 $s$ 有两个角色；多重指标请看成 $\alpha$。
+3. Lemma 1 的权界在「融合相邻仿射层」时才会出现 $\mathrm{width}\cdot B_1 B_2$；只拼接不加融合则是 $\max B_i$。内容全程用前者，所以 $B$ 看起来很大。
+4. $(W/3)^{-D}$ 不是最优指数（可以 $^{-2D}$）；足够让 $D=1+\zeta/d$ 时这一项不超过 $W^{-\zeta/d}$。
+5. 宽度里的 $2^d$ 与朴素的 $(N+1)^d$ 不是一回事；阶都是 $W^{-\zeta/d}$，改进构造见。
 6. ReLU–sine–$2^x$ 打破 CoD **不能** 当成「ReLU 也没有 CoD」。

@@ -7,5 +7,4 @@ cover: /covers/post-math.svg
 icon: book
 order: 0
 facts: 含数学附录与习题
-sourceNote: 基于 Yuling Jiao 的 FODS 讲义整理的个人学习笔记，保留来源说明与讲义页码。
 ---

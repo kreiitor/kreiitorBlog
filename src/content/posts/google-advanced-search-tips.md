@@ -15,6 +15,8 @@ cover: /covers/post-cli-terminal.svg
 
 在日常工作和研究中，大多数人只用关键词搜索，导致大量时间浪费在翻找和过滤结果上。这篇文档整理了 31 条 Google 高级搜索语法，覆盖精确匹配、范围限定、页面元素定位和内置工具四大类。
 
+> 说明：`~`、`link:`、`phonebook:` 等旧操作符已被 Google 停止支持或不再保证可用。相关条目保留下来用于理解历史语法；实际检索请优先使用仍受支持的 `site:`、`filetype:`、`intitle:`、`intext:` 等操作符。
+
 适合以下场景：
 
 - 需要精确搜索某篇论文、某段话或某个术语
@@ -52,8 +54,8 @@ inbound marketing OR advertising
 much * about nothing
 ```
 
-### 5. 同义词（波浪号）
-在词前加 `~`，同时搜索该词及其同义词。
+### 5. 同义词（波浪号，旧语法）
+在词前加 `~`，同时搜索该词及其同义词。Google 已不再保证这一语法可用，当前建议用 `OR` 连接同义词。
 ```
 "inbound marketing" ~professional
 ```
@@ -74,8 +76,8 @@ site:www.smallbusinesshub.com "inbound marketing"
 related:visual.ly
 ```
 
-### 8. 反向链接（link:）
-查找有哪些页面链接到了指定页面。
+### 8. 反向链接（link:，已废弃）
+查找有哪些页面链接到了指定页面。Google 已停止公开支持这一操作符，外链分析需要改用 Search Console 或其他工具。
 ```
 link:buzzfeed
 ```
@@ -212,8 +214,8 @@ pizza vs broccoli
 
 ## 五、其他实用技巧
 
-### 29. 电话查询（phonebook:）
-输入电话号码查归属人。仅限真实号码。
+### 29. 电话查询（phonebook:，已废弃）
+输入电话号码查归属人。该操作符已停止支持，仅保留作为历史语法参考。
 ```
 phonebook:617-555-1212
 ```

@@ -1,6 +1,6 @@
 ---
 title: "英文文献 AI 辅助领域研究与文献积累最佳实践"
-description: "面向已经积累一批 PDF 文献、需要系统了解研究领域的人，整理 AI 辅助领域研究与文献积累的最佳实践，覆盖研究目标定义、文献分层、三遍阅读法、结构化笔记、主题矩阵、领域地图和可直接复用的 AI 提示词。"
+description: "面向已有一批 PDF 的研究者，整理 AI 辅助领域调研、文献分层、三遍阅读、结构化笔记与领域地图的实践。"
 pubDate: 2026-06-04
 updatedDate: 2026-10-11
 tags:
@@ -231,7 +231,7 @@ year:
 venue:
 tags:
   - paper
-  - 待补充主题标签
+  - 主题标签
 status: unread / skimmed / reading / read / cited
 rating: high / medium / low
 ---

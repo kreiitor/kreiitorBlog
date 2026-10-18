@@ -205,7 +205,7 @@ use std::cmp::Reverse;
 let mut h = BinaryHeap::new();
 h.push(x); h.pop(); h.peek();    // 大根堆
 
-let mut min_h = BinaryHeap::from(Reverse(x));   // 小根堆：包 Reverse
+let mut min_h = BinaryHeap::from([Reverse(x)]);   // 小根堆：包 Reverse
 min_h.push(Reverse(5));
 min_h.pop().map(|Reverse(v)| v);
 
