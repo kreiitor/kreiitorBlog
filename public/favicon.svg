@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
  <title id="logo-title">kreiitor · K 索引标记</title>
- <path class="logo-stem" d="M12 12H22V52H12Z" fill="#293ccb"/>
- <path class="logo-arms" d="M22 30L42 12H55L34 32L56 52H42L22 35Z" fill="#293ccb"/>
- <rect class="logo-index" x="47" y="9" width="10" height="10" rx="1.5" fill="#e65d3b"/>
+ <path class="logo-stem" d="M12 12H22V52H12Z" fill="#2647d7"/>
+ <path class="logo-arms" d="M22 30L42 12H55L34 32L56 52H42L22 35Z" fill="#2647d7"/>
+ <rect class="logo-index" x="47" y="9" width="10" height="10" rx="1.5" fill="#f2cc27"/>
 </svg>

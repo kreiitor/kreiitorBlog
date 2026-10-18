@@ -52,8 +52,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
    event.preventDefault();
    search();
   }
-  if (event.key === 'Escape') { const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu');
- matchMedia('(min-width: 901px)').addEventListener('change',event=>{if(event.matches&&menu)menu.open=false;}); if(menu?.open){menu.open=false;menu.querySelector('summary')?.focus();} }
+  if (event.key === 'Escape') { const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu'); if(menu?.open){menu.open=false;menu.querySelector('summary')?.focus();} }
  });
  const menu=document.querySelector<HTMLDetailsElement>('.mobile-menu');
  matchMedia('(min-width: 901px)').addEventListener('change',event=>{if(event.matches&&menu)menu.open=false;});

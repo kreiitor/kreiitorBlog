@@ -41,7 +41,13 @@ for(const theme of ['light','dark']) {
    '.post-card .card-meta',
    '.post-card .card-description',
    '.post-card .zen-tag',
-   '.selected-invitation span:last-child',
+   '.reading-detour > a',
+   '.detour-heading > span',
+   '[data-another-note]',
+   '.research-art .art-top',
+   '.question-paper',
+   '.reading-paper',
+   '.experiment-paper',
    '.garden-aside .topic-list a > span:last-child',
   ];
   for(const selector of selectors) {

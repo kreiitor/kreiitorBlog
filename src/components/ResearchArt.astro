@@ -1,79 +1,52 @@
-<figure class="research-art" aria-label="从论文阅读到实验求证的研究手记插画">
- <div class="art-top"><span>Research notebook</span><span>Paper / Code</span></div>
- <svg viewBox="0 0 500 400" width="500" height="400" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-  <defs><pattern id="garden-grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".65" fill="var(--color-line-strong)" opacity=".4"/></pattern></defs>
-  <rect width="500" height="400" fill="url(#garden-grid)"/>
-  <path class="art-route" d="M40 330C130 330 80 100 220 100s90 230 240 230" stroke="var(--color-line-strong)" stroke-width="1.5" stroke-dasharray="3 7" stroke-linecap="round"/>
-  <circle class="art-orbit" cx="262" cy="208" r="150" stroke="var(--color-line-strong)" stroke-width="1.2"/>
-  <!-- 后层便签：新生想法 -->
-  <g class="art-layer art-layer-note"><g transform="rotate(5 380 240)">
-   <rect x="330" y="180" width="100" height="112" rx="6" fill="var(--color-paper-warm)" stroke="var(--color-line-strong)"/>
-   <path d="M344 204h72" stroke="var(--color-line-strong)"/>
-   <path d="M380 258v-26m0 8c-13 0-13-12-13-12 13 0 13 12 13 12Zm0 7c13 0 13-12 13-12-13 0-13 12-13 12Z" stroke="var(--color-sage)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-   <text class="art-detail" x="344" y="282" font-family="sans-serif" font-size="9" letter-spacing=".5" fill="var(--color-ink-muted)">HYPOTHESIS</text>
-  </g></g>
-  <!-- 主纸张：进行中的工作 -->
-  <g class="art-layer art-layer-paper"><g class="art-paper" transform="rotate(-4 252 200)">
-   <rect x="152" y="66" width="200" height="268" rx="6" fill="var(--color-ink)" opacity=".07" transform="translate(5 8)"/>
-   <rect x="152" y="66" width="200" height="268" rx="6" fill="var(--color-surface)" stroke="var(--color-line-strong)"/>
-   <path d="M174 100h156" stroke="var(--color-line)"/>
-   <text class="art-detail" x="174" y="90" font-family="sans-serif" font-size="9" letter-spacing="1" fill="var(--color-ink-muted)">RESEARCH IN PROGRESS</text>
-   <text class="art-detail" x="174" y="150" font-family="Georgia,serif" font-size="30" fill="var(--color-ink)">Read. Build.</text>
-   <text class="art-detail" x="174" y="188" font-family="Georgia,serif" font-size="29" font-style="italic" fill="var(--color-accent)">Then verify.</text>
-   <g class="art-mobile-mark" stroke="var(--color-sage)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M212 202h80M212 202v-78m8 58 22-29 21 12 25-36"/>
-    <circle cx="288" cy="129" r="6" fill="var(--color-accent)" stroke="none"/>
-   </g>
-   <path d="M174 214h156m-156 9h124" stroke="var(--color-line)"/>
-   <!-- 折线小图 -->
-   <path d="M190 296h126M190 296v-40" stroke="var(--color-line-strong)"/>
-   <path d="M197 288c22 0 22-26 46-17s27-22 56-23" stroke="var(--color-sage)" stroke-width="2" stroke-linecap="round"/>
-   <circle cx="243" cy="271" r="3.5" fill="var(--color-surface)" stroke="var(--color-sage)" stroke-width="1.5"/>
-   <circle cx="299" cy="248" r="4" fill="var(--color-accent)"/>
-   <path d="M174 318h48m12 0h48m12 0h36" stroke="var(--color-line-strong)" stroke-linecap="round"/>
-  </g></g>
-  <!-- 简洁几何徽记：打开的书 -->
-  <g class="art-layer art-layer-badges">
-  <g transform="translate(88 148)">
-   <circle r="26" fill="var(--color-surface)" stroke="var(--color-line-strong)"/>
-   <path d="M-11-6c4-2.5 7-2.5 11 0 4-2.5 7-2.5 11 0v13c-4-2.5-7-2.5-11 0-4 2.5-7 2.5-11 0v-13Z M0-6v13" stroke="var(--color-sage)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </g>
-  <!-- 简洁几何徽记：堆叠层 -->
-  <g transform="translate(76 300)">
-   <circle r="19" fill="var(--color-surface)" stroke="var(--color-line-strong)"/>
-   <path d="M-9-3l9 5 9-5-9-5-9 5Z M-9 2l9 5 9-5" stroke="var(--color-sage)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </g>
-  </g>
-  <!-- 蓝色点缀 -->
-  <path d="M428 84v18m-9-9h18" stroke="var(--color-accent)" stroke-width="1.6" stroke-linecap="round"/>
-  <circle cx="42" cy="330" r="4" fill="var(--color-sage)"/>
-  <circle cx="458" cy="330" r="4" fill="var(--color-accent)"/>
- </svg>
- <figcaption><span>阅读 · 实验 · 写作</span><span>从问题出发，用实验求证。</span></figcaption>
-</figure>
+---
+import Icon from './Icon.astro';
+import { withBase } from '../utils/url';
+---
+<aside class="research-art" aria-label="从一个问题开始探索">
+ <div class="art-top"><span>研究从一个问题开始</span><svg viewBox="0 0 36 36" width="36" height="36" aria-hidden="true"><path d="M18 3v30M3 18h30M7.4 7.4l21.2 21.2M7.4 28.6 28.6 7.4" stroke="currentColor" stroke-width="3"/></svg></div>
+ <div class="art-papers">
+  <a class="question-paper art-layer" href={withBase('/blog/llm-eval-pipeline/')}>
+   <span class="paper-label">一个值得追问的问题</span>
+   <strong>怎样判断，<br/>模型真的有用？</strong>
+   <span class="paper-description">把评测做成可持续迭代的实验。</span>
+   <span class="paper-link">从研究札记开始 <Icon name="arrow" size={20}/></span>
+   <span class="paper-mobile">研究札记 <Icon name="arrow" size={16}/></span>
+  </a>
+  <a class="reading-paper art-layer" href={withBase('/blog/paper-reading-notes/')}><Icon name="book" size={22}/><span><strong>读一篇论文</strong><small>把阅读变成自己的理解</small></span><Icon name="arrow" size={18}/></a>
+  <a class="experiment-paper art-layer" href={withBase('/projects/paper-replication-workbench/')}><Icon name="layers" size={22}/><span><strong>跑一次实验</strong><small>让想法与证据相遇</small></span><Icon name="arrow" size={18}/></a>
+ </div>
+ <p class="art-caption">阅读给出线索，实验留下证据。</p>
+</aside>
 <style>
- .research-art { --color-surface: var(--color-hero-paper); --color-paper-warm: #f6b18f; --color-ink: var(--color-hero-ink); --color-ink-muted: #665064; --color-line: #d9bcac; --color-line-strong: var(--color-hero-line); --color-sage: #293ccb; --color-accent: #293ccb; background: var(--color-hero-panel); border: 1px solid rgb(255 255 255 / .12); border-radius: 4px; padding: 22px 24px 18px; overflow: hidden; box-shadow: 10px 10px 0 var(--color-counterpoint); }
- .art-top { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .025em; color: #f5f1ff; }
- svg { display: block; width: 100%; height: auto; margin-block: 6px; }
- .art-mobile-mark { display: none; }
- figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; padding-top: 13px; border-top: 1px solid rgb(255 255 255 / .3); font-size: 12px; color: #fff4df; }
- figcaption span { white-space: nowrap; }
- .art-layer { transform-box: fill-box; transform-origin: center; animation: art-settle 720ms var(--ease-out-expo) both; transition: translate 320ms var(--ease-out-expo),rotate 320ms var(--ease-out-expo); }
- .art-layer-note { animation-delay: 60ms; }
- .art-layer-paper { animation-delay: 160ms; }
- .art-layer-badges { animation-delay: 280ms; }
- .art-orbit { transform-box: fill-box; transform-origin: center; animation: art-orbit-arrive 900ms 120ms var(--ease-out-expo) both; }
- .art-route { animation: art-route-arrive 1100ms var(--ease-out-expo) both; }
- @keyframes art-settle { from { opacity: 0; transform: translateY(16px) rotate(2deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
- @keyframes art-orbit-arrive { from { opacity: .25; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
- @keyframes art-route-arrive { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
- @media (hover: hover) and (prefers-reduced-motion: no-preference) { .research-art:hover .art-layer-note { translate: 3px -3px; rotate: 1deg; } .research-art:hover .art-layer-paper { translate: 0 -3px; } .research-art:hover .art-layer-badges { translate: -2px 1px; } }
- @media (prefers-reduced-motion: reduce) { .art-layer,.art-orbit,.art-route { animation: none; translate: none; rotate: none; } }
- /* SVG colors inherit both the manual theme and the system preference. */
- /* On small screens the notebook becomes a readable caption, not a cropped miniature. */
- @media (max-width: 900px) {
-  .research-art { padding: 16px 20px; border-left: 3px solid var(--color-counterpoint); box-shadow: none; }
-  .art-top,svg { display: none; }
-  figcaption { display: flex; flex-wrap: wrap; gap: 4px 20px; border: 0; padding: 0; font-size: 13px; line-height: 1.8; }
+ .research-art { padding: 20px; border-radius: 6px; background: var(--color-hero-panel); color: white; position: relative; }
+ .art-top { display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 13px; }
+ .art-top > svg { color: var(--color-highlight); }
+ .art-papers { display: grid; gap: 10px; margin-top: 16px; }
+ .question-paper { display: block; position: relative; background: var(--color-highlight); color: var(--color-hero-ink); padding: 18px; border-radius: 3px; transform: rotate(-2deg); box-shadow: 5px 7px 0 rgb(0 0 0 / .14); }
+ .paper-label { display: block; font-size: 12px; margin-bottom: 6px; }
+ .question-paper strong { display: block; font-family: var(--font-title); font-size: clamp(23px,2vw,27px); font-weight: 600; line-height: 1.35; }
+ .paper-description { display: none; font-size: 12px; margin-top: 12px; }
+ .paper-link { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid currentColor; font-size: 13px; }
+ .paper-mobile { display: none; }
+ .reading-paper,.experiment-paper { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 48px; border-radius: 3px; color: var(--color-hero-ink); background: #fdfefb; }
+ .reading-paper > span,.experiment-paper > span { flex: 1; }
+ .art-papers strong { font-weight: 600; }
+ .reading-paper strong,.experiment-paper strong { font-size: 14px; }
+ small { display: none; font-size: 11px; margin-top: 2px; color: #526078; }
+ .art-caption { margin-top: 14px; color: white; font-size: 12px; }
+ .art-layer { transition: transform var(--dur-base) var(--ease-out-expo),box-shadow var(--dur-base); }
+ .art-layer:focus-visible { outline-color: white; outline-offset: 5px; }
+ @media(hover:hover) and (prefers-reduced-motion:no-preference) { .question-paper:hover { transform: rotate(0) translateY(-3px); box-shadow: 5px 10px 0 rgb(0 0 0 / .15); } .reading-paper:hover,.experiment-paper:hover { transform: translateX(4px); } }
+ @media (max-width:900px) {
+  .research-art { padding: 16px; }
+  .art-top { font-size: 12px; }
+  .art-top > svg { width: 22px; height: 22px; }
+  .art-papers { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+  .question-paper,.reading-paper,.experiment-paper { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 8px 4px; transform: none; box-shadow: none; }
+  .question-paper > :not(.paper-mobile),.reading-paper > :global(svg),.experiment-paper > :global(svg),small,.art-caption { display: none; }
+  .paper-mobile { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+  .reading-paper strong,.experiment-paper strong { font-size: 12px; }
+  .reading-paper > span,.experiment-paper > span { flex: initial; }
  }
+ @media (prefers-reduced-motion:reduce) { .art-layer { animation: none; transition: none; } }
 </style>

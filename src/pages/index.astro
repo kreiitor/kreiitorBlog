@@ -29,6 +29,7 @@ const featuredProjects = getFeaturedProjects(projects,2);
 const allTags = getTagSummaries(posts,projects);
 const tags = allTags.slice(0,8);
 const learningSeries = getLearningSeries(await getCollection('series'), posts);
+const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featuredIds.has(post.id)).map(post => ({ title:post.data.title, description:post.data.description, href:withBase(`/blog/${post.id}/`) }));
 ---
 <BaseLayout>
  <div class="home-page" data-pagefind-ignore>
@@ -50,7 +51,9 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
    <SectionHeading title="精选札记" description="从问题出发，把方法与实践写清楚。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
    <div class="selected-writing">
     {featuredPosts[0] && <PostCard post={featuredPosts[0]} featured featuredLabel={featuredLabels[0]}/>}
-    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="selection-label">{featuredLabels[index+1]}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}<a class="selected-invitation" href={withBase('/archive/')}><span>更多思考，留在时间里。</span><span>沿时间线浏览 <Icon name="arrow" size={16}/></span></a></div>
+    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="selection-label">{featuredLabels[index+1]}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}
+     {wanderingNotes.length > 0 && <div class="reading-detour" data-reading-detour data-notes={JSON.stringify(wanderingNotes)}><div class="detour-heading"><span>换个方向，随手翻翻</span><button type="button" data-another-note hidden>换一篇 <span aria-hidden="true">↻</span></button></div><a data-detour-link href={wanderingNotes[0].href}><strong data-detour-title>{wanderingNotes[0].title}</strong><Icon name="arrow" size={18}/></a><p data-detour-description role="status" aria-live="polite">{wanderingNotes[0].description}</p></div>}
+    </div>
    </div>
   </section>
   <section class="page-shell editorial-section learning-section">
@@ -76,9 +79,25 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   </section>
  </div>
 </BaseLayout>
+<script>
+ const detour=document.querySelector<HTMLElement>('[data-reading-detour]');
+ const another=detour?.querySelector<HTMLButtonElement>('[data-another-note]');
+ const link=detour?.querySelector<HTMLAnchorElement>('[data-detour-link]');
+ const title=detour?.querySelector<HTMLElement>('[data-detour-title]');
+ const description=detour?.querySelector<HTMLElement>('[data-detour-description]');
+ if(detour&&another&&link&&title&&description){
+  const notes=JSON.parse(detour.dataset.notes??'[]') as {title:string;description:string;href:string}[];
+  let current=0;
+  another.hidden=notes.length<2;
+  another.addEventListener('click',()=>{
+   current=(current+1+Math.floor(Math.random()*(notes.length-1)))%notes.length;
+   const note=notes[current];link.href=note.href;title.textContent=note.title;description.textContent=note.description;
+  });
+ }
+</script>
 <style>
- .home-hero { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); align-items: center; gap: 56px; padding-block: 42px 36px; }
- .hero-visual { width: 100%; max-width: 364px; justify-self: end; margin-right: 10px; }
+ .home-hero { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); align-items: center; gap: 56px; padding-block: 42px 36px; }
+ .hero-visual { width: 100%; max-width: 400px; justify-self: end; margin-right: 0; }
  .journal-strip + .editorial-section { margin-top: 40px; }
  .selected-writing { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.9fr); gap: 56px; margin-top: 30px; align-items: start; }
  .selected-writing > *, .home-hero > * { min-width: 0; }
@@ -96,6 +115,15 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .selected-row:is(:hover,:focus-visible)::after { transform: scaleX(1); }
  .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
  .selected-invitation span:last-child { color: var(--color-accent); }
+ .reading-detour { padding-top: 16px; }
+ .detour-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+ .detour-heading > span { padding: 2px 7px; background: var(--color-highlight); color: var(--color-on-highlight); font-size: 12px; }
+ .detour-heading button { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; font-size: 13px; color: var(--color-accent); }
+ .detour-heading button:hover { text-decoration: underline; text-underline-offset: 4px; }
+ .reading-detour > a { display: flex; justify-content: space-between; align-items: start; gap: 16px; font-size: 16px; line-height: 1.8; padding-block: 8px; }
+ .reading-detour strong { font-weight: 500; }
+ .reading-detour > a:hover { color: var(--color-accent); }
+ .reading-detour > p { font-size: 13px; line-height: 1.8; color: var(--color-ink-soft); }
  @media (max-width: 900px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
  .hero-kicker { display: flex; align-items: center; gap: 10px; font-size: var(--text-caption); color: var(--color-accent); }
  .hero-kicker span { width: 22px; height: 2px; background: var(--color-counterpoint); }
@@ -122,6 +150,16 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  .journal-counts { display: flex; gap: 25px; font-size: var(--text-caption); color: var(--color-ink-soft); }
  .journal-counts a { display: inline-flex; align-items: center; min-height: 44px; }
  .journal-counts strong { font-family: var(--font-editorial); font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--color-ink); margin-right: 6px; }
+ .learning-section { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 40px; padding: 32px; border-radius: 8px; background: var(--color-paper-cool); }
+ .learning-section :global(.section-heading) { display: block; padding: 0; border: 0; }
+ .learning-section :global(.section-heading .text-link) { margin-top: 20px; }
+ .learning-section :global(.section-description) { line-height: 1.9; }
+ .home-series :global(.series-index) { grid-template-columns: 88px minmax(0,1fr) 120px; column-gap: 24px; row-gap: 8px; padding: 22px 0; }
+ .home-series :global(.series-index:first-child) { padding-top: 0; }
+ .home-series :global(.series-illustration) { grid-column: 1; grid-row: 1 / span 2; width: 88px; height: 76px; }
+ .home-series :global(.series-heading) { grid-column: 2; grid-row: 1; }
+ .home-series :global(.series-description) { grid-column: 2; grid-row: 2; -webkit-line-clamp: 2; }
+ .home-series :global(.series-bottom) { grid-column: 3; grid-row: 1 / span 2; }
  .home-series { grid-template-columns: minmax(0,1fr); gap: 0; margin-top: 6px; }
  .home-page :global(.section-heading h2) { font-size: 30px; }
  .project-grid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 32px; margin-top: 30px; }
@@ -142,6 +180,8 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
  @media (max-width: 1100px) { .home-hero { gap: 35px; } .selected-writing { gap: 32px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
  @media (max-width: 900px) { .hero-copy h1 { font-size: 34px; } .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { gap: 24px; } .selected-writing :global(.card-content h3) { font-size: 23px; } }
  @media (max-width: 900px) {
+  .learning-section { display: block; padding: 24px; }
+  .learning-section :global(.section-heading) { margin-bottom: 24px; }
   .home-hero { grid-template-columns: 1fr; padding-block: 28px 24px; gap: 24px; }
   .hero-copy h1 { font-size: clamp(29px,8vw,44px); margin-top: 18px; line-height: 1.5; }
   .hero-description { font-size: 14px; margin-top: 18px; }
@@ -160,6 +200,12 @@ const learningSeries = getLearningSeries(await getCollection('series'), posts);
   .project-grid :global(.project-showcase:nth-child(2)) { margin-top: 0; }
  }
  @media (max-width: 600px) {
+  .home-series :global(.series-index) { grid-template-columns: 64px minmax(0,1fr); gap: 12px; }
+  .home-series :global(.series-illustration) { width: 64px; height: 64px; grid-row: 1; }
+  .home-series :global(.series-description) { grid-column: 1 / -1; grid-row: 2; }
+  .home-series :global(.series-bottom) { grid-column: 1 / -1; grid-row: 3; flex-direction: row; align-items: start; text-align: left; }
+  .home-series :global(.series-heading h3) { font-size: 20px; }
+  .home-series :global(.series-heading .series-subtitle) { font-size: 14px; }
   .writing-section :global(.section-heading) { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px 12px; }
   .writing-section :global(.section-heading > div) { display: contents; }
   .writing-section :global(.section-heading h2) { grid-column: 1; grid-row: 1; }

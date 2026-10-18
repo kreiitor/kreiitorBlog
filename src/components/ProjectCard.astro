@@ -7,10 +7,9 @@ interface Props { project: ProjectEntry; showcase?: boolean; headingLevel?: 'h2'
 const { project, showcase = false, headingLevel: Heading = 'h3' } = Astro.props;
 const href = withBase(`/projects/${project.id}/`);
 const cover = project.data.cover ?? '/covers/project-benchmark.svg';
-const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
 ---
 <article class:list={['zen-card','project-card',{'project-showcase':showcase}]}>
- <a href={href} class="project-image" tabindex="-1" aria-hidden="true">{studyCover ? <svg viewBox="190 100 440 240" width="440" height="240" aria-hidden="true"><image href={withBase(cover)} width="800" height="420"/></svg> : <img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/>}</a>
+ <a href={href} class="project-image" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/></a>
  <div class="card-content">
   <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
   <Heading><a href={href}>{project.data.title}</a></Heading>
@@ -19,9 +18,9 @@ const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
  </div>
 </article>
 <style>
- .project-card { display: grid; grid-template-columns: 148px minmax(0,1fr); overflow: hidden; background: var(--color-surface); }
- .project-image { background: var(--color-sage-soft); overflow: hidden; border-right: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center; }
- .project-image img,.project-image svg { width: 100%; height: auto; transition: translate var(--dur-slow) var(--ease-out-expo); }
+ .project-card { display: grid; grid-template-columns: minmax(0,1fr); overflow: hidden; background: var(--color-surface); }
+ .project-image { aspect-ratio: 800 / 420; background: var(--color-sage-soft); overflow: hidden; border-bottom: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center; }
+ .project-image img { width: 100%; height: 100%; object-fit: contain; transition: transform var(--dur-slow) var(--ease-out-expo); }
  .project-card .card-content { min-width: 0; gap: 12px; padding: 24px; }
  .project-card :is(h2,h3) { font-size: 21px; line-height: 1.5; }
  .project-card .card-meta { font-size: 13px; }
@@ -30,19 +29,18 @@ const studyCover = /^\/covers\/project-[\w-]+\.svg$/.test(cover);
  .project-status span { width: 6px; height: 6px; background: currentColor; border-radius: 50%; flex-shrink: 0; }
  .project-status.is-complete { color: var(--color-sage); }
  .project-status.is-planned { color: var(--color-ink-muted); }
- @media (hover: hover) { .project-card:hover { translate: 0 0; } .project-card:hover .project-image :is(img,svg) { translate: 2px 0; } }
+ @media (hover: hover) { .project-card:hover { translate: 0 0; } .project-card:hover .project-image img { transform: scale(1.025); } }
  @media (max-width: 600px) {
   .project-card { grid-template-columns: minmax(0,1fr); }
-  .project-image { height: 156px; border-right: 0; border-bottom: 1px solid var(--color-line); }
-  .project-image svg { width: min(100%,300px); height: 100%; }
-  .project-image img { width: 100%; height: 100%; object-fit: cover; }
+  .project-image { aspect-ratio: 800 / 420; border-right: 0; border-bottom: 1px solid var(--color-line); }
+  .project-image img { object-fit: cover; }
   .project-card .card-content { padding: 22px; }
   .project-card :is(h2,h3) { font-size: 22px; }
   .project-card .card-description { -webkit-line-clamp: 4; }
  }
  .project-showcase { display: flex; flex-direction: column; border-radius: 4px; }
- .project-showcase .project-image { height: 180px; flex: 0 0 180px; border-right: 0; border-bottom: 1px solid var(--color-line); background: var(--color-sage-soft); }
- .project-showcase .project-image :is(img,svg) { width: min(100%,330px); height: 180px; object-fit: contain; }
+ .project-showcase .project-image { aspect-ratio: 800 / 420; flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--color-line); background: var(--color-sage-soft); }
+ .project-showcase .project-image img { width: 100%; height: 100%; object-fit: cover; }
  .project-showcase .card-content { flex: 1; gap: 14px; padding: 26px 28px; }
  .project-showcase :is(h2,h3) { font-size: 24px; line-height: 1.45; }
  .project-showcase .card-description { -webkit-line-clamp: 3; line-height: 1.85; }
