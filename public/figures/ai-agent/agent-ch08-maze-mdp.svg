@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">迷宫 MDP 的状态转移</title>
+  <desc id="fig-desc">五个房间从左到右串联：入口大厅经东与拿钥匙到储藏室，经北到北部走廊，经北转西到守卫房间，再经东到宝藏室；守卫房间另有一条攻击银剑的路径通向宝藏室，奖励 +100</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">迷宫 MDP 的状态转移</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">五个房间沿主路径串联，守卫房间另有攻击路径通向宝藏</text><rect x="47.66666666666667" y="104.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">入口大厅</text>
+  <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">起点</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">储藏室</text>
+  <text x="400.00000000000006" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">拿钥匙</text><rect x="542.3333333333334" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">北部走廊</text>
+  <text x="647.3333333333334" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">向北</text><rect x="47.66666666666667" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="320.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">守卫房间</text>
+  <text x="152.66666666666669" y="336.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">需要银剑</text><rect x="295.00000000000006" y="267.5" width="210" height="112" rx="8" fill="var(--yellow)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="320.25" font-size="13" fill="var(--on-yellow)" font-weight="700" text-anchor="middle">宝藏室</text>
+  <text x="400.00000000000006" y="336.5" font-size="12" fill="var(--on-yellow)" font-weight="400" text-anchor="middle">终点</text><path d="M257.6666666666667 160.5 L295.00000000000006 160.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M505.00000000000006 160.5 L542.3333333333334 160.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M647.3333333333334 216.5 L647.3333333333334 242 L152.66666666666669 242 L152.66666666666669 267.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M257.6666666666667 323.5 L295.00000000000006 323.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M257.6666666666667 323.5 L295.00000000000006 323.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">MDP 五元组：S = 5 个状态；A = {东, 西, 南, 北, 拿, 攻击, 合成}；P(s′|s,a) 为确定性转移；γ = 0.99。攻击路径奖励 R = +100。</text>
+</svg>

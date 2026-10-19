@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">KV 缓存的多级存储与取回时间</title>
+  <desc id="fig-desc">HBM、主机内存、本地 SSD 与远端存储池容量依次增大，取回 1.125 GiB 前缀的时间分别为 0、48.3、170 与 96.6 毫秒，都远小于重算的 856 毫秒。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+  </style>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">KV 的多级存储：越往下容量越大、取回越慢</text>
+  <text x="400" y="62" text-anchor="middle" class="sub">8K 前缀 1.125 GiB；四级取回都远快于重算的 856 ms</text>
+
+  <text x="28" y="90" class="s">存储层级（方框宽度只表示容量次序）</text>
+
+  <rect x="40" y="100" width="300" height="48" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.8"/>
+  <text x="56" y="121" class="b">HBM</text>
+  <text x="56" y="139" class="tiny">≤63.6 GB · 已在 GPU 上</text>
+  <text x="328" y="130" text-anchor="end" class="b">0 ms</text>
+
+  <rect x="40" y="158" width="400" height="48" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.8"/>
+  <text x="56" y="179" class="b">主机内存</text>
+  <text x="56" y="197" class="tiny">256 GiB · PCIe 4.0 x16，25 GB/s</text>
+  <text x="428" y="188" text-anchor="end" class="b">48.3 ms</text>
+
+  <rect x="40" y="216" width="520" height="48" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.8"/>
+  <text x="56" y="237" class="b">本地 SSD</text>
+  <text x="56" y="255" class="tiny">3.84 TB · 顺序读 7.1 GB/s</text>
+  <text x="548" y="246" text-anchor="end" class="b">170 ms</text>
+
+  <rect x="40" y="274" width="620" height="48" rx="7" fill="var(--line-soft)" stroke="var(--line)" stroke-width="1.8"/>
+  <text x="56" y="295" class="b">远端存储池</text>
+  <text x="56" y="313" class="tiny">随节点数增加 · 25 GB/s 网卡，再经 PCIe</text>
+  <text x="648" y="304" text-anchor="end" class="b">96.6 ms</text>
+
+  <rect x="40" y="350" width="700" height="48" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="1.8" stroke-dasharray="6 5"/>
+  <text x="56" y="371" class="b">对照：重算</text>
+  <text x="56" y="389" class="tiny">不保存状态 · 按峰值 50% 计</text>
+  <text x="728" y="380" text-anchor="end" class="b">856 ms</text>
+
+  <text x="400" y="426" text-anchor="middle" class="tiny">远端取回先经网卡到主机内存，再经 PCIe 到 GPU，两段串行；容量决定缓存能保留多久，读取还要看能否与计算重叠。</text>
+</svg>

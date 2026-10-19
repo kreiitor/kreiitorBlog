@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">三层轨迹验证</title>
+  <desc id="fig-desc">三层验证器自下而上排列：结果验证器读取测试、金额与订单最终状态，过程验证器读取政策、权限与动作和承诺，LLM Rubric 评判自然、简洁与合规变通；三层结论汇合成包含任务结果、维度评价、证据位置和失败标签的结构化轨迹评价，再输出为可学习诊断信号</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">三层轨迹验证</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">结果、过程、质量三层汇合为可学习的诊断信号</text><rect x="47.66666666666667" y="104.5" width="210" height="112" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="157.25" font-size="13" fill="var(--on-blue)" font-weight="700" text-anchor="middle">结果验证器</text>
+  <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--on-blue)" font-weight="400" text-anchor="middle">测试 · 金额 · 订单状态</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">过程验证器</text>
+  <text x="400.00000000000006" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">政策 · 权限 · 动作与承诺</text><rect x="542.3333333333334" y="104.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">LLM Rubric</text>
+  <text x="647.3333333333334" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">自然 · 简洁 · 合规变通</text><rect x="47.66666666666667" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="312.125" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">结构化轨迹评价</text>
+  <text x="152.66666666666669" y="328.375" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">总判定 · 逐维结论 · 证据位置 ·</text><text x="152.66666666666669" y="344.575" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">失败标签</text><rect x="295.00000000000006" y="267.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="320.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">可学习诊断信号</text>
+  <text x="400.00000000000006" y="336.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">交给独立模块选择更新对象</text><path d="M152.66666666666669 216.5 L152.66666666666669 242 L152.66666666666669 242 L152.66666666666669 267.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M400.00000000000006 216.5 L400.00000000000006 242 L152.66666666666669 242 L152.66666666666669 267.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M647.3333333333334 216.5 L647.3333333333334 242 L152.66666666666669 242 L152.66666666666669 267.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M257.6666666666667 323.5 L295.00000000000006 323.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">证据不足时允许拒绝评分；低置信度案例不进入学习集。</text>
+</svg>

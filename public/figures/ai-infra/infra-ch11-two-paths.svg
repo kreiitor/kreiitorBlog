@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">模型服务与工具环境两条路径</title>
+  <desc id="fig-desc">任务控制器分别连接模型服务与工具环境：向模型服务发送模型请求并取回完整工具参数，向工具环境发送工具操作并取回保存结果；环境平台位于 m5d.metal 的 48 核与约 358 GiB 内存中</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">模型服务与工具环境两条路径</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">控制器转发参数，执行结果回到下一轮</text><rect x="47.66666666666667" y="186" width="210" height="112" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="238.75" font-size="13" fill="var(--on-blue)" font-weight="700" text-anchor="middle">模型服务</text>
+  <text x="152.66666666666669" y="255" font-size="12" fill="var(--on-blue)" font-weight="400" text-anchor="middle">10 个副本 · 320 并发</text><rect x="295.00000000000006" y="186" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="238.75" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">任务控制器</text>
+  <text x="400.00000000000006" y="255" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">转发参数与结果</text><rect x="542.3333333333334" y="186" width="210" height="112" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="238.75" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">工具环境</text>
+  <text x="647.3333333333334" y="255" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">48 核 · 约 358 GiB</text><path d="M295.00000000000006 242 L257.6666666666667 242" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M257.6666666666667 242 L295.00000000000006 242" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M505.00000000000006 242 L542.3333333333334 242" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M542.3333333333334 242 L505.00000000000006 242" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">虚线框表示工具环境所在的执行节点；模型计算期间可以并行准备下一轮环境。</text>
+</svg>

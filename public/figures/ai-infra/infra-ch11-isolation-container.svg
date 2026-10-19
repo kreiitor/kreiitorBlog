@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">容器：私有视图与配额</title>
+  <desc id="fig-desc">任务 0 与任务 1 各有一层私有视图与配额，提供进程编号、网络、文件系统和资源控制视图；两层都落到同一个宿主操作系统内核</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">容器：私有视图与配额</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">命名空间与配额隔离，仍共用宿主内核</text><rect x="40" y="180" width="720" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="54" y="212" font-size="11.5" fill="var(--ink)" font-weight="700" text-anchor="start">任务 0 · 任务 1</text><rect x="254" y="189" width="150" height="40" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1"/><text x="329" y="212" font-size="11" fill="var(--ink)" font-weight="600" text-anchor="middle">私有视图与配额</text><rect x="532" y="189" width="150" height="40" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1"/><text x="607" y="212" font-size="11" fill="var(--ink)" font-weight="600" text-anchor="middle">命名空间 · 文件系统</text><rect x="40" y="246" width="720" height="58" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/><text x="54" y="278" font-size="11.5" fill="var(--ink)" font-weight="700" text-anchor="start">宿主操作系统内核</text><rect x="393" y="255" width="150" height="40" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1"/><text x="468" y="278" font-size="11" fill="var(--ink)" font-weight="600" text-anchor="middle">底层仍为同一内核</text></svg>

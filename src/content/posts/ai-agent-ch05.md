@@ -75,7 +75,10 @@ Agent：已整理完毕，共发现 3 个 TODO 项，清单保存在 TODO_LIST.m
 
 这里的回答是：几乎所有高效的内容生成最终都要落到代码上。逐项举证如下。PPT、Word 文档本质上是 OOXML（Office Open XML，微软推出的办公文档开放标准）格式的代码。PDF 报告可以通过 Markdown、HTML 或 LaTeX 生成，数据分析和可视化可以由 Python 脚本完成。甚至 GUI 操作中成功的浏览器操作序列也可以被固化为可复用的代码（详见第九章）。Deep Research 的搜索和信息综合可通过代码驱动的 Web 请求和解析实现。Computer Use 虽然通用性更强，但成本、延迟和稳定性远不如直接通过代码或 API 来完成相同操作。结论句是：代码生成是效率最高、成本最低、可复用性最强的能力基座。
 
-示意图画的是 OpenClaw 的分层结构，从图中可读出的信息如下：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-openclaw-layers.svg" alt="自上而下三层：多平台消息网关接入 WhatsApp、Telegram、iMessage、Slack 与 CLI；Coding Agent 运行时并排七个工具，外侧接网络搜索与浏览器自动化；文件系统保存 MEMORY.md、每日日志、SOUL.md、知识库与 Git 版本。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>三层结构。</strong> 上层负责渠道接入，中层负责推理与工具执行，下层把记忆、知识与能力落成可读写、可回滚的文件。</figcaption>
+</figure>
 
 - 最上层是多平台消息网关（用户交互层），列出的渠道有 WhatsApp、Telegram、iMessage、Slack、CLI；它向下输出「自然语言请求」。
 - 中间是 Coding Agent 运行时（推理 + 执行核心），里面并排放着七个工具及其职责：Code Interpreter（代码执行）、Bash Shell（系统命令）、Read File（读取文件）、Write File（写入文件）、Edit File（编辑文件）、Glob（文件搜索）、Grep（内容搜索）。紧挨着它有两个外侧模块：网络搜索模块（对应 Deep Research 的「Web 请求 · 解析」）与浏览器自动化（对应 Computer Use 的「Playwright DOM」）。
@@ -124,7 +127,12 @@ Computer Use 明明更通用，为什么排不到核心？这里给的是三个�
 
 ### 5.1.3 Coding Agent 的整体流程
 
-这里先给出整幅流程图。示意图把工作流画成五个阶段，每个阶段里列出了具体动作与所用工具，并在图的下半部分单独画出闭环反馈机制与 Agent 状态栏。按图可读出的内容如下：
+整幅流程图把工作流画成五个阶段，每个阶段里列出了具体动作与所用工具，并在下半部分画出闭环反馈机制。按图可读出的内容如下：
+
+<figure class="diagram">
+  <img src="../../figures/ai-agent/coding-agent-flow.svg" alt="Coding Agent 从项目文档化到审查交付的五段流程，以及测试与审查的反馈回路" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>Coding Agent 的五段工作流。</strong> 文档化、澄清、设计、编码测试与审查交付依次推进；测试失败回到实现，审查问题退回编码。</figcaption>
+</figure>
 
 | 阶段 | 图中的动作与工具 |
 | --- | --- |
@@ -437,7 +445,10 @@ Coding Agent 面临的根本挑战是代码库通常很大，但模型上下文�
 
 在庞大的代码库中定位相关代码，是 Coding Agent 工作的起点，这里开篇就把这句话摆在最前面。图 5-3 把几类互补的搜索工具摆在一起对比，落点是同一个意思，成熟的 Coding Agent 得会按任务性质挑检索方式。
 
-示意图用四栏并列的方式对比了四类搜索方式，每栏给出查询示例、返回结果和一句话定位：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-search-tools.svg" alt="四栏并列：grep 做正则内容匹配，返回所有出现位置；glob 做文件名匹配，不读文件内容；语义代码搜索用自然语言返回带相似度的结果；符号查找基于 AST 区分定义与引用。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>四类搜索工具的分工。</strong> 匹配对象从路径、文本、语义到语法结构逐层深入，精确度与实现成本同步上升。</figcaption>
+</figure>
 
 | 搜索方式 | 查询示例 | 返回结果示例 | 图中的一句话定位 |
 | --- | --- | --- | --- |
@@ -486,7 +497,10 @@ glob 与 grep 的差别在匹配对象：glob 匹配路径（`**/test_*.py`）�
 
 文件编辑的难点不在操作本身，难的是怎么让 LLM 用高效又可靠的方式告诉系统「改哪里、怎么改」。图 5-4 对比了五种文件编辑方案，展示的是人类语言表达与机器精确执行之间的根本张力。
 
-示意图给出五种方案的示例、机制、优势与劣势，并在图底部单独标出「实际采用情况」：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-edit-schemes.svg" alt="五行方案对照：Diff + Apply Model、Old String → New String、行号定位、类 Vim 命令、首尾匹配，分别列出机制、优势、劣势与实际采用情况。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>五种编辑方案。</strong> 每条方案都在回答同一个问题：怎样用尽量少的 token 精确指出改哪里；失败模式决定了它适合哪种 Agent。</figcaption>
+</figure>
 
 | 方案 | 图中的示例 | 机制 | 图中的优势 | 图中的劣势 |
 | --- | --- | --- | --- | --- |
@@ -788,7 +802,10 @@ def cancel_reservation(
 
 PPT 创作往往耗时费力：一个典型的学术报告 PPT 可能包含数十页内容，每页都需精心设计布局、提炼要点、选配图表。把它转化为代码生成问题就能极大降低复杂度。现代 PPT 框架（如 Slidev）采用的设计哲学是用 Markdown 和 HTML 定义演示内容，创建一页内容只需编写简洁的标记语言，框架会自动处理渲染、布局和动画，这种方式对掌握了代码生成能力的 Agent 极其友好。
 
-示意图画的是两列协作结构：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-proposer-reviewer.svg" alt="论文 PDF 交给 Proposer 生成 Slidev 代码，渲染成逐页截图后由 Reviewer 用 Vision LLM 检查；文字溢出、布局拥挤等问题以修改建议回到 Proposer，循环 2–3 轮后定稿。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>生成与审查分离。</strong> Proposer 只看结构化反馈，Reviewer 只看最新渲染结果；两边的上下文都不累积历史截图。</figcaption>
+</figure>
 
 | 角色 | 图中的输入/步骤 | 图中的输出/发现 |
 | --- | --- | --- |
@@ -819,7 +836,10 @@ PPT 创作往往耗时费力：一个典型的学术报告 PPT 可能包含数�
 
 实验目标是把 PPT 生成能力扩展到视觉和听觉通道，实现视频讲解自动生成。技术在实验 5-6 的流程上加两步：Agent 同时生成每页的口语化讲解文字（引导性叙述，不复述这里），调用 TTS（文本转语音）合成语音，用 ffmpeg 把 PPT 截图与音频同步合成视频。验收要求视频 5-15 分钟，每页展示时间与语音时长精确匹配，讲解内容与视觉元素呼应。
 
-示意图分两个阶段展开。阶段一是 PPT 生成（Proposer-Reviewer）：PDF 输入（`paper.pdf` → 解析章节结构 → 提取图表引用）→ 内容规划（10-20 页结构 → 核心论点提取 → 图表分配到页）→ Slidev 生成（逐页生成代码、`layout: two-cols`、代码与图片混排）→ 渲染检查（`export --per-slide`、Vision LLM 审查、溢出与拥挤检测）→ 迭代修复（Reviewer 回给 Proposer、修改 Slidev 代码、重新渲染验证）→ PPT 完成。阶段二是视频合成：逐页截图（`slide-01.png`、`slide-02.png` …）→ 讲解稿生成（LLM 逐页生成口语化讲解文字，引导性叙述）→ TTS 合成（文字转语音，`speech-01.mp3`、`speech-02.mp3`）→ 音画同步（ffmpeg 合成，截图时长等于音频时长，加转场效果）→ 最终视频（`output.mp4`，5-15 分钟，视觉与听觉双通道）。图底部并列了三条验收标准：PPT 是 10-20 页、覆盖主要贡献、至少 3 张原图表；渲染是零文字溢出、布局合理、图文匹配；视频是 5-15 分钟、音画同步、叙述连贯。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-paper-video.svg" alt="阶段一从 paper.pdf 解析章节与图表，规划 10–20 页结构，生成 Slidev 代码，逐页渲染检查并迭代修复；阶段二逐页截图，生成口语化讲解稿，TTS 合成语音，用 ffmpeg 对齐音画，输出 5–15 分钟视频。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两阶段流水线。</strong> 阶段一用提议者-审核者机制保证页面质量，阶段二把定稿页面转成截图、语音与同步视频。</figcaption>
+</figure>
 
 视频编辑是同一套思路的另一个落点。用通用 Computer Use 做视频编辑会碰到根本挑战：视频剪辑软件的 GUI 极其复杂，包含大量时间轴、图层、效果面板，Agent 需要精确定位这些界面元素并通过鼠标键盘操作完成编辑，精确输出坐标非常困难。把视频编辑重构为 API 调用和代码生成问题，复杂度就大幅下降。许多专业软件提供了程序化 API 接口，以结构化、可组合的方式暴露核心功能，这里给了两个例子：Blender，开源的 3D 创作与视频合成工具，支持 Python 脚本控制；FFmpeg，音视频处理领域的命令行瑞士军刀。Blender Python API 允许通过代码精确控制视频片段的导入、裁剪、排列、过渡效果、音频混合，每个操作对应一个清晰的函数调用。对 Agent 而言，把自然语言需求转化为 API 调用，远比理解 GUI 界面并模拟鼠标点击容易得多。视频编辑同样采用提议者-审核者机制：Proposer Agent 生成 Blender 脚本，Reviewer Agent 渲染关键帧并用 Vision LLM 检查效果，反馈修改建议。
 
@@ -885,7 +905,10 @@ RPA 这个判断值得琢磨。当外部系统连 API 都没有（只有 GUI）�
 
 代码生成的自动化路径是这样：Agent 读取生产日志，结合架构文档和 PRD（产品需求文档）自动判断执行流程是否符合预期，定位有问题的环节和模块，再根据分析结果生成结构化问题报告（优先级、模块、描述、改进建议）和回归测试用例。关键在于测试用例的构造方式：用例引用问题轨迹 ID 和关键交互轮次，测试框架通过自动重放，验证修复后的系统在相同输入下能否产生正确行为。最后一步是闭环，Agent 通过 MCP 对接 GitHub，创建 Issue 并分配给相关开发者，完成从问题发现到任务分派的全自动化。
 
-示意图把这条流水线画成五步：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-log-diagnosis.svg" alt="五步串联：采集 trajectory_001.json 轨迹，LLM 结合架构文档与 PRD 分析，生成 P1 问题报告，生成引用轨迹编号的回归测试用例，最后通过 MCP 创建 GitHub Issue。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>从日志到工作项。</strong> 关键在第四步：测试用例引用轨迹 ID 与交互轮次，失败场景因此可以被重放，而不是只留下一份文字报告。</figcaption>
+</figure>
 
 | 步骤 | 图中内容 |
 | --- | --- |
@@ -957,7 +980,10 @@ RPA 这个判断值得琢磨。当外部系统连 API 都没有（只有 GUI）�
 
 换成代码生成，Agent 可以创建结构化的交互界面来替代文本问答。图 5-8 展示了动态表单生成流程，说明 Agent 如何把澄清问题转化为一次性填写的结构化界面。Agent 生成包含各种输入控件的 HTML 表单：文本框收集开放性信息，下拉菜单让用户在预定义选项中选择，复选框允许多选，日期选择器简化时间输入。再进一步，Agent 可以生成级联表单，通过 JavaScript 实现动态逻辑，选择某选项后自动显示或隐藏后续问题，并动态更新可选项。用户一次填完整张表单，不用多轮对话，还能清楚看到所有需要填写的信息以及问题之间的逻辑关系。
 
-示意图的流程可以读出这几步：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-dynamic-form.svg" alt="用户说想去北京，LLM 生成含出发城市、日期、旅行类型的表单；用户填上海、2025-08-15、往返、2025-08-22 后提交，前端返回结构化 JSON，Agent 带着完整参数继续搜索航班。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>把澄清问题做进一张表单。</strong> 级联逻辑在前端处理依赖关系，用户一次填完，不需要为每个澄清点多走一轮对话。</figcaption>
+</figure>
 
 | 环节 | 图中的内容 |
 | --- | --- |
@@ -989,7 +1015,10 @@ RPA 这个判断值得琢磨。当外部系统连 API 都没有（只有 GUI）�
 
 缩短数据路径不等于安全，因为路径的终点是数据库和浏览器，这两个地方都有真实的破坏力。几类约束各管一段：只读账号是最粗的一道，从账号层面杜绝写操作；只允许经过批准的 SELECT 是在 SQL 语义层拦截，这和 5.1.9 讲的「语义解析而非关键字黑名单」是同一个思路，关键在于解析语句本身，靠 grep 关键字拦不住；服务端参数化绑定防的是注入，模型写出的 SQL 里如果带了用户提供的值，必须走参数绑定，不能字符串拼接；限额加沙盒限制的是破坏半径。那句总结语是整个小节的题眼，**性能优化不能顺手当成安全方案**。
 
-示意图用上下两栏对比了两种模式：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-artifact-mode.svg" alt="左栏传统模式：LLM 生成 SQL，数据库返回 5000 行，LLM 阅读后用文字复述，标为低效；右栏 Artifact 模式：LLM 只生成 SQL 代码，数据库结果直达前端并渲染成表格，标为高效。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两种数据路径。</strong> Artifact 模式让 LLM 只写代码、不接触数据，把数据流从「DB → LLM → 用户」改成「DB → 前端 → 可视化」。</figcaption>
+</figure>
 
 | 对比项 | 传统模式：数据经过 LLM（图中标「✗ 低效」） | Artifact 模式：数据直达前端（图中标「✓ 高效」） |
 | --- | --- | --- |
@@ -1067,7 +1096,10 @@ Artifact 模式与「Agent 执行 SQL 后描述结果」。前者让 LLM 只写�
 
 前面几节把代码生成用在了各个地方，从数学思考到文档创作再到界面定制。把这些能力推向极限，会浮出一个自然的问题：Agent 能不能用代码生成能力来创造另一个 Agent？
 
-示意图先画了一条从物理到智能的演化阶梯，再对比 DNA 自复制与 Agent 自举。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-self-bootstrap.svg" alt="两栏对照：DNA 自复制的机制是随机变异加自然选择，不理解自身、不能定向修改、经历 37 亿年盲目试错；Agent 自举的机制是理解代码加定向设计，理解自身机制、有目的地创造、继承最佳实践。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两种自复制机制。</strong> 代码可读、可理解，所以 Agent 能看懂自己的架构并定向改写；生物复制只能靠随机变异和环境筛选。</figcaption>
+</figure>
 
 演化阶梯是：尘埃 → 恒星（物理定律）、恒星 → 行星（引力聚合）、行星 → 生命（DNA 自复制）、生命 → 智能体（代码自举）。每一级都标上了驱动机制，物理定律、引力聚合、DNA 自复制、代码自举。这是本章唯一一处类比性质的论证，用意在于每一级复杂度跃迁都对应一种新的自我构建机制，而代码自举被放在与 DNA 自复制同一层的位置上，意思是智能体开始能构造自己的同类，这在层级上与「生命开始能复制自己」相当。
 
@@ -1126,7 +1158,10 @@ Agent 自举的一个重要前提是自我修复能力，OpenClaw 的 doctor 命
 
 实验目标是构建具备**元编程**（Metaprogramming，即编写能生成或修改其他程序的程序）能力的 Coding Agent，能根据用户需求自动创建新 Agent 系统，确保遵循最佳实践。技术方案是为 Coding Agent 提供高质量 Agent 实现作为参考范例（可使用 ch5/coding-agent 项目本身）；当接到创建新 Agent 的需求时，Agent 先复制这个范例代码，再基于用户的具体需求做针对性修改。验收标准是：生成的 Agent 能成功运行并完成基本任务；验证它采用标准消息格式和工具调用协议，使用当前推荐的模型和 API；测试多轮对话中上下文和状态管理的正确性；对比从零生成和基于范例修改两种模式，验证后者在质量和效率上的优势。
 
-示意图画的是四步流程与产出对比：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch05-example-bootstrap.svg" alt="四步流程：读取 agent.py、tools/*.py、system_prompt.md 与 config.yaml；复制 reference/ 到 new_agent/ 并保留循环框架与消息格式；修改提示词、新增退款工具；运行 agent.py 发测试消息验证。产出包含提示词、工具、框架与配置的新 Agent。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>造新 Agent 的四步。</strong> 复制的是大量经过验证的框架代码，修改的只是角色、工具与业务逻辑，最后必须真的跑起来验证。</figcaption>
+</figure>
 
 | 步骤 | 图中的内容 |
 | --- | --- |

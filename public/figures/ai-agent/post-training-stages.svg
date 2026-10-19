@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">从预训练到 RL 的四阶段</title>
+  <desc id="fig-desc">预训练、Mid-training、SFT 与 RL 使用不同的数据与优化目标，分别形成语言与世界知识、领域基础能力、指令与格式协议、可迁移决策策略。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">从预训练到 RL 的四阶段</text>
+  <text x="400" y="60" text-anchor="middle" class="sub">数据、损失与代价逐级变化，能力逐层成形</text>
+
+  <rect x="32" y="92" width="172" height="244" rx="9" fill="var(--blue)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="118" y="124" text-anchor="middle" class="h onblue">① 预训练</text>
+  <text x="118" y="146" text-anchor="middle" class="tiny onblue">Pre-training</text>
+  <text x="48" y="180" class="tiny onblue">数据</text>
+  <text x="48" y="198" class="b onblue">海量互联网文本</text>
+  <text x="48" y="228" class="tiny onblue">目标</text>
+  <text x="48" y="246" class="b onblue">预测下一个词</text>
+  <text x="48" y="276" class="tiny onblue">学到</text>
+  <text x="48" y="294" class="b onblue">语言与世界知识</text>
+  <text x="48" y="322" class="tiny onblue">代价：极高</text>
+
+  <rect x="224" y="92" width="172" height="244" rx="9" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="310" y="124" text-anchor="middle" class="h">② Mid-training</text>
+  <text x="310" y="146" text-anchor="middle" class="tiny">继续预训练</text>
+  <text x="240" y="180" class="tiny">数据</text>
+  <text x="240" y="198" class="b">领域 / 长上下文语料</text>
+  <text x="240" y="228" class="tiny">目标</text>
+  <text x="240" y="246" class="b">继续预测下一个词</text>
+  <text x="240" y="276" class="tiny">学到</text>
+  <text x="240" y="294" class="b">领域知识与基础能力</text>
+  <text x="240" y="322" class="tiny">代价：中 — 高</text>
+
+  <rect x="416" y="92" width="172" height="244" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="502" y="124" text-anchor="middle" class="h">③ SFT</text>
+  <text x="502" y="146" text-anchor="middle" class="tiny">监督微调</text>
+  <text x="432" y="180" class="tiny">数据</text>
+  <text x="432" y="198" class="b">输入—输出示范对</text>
+  <text x="432" y="228" class="tiny">目标</text>
+  <text x="432" y="246" class="b">只在回答上算损失</text>
+  <text x="432" y="276" class="tiny">学到</text>
+  <text x="432" y="294" class="b">指令、格式、流程</text>
+  <text x="432" y="322" class="tiny">代价：低</text>
+
+  <rect x="608" y="92" width="160" height="244" rx="9" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <text x="688" y="124" text-anchor="middle" class="h">④ RL</text>
+  <text x="688" y="146" text-anchor="middle" class="tiny">强化学习</text>
+  <text x="624" y="180" class="tiny">数据</text>
+  <text x="624" y="198" class="b">任务 + 环境 + 奖励</text>
+  <text x="624" y="228" class="tiny">目标</text>
+  <text x="624" y="246" class="b">最大化期望奖励</text>
+  <text x="624" y="276" class="tiny">学到</text>
+  <text x="624" y="294" class="b">可迁移决策策略</text>
+  <text x="624" y="322" class="tiny">代价：高，常为 SFT 的</text>
+  <text x="624" y="338" class="tiny">几十至上百倍</text>
+
+  <path d="M206 214 H220" stroke="var(--line)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M398 214 H412" stroke="var(--line)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M590 214 H604" stroke="var(--line)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+  <rect x="32" y="360" width="736" height="42" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="400" y="386" text-anchor="middle" class="b">SFT 优化示范复现，RL 优化期望奖励；数据与环境比算法更重要</text>
+  <text x="400" y="428" text-anchor="middle" class="tiny">阶段顺序可以因目标分布与数据条件调整，但每一阶段的信号来源不同。</text>
+</svg>

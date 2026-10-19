@@ -179,6 +179,7 @@
  /* 图注规范：短句进 figcaption，长解释进 title，无障碍描述进 alt（三段互不重复） */
  .rich-content figure { margin-block: 2em; }
  .rich-content figure > * + * { margin-top: .75em; }
+ .rich-content figure.diagram img { display: block; width: 100%; height: auto; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-surface); }
  .rich-content figcaption { font-size: var(--text-ui); line-height: 1.8; color: var(--color-ink-soft); text-align: left; }
  .rich-content figcaption strong { color: var(--color-ink); }
 

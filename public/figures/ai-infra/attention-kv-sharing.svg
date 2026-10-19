@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">MHA、GQA 与 MQA 的 KV 共享方式</title>
+  <desc id="fig-desc">四个查询头分别对应四组、两组或一组 KV；查询头本身不被合并，减少的是需要保存和读取的 KV 份数。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+  </style>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">MHA、GQA、MQA：共享的是 KV，不是查询</text>
+  <text x="400" y="62" text-anchor="middle" class="sub">四个查询头仍各自打分；减少的是需要保存和读取的 KV 组数</text>
+
+  <text x="28" y="94" class="s">固定四个查询头</text>
+
+  <rect x="28" y="106" width="230" height="296" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="1.8"/>
+  <text x="143" y="132" text-anchor="middle" class="b">MHA · 多头</text>
+  <text x="143" y="154" text-anchor="middle" class="tiny">每头一组 KV</text>
+
+  <rect x="43" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="63" y="198" text-anchor="middle" class="tiny">Q1</text>
+  <rect x="93" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="113" y="198" text-anchor="middle" class="tiny">Q2</text>
+  <rect x="143" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="163" y="198" text-anchor="middle" class="tiny">Q3</text>
+  <rect x="193" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="213" y="198" text-anchor="middle" class="tiny">Q4</text>
+
+  <rect x="43" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="63" y="319" text-anchor="middle" class="tiny">KV1</text>
+  <rect x="93" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="113" y="319" text-anchor="middle" class="tiny">KV2</text>
+  <rect x="143" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="163" y="319" text-anchor="middle" class="tiny">KV3</text>
+  <rect x="193" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="213" y="319" text-anchor="middle" class="tiny">KV4</text>
+
+  <path d="M63 208 L63 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M113 208 L113 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M163 208 L163 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M213 208 L213 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <text x="143" y="370" text-anchor="middle" class="b">4 份 KV</text>
+
+  <rect x="285" y="106" width="230" height="296" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="1.8"/>
+  <text x="400" y="132" text-anchor="middle" class="b">GQA · 分组</text>
+  <text x="400" y="154" text-anchor="middle" class="tiny">每两个查询共用一组</text>
+
+  <rect x="300" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="320" y="198" text-anchor="middle" class="tiny">Q1</text>
+  <rect x="350" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="370" y="198" text-anchor="middle" class="tiny">Q2</text>
+  <rect x="400" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="420" y="198" text-anchor="middle" class="tiny">Q3</text>
+  <rect x="450" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="470" y="198" text-anchor="middle" class="tiny">Q4</text>
+
+  <rect x="318" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="360" y="319" text-anchor="middle" class="tiny">KV1</text>
+  <rect x="418" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="460" y="319" text-anchor="middle" class="tiny">KV2</text>
+
+  <path d="M320 208 L320 280 L360 280 L360 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M370 208 L370 280 L360 280" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M420 208 L420 280 L460 280 L460 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M470 208 L470 280 L460 280" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <text x="400" y="370" text-anchor="middle" class="b">2 份 KV</text>
+
+  <rect x="542" y="106" width="230" height="296" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="1.8"/>
+  <text x="657" y="132" text-anchor="middle" class="b">MQA · 多查询</text>
+  <text x="657" y="154" text-anchor="middle" class="tiny">所有查询共用一组</text>
+
+  <rect x="557" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="577" y="198" text-anchor="middle" class="tiny">Q1</text>
+  <rect x="607" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="627" y="198" text-anchor="middle" class="tiny">Q2</text>
+  <rect x="657" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="677" y="198" text-anchor="middle" class="tiny">Q3</text>
+  <rect x="707" y="178" width="40" height="30" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
+  <text x="727" y="198" text-anchor="middle" class="tiny">Q4</text>
+
+  <rect x="607" y="298" width="100" height="34" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="657" y="319" text-anchor="middle" class="tiny">KV1</text>
+
+  <path d="M577 208 L577 280 L657 280 L657 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M627 208 L627 280 L657 280" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M677 208 L677 298" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <path d="M727 208 L727 280 L657 280" stroke="var(--blue)" stroke-width="1.6" fill="none"/>
+  <text x="657" y="370" text-anchor="middle" class="b">1 份 KV</text>
+
+  <text x="400" y="428" text-anchor="middle" class="tiny">共享的是上下文表示：每个查询头仍有自己的 Q 投影、softmax 与输出；省下的是容量和读取带宽，注意力算力不变。</text>
+</svg>

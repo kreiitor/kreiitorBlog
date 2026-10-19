@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">两层 Clos 与半分割集</title>
+  <desc id="fig-desc">上方两台脊交换机，下方四台叶交换机，每台叶交换机都连到两台脊交换机；每台叶交换机下挂 32 个端点，中间虚线把端点分成左右两半，穿过虚线的叶—脊链路构成半分割集</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">两层 Clos 与半分割集</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">四台叶交换机全连两台脊交换机，虚线切出半分割</text><line x1="80" y1="240" x2="270" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="240" x2="470" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="270" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="470" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="270" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="470" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="270" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="470" y2="110" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="240" x2="80" y2="380" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="270" y2="380" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="460" y2="380" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="650" y2="380" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><rect x="220" y="86" width="100" height="48" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="270" y="114.125" font-size="11" fill="var(--on-blue)" font-weight="700" text-anchor="middle">脊交换机 0</text>
+  <rect x="420" y="86" width="100" height="48" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="470" y="114.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">脊交换机 1</text>
+  <rect x="30" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="80" y="244.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">叶交换机 0</text>
+  <rect x="220" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="270" y="244.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">叶交换机 1</text>
+  <rect x="410" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="460" y="244.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">叶交换机 2</text>
+  <rect x="600" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
+  <text x="650" y="244.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">叶交换机 3</text>
+  <rect x="30" y="356" width="100" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="80" y="384.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">32 端点</text>
+  <rect x="220" y="356" width="100" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="270" y="384.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">32 端点</text>
+  <rect x="410" y="356" width="100" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="460" y="384.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">32 端点</text>
+  <rect x="600" y="356" width="100" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="650" y="384.125" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">32 端点</text>
+  <text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">图中以四台叶交换机和两台脊交换机作代表；64 端口配置实际为 64 台叶交换机、32 台脊交换机，每台叶交换机一半端口接服务器、一半接脊交换机。</text>
+</svg>

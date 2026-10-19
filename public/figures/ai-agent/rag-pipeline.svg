@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">RAG 查询流程</title>
+  <desc id="fig-desc">用户查询先经混合检索得到 Top-K 文本块，再与查询一起构造成完整提示词，最后由语言模型生成带依据的回答。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:14px;font-weight:600;fill:var(--ink)}
+    .s{font-size:13px;fill:var(--muted)}
+    .tiny{font-size:12px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">RAG：检索、增强与生成</text>
+  <text x="400" y="60" text-anchor="middle" class="sub">查询先去找资料，再让模型基于资料作答</text>
+
+  <rect x="35" y="92" width="160" height="76" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="115" y="122" text-anchor="middle" class="h onblue">① 查询</text>
+  <text x="115" y="145" text-anchor="middle" class="tiny onblue">用户问题</text>
+
+  <rect x="220" y="92" width="160" height="76" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="300" y="122" text-anchor="middle" class="h">② 检索</text>
+  <text x="300" y="145" text-anchor="middle" class="tiny">稠密 + BM25</text>
+
+  <rect x="405" y="92" width="160" height="76" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="485" y="122" text-anchor="middle" class="h">③ 增强</text>
+  <text x="485" y="145" text-anchor="middle" class="tiny">拼接完整 Prompt</text>
+
+  <rect x="590" y="92" width="160" height="76" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <text x="670" y="122" text-anchor="middle" class="h">④ 生成</text>
+  <text x="670" y="145" text-anchor="middle" class="tiny">基于上下文作答</text>
+
+  <path d="M196 130 H216" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M381 130 H401" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M566 130 H586" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+  <path d="M300 170 V196" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 5" fill="none"/>
+  <rect x="215" y="196" width="170" height="54" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="300" y="218" text-anchor="middle" class="b">知识库</text>
+  <text x="300" y="238" text-anchor="middle" class="tiny">向量索引 · 关键词索引</text>
+
+  <rect x="35" y="278" width="160" height="104" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="115" y="302" text-anchor="middle" class="s">示例查询</text>
+  <text x="115" y="328" text-anchor="middle" class="b">故意杀人罪</text>
+  <text x="115" y="350" text-anchor="middle" class="b">判几年？</text>
+
+  <rect x="220" y="278" width="160" height="104" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="300" y="302" text-anchor="middle" class="s">Top-K 文本块</text>
+  <text x="300" y="328" text-anchor="middle" class="b">刑法第 232 条</text>
+  <text x="300" y="350" text-anchor="middle" class="tiny">量刑区间与情节</text>
+
+  <rect x="405" y="278" width="160" height="104" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="485" y="302" text-anchor="middle" class="s">增强后的 Prompt</text>
+  <text x="485" y="328" text-anchor="middle" class="b">问题 + 法条片段</text>
+  <text x="485" y="350" text-anchor="middle" class="tiny">要求基于材料回答</text>
+
+  <rect x="590" y="278" width="160" height="104" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="670" y="302" text-anchor="middle" class="s">回答</text>
+  <text x="670" y="328" text-anchor="middle" class="b">结论 + 依据</text>
+  <text x="670" y="350" text-anchor="middle" class="tiny">可回溯到文本块</text>
+
+  <text x="400" y="420" text-anchor="middle" class="tiny">每个环节都会引入误差，并沿着流水线串联到最终答案。</text>
+</svg>

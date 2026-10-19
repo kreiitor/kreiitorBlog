@@ -81,7 +81,10 @@ cover: /covers/series-ai-agent.svg
 
 为此需要事件驱动的异步 Agent 架构。技术上，这意味着系统不再主动地反复检查"有没有新消息"，那叫**轮询**，效率低；而是在新消息到达时自动触发处理逻辑。所有的输入、输出、思考过程和外部交互都被统一建模为**事件流**，也就是一条时间线上依次排列的事件记录。图 6-1 给出了事件驱动异步 Agent 的整体架构，展示事件源、事件队列与 Agent 处理流程之间的关系。
 
-> 示意图「事件驱动的异步 Agent 架构」：整幅图从左到右分三段。最左是**事件源**一列，每种事件源都对应一个回调名和一段载荷示例——Email 对应 `on_email_reply`，载荷 `{"from":"alice@...","subject":"Re:会议"}`；Timer 对应 `on_timer_expire`，载荷 `{"task_id":"daily_report","scheduled":"09:00"}`；Webhook 对应 `on_webhook`，载荷 `{"repo":"agent-lib","event":"pr_merged"}`；User 对应 `on_user_message`，载荷 `{"text":"帮我查下明天的天气"}`。中间是**事件队列**，队列里并排躺着若干条排队中的事件，每条都带优先级标注：`user.input` 优先级"常规"、`email.reply` 优先级"常规"、`user.interrupt` 优先级"紧急!"、`timer.trigger` 优先级"常规"。最右是**Agent 处理流程**，是一个带"循环"回边的流水线：取出事件 → 路由器（LLM 判定紧急度）→ 追加到轨迹（结构化事件格式）→ LLM 推理（观察→思考→行动）→ 工具执行（异步/同步分派）→ 结果处理（通知/响应/存储），然后回到"取出事件"形成循环。图想表达的是：外部世界的事件先被规范化成结构化事件并进入队列，由路由器按紧急度决定处理方式，最终同一份队列驱动着 Agent 的推理—行动循环。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/event-driven-architecture.svg" alt="事件源、事件队列与 Agent 处理循环组成事件驱动的异步架构" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>事件驱动的异步 Agent。</strong> 外部事件先被规范化并进入队列，路由器按紧急度决定处理方式，事件流驱动推理与行动循环。</figcaption>
+</figure>
 
 "事件流"这个词的定义要记准：所有输入、输出、思考过程和外部交互都被统一建模为一条时间线上依次排列的事件记录。这句话是后面所有设计（事件队列、结构化事件、轨迹追加）的前提，只有进了这条线，才谈得上排序与消费。
 
@@ -223,7 +226,10 @@ Agent 与虚拟环境之间的数据交换通过共享文件系统完成：以�
 
 基于紧急度的动态处理策略。人类在处理多个任务时，会根据紧急程度采取不同的策略。面对突发的紧急情况，会立即停下手头的工作；面对常规的待办事项，则加入任务列表稍后处理。Agent 的事件处理也应体现这种智能性。
 
-> 示意图「异步事件处理的三种策略」：图中有三条并列的时间线，纵轴刻度是 t₁、t₂、t₃，用来对照同一时刻三种策略在做什么。第一条是**取消式（紧急）**：Agent 正在"LLM 推理中..."，此时到达 `⚡ user.interrupt: "停止!"`，推理被打上×，正在执行的工具也被打上×，随后重新发起一次"新 LLM 推理（含中断事件 + 清空队列）"。第二条是**队列式（常规）**：LLM 先开始，接着"工具执行 (search_web)"，期间用户发来"只看最近1个月"，这条消息被标为"入队等待"，等工具返回后一次性"批量追加: tool.result + user补充"，再进入"LLM 综合处理"。第三条是**并行式（独立）**：主线是"主任务: 数据分析 (长时间执行)"，此时用户问"今天天气怎样?"，系统另起一个"并行 LLM"把天气结果立即回复给用户，并在主任务轨迹上标记"[与主任务并行]"。整幅图想说明的是：紧急事件要制造安全点立刻插入，常规事件等到安全点批量追加，独立轻量查询则另开一条循环、不占用主循环。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-event-strategies.svg" alt="三栏对照同一时刻的处理：取消式在用户说停止时打断推理并清空队列；队列式把补充消息入队，等工具返回后批量追加；并行式为主任务另起一个 LLM，立即回答独立的天气查询。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>按紧急度分流。</strong> 三条策略的差别不在事件类型，而在事件到达时是否制造安全点、是否占用主循环。</figcaption>
+</figure>
 
 **取消式处理（Cancellation-Based）**用于紧急事件，其本质是为紧急事件提前制造一个安全点：主动中断当前步骤，把这一刻变成可以消费新事件的边界。当紧急事件到达时（如用户点击"停止"或监督系统发来高优先级指令）：
 
@@ -271,7 +277,10 @@ n8n 触发器生态的类比很形象，每一种触发器都是 Agent 的一个
 
 #### 实验 6-1 ★★★：事件驱动的邮件处理 Agent
 
-> 示意图「实验 6-1 事件驱动 Agent 架构」：图从左到右是四层结构。最左是**外部事件源**一列：Web/App 的 `on_user_message`、邮件系统的 `on_email_reply`、GitHub 的 `on_github_pr_update`、定时器的 `on_timer_expire`、Webhook 的 `on_webhook_received`、系统告警的 `on_resource_alert`。事件进入中间的 **FastAPI 服务器**，它暴露 HTTP 端点 `POST /events/{type}`，内部依次是**事件路由器**（LLM 判定紧急度）、**事件队列**（优先级排序）、**Agent 循环**（取出→推理→执行）与**会话管理**（多线程上下文）。右侧是 **MCP 工具服务器**，工具按四类分组：感知工具（`search_web`、`read_file`、`read_webpage`、`parse_image`）、执行工具（`code_interpreter`、`virtual_terminal`、`write_file`）、协作工具（`browser_use`、`request_human_approval`）、通知工具（`send_email`、`send_slack`、`send_im_notification`）。最下层是**持久层**：对话历史、事件日志、定时任务、工具状态、审计追踪。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-event-architecture.svg" alt="四层结构：外部事件源提供用户消息、邮件、GitHub、定时器、Webhook 与告警事件；FastAPI 服务器接收 POST /events/{type}，内部有路由器、优先级队列、Agent 循环与会话管理；MCP 工具服务器分感知、执行、协作、通知四组；持久层保存对话历史、事件日志、定时任务、工具状态与审计追踪。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>事件驱动的四层结构。</strong> 事件先进入统一端点，再由路由器判定紧急度，队列与 Agent 循环负责调度；工具和持久层分别承担行动与记忆。</figcaption>
+</figure>
 
 本实验构建一个最简单的事件驱动 Agent：自动邮件处理助手。Agent 监听邮件收件箱，每当收到新邮件时自动触发处理流程，做分类、摘要、起草回复，必要时通知用户。这是事件驱动 Agent 最直观的入门场景：一个外部事件（新邮件到达）触发一次完整的 Agent 思考循环。
 
@@ -345,7 +354,10 @@ n8n 触发器生态的类比很形象，每一种触发器都是 Agent 的一个
 
 在末尾添加汇总："上面有 4 个未处理事件，包括 1 个工具结果、2 条用户消息、1 个系统提醒。请确保回应涵盖所有信息。"
 
-> 示意图「实验 6-2 异步 Agent 打断与恢复」：图把 Agent、工具 A/B/C 与轨迹并排画成泳道。轨迹一侧先是"LLM: 启动 3 个工具"；三条工具泳道上分别标注"脚本 A: 每秒 3% → 33s 完成""脚本 B: 每秒 2% → 50s...""脚本 C: 每秒 1% → 100s..."。随后 A 泳道出现"A 完成"，轨迹上出现"查询 B,C 进度"，返回"B≈66% C≈33%"，接着轨迹上出现"取消 C"，C 泳道被打上×；再后来"B 完成"，轨迹上出现"LLM: 整合 A+B 结果生成报告"，最终轨迹记录"A 结果 + B 结果 + C 取消记录"。图底部点出三个关键机制：**占位符注入 + 异步完成事件 + `cancel_tool(task_id)` API**。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-async-interrupt.svg" alt="四条泳道：主循环在 0 秒启动脚本 A、B、C；脚本 A 每秒 3%、33 秒完成，脚本 B 每秒 2%、50 秒完成，脚本 C 每秒 1%、约 33 秒时进度 33% 被取消；33 秒查询到 B 约 66%、C 约 33%，50 秒后整合 A 与 B 的结果生成报告。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>并行执行与取消。</strong> 完成事件把真实结果注入轨迹，进度查询提供取消依据；被取消的脚本保留一条取消记录。</figcaption>
+</figure>
 
 #### 实验 6-2 ★★★：带并行执行和打断能力的异步 Agent
 
@@ -380,7 +392,10 @@ n8n 触发器生态的类比很形象，每一种触发器都是 Agent 的一个
 
 **GPT-6 Astra** 已支持**异步工具调用（Async tool calling）**与**回合中途引导（Mid-turn steering）**，体现了这一变化（图 6-5）。补充：③ OpenAI, "Async tool calling"; "Using GPT-6 Astra"，核对日期：2026-09-05。④ OpenAI, "Mid-turn steering"，核对日期：2026-09-05。
 
-> 示意图「同步接口兼容与模型原生异步」：图分左右两栏做对照。左栏是**兼容方案：运行时安排异步节奏**，四步——任务在后台运行、明确记录"尚未完成"、运行时接入新事件、决定排队/打断/并行处理；栏内另有一列说明模型侧的状态：模型继续处理任务、仍按同步交互方式接收信息。右栏是**原生异步：模型理解等待与中途变化**，上半支是"发起耗时查询（例如：查询会议场地）→ 等待期间继续工作（例如：整理议程与准备清单）→ 结果到达后作出决策（依据真实信息比较场地）"，下半支是"用户中途补充要求（例如：预算与人数变化）→ 保留已完成的工作 → 将新要求纳入当前任务 → 调整后续行动 → 综合已有信息与全部更新"。图底部总结分工：**模型理解变化、调整计划；运行时管理工具执行、任务状态与事件来源**，并点出"能接收异步消息，还需要能正确恢复任务并控制实际动作"。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-sync-vs-native.svg" alt="左栏兼容方案由运行时安排四步：任务后台运行、记录尚未完成、接入新事件、决定排队或打断；模型仍按同步方式接收信息。右栏原生异步由模型理解等待与中途变化：发起耗时查询后继续工作，结果到达再决策；用户中途补充要求时保留已完成工作并调整后续行动。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两条实现路线。</strong> 兼容方案把异步节奏翻译成同步轨迹，原生异步让模型自己理解等待、结果到达与中途修改。</figcaption>
+</figure>
 
 异步工具调用将"发起行动"和"获得结果"分开。Agent 发起耗时查询后，可以继续推理、调用其他工具，或处理不依赖查询结果的部分。例如，查询会议场地时，可以先整理议程和准备清单；等场地信息返回，再比较方案。关键是分清工作的依赖关系：能独立推进的工作继续做，必须依据结果的决策留到结果到达之后。
 
@@ -468,7 +483,12 @@ OpenAI 在 GPT-Live 的介绍里用「级联、轮次式、全双工」概括了
 
 绝大多数商业语音助手都基于串行流水线（图 6-6）：VAD 判断用户何时说完，ASR 把音频转成文字，LLM 理解并生成回复，TTS 再把文字念出来。模块化让每个组件可以独立优化，但每一级都可能增加等待时间。
 
-> 示意图「语音 Agent 串行流水线」：一条从左到右的四级流水线，每级都标注了时延区间与候选技术。第一级 VAD（语音活动检测）500–800ms，候选 Silero VAD / ONNX Runtime；第二级 ASR（语音识别）50–200ms，候选 Whisper / SenseVoice；第三级 LLM（语言模型推理）100–500ms，候选 GPT-4o / Doubao Flash；第四级 TTS（语音合成）200–500ms，候选 Fish Audio S1 / 神经网络合成。图下方标注「串行阻塞：每阶段等待前一阶段完成」，并给出用户视角的一条时间线：「用户说话 2–3 秒 → VAD 等待 → ASR 等待 → LLM 空闲 → 浪费所有时间间隙」。最底部注明技术栈：Node.js WebSocket + AudioWorklet（128 样本 ≈ 2.7ms）+ FFmpeg。图想说明的是：模块化带来可替换性，但四段延迟串行相加，而且用户说话的那 2–3 秒里后三级全部空转。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/voice-pipeline.svg" alt="VAD、ASR、LLM 首 token、LLM 生成与 TTS 五段串行执行；空载总延迟在 950 到 2300 毫秒之间" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>语音级联的延迟构成。</strong> 五个阶段首尾相接；最优与最差分别取各段的下限和上限，串行相加得到 950 ms 与 2300 ms。</figcaption>
+</figure>
+
+这张图只算空载情况。真实服务里还要加上排队，利用率越高，等待被放大得越明显；而用户说话的 2–3 秒内，后面的 ASR、LLM 与 TTS 都还没有工作可做。
 
 各模块的作用与典型瓶颈如下：
 
@@ -481,11 +501,17 @@ OpenAI 在 GPT-Live 的介绍里用「级联、轮次式、全双工」概括了
 
 在一个简短、不开启 reasoning 的回复中，VAD、ASR、LLM 和 TTS 的等待会串行累积（图 6-7）。真实数值取决于输入长度、模型、硬件、网络和负载。
 
-> 示意图「延迟瀑布：串行累积总响应时间」：一条横向时间轴，刻度 0ms / 500ms / 1000ms / 1500ms / 2000ms；轴上按顺序堆叠五段（前四段对应四个模块，第五段是 LLM 生成）：VAD 等待 500–800ms、ASR 转录 50–200ms、LLM TTFT（首 token 延迟）100–500ms、LLM 生成 100–300ms、TTS 合成 200–500ms。图把五段区间相加，得到「总响应时间：最优 950ms ≈ 0.9s，最差 2300ms ≈ 2.3s」，并标注这是「← 空载理想情况」。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-latency-waterfall.svg" alt="两条泳道按五段累加。最优情形：VAD 500ms、ASR 50ms、LLM 首 token 100ms、生成 100ms、TTS 200ms，总计 950ms；最差情形：VAD 800ms、ASR 200ms、首 token 500ms、生成 300ms、TTS 500ms，总计 2300ms。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>串行链路的延迟构成。</strong> 五段首尾相接，任一段变慢都会直接推高总响应时间；这里展示的是空载理想情况。</figcaption>
+</figure>
 
 生产环境的排队还会进一步放大空载延迟（图 6-8），但这属于服务容量规划，本章不展开排队模型。
 
-> 示意图「排队延迟曲线」：横轴是利用率 ρ（0.0 到 1.0，刻度 0.0/0.2/0.4/0.6/0.8/1.0），纵轴是总延迟（s，刻度 0 到 12）。曲线随 ρ 上升而急剧上扬：ρ=0.5 → 2s（标注「用户忍受上限」），ρ=0.8 → 5s（标注「不可接受」），ρ→1 → ∞。图内给出公式「总延迟 = S/(1−ρ)，空载延迟 S=1s」，并注明「生产环境 ρ 通常 0.5–0.8 → 实际延迟 2–5× 空载延迟」。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-queue-delay.svg" alt="折线图：横轴利用率 ρ 从 0 到 1，纵轴总延迟 0 到 12 秒。ρ=0.5 时延迟 2 秒，标注为用户忍受上限；ρ=0.8 时延迟 5 秒，标注为不可接受；ρ 趋近 1 时延迟趋于无穷。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>排队放大的非线性。</strong> 利用率越过 0.8 后，延迟迅速脱离可接受区间；同样的空载延迟，生产负载下可能放大 2–5 倍。</figcaption>
+</figure>
 
 实验 6-4 ★：构建传统语音 Agent。本实验用 WebSocket 串起麦克风、Silero VAD、本地 Whisper、流式 LLM 和 Fish S1 TTS，建立后续方案的级联基线（baseline）。
 
@@ -556,7 +582,10 @@ VAD 有两种错法。静音阈值定得长，就「等待」，用户说完还�
 
 Omni 模型仍然假设轮流说话，通常要靠 VAD 划分发言权。因此，用户报数字时的中途停顿仍可能被误判为说完。
 
-> 示意图「端到端多模态语音模型架构对比」：图上半部并列四个产品/模型的卡片，每张列出关键设计点。OpenAI Realtime：`gpt-realtime`、服务端 VAD + 轮次检测、异步函数调用、打断时停止当前生成、「本质仍在 VAD 框架下」、「2024 preview 基于 GPT-4o」。Gemini Live：Gemini 2.0、VAD 敏感度可配置、打断时保留已发信息、对话连贯性优化、「与 OpenAI 策略类似」。Qwen3-Omni：Thinker-Talker MoE、思考（理解）+ 表达（生成）分工、多码本语音编码、首包延迟 234ms、32/36 达开源 SOTA。Step-Audio 2：潜在音频编码 + RL、端到端语音 token、副语言理解 83.09%、CoT 思考 + RAG + 工具、「超越 Qwen2.5-Omni (44.18%)」。图下半部先总结多数方案的共同局限：仍依赖轮次检测机制——轮次检测不足（用户停顿 ≠ 说完、犹豫时需主动引导）、打断判断原始（「嗯」「对」是附和不是打断、背景噪音误判为发言）；根本原因是 VAD 基于声学信号，无法捕捉语义层面信息。最后是输入/输出架构对比一栏，用箭头表示数据流：传统串行 `音频→VAD→ASR→文本→LLM→文本→TTS→音频`；OpenAI/Gemini `音频→端到端模型(内置 VAD)→音频/文本`；Qwen3-Omni `音频/图像/视频→Thinker(MoE)→Talker→语音编码`；Step-Audio 2 `原始音频→潜在编码器→LLM+RL→音频+文本 token`；全双工 Moshi `并行双音频流 + 内心独白文本流 → 无需 VAD / 轮次检测`。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-omni-models.svg" alt="四栏卡片：OpenAI Realtime 用服务端 VAD 与轮次检测；Gemini Live 可配置 VAD 敏感度并保留已发信息；Qwen3-Omni 用 Thinker-Talker MoE，首包延迟 234ms；Step-Audio 2 用潜在音频编码与 RL，副语言理解 83.09%。底部指出多数方案仍依赖轮次检测。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>四个端到端方案。</strong> 它们的共同点是把音频直接送入模型，但多数仍靠 VAD 划分发言权，声学信号判断不了语义上的「说完」。</figcaption>
+</figure>
 
 实验 6-6 ★★：本地运行 MiniCPM-o 4.5，对比端到端与自级联。本实验使用本地 MiniCPM-o 4.5，关闭 thinking mode，比较直接从音频作答与同模型自级联先转录再作答。它测的是音频信息是否被保留，不是后文的「边想边说」。
 
@@ -608,7 +637,10 @@ Moshi 与交互模型要分开看。这里说 Moshi 是「研究上的先声」�
 
 快思考可以在几百毫秒内先给出即时回应，慢思考则在后台完成更深的推导。它的问题是简单问题会被重复处理，复杂问题又可能出现前后不一致：快模型先建议购买，慢模型随后发现套餐缺少关键功能，用户在几秒内便听到相互冲突的答案。根本原因是两个实例各自完成了一次独立思考。
 
-> 示意图「快/慢思考架构与方案对比」：图上半部是一条并行的双分支时序。用户输入是「选哪个套餐?」；两条分支同时出发——快思考 ~500ms（思考关闭）给出「价格不错，建议购买」，慢思考 ~8s（思考开启）给出「缺少国际漫游，不太适合」。用户体验时间线上于是出现两句话：0.5s 时听到「价格不错，建议购买」，8.0s 时听到「缺少国际漫游，不适合」，图上标出「→ 自相矛盾！→ 用户失去信任」。图下半部列出两大问题：问题一「简单问题过度思考」（「今天星期几」→快思考已对→慢思考仍运行 8s）；问题二「快慢不一致」（独立思考路径，假设可能完全不同）。接着给出改进方向：「慢思考作为『军师』幕后指导」，路径是 `慢思考 → Agent 状态栏 → 快思考`，评价是「不直接冲突，但沟通间接模糊」，并指出仍有本质局限：快思考可能误解状态栏提示（「确认价格」→「向用户确认」而非「重新计算」）、「无法实现『边想边说』的自然交互」。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-fast-slow-timeline.svg" alt="两条并行分支：快思考在 500ms 内给出「价格不错，建议购买」，慢思考约 8 秒后给出「缺少国际漫游，不太适合」；用户体验时间线上 0.5 秒听到第一句，8.0 秒听到第二句，形成自相矛盾。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两个实例各自思考的代价。</strong> 快慢分支同时出发、互不知情，用户先听到一个结论，几秒后又听到相反的结论。</figcaption>
+</figure>
 
 #### 6.3.5.2 方案二：快思考交互，慢思考提醒
 
@@ -679,7 +711,10 @@ Computer Use（也称 GUI 自动化 Agent）让 AI 像人类一样通过观察�
 
 这里要区分「看懂界面」和「完成任务」。前者更接近多模态理解能力，可以用一次截图问答来测量；后者则要求模型把理解和生成动作放进闭环，处理页面加载、状态变化、误操作和不可逆后果。Computer Use 的难点因此不只是让模型在截图上答对，还要让它在每一步之后重新确认现实是否仍符合计划。
 
-> 示意图「Computer Use Agent 的感知-思考-行动循环」：图是一个带编号的四段环形流程。①截图：对象是计算机屏幕（桌面 / 浏览器 / 应用），「等待界面稳定后截图」。②模型推理：输入为「截图 + 任务指令」，输出为一串「思考: 『搜索框在屏幕中央』」以及动作 `click(512, 250)`、`type("weather")`。③执行动作：执行工具是 `xdotool` / `Playwright`，能力包括鼠标（移动、点击、拖拽）、键盘（输入、组合键）、滚动（上下左右）、等待（界面响应）。④界面状态变化 → 等待稳定 → 进入下一轮截图，回到 ①形成循环。图注另标「典型场景：完成一个多步表单填写可能需要 10–20 轮循环」。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-computer-use-loop.svg" alt="四段循环：截图桌面、浏览器或应用；模型接收截图与任务指令，输出思考和 click(512, 250) 等动作；执行层用 xdotool 或 Playwright 操作鼠标键盘；界面变化后等待稳定并回到截图。一个多步表单通常需要 10–20 轮。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>闭环的核心是重新观察。</strong> 每次动作之后都要确认现实是否仍符合计划；页面加载、状态变化和误操作都只能靠下一张截图发现。</figcaption>
+</figure>
 
 这个循环中有三个关键设计维度：动作空间（Agent 能执行哪些操作）、视觉定位（如何在截图中找到目标元素）、以及模型架构（如何从截图生成正确动作）。
 
@@ -707,7 +742,10 @@ GUI 操作工具（computer tool）覆盖鼠标、滚动、键盘和感知动作
 
 实验 6-8 ★：运行 Computer Use（Anthropic 参考路径或开放模型路径）。路径 A 使用 Anthropic Computer Use Demo：容器打包完整的 Ubuntu 桌面环境（含浏览器、终端等常用工具），前端接收任务，后端把指令与截图发送给 Claude，再执行模型返回的鼠标、键盘、终端或编辑动作。路径 B 使用这里的 `chapter6/computer-use-open-model` 示例代码：默认以开放权重的 Qwen3-VL 32B Instruct 驱动 browser-use，可通过 OpenRouter 托管 API，也可连接自托管的 vLLM/SGLang 等服务。
 
-> 示意图「Computer Use 动作空间」：图分四个板块。GUI 操作工具 (computer)：鼠标一栏列出 `mouse_move · left/right/middle_click`、`double/triple_click · left_click_drag`、`left_mouse_down/up`；键盘一栏列出 `type (逐字符, 12ms间隔)`、`key (组合键) · hold_key (长按)`；滚动一栏是 `scroll 四方向 + 修饰键`。另有一列感知动作：截图 `screenshot → 缩放到训练分辨率`、光标 `cursor_position → (x, y)`、等待 `wait → 等待界面稳定`。命令执行 (bash)：终端 `持久 bash 会话 · 120s 超时`、`哨兵字符串检测完成`。文件编辑 (str_replace_editor)：操作 `view · create · str_replace`、`insert · undo_edit`。坐标缩放机制：`实际分辨率 ↔ 训练分辨率 (XGA/WXGA/FWXGA)`，流程为「截图缩小 → 模型推理 → 坐标放大 → xdotool 执行」。图底给出典型执行流程：填写表单——① `screenshot` 截取当前页面；② 模型推理识别姓名框位置；③ `mouse_move` 移动到 (324, 156)；④ `left_click` 点击获取焦点；⑤ `type` 输入 "John Smith"；并注明「每个动作间隔 2–5s（串行截图-识别-思考-点击），人类速度的 1/3 到 1/5」。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-action-space.svg" alt="四栏：GUI 操作工具提供鼠标移动、点击、拖拽，键盘输入与组合键，四方向滚动；感知动作提供截图、光标位置与等待；bash 提供持久终端、120 秒超时与哨兵字符串；文件编辑提供查看、创建、替换、插入与撤销。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>动作空间的分层。</strong> 鼠标键盘最通用但依赖坐标，终端最强力但要求会写命令，文件编辑最精确但需要先定位目标；按稳定性选择路径。</figcaption>
+</figure>
 
 三类工具的划分逻辑值得学：操作界面（computer）、操作命令（bash）、操作文件（str_replace_editor）。它们覆盖了「用人方式使用电脑」的三条主要路径，而且在能力粒度上是递进的。鼠标键盘最通用但最脆弱（依赖坐标与像素），终端最强力但要求 Agent 会写命令，文件编辑最精确但要先知道要改哪一段。设计自己的动作空间时，这种分层比「给一堆零散工具」更好用：模型可以按「有没有更稳的路径」来选择。
 
@@ -762,9 +800,15 @@ $$
 
 实验 6-9 ★：使用 browser-use 实现自动浏览器操作。基于 Playwright 浏览器自动化框架（一个用代码控制浏览器的工具库），结合多模态大模型实现自然语言驱动的浏览器操作。启用 SoM 可视化模式，每次决策前保存带标注框的截图。测试任务「打开 Google 查询旧金山天气」：系统启动后截图显示 Google 搜索页面，交互元素被编号，模型选择搜索框、输入 "San Francisco weather today"、提交搜索，再从结果页提取温度和天气状况。
 
-> 示意图「Set-of-Mark 与结构化元素索引（browser-use 实现）」：图分三块。左侧是模拟网页截图（标注后）：地址栏 `www.example.com`，页面上四个元素分别叠加编号——搜索框标 `[1]`、按钮「Submit」标 `[2]`、输入框「Enter your name...」标 `[3]`、链接「Documentation →」标 `[4]`。右上角是元素列表（文本描述），逐条列出这四个 ID 对应的 HTML 片段；下方标注「模型输出 ID → 系统用中心坐标执行」。右下角是 SoM 流程（browser-use 实现）的五个环节串联：`CDP 获取 DOM/A11y` → `可交互性检测` → `边界框 + ID 分配` → `截图上画框标注` → `文本列表 + 截图 → 模型`。图底给出适用边界：结构化界面（网页 / Accessibility 接口）适用；游戏 / Canvas 需回退纯视觉方法。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-set-of-mark.svg" alt="模拟网页截图：搜索框标 [1]、Submit 按钮标 [2]、姓名输入框标 [3]、Documentation 链接标 [4]；右侧列出四个 ID 对应的 HTML 片段。底部流程为 CDP 获取 DOM/A11y、可交互性检测、边界框与 ID 分配、截图标注、文本列表与截图送入模型。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>把定位变成选择题。</strong> 系统先在截图上画框编号，模型只需输出 ID，执行层再用元素中心坐标完成点击。</figcaption>
+</figure>
 
-> 示意图「分辨率匹配与双向坐标缩放」：图左侧是实际屏幕 2560 × 1440（或其他分辨率），标注「用户点击: (1280, 720)」。中间是模型训练分辨率一列，列出三档：XGA 1024×768、WXGA 1280×800、FWXGA 1366×768，并标注「根据宽高比选择最匹配」。右侧是模型侧输出：「模型输出坐标 基于缩小后图像 预测: (683, 384) → 放大回实际分辨率」，两侧之间用「缩小」和「坐标」两个箭头表示双向映射。图底给出完整流程：① 按宽高比选目标分辨率 → ② ImageMagick 缩小截图 → ③ 模型推理生成坐标 → ④ 按比例放大 → ⑤ xdotool 执行；并给出缩放示例（16:9 屏幕 → FWXGA）：截图 2560×1440 → 1366×768（×0.53）；坐标 模型 (683, 384) → 实际 (1280, 720)（×1.87）。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch06-resolution-scaling.svg" alt="实际屏幕 2560×1440 上用户点击 (1280, 720)；截图按宽高比选 FWXGA 1366×768 缩小（×0.53）；模型在缩小图上预测 (683, 384)，坐标按 ×1.87 放大回实际分辨率，由 xdotool 执行。" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>双向坐标映射。</strong> 训练分辨率有三档，按宽高比选最接近的一档，缩放比例在截图与执行两侧互为倒数。</figcaption>
+</figure>
 
 三条路线可以用「定位的答案空间」来统一理解：坐标预测的答案空间是连续的像素平面（无限多可能答案）；视觉标注的答案空间是分割模型切出的若干候选区域；结构化索引的答案空间是 DOM/A11y 里可交互元素的 ID 集合（通常几十个）。答案空间越小、越规范，模型越容易答对，这正是这里「选择题比填空题容易」的类比。
 

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">事件驱动的异步 Agent 架构</title>
+  <desc id="fig-desc">邮件、定时器、Webhook 与用户消息先被规范化成事件进入队列，再由路由器判定紧急度，驱动 Agent 的推理与行动循环。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">事件驱动的异步 Agent</text>
+  <text x="400" y="60" text-anchor="middle" class="sub">事件先规范化、入队，再由路由器决定处理方式</text>
+
+  <rect x="30" y="84" width="196" height="300" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="128" y="112" text-anchor="middle" class="h">事件源</text>
+
+  <rect x="44" y="128" width="168" height="52" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="56" y="149" class="b">Email</text>
+  <text x="56" y="168" class="tiny">on_email_reply</text>
+
+  <rect x="44" y="190" width="168" height="52" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="56" y="211" class="b">Timer</text>
+  <text x="56" y="230" class="tiny">on_timer_expire</text>
+
+  <rect x="44" y="252" width="168" height="52" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="56" y="273" class="b">Webhook</text>
+  <text x="56" y="292" class="tiny">on_webhook</text>
+
+  <rect x="44" y="314" width="168" height="52" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="56" y="335" class="b">User</text>
+  <text x="56" y="354" class="tiny">on_user_message</text>
+
+  <rect x="262" y="84" width="188" height="300" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="356" y="112" text-anchor="middle" class="h">事件队列</text>
+
+  <rect x="276" y="130" width="160" height="42" rx="6" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="288" y="148" class="b">user.interrupt</text>
+  <text x="424" y="148" text-anchor="end" class="tiny">紧急</text>
+
+  <rect x="276" y="184" width="160" height="42" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="288" y="202" class="b">user.input</text>
+  <text x="424" y="202" text-anchor="end" class="tiny">常规</text>
+
+  <rect x="276" y="238" width="160" height="42" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="288" y="256" class="b">email.reply</text>
+  <text x="424" y="256" text-anchor="end" class="tiny">常规</text>
+
+  <rect x="276" y="292" width="160" height="42" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="288" y="310" class="b">timer.trigger</text>
+  <text x="424" y="310" text-anchor="end" class="tiny">常规</text>
+
+  <text x="356" y="360" text-anchor="middle" class="tiny">按优先级取出</text>
+
+  <path d="M228 232 H256" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M452 232 H488" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+  <rect x="492" y="84" width="278" height="300" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="631" y="112" text-anchor="middle" class="h">Agent 处理循环</text>
+
+  <rect x="512" y="128" width="238" height="34" rx="5" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="631" y="150" text-anchor="middle" class="b">取出事件</text>
+  <rect x="512" y="172" width="238" height="34" rx="5" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="631" y="194" text-anchor="middle" class="b">路由：LLM 判定紧急度</text>
+  <rect x="512" y="216" width="238" height="34" rx="5" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="631" y="238" text-anchor="middle" class="b">追加到结构化轨迹</text>
+  <rect x="512" y="260" width="238" height="34" rx="5" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="631" y="282" text-anchor="middle" class="b">推理：观察 → 思考 → 行动</text>
+  <rect x="512" y="304" width="238" height="34" rx="5" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="631" y="326" text-anchor="middle" class="b">工具执行（异步 / 同步）</text>
+  <rect x="512" y="348" width="238" height="26" rx="5" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="631" y="366" text-anchor="middle" class="b">结果处理：通知 / 响应 / 存储</text>
+
+  <path d="M760 362 C780 362 780 142 760 142" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+
+  <text x="400" y="424" text-anchor="middle" class="tiny">时间驱动只能定时查看；事件驱动在事件到达时被唤醒。</text>
+</svg>

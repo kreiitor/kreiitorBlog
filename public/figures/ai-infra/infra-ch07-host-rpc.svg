@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">主机 RPC 的参数路径</title>
+  <desc id="fig-desc">CPU A 经网卡 A 和网络到达网卡 B，再到 CPU B；实线表示数据，虚线表示控制提交，接收方按完成条件使用结果</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">主机 RPC 的参数路径</text>
+  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">CPU A 经两张网卡把参数送到 CPU B，由远端执行请求</text><rect x="109.5" y="104.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="214.5" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">CPU A</text>
+  <text x="214.5" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">发起者</text><rect x="480.5" y="104.5" width="210" height="112" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="585.5" y="157.25" font-size="13" fill="var(--on-blue)" font-weight="700" text-anchor="middle">网卡 A</text>
+  <text x="585.5" y="173.5" font-size="12" fill="var(--on-blue)" font-weight="400" text-anchor="middle">提交操作</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
+  <text x="214.5" y="320.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">网卡 B</text>
+  <text x="214.5" y="336.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">接收参数</text><rect x="480.5" y="267.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <text x="585.5" y="320.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">CPU B</text>
+  <text x="585.5" y="336.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">远端执行</text><path d="M319.5 160.5 L480.5 160.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M585.5 216.5 L585.5 242 L214.5 242 L214.5 267.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M319.5 323.5 L480.5 323.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M585.5 267.5 L585.5 242 L214.5 242 L214.5 216.5" fill="none" stroke="var(--blue)" stroke-width="2.1" marker-end="url(#arrow)"/></svg>

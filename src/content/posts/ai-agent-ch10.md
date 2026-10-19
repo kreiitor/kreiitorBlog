@@ -42,19 +42,10 @@ cover: /covers/series-ai-agent.svg
 
 对应到 IPC 的两大范式：共享文件系统就是 Agent 世界的「共享内存」；工具调用参数和消息总线则是「消息传递」的两种形态，前者随调用同步传递，后者经中转站异步投递。两种范式各有取舍，这里引了 Go 语言一句广为流传的话：「不要通过共享内存来通信，而要通过通信来共享内存」。
 
-> 示意图：这是一张左右对照的架构示意图，标题为「共享上下文与不共享上下文对比」。
-> **左半部分：共享上下文（继承式协作）**，画的是同一个 Agent 在三个阶段接力，所有阶段共享同一对话历史（图中用向上的箭头标注「↑ 所有阶段共享同一对话历史」）：
-> - 阶段 1 需求分析师：`sys: "你的职责是充分理解需求..."`，`tools: [ask_question, save_req]`，`user: "写一个 CSV 分析脚本"`，`agent: "需要处理哪些文件类型？"`；
-> - 阶段 2 软件工程师：`sys: "根据已确认需求编写代码..."`，`tools: [write_file, execute_code]`，`agent: write_file("analyze.py", ...)`，`agent: execute_code("python test.py")`；
-> - 阶段 3 代码审查员：`sys: "审查代码质量和安全性..."`，`tools: [run_linter, run_tests]`，`agent: run_linter → 2 warnings`，`agent: approve_code`。
-> 图下方标出这一支的权衡：`✓ 完整轨迹`、`✗ 上下文快速膨胀`。
-> **右半部分：不共享上下文（隔离式协作）**，画的是三个各自独立的 Agent，每个有自己的系统提示词和工具集，通过共享文件系统交换产物：
-> - Glossary Agent：`sys: "识别术语并翻译..."`，`tools: [search_dict, write_file]`，产出 `→ glossary.json`；
-> - Translation Agent：`sys: "翻译本章内容..."`，`tools: [read_file, write_file]`，产出 `→ chapter1_zh.md`；
-> - Proofreading Agent：`sys: "检查术语一致性..."`，`tools: [read_file, write_file]`，产出 `→ review_report.md`；
-> 三者共用一块「共享文件系统」，里面躺着 `glossary.json`、`chapter1_zh.md`、`review_report.md`；另有标注 `+ 工具调用参数传递结构化数据`。
-> 图下方标出这一支的权衡：`✓ 模块化 · 可扩展 · 并行`、`✗ 信息同步复杂`。
-> （上文的文字描述严格依据这里图内文字；图内省略号处的提示词这里未完整给出，这里照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/multi-agent-topologies.svg" alt="共享上下文与隔离上下文的对比，以及对等、管理者与去中心化三种协作拓扑" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>多 Agent 协作的两个维度。</strong> 上层对比共享上下文与隔离上下文，下层给出对等、管理者与去中心化三种控制流拓扑。</figcaption>
+</figure>
 
 用一句话区分两种模式：共享上下文是「同一个人换岗位」，不共享上下文是「不同的人换文件」。前者交接的是记忆，后者交接的是产物。
 
@@ -264,12 +255,10 @@ Agent 专属工作区（Scratchpad）。每个 Agent 实例独享的私有目录
 
 系统内置资源（Built-in System Resources）。系统预置、对所有 Agent 只读共享的资源包，典型代表是第二章、第四章介绍的 Skills，它们是以文件形式组织的知识文档与脚本，挂载于 `/skills` 等路径，按渐进式披露（先索引、后按需展开）取用；此外还包括参考手册、模板库与共享工具定义。该层全局共享、只读、跨会话稳定，可被所有 Agent 并发读取而无需并发控制。
 
-> 示意图：这幅图画出「Agent 虚拟文件系统的四类区域挂载结构」。图的顶部左右是两个 Agent（Agent A、Agent B），它们都汇入中间的统一接口层，标注为「统一接口：read_file · write_file · list_dir」，接口之下是「虚拟文件系统 /」这根中枢。图的左侧是「用户」，标注「上传 / 下载」；图的右侧是「外部数据源：Google Drive · Notion」，标注「挂载 mount」。四个区域画在下方：
-> - Agent 专属工作区，路径 `/scratch/<id>`，副标题 Scratchpad，特征为「私有 · 仅该 Agent」「随实例销毁」「读写 · 无需并发控制」，并特别注明「每个 Agent 各一份」；
-> - 多 Agent 共享空间，路径 `/workspace/shared`，副标题 Shared Workspace，特征为「用户可见 · 持久化」「读写 · 需并发控制」「乐观锁 · worktree」；
-> - 外部挂载资源，路径 `/mnt/gdrive · /mnt/notion`，标注「经适配器 adapter」，特征为「受外部授权约束」「多为只读 · 写需谨慎」「延迟高 · 一致性弱」；
-> - 系统内置资源，路径 `/skills`，内容为「Skills · 模板 · 手册」，特征为「全局共享 · 只读」「跨会话稳定」「渐进式披露」。
-> 整幅图要表达的核心意思是：同一棵目录树，四个区域权限各不相同；Agent 通过统一接口访问整棵树，用户从共享空间上传下载，外部数据源经适配器挂载，系统内置资源只读提供。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-vfs-regions.svg" alt="Agent A 与 Agent B 经统一接口 read_file、write_file、list_dir 访问虚拟文件系统根目录；根目录下挂载四个区域：/scratch/&lt;id> 私有可写、随实例销毁，/workspace/shared 用户可见且需并发控制，/mnt 外部资源经适配器挂载且多为只读，/skills 全局只读并提供 Skills、模板与手册；用户从共享空间上传下载，外部数据源经挂载进入" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>Agent 的地址空间。</strong> 统一接口让四个区域看起来一样，权限、生命周期和一致性却各不相同；设计时先按「别人是否需要看到」和「是否可写」划分区域，再决定并发控制。</figcaption>
+</figure>
 
 这里给出表 10-3（按语义还原），并说明它可作为文件系统布局设计的检查表：
 
@@ -595,10 +584,10 @@ return summarize_failures(workers)
 
 #### 顺序协调形态
 
-> 示意图：这幅图画出「Manager 顺序协调」。图上方是 **Manager Agent**，标注职责链「任务理解 → 分解 → 调度 → 综合」，其工具集为 `[call_agent_A, call_agent_B, call_agent_C, search, write_file]`；三个子 Agent 和两个普通工具并列在同一张清单里，直观体现了「Agent 即工具」。
-> 图中间是三个子 Agent，各自有明确的角色和步骤标号：**Sub-Agent A**（角色：数据收集；搜索技术文档、提取关键信息；`Step 1`）；**Sub-Agent B**（角色：分析处理；对比分析数据、生成统计报告；`Step 2`）；**Sub-Agent C**（角色：报告生成；撰写最终报告、格式化输出；`Step 3`）。
-> 图下方画出顺序执行流：`Manager 调用 A → A 返回数据 → Manager 传给 B → B 返回分析 → Manager 传给 C → C 返回报告`，并有一行总结：「Manager 视角：调用 Agent = 调用工具（发请求 → 获响应）」。
-> 整幅图的要点是：控制流是线性的、串行的，每一步的结果都经过 Manager 中转，A 和 B、B 和 C 之间不直接通信。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-manager-sequential.svg" alt="Manager Agent 位于上方，工具集里同时有子 Agent 与普通工具；三个子 Agent 依次承担数据收集、分析处理和报告生成；执行流为 Manager 调用 A、A 返回数据、Manager 传给 B、B 返回分析、Manager 传给 C、C 返回报告，A 与 B、B 与 C 之间不直接通信" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>顺序协调。</strong> 控制流是线性的，每个子 Agent 只完成一个步骤；结果统一回到 Manager，再由它决定下一步。调用 Agent 与调用普通工具在 Manager 视角下没有区别。</figcaption>
+</figure>
 
 这里说明：Manager 按顺序依次调用专门 Agent，每个 Agent 完成后返回结果，Manager 再决定下一步。控制流是线性的，简单明了，适合子任务之间有清晰先后依赖的场景。
 
@@ -621,29 +610,19 @@ return summarize_failures(workers)
 
 实验要求四条：1) 选择一本图文并茂、包含代码的技术书籍作为翻译对象；2) 实现 Manager、Glossary、Translation、Proofreading 四种 Agent；3) 记录每个 Agent 的上下文消耗，验证管理者模式控制上下文膨胀的有效性；4) 对比单 Agent 与管理模式在翻译质量、执行效率、资源消耗方面的差异。
 
-> 示意图：这幅图画出「书籍翻译 Agent 架构」。中心是 **Manager Agent**，标注职责「任务规划 · 进度监控 · 异常处理 · 结果综合」。外围三个角色 Agent：
-> - **Glossary Agent**：接收整体 → 识别专业术语，搜索专业词典 + 翻译规范，输出 `glossary.json`，图内示例内容是 `{"attention": "注意力", "transformer": "Transformer", "backprop": "反向传播"}`；
-> - **Translation Agent ×N**：章节翻译，输入「章节 + 术语表 + 指南」，术语严格按表翻译，输出 `chapter{n}_zh.md`，图内示例译文片段为 `"...注意力机制通过计算 Query·Key^T 的相似度..."`；
-> - **Proofreading Agent**：全文审校，扫描验证术语一致性、检查流畅性和可读性，输出 `review_report.md`，图内示例报告为 `P3: "注意力"→"关注"不一致`、`P8: 长句建议拆分`。
-> 图下方是一块共享文件系统，里面列出四类产物：`glossary.json`（术语对照表）、`chapter{1..10}_zh.md`（章节译文）、`review_report.md`（审校报告）、`translation_guide.md`（翻译指南），从三个角色到共享文件系统之间标注着「术语表」「译文」等流向。
-> 图底部总结了「上下文隔离优势」：Glossary 仅看术语，Translation 仅看当前章节加术语表，Manager 仅维护文件索引。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-translation-architecture.svg" alt="Manager Agent 位于中心，负责规划、进度监控、异常处理和结果综合；外围是 Glossary Agent、Translation Agent 多实例和 Proofreading Agent，分别产出 glossary.json、chapter{n}_zh.md 与 review_report.md，全部写入共享文件系统，Manager 只维护文件索引" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>管理者模式下的翻译分工。</strong> 每个角色只拿自己需要的上下文：术语 Agent 看整体，翻译 Agent 看单章加术语表，审校 Agent 看全部译文；Manager 不保存完整译文，只维护文件索引并按审校报告发回修订。</figcaption>
+</figure>
 
 #### 并行协调形态
 
-> 示意图：这幅图画出「Manager 并行协调」。上方是 **Manager Agent**，标注「并行调度 · 实时监控 · 结果汇总」。中间是一条消息总线（Message Bus），四个子 Agent 挂在总线上，每个都注明「独立上下文」并带状态标记：**Agent 1**（数据采集，运行中 ◎）、**Agent 2**（内容分析，运行中 ◎）、**Agent 3**（图表生成，已完成 ✓）、**Agent 4**（格式校验，等待中 ○）。
-> 图内给出消息总线通信示例四条 JSON：
-> ```
-> Manager → Agent 1
-> {"type":"start","task":"采集 arxiv 论文","params":{"query":"LLM agent"}}
-> Agent 3 → Manager
-> {"type":"completed","agent_id":"3","result":"charts/fig1.svg 已生成"}
-> Agent 1 → Agent 2
-> {"type":"data_ready","source":"agent_1","file":"raw_data.json"}
-> Manager → Agent 4
-> {"type":"start","depends_on":["agent_2","agent_3"]}
-> ```
-> 这四条消息正好示范了三种流向：Manager→子 Agent（下发任务）、子 Agent→Manager（汇报完成）、子 Agent→子 Agent（数据就绪通知），另外还有一个带依赖的延后启动，Agent 4 依赖 Agent 2 和 Agent 3。
-> （上引 JSON 为这里图内文字照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/manager-message-bus.svg" alt="Manager 通过消息总线向四个独立上下文的子 Agent 下发任务，Agent 4 等待前两个依赖完成" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>Manager 的并行协调。</strong> 任务下发、完成汇报和子 Agent 之间的数据就绪通知都经过消息总线，各子 Agent 在自己的上下文中工作。</figcaption>
+</figure>
+
+总线的价值在于解耦：发送方不必知道接收方何时在线，接收方也不必维护与每个同伴的点对点连接。Manager 只保留任务、状态和产物索引，完整轨迹留在各子 Agent 自己那里。
 
 这里说明：多个子任务可以并行执行时，顺序模式就显得效率低下了。并行协调让多个 Agent 同时工作，大幅提升吞吐量。Manager Agent 不仅要规划并行任务，还要实时监控所有运行中的 Agent，协调通信，在 Agent 成功或失败时做出全局决策。这通常需要消息总线作为基础设施，可以把它理解为一个「公共公告板」：Agent 可以往上面贴消息（发布），也可以关注自己感兴趣的消息类型（订阅），实现异步通信、互不阻塞。这一点和 10.4.1 里点对点消息的局限正好接上，Agent 数量一多，点对点连接数随 Agent 数呈平方增长，还得要求收发双方同时在线。
 
@@ -673,18 +652,10 @@ return summarize_failures(workers)
 
 这个实验有两处特别值得学。一句「不要用『字段数量超过阈值』的 Python 规则代替模型决策」，是整体「让模型做判断」这一立场的典型表述：写死规则的版本跑起来更快、更可预测，但它把「什么时候该打电话」这个需要理解页面语义的判断降级成了计数。这里把固定模式定位成并发基线，把自主模式定位成主实验，正是要证明模型能自己做这个决策。另一处是「问下一个」和「填上一个」真正重叠这个验收标准，它要求证明 Phone Agent 还在问第 N+1 项的时候，Computer Agent 已经把第 N 项填进页面了，而不是只看「两个进程都在运行」。验收标准要写到能观测到重叠，这个标准定得很准，`info_collected` 那条「不等网页填写完成便询问下一项」的设计目的就在这里。安全约束同样值得记：真人语音须显式同意，提交须显式授权，这是给「Agent 替人做实事」设的两道人工门禁（对应 10.4.3.1 里的人工门禁）。
 
-> 示意图：这幅图画出「Phone 与 Computer 双 Agent 架构」。左右两个 Agent，各自画出内部流水线：
-> - **Phone Agent**（标注：Node.js · 实时语音通话）：用户语音/麦克风输入 → VAD + ASR（Silero VAD → STT 转录）→ LLM 推理（理解意图 + 提取信息）→ TTS 合成（生成语音回复 → 播放）；
-> - **Computer Agent**（标注：Python · 浏览器自动化）：屏幕截图（浏览器当前页面）→ Vision LLM（理解页面结构 + 表单字段）→ 动作规划（定位字段 → 规划输入序列）→ 执行操作（点击 / 输入 / 提交）。
-> 两者之间是一条 **WebSocket 双向通信（`ws://localhost:8849`）**，标注「实时双向消息流（边打电话边用电脑）」。管道上标出了四条真实消息示例：
-> ```
-> Phone → Computer   [FROM_PHONE_AGENT] 用户说姓名是张三
-> Computer → Phone   [FROM_COMPUTER_AGENT] 已填写姓名，需要证件号
-> Phone → Computer   [FROM_PHONE_AGENT] 证件号 310101199001011234
-> Computer → Phone   [FROM_COMPUTER_AGENT] 表单已提交，注册成功
-> ```
-> 图底部有一行结论：「关键：两个 Agent 独立 ReAct 循环并行运行，互不阻塞」。
-> （上引消息示例为这里图内文字照录，其中证件号为示意数据。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-phone-computer.svg" alt="左侧 Phone Agent 流水线为语音输入、VAD 加 ASR、LLM 推理、TTS 合成；右侧 Computer Agent 流水线为屏幕截图、Vision LLM、动作规划、执行操作；两条流水线经 ws://localhost:8849 双向通信，互不阻塞" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>异构双 Agent。</strong> 电话侧负责连续追问并把自然语言转成字段，电脑侧负责理解页面并填写；两侧各自维护 ReAct 循环，只通过结构化消息交换已收集的信息和页面状态。</figcaption>
+</figure>
 
 #### 实验 10-4 ★★★：同时从多个网站搜集信息的 Agent
 
@@ -703,16 +674,10 @@ return summarize_failures(workers)
 
 这里给的时间数据值得把账算一遍。串行方案是 10 个网站 × 30s/站 = 300s，约 5 分钟；并行方案是 18 秒找到加上 1 秒终止，共 19 秒；两者相除，加速比 = 300 / 19 ≈ 15.8 倍（这里写「~15×」，这个数是我按它的数字算的）。这里有个容易看漏的地方：理想并行加速比本该是 10 倍（10 个网站同时查），实际却是 15.8 倍，比 10 倍还多。原因是串行方案里每个网站要花 30s，包含超时和失败等待；而并行方案里级联终止让 8 个还没完成的 Agent 提前停下，省掉了它们本会消耗的时间。所以这里那句「（含级联终止优化）」是实打实的：加速比里有一部分是省下来的，并不全是并行出来的。
 
-> 示意图：这幅图画出「并行 Web Scraping 架构」。上方是 **Manager Agent**，标注「动态创建 · 实时监控 · 级联终止」。下方是五个被画出的子 Agent（图上标注「Agent 5 … 10 …（共 10 个）」），每个带目标域名与状态：
-> - Agent 1（`cs.edu.cn`，教师名录搜索，搜索中... ◎）
-> - Agent 2（`math.edu.cn`，教师名录搜索，未找到 ✗）
-> - Agent 3（`phys.edu.cn`，教师名录搜索，找到！✓）
-> - Agent 4（`chem.edu.cn`，教师名录搜索，已终止 ⊘）
-> - Agent 5 … 10（共 10 个，教师名录搜索，已终止 ⊘）
-> 图右侧是级联终止时序：`t=0s` 启动 10 个 Agent 并行搜索「张伟」；`t=12s` Agent 2 完成，未找到 → 退出；`t=18s` Agent 3 找到，发送 `target_found`；`t=18.1s` Manager 广播 `terminate` 给其余运行中的 Agent；`t=19s` 全部确认终止，汇总结果返回。
-> 图右下角是找到结果的示例：`姓名: 张伟  学院: 物理学院  职位: 教授  方向: 量子计算  邮箱: zhangwei@phys.edu.cn`。
-> 图底部是性能对比：`串行: 10 个网站 × 30s = ~5 分钟`；`并行: 18 秒找到 + 1 秒终止 = 19 秒`；`加速比: ~15×（含级联终止优化）`。
-> （上引数字为这里图内文字照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-parallel-scraping.svg" alt="Manager Agent 在上方负责动态创建、实时监控和级联终止；下方五个被画出的子 Agent 对应 cs.edu.cn、math.edu.cn、phys.edu.cn、chem.edu.cn 与其余 Agent 5 到 10，状态分别为搜索中、未找到、找到、已终止、已终止；找到的 Agent 3 向 Manager 发送 target_found，其余 Agent 在 t=19s 前确认终止" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>并行搜索与级联终止。</strong> Manager 为每个学院网站创建一个独立 Agent；一个 Agent 命中后广播终止，其余 Agent 在安全点退出。右侧时序为 t=0s 启动、t=12s 一个未找到退出、t=18s 命中、t=18.1s 广播终止、t=19s 汇总。</figcaption>
+</figure>
 
 #### 管理者 Agent 生成 Agent 工作流
 
@@ -754,15 +719,10 @@ await agent(writeProvenance(results.flat))
 
 #### 案例一：MetaGPT——SOP 驱动的软件公司模拟
 
-> 示意图：这幅图画出「MetaGPT 多 Agent 协作网络」。五个角色沿一条流水线排列，每个都标出输入与产出：
-> - **Product Manager**：输入「用户需求描述」；产出「功能列表 + 优先级」「用户故事（5 条）」「验收标准」，落到 `docs/PRD.md`；
-> - **Architect**：输入 `PRD.md`；产出「技术栈: FastAPI+React」「API 规范（OpenAPI）」「数据库 Schema」，落到 `docs/design.md`；
-> - **Project Manager**：输入 `design.md`；产出「任务清单 + 分工」「文件级分配」「模块依赖顺序」，落到 `docs/tasks.md`；
-> - **Engineer ×3**：输入 `tasks.md + design.md`；产出「模块 A: 用户服务」「模块 B: 订单服务」「模块 C: 支付服务」，落到 `src/*.py`；
-> - **QA Engineer**：输入 `src/ + PRD.md`；产出「单元测试（pytest）」「集成测试（API）」「Bug 报告」，落到 `docs/test_report.md`；并有一条从 Bug 报告指向 Engineer 的「Bug 修复」回路。
-> 图下方是一块「共享项目目录」，列出全部产物：`docs/PRD.md`、`docs/design.md`、`docs/tasks.md`、`src/*.py`、`docs/test_report.md`。
-> 图右下角列出「MetaGPT 核心设计」四条：▸ 标准化文档（每个角色输出明确格式，下游只需理解格式，不需理解上游思考过程）；▸ 接口解耦（改进 Product Mgr、换更强模型，只要输出符合 PRD 格式，下游零修改）；▸ 无 Manager（控制权沿 DAG 自然流动：Product Mgr→Architect→Project Mgr→Engineer→QA）；▸ 异常通道（QA 测试失败 → Bug 报告按模块路由回 Engineer → 迭代修复）。
-> （上引文字为这里图内文字照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-metagpt-pipeline.svg" alt="Product Manager 输出 PRD，Architect 读取 PRD 输出设计文档，Project Manager 读取设计文档输出任务清单，Engineer 三个实例读取任务与设计实现三个服务模块，QA Engineer 读取代码和 PRD 输出测试与 Bug 报告；Bug 报告按模块路由回 Engineer 修复；全部产物落在共享项目目录" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>SOP 驱动的流水线。</strong> 每个角色只输出格式固定的文档，下游只理解格式与产物，不需要理解上游的思考过程；控制权沿 DAG 前进，QA 失败时通过异常通道回到 Engineer。</figcaption>
+</figure>
 
 MetaGPT 的核心洞察是：人类软件公司积累的标准作业程序（SOP，Standard Operating Procedure）本身就是被反复验证过的协作协议。把 SOP 编码进多 Agent 系统，让每个角色像流水线上的专业工种一样产出标准化交付物，交付物天然构成了角色间的通信接口。
 
@@ -1025,30 +985,10 @@ Karpathy 那句话里藏着一个很实用的区分。可以外包的是思考�
 
 这一节是全章最像实验科学的一节，因为它给出的是一个可复现的机制加一个可度量的结果。这里先用图 10-10 把机制画了出来。
 
-> 示意图：这幅图画出「AI 小镇架构」，用一个人物（Isabella Rodriguez，Hobbs 咖啡馆店主，性格标注「热情好客，乐于社交」）串起三层机制。
->
-> ① 记忆流 Memory Stream，列出五条带时间戳的记忆，每条附 `importance`（重要性）与 `recency`（时近性）两个分值：
-> - `[08:30] Hobbs 咖啡馆开门营业`，importance: 4，recency: 0.9
-> - `[09:15] 顾客 Klaus 来店里买咖啡`，importance: 5，recency: 0.85
-> - `[10:00] 决定办一场情人节派对`，importance: 9，recency: 0.8
-> - `[11:30] 邀请顾客 Maria 来派对`，importance: 8，recency: 0.7
-> - `[14:00] 请 Maria 帮忙布置场地`，importance: 7，recency: 0.6
->
-> ② 反思 Reflection，列出四组「抽象提问 → 结论」：
-> - 「谁是 Hobbs 的常客？」→ `Maria、Klaus、Tom（常来）`
-> - 「我该邀请谁来派对？」→ `熟客与好友都邀请`
-> - 「派对筹备到哪一步了？」→ `已邀数人, 待布置场地`
-> - 「谁能帮我布置咖啡馆？」→ `Maria（好友, 乐意帮忙）`
->
-> ③ 计划与行动 Planning，列出一天的时间表：`08:00 起床 + 早餐`、`09:00 Hobbs 开店营业`、`12:00 边营业边邀请顾客`、`14:00 与 Maria 布置场地`、`16:00 备好茶点与座位`、`18:00 在 Hobbs 举办情人节派对`，并在 16:00 处标了一个 `← 动态调整` 的箭头，表示计划会被运行期修正。
->
-> 记忆流与反思之间标有「检索」、反思与计划之间标有「驱动」，说明三者的数据流关系。
->
-> 图右侧是涌现行为（25 个 Agent · 2 天虚拟时间），列出四类：▸ 自发社交（多次偶遇 → 友谊形成 → 主动约见）、▸ 信息传播（Isabella 的情人节派对邀请扩散到多个 Agent）、▸ 选举传播（Sam 竞选市长的消息在 Agent 间扩散）、▸ 关系记忆（记住过往交谈（如摄影项目）并延续话题）。
->
-> 图底部是一句结论：「所有行为均非预编程 — 记忆 + 反思 + 社交常识推理的涌现结果」。
->
-> （上引数值与文字均为这里图内文字照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-smallville-architecture.svg" alt="记忆流保存带时间戳的事件与对话，并附重要性、时近性评分；反思通过抽象提问把具体记忆归纳成新结论；计划根据检索到的记忆和反思生成日程，并在运行中动态调整；计划执行又写入新的记忆；25 个 Agent 在 2 天虚拟时间里涌现出自发社交、信息传播、选举传播和关系记忆" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>生成式 Agent 的数据流。</strong> 记忆流提供原始经验，反思把经验归纳成更高层的认识，计划再用检索到的记忆和反思安排行动；执行结果回到记忆流，形成自我增强的闭环。</figcaption>
+</figure>
 
 机制之外的部分，这里从论文开始讲。2023 年斯坦福大学和 Google 研究团队发表了论文《Generative Agents: Interactive Simulacra of Human Behavior》，提出「生成式 Agent」的概念，核心创新在于不再局限于让 Agent 完成预定义的任务，而是赋予 Agent 接近人类的记忆、反思和规划能力，使它们能够在开放的社会环境中自主生活、社交和发展。
 
@@ -1212,24 +1152,10 @@ RentAHuman 把传统的人机关系反了过来：以前是人雇 AI，现在是
 - 村民 Agent 的推理基于发言和行为的逻辑分析，而非随机猜测
 - 游戏结束时能正确判断胜负
 
-> 示意图：这幅图画出「语音狼人杀 Agent 系统」。中心是一个法官（代码驱动），标注职责「游戏状态 · 阶段控制 · 信息分发」，并画出阶段循环 `Night → Day → Vote → Settle`。围绕法官是各角色 Agent，每个都注明「可见什么 / 策略 / 夜晚或白天做什么」：
-> - 狼人 1：可见「同伴身份」，策略「伪装村民」，夜晚「选择目标」；与狼人 2 之间有「互知」标记；
-> - 狼人 2：可见「同伴身份」，策略「跟票保护」，夜晚「协商目标」；同样标「互知」；
-> - 预言家：可见「验人结果」，策略「择机跳出」，夜晚「查验 1 人」；有一条「验人结果」的连线；
-> - 女巫：可见「死亡/救治」，策略「保药/解药」，夜晚「救/毒 1 人」；
-> - 村民 ×2：可见「仅公开信息」，策略「逻辑推理」，白天「分析发言」。
->
-> 图下方是「信息权限控制：法官按角色过滤上下文」的明细：
-> - 狼人：所有狼人身份 + 夜晚商议 + 公开发言
-> - 预言家：验人结果(仅自己验的) + 公开发言
-> - 女巫：当晚死亡者 + 解药/毒药状态 + 公开发言
-> - 村民：仅公开发言 + 投票记录（零私有信息）
->
-> 图右侧是实时语音交互（ASR + LLM + TTS）的三个阶段：白天讨论（法官管理发言顺序，按座位依次发言）、投票阶段（收集所有玩家投票，统计票数公布结果）、夜晚阶段（法官依次唤醒角色，私密语音通道）。
->
-> 图右下角是真人玩家：随机分配角色，语音表达投票/发言。
->
-> （上引各角色可见信息与策略文字为这里图内文字照录。）
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch10-werewolf-topology.svg" alt="代码驱动的法官位于中心，掌握游戏状态、阶段控制和信息分发；周围是狼人 1、狼人 2、预言家、女巫、两名村民和一名真人玩家；狼人之间互知身份，预言家向法官提交验人结果；法官按角色只传递其应见的私有信息与公开发言" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>中心化信息分发。</strong> 法官用代码维护状态并控制 Night、Day、Vote、Settle 循环；角色 Agent 只在被调用时收到自己的可见信息，因此信息不对称由调用层保证，而不是靠模型自觉。</figcaption>
+</figure>
 
 狼人杀这个案例放在 Agent 社会的收尾位置，用意很深。它是「策略博弈」唯一的案例，也是全章唯一一个「主要架构对照」直接来自同一节开头的案例。
 

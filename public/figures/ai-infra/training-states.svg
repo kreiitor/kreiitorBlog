@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">一次训练步的状态与数据流</title>
+  <desc id="fig-desc">前向计算产生损失并保留激活，反向计算得到参数梯度，Adam 更新读取 FP32 主权重与两份矩状态；每参数常驻训练状态合计约 16 字节。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:15px;font-weight:700;fill:var(--ink)}
+    .b{font-size:12px;font-weight:600;fill:var(--ink)}
+    .s{font-size:11px;fill:var(--muted)}
+    .tiny{font-size:10px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue)"/></marker>
+    <marker id="arrow-y" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--yellow)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" class="title">一次训练步的状态与数据流</text>
+  <text x="400" y="58" text-anchor="middle" class="sub">前向保留激活，更新读取高精度主权重与矩状态</text>
+
+  <rect x="28" y="96" width="105" height="64" rx="7" fill="var(--blue)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="80" y="122" text-anchor="middle" class="h onblue">输入与权重</text>
+  <text x="80" y="142" text-anchor="middle" class="s onblue">BF16</text>
+
+  <rect x="147" y="96" width="105" height="64" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="199" y="122" text-anchor="middle" class="h">前向</text>
+  <text x="199" y="142" text-anchor="middle" class="s">产生激活</text>
+
+  <rect x="266" y="96" width="105" height="64" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="318" y="122" text-anchor="middle" class="h">损失</text>
+  <text x="318" y="142" text-anchor="middle" class="s">标量目标</text>
+
+  <rect x="385" y="96" width="105" height="64" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="437" y="122" text-anchor="middle" class="h">反向</text>
+  <text x="437" y="142" text-anchor="middle" class="s">读取激活</text>
+
+  <rect x="504" y="96" width="105" height="64" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="556" y="122" text-anchor="middle" class="h">参数梯度</text>
+  <text x="556" y="142" text-anchor="middle" class="s">BF16</text>
+
+  <rect x="623" y="96" width="105" height="64" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <text x="675" y="122" text-anchor="middle" class="h">Adam 更新</text>
+  <text x="675" y="142" text-anchor="middle" class="s">生成新权重</text>
+
+  <path d="M135 128 H143" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M254 128 H262" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M373 128 H381" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M492 128 H500" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M611 128 H619" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <path d="M199 164 V196 H437 V164" stroke="var(--yellow)" stroke-width="2.5" fill="none" marker-end="url(#arrow-y)"/>
+  <text x="318" y="190" text-anchor="middle" class="b">保留激活，供反向使用</text>
+
+  <path d="M675 164 V206" stroke="var(--yellow)" stroke-width="2.5" fill="none" marker-end="url(#arrow-y)"/>
+  <rect x="535" y="210" width="242" height="54" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="656" y="232" text-anchor="middle" class="b">读取 FP32 主权重</text>
+  <text x="656" y="250" text-anchor="middle" class="b">+ 一阶矩 + 二阶矩</text>
+
+  <text x="60" y="310" class="h">每参数常驻训练状态</text>
+  <rect x="56" y="326" width="110" height="34" rx="5" fill="var(--blue)"/>
+  <text x="111" y="348" text-anchor="middle" class="b onblue">权重 2 B</text>
+  <rect x="174" y="326" width="110" height="34" rx="5" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="229" y="348" text-anchor="middle" class="b">梯度 2 B</text>
+  <rect x="292" y="326" width="126" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="355" y="348" text-anchor="middle" class="b">主权重 4 B</text>
+  <rect x="426" y="326" width="126" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="489" y="348" text-anchor="middle" class="b">一阶矩 4 B</text>
+  <rect x="560" y="326" width="126" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="623" y="348" text-anchor="middle" class="b">二阶矩 4 B</text>
+  <text x="710" y="348" class="h">= 16 B</text>
+
+  <text x="400" y="396" text-anchor="middle" class="tiny">常驻状态之外，显存峰值还要加上同一时刻仍保留的激活与临时缓冲区。</text>
+  <text x="400" y="426" text-anchor="middle" class="tiny">分片、重计算与卸载改变的是峰值，而不是这段数据流本身。</text>
+</svg>

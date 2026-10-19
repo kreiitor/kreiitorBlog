@@ -139,7 +139,12 @@ HCI 与 ACI 这个类比抓住了要害。HCI 的成果（按钮要够大、反�
 
 MCP 采用客户端-服务器架构：MCP 服务器暴露一组工具，MCP 客户端（通常是 Agent 框架或 IDE）通过标准化协议与服务器通信。这里列出了三个关键设计决策。工具描述格式是标准化的，每个工具通过 JSON Schema 定义输入参数的类型、约束和描述，确保不同的客户端都能正确理解工具的使用方式，这直接对应前文讨论的工具描述最佳实践，参数类型明确、附带使用示例、标注性能特征。传输层是灵活的，MCP 支持本地和远程两种部署方式，同一个 MCP 服务器既可以作为本地进程运行，也可以部署为远程服务，本地传输采用 `stdio`（标准输入输出），远程传输采用 Streamable HTTP（早期的 SSE 方案已弃用）。资源与工具是分离的，除了可执行的工具，MCP 还定义了只读的资源（如文件内容、数据库记录），客户端可以浏览和读取资源而无需调用工具，这种分离使 Agent 能够区分「获取信息」和「执行操作」这两类不同性质的动作。此外还有第三类原语提示模板（prompts），即由服务器提供的可复用提示词模板，供客户端和用户按需选用。三类原语各自对应一种角色，工具是「模型可执行的操作」，资源是「应用可读取的数据」，提示是「用户可选用的模板」。
 
-图 4-1 是示意图「MCP 协议交互时序」，一张 MCP Client 与 MCP Server 之间的左右往返时序图，横向是时间，左侧竖线代表客户端，右侧竖线代表服务器，箭头表示消息流向，交互被分成三个阶段。① 能力发现：客户端向服务器发 `initialize`，服务器返回协议版本与 capabilities；客户端再发 `notifications/initialized`。② 工具发现：客户端发 `tools/list`，服务器返回标准化工具定义，图例中的样例是 `get_weather`，查询指定城市天气，输入是城市，输出是天气信息。③ 工具调用：客户端发 `tools/call`，参数是 `get_weather（Beijing）`，服务器返回工具结果，图中样例结果是「Beijing：22°C，晴」。图意很直白：把一次完整的 MCP 交互拆成「先问服务器会什么（可选），再要工具清单，之后调用具体工具」三步，说明客户端不必预先知道服务器有哪些工具，一切通过标准化的请求/响应消息完成。
+图 4-1 展示一次完整的 MCP 交互：能力发现、工具发现与工具调用三个阶段。客户端不必预先知道服务器有哪些工具，一切通过标准化的请求/响应消息完成。
+
+<figure class="diagram">
+  <img src="../../figures/ai-agent/mcp-handshake.svg" alt="MCP 客户端与服务器之间的能力发现、工具发现和工具调用时序" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>MCP 的交互时序。</strong> 客户端先完成能力发现，再取工具清单，最后调用具体工具；服务器暴露的工具通过标准化消息被描述和调用。</figcaption>
+</figure>
 
 MCP 的生态价值在于「一次开发，处处可用」。一个 MCP 服务器可以同时被 Cursor、Claude Desktop、OpenClaw 等任何兼容的客户端使用，工具开发者无需关心上游 Agent 框架的差异；MCP 已被多个主流 Agent 框架和 IDE 采纳，正在成为工具互操作的重要标准。这里还说明，本章的所有实验均基于 MCP 协议构建工具。
 
@@ -221,11 +226,19 @@ Pi Coding Agent 的选择要理解成一次架构取舍，不必读成「反对 
 
 MCP-Zero 是这方面有代表性的工作（补充：⑤）：系统提示词中不预置任何工具 schema，Agent 在思考中生成结构化请求块（如「GitHub 服务器：搜索仓库并返回元数据」），系统通过服务器级到工具级的两层语义路由从数千候选中匹配注入，论文在 APIBank 上报告 token 消耗降低约 98%，并在 2,797 个工具的候选集上验证了大规模工具选择能力。工程上更常见的等价方案，是在系统提示词里只保留少数基础工具（web search、code interpreter）外加一个「工具搜索工具」，Agent 用自然语言描述需求即可检索并加载，Anthropic 在 Claude API 中提供的 Tool Search Tool 就属于这一类。两者的共同点都是「Agent 声明缺口、系统按需注入」。
 
-图 4-2 是示意图「层次化工具匹配（服务器级到工具级两层语义搜索）」，一张自上而下的流程图，展示一次 `discover_tools` 调用的两级筛选过程。起点是 `Agent: "我需要查询 GitHub 仓库的贡献者统计"`，它调用 `discover_tools(自然语言需求)`。第一层是服务器匹配（按语义相似度），列出五个候选服务器及分数：`GitHub` 0.92、`Weather` 0.15、`Finance` 0.23、`ArXiv` 0.18、`File System` 0.31，命中 Top-1 服务器 GitHub，0.92 明显领先。第二层是工具匹配，在这个服务器的 26 个工具里按相似度排序：`search_repositories` 0.41（搜索仓库）、`list_contributors` 0.89（贡献者列表）、`get_repo_stats` 0.85（仓库统计）、`create_issue` 0.12（创建 Issue）、`get_commit_history` 0.67（提交历史）。终点是返回 Top-3：`list_contributors`、`get_repo_stats`、`get_commit_history`。图意是：把「在几千个工具里找一个」拆成「先在几十个服务器里找一个，再在这个服务器的几十个工具里找三个」，第一层用 0.92 的分数把搜索空间从 5 个服务器收敛到 1 个，第二层在这个服务器内的 26 个工具里按分数取前 3 个返回给模型。
+<figure class="diagram">
+  <img src="../../figures/ai-agent/tool-discovery.svg" alt="Agent 的自然语言需求先匹配到 GitHub 服务器，再在该服务器的工具列表中取相似度最高的三个 schema" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>两层工具匹配。</strong> 第一层把候选从数千个工具收敛到一个服务器，第二层再在这个服务器的工具集合里取 Top-3。</figcaption>
+</figure>
+
+第一层的高分把 GitHub 与其余服务器明显拉开；第二层里只读的贡献者、统计与提交历史排在前面，写操作 create_issue 分数很低。两层都依赖同一份离线嵌入索引，候选空间变小后分数也更可比。
 
 高效匹配的关键在于工具组织本身具有层次结构。在 MCP 等协议中，工具按服务器分组（这里的类比是手机上的 App，每个 App 提供一组相关功能），于是匹配可以分两层：先按能力描述定位相关服务器，再在服务器内匹配具体工具，把搜索空间从「数千个工具」缩小为「数十个服务器 × 每个服务器数十个工具」，既省算力也减少跨领域的语义混淆。这依赖一个离线构建、支持增量更新的嵌入索引。降级路径也是设计的一部分：若两层匹配的候选相似度都低于阈值，则应明确返回「未找到」，让 Agent 改写需求重试、用基础工具手工实现，或干脆创造一个新工具（创造工具是第九章的主题）。这里另有一句结论：首次加载后的 schema 固定在轨迹原位置，静态前缀仍可复用。
 
-图 4-3 是示意图「工具动态加载的 KV Cache 优化」，一张左右对照图，把朴素方案与优化方案的上下文结构并列，下方配一张对比表。左侧的朴素方案（缓存失效）里，`System Prompt` 的内容是「你是一个 AI 助手…」加上全部工具 schema，标注 `~50K tokens`；接着是 `User Message`「查询 NVDA 股价」；然后是 `Assistant` 的 `tool_call: ...`；图右下角用醒目文字给出结论：「每次加载新工具 → 整个缓存失效！」。右侧的优化方案（缓存稳定）里，`System Prompt (固定)` 只含「你是一个 AI 助手…」的角色、规则和基础工具，标注 `~2K tokens | KV 缓存`；下面是一块「Agent 状态栏（轻量）」，内容形如「可用工具: `web_search`, `get_weather`...」，标注 `~200 tokens`；接着是 `User: discover_tools`「我需要查股票价格」，工具结果是「返回 `get_stock_quote` schema」，图中注明「工具定义在此」；然后是 `User Message`「查询 NVDA 股价」；再下面是「Agent 状态栏（更新）」「+`get_stock_quote` 已添加」，标注 `~220 tokens`；图右下角的结论是「System Prompt 不变 → KV Cache 完全复用」。下方的对比表（按这里语义还原）如下：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch04-tool-cache.svg" alt="左侧朴素方案的 System Prompt 含全部工具 schema，约 50K tokens，每次加载新工具整个缓存失效，命中率约 0%，首 token 重算 50K tokens；右侧优化方案的固定 System Prompt 约 2K tokens，状态栏约 200 到 220 tokens，缓存命中率约 95%，增量计算约 200 tokens" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>同一目标，两种缓存代价。</strong> 左侧把工具定义堆在静态前缀里，新增工具就使整段前缀失效；右侧只保留固定前缀，把新 schema 作为工具结果放进轨迹，状态栏只维护简短的工具名列表。</figcaption>
+</figure>
 
 | 对比维度 | 朴素方案 | 优化方案 |
 | --- | --- | --- |
@@ -238,7 +251,10 @@ MCP-Zero 是这方面有代表性的工作（补充：⑤）：系统提示词�
 
 这里补充了两点第二章未展开的工程细节。两个 API 都对「固定在原位置」给出了明确保证：OpenAI 要求后续请求保持 `tool_search_output` 项的原位置，同一工具无需重复加载；Anthropic 在会话历史的原位置内联展开 `tool_reference` block，官方文档明确表示后续每一轮都能保持缓存命中。真正会导致重算的只有两种情况：Prompt Cache 的 TTL 过期，整段前缀一起重算，这不是工具定义特有的代价；以及修改、移除或重排已加载的工具集，缓存从变动点起失效。
 
-图 4-4 是示意图「动态发现后的上下文结构：工具 schema 散落在轨迹各处」，一张纵向的上下文字节结构图，分成两大区块。静态前缀（字节级不变，KV Cache 持续命中）只含 `System Prompt` 与「核心工具定义：`web_search`, `code_interpreter`, `tool_search`」。轨迹（只增不改，新内容追加在末尾）按时间顺序列出：
+<figure class="diagram">
+  <img src="../../figures/ai-agent/agent-ch04-tool-schema-trajectory.svg" alt="上层静态前缀包含 System Prompt 与核心工具定义 web_search、code_interpreter、tool_search；下层轨迹按时间顺序包含查询股价、tool_search_call、get_stock_quote schema、调用与结果、查询 GitHub 贡献者、list_contributors schema、调用与回复" width="800" height="450" loading="lazy" decoding="async">
+  <figcaption><strong>静态前缀与轨迹的分工。</strong> 新工具的完整 schema 首次注入后固定在轨迹中的位置，之后作为普通历史命中缓存；移除或重排会让缓存从变动点起失效。</figcaption>
+</figure>
 
 - `User：查询 NVDA 股价`
 - `Assistant：tool_search_call(股价)`

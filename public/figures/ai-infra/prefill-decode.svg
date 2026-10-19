@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">Prefill 与 Decode 的资源画像</title>
+  <desc id="fig-desc">Prefill 一次并行处理多个输入 token，权重读取被复用，通常受算力限制；Decode 每步只处理一个 token，却要重读权重与全部 KV，通常受带宽限制。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:17px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+    <marker id="arrow-y" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--yellow)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="36" text-anchor="middle" class="title">Prefill 与 Decode 的资源画像</text>
+  <text x="400" y="60" text-anchor="middle" class="sub">同一套权重，两种完全不同的瓶颈</text>
+
+  <rect x="36" y="84" width="350" height="300" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <rect x="36" y="84" width="350" height="48" rx="10" fill="var(--blue)"/>
+  <rect x="36" y="120" width="350" height="12" fill="var(--blue)"/>
+  <text x="211" y="115" text-anchor="middle" class="h onblue">Prefill</text>
+
+  <g fill="var(--surface)" stroke="var(--blue)" stroke-width="1.5">
+    <rect x="62" y="154" width="26" height="26" rx="4"/><rect x="94" y="154" width="26" height="26" rx="4"/>
+    <rect x="126" y="154" width="26" height="26" rx="4"/><rect x="158" y="154" width="26" height="26" rx="4"/>
+    <rect x="190" y="154" width="26" height="26" rx="4"/><rect x="222" y="154" width="26" height="26" rx="4"/>
+    <rect x="254" y="154" width="26" height="26" rx="4"/><rect x="286" y="154" width="26" height="26" rx="4"/>
+  </g>
+  <text x="211" y="148" text-anchor="middle" class="s">P 个输入 token 并行</text>
+
+  <rect x="76" y="202" width="270" height="38" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="211" y="226" text-anchor="middle" class="b">权重读一次</text>
+  <path d="M211 196 V198" stroke="var(--blue)" stroke-width="2" fill="none"/>
+  <path d="M211 240 V260" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="224" y="255" class="tiny">一次读取，服务 P 行</text>
+
+  <rect x="76" y="266" width="270" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="211" y="288" text-anchor="middle" class="b">大矩阵计算</text>
+  <text x="211" y="306" text-anchor="middle" class="tiny">计算密集，行数多</text>
+
+  <rect x="96" y="334" width="230" height="30" rx="6" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="211" y="354" text-anchor="middle" class="b onblue">瓶颈：算力</text>
+
+  <rect x="414" y="84" width="350" height="300" rx="10" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <rect x="414" y="84" width="350" height="48" rx="10" fill="var(--yellow)"/>
+  <rect x="414" y="120" width="350" height="12" fill="var(--yellow)"/>
+  <text x="589" y="115" text-anchor="middle" class="h onyellow">Decode</text>
+
+  <rect x="462" y="154" width="26" height="26" rx="4" fill="var(--surface)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="500" y="173" class="s">每步 1 个新 token</text>
+
+  <rect x="454" y="202" width="270" height="34" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="589" y="224" text-anchor="middle" class="b">权重（全量重读）</text>
+  <rect x="454" y="246" width="270" height="34" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="589" y="268" text-anchor="middle" class="b">全部历史 KV</text>
+
+  <path d="M589 200 V190" stroke="var(--yellow)" stroke-width="2" fill="none"/>
+  <path d="M529 280 V292" stroke="var(--yellow)" stroke-width="2.5" fill="none" marker-end="url(#arrow-y)"/>
+  <path d="M649 280 V292" stroke="var(--yellow)" stroke-width="2.5" fill="none" marker-end="url(#arrow-y)"/>
+
+  <rect x="454" y="296" width="270" height="38" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+  <text x="589" y="320" text-anchor="middle" class="b">读权重 + 读旧 KV</text>
+
+  <rect x="474" y="344" width="230" height="30" rx="6" fill="var(--yellow)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="589" y="364" text-anchor="middle" class="b onyellow">瓶颈：显存带宽</text>
+
+  <text x="400" y="416" text-anchor="middle" class="s">首 token 由 prefill 产生；后续 G−1 次 decode 每次只推进一个 token。</text>
+  <text x="400" y="436" text-anchor="middle" class="tiny">请求形状不同，资源画像就不同，不能只看总 token 数。</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">Agent 内部的 Model 与 Harness</title>
+  <desc id="fig-desc">Agent 边界内，Harness 负责上下文管理、工具接口、约束、验证和纠正；Model 负责理解、推理与选择行动，工具接口连接外部环境。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:30px;font-weight:700;fill:var(--ink)}
+    .head{font-size:24px;font-weight:700;fill:var(--blue)}
+    .label{font-size:22px;font-weight:600;fill:var(--ink)}
+    .small{font-size:15px;fill:var(--muted)}
+    .pill{font-size:16px;font-weight:600;fill:var(--ink)}
+    .on-blue{fill:var(--on-blue)}
+    .on-yellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="40" text-anchor="middle" class="title">Model + Harness</text>
+
+  <rect x="45" y="68" width="710" height="330" rx="16" fill="none" stroke="var(--blue)" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="70" y="96" class="head">Agent 边界</text>
+
+  <rect x="80" y="112" width="640" height="258" rx="12" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="104" y="142" class="head">Harness</text>
+  <text x="700" y="142" text-anchor="end" class="small">运行与治理</text>
+
+  <g>
+    <rect x="96" y="158" width="112" height="38" rx="19" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="152" y="183" text-anchor="middle" class="pill">上下文管理</text>
+    <rect x="220" y="158" width="112" height="38" rx="19" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="276" y="183" text-anchor="middle" class="pill">工具接口</text>
+    <rect x="344" y="158" width="112" height="38" rx="19" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="400" y="183" text-anchor="middle" class="pill">约束</text>
+    <rect x="468" y="158" width="112" height="38" rx="19" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="524" y="183" text-anchor="middle" class="pill">验证</text>
+    <rect x="592" y="158" width="112" height="38" rx="19" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="648" y="183" text-anchor="middle" class="pill">纠正</text>
+  </g>
+
+  <rect x="104" y="220" width="278" height="72" rx="8" fill="var(--paper)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="243" y="248" text-anchor="middle" class="label">上下文</text>
+  <text x="243" y="274" text-anchor="middle" class="small">观察 · 历史 · 记忆 · 任务状态</text>
+
+  <rect x="418" y="220" width="278" height="72" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <text x="557" y="248" text-anchor="middle" class="label on-yellow">Model</text>
+  <text x="557" y="274" text-anchor="middle" class="small on-yellow">理解 · 推理 · 选择行动</text>
+
+  <path d="M382 256 H418" stroke="var(--blue)" stroke-width="3" fill="none" marker-end="url(#arrow-blue)"/>
+  <path d="M418 276 H382" stroke="var(--blue)" stroke-width="3" fill="none" marker-end="url(#arrow-blue)"/>
+
+  <rect x="104" y="312" width="592" height="42" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="2"/>
+  <text x="400" y="339" text-anchor="middle" class="label on-blue">工具与动作接口</text>
+
+  <text x="400" y="425" text-anchor="middle" class="small">Harness 负责运行与治理；Model 负责决策。Environment 仍在这条边界之外。</text>
+</svg>

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">多 Agent 协作的两个维度</title>
+  <desc id="fig-desc">上层对比共享上下文与隔离上下文的协作方式，下层给出对等、管理者与去中心化三种控制流拓扑。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" class="title">多 Agent 协作的两个维度</text>
+  <text x="400" y="58" text-anchor="middle" class="sub">上下文是否共享，以及控制流是什么形状</text>
+
+  <rect x="32" y="78" width="356" height="150" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="52" y="104" class="h">共享上下文 · 记忆接力</text>
+  <rect x="52" y="120" width="92" height="38" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="98" y="144" text-anchor="middle" class="b">需求</text>
+  <rect x="164" y="120" width="92" height="38" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="210" y="144" text-anchor="middle" class="b">开发</text>
+  <rect x="276" y="120" width="92" height="38" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="322" y="144" text-anchor="middle" class="b">审查</text>
+  <path d="M146 139 H160" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M258 139 H272" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="52" y="178" width="316" height="30" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <text x="210" y="198" text-anchor="middle" class="tiny">同一份对话历史持续增长</text>
+
+  <rect x="412" y="78" width="356" height="150" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="432" y="104" class="h">隔离上下文 · 产物交接</text>
+  <rect x="432" y="120" width="92" height="38" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="478" y="144" text-anchor="middle" class="b">术语</text>
+  <rect x="544" y="120" width="92" height="38" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="590" y="144" text-anchor="middle" class="b">翻译</text>
+  <rect x="656" y="120" width="92" height="38" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="702" y="144" text-anchor="middle" class="b">校对</text>
+  <g stroke="var(--line)" stroke-width="1.5" stroke-dasharray="3 4">
+    <path d="M478 158 V174"/><path d="M590 158 V174"/><path d="M702 158 V174"/>
+  </g>
+  <rect x="432" y="178" width="316" height="30" rx="6" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <text x="590" y="198" text-anchor="middle" class="tiny">共享文件系统：glossary · chapter · review</text>
+
+  <text x="150" y="258" text-anchor="middle" class="b">对等：环</text>
+  <circle cx="100" cy="314" r="18" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="200" cy="314" r="18" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="150" cy="374" r="18" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <g stroke="var(--blue)" stroke-width="2" fill="none">
+    <path d="M116 306 L184 306" marker-end="url(#arrow)"/>
+    <path d="M190 328 L162 360" marker-end="url(#arrow)"/>
+    <path d="M138 360 L110 328" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="400" y="258" text-anchor="middle" class="b">管理者：星</text>
+  <circle cx="400" cy="324" r="22" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <circle cx="330" cy="286" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="470" cy="286" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="330" cy="372" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="470" cy="372" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <g stroke="var(--blue)" stroke-width="2" fill="none">
+    <path d="M384 312 L342 296" marker-end="url(#arrow)"/>
+    <path d="M416 312 L458 296" marker-end="url(#arrow)"/>
+    <path d="M384 338 L342 362" marker-end="url(#arrow)"/>
+    <path d="M416 338 L458 362" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="650" y="258" text-anchor="middle" class="b">去中心化：网</text>
+  <circle cx="590" cy="300" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="710" cy="300" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="590" cy="380" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <circle cx="710" cy="380" r="16" fill="var(--surface)" stroke="var(--blue)" stroke-width="2"/>
+  <g stroke="var(--blue)" stroke-width="2" fill="none">
+    <path d="M606 308 L694 308" marker-end="url(#arrow)"/>
+    <path d="M606 372 L694 372" marker-end="url(#arrow)"/>
+    <path d="M598 316 L598 364" marker-end="url(#arrow)"/>
+    <path d="M702 316 L702 364" marker-end="url(#arrow)"/>
+    <path d="M602 312 L698 368" marker-end="url(#arrow)"/>
+    <path d="M698 312 L602 368" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="400" y="428" text-anchor="middle" class="tiny">共享上下文交接记忆，隔离上下文交接产物；三种拓扑对应环、星、网。</text>
+</svg>

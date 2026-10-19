@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">Roofline 模型</title>
+  <desc id="fig-desc">横轴是算术强度，纵轴是可达性能。算术强度低于转折点时受带宽限制，沿斜线增长；高于转折点时受算力限制，性能停在峰值。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:28px;font-weight:700;fill:var(--ink)}
+    .axis{font-size:18px;fill:var(--muted)}
+    .region{font-size:24px;font-weight:700;fill:var(--blue)}
+    .small{font-size:16px;fill:var(--muted)}
+    .ridge{font-size:18px;font-weight:600;fill:var(--ink)}
+  </style>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="38" text-anchor="middle" class="title">Roofline：算术强度决定瓶颈</text>
+
+  <g stroke="var(--line-soft)" stroke-width="1" stroke-dasharray="4 6">
+    <path d="M200 90 V380"/><path d="M330 90 V380"/><path d="M460 90 V380"/><path d="M590 90 V380"/>
+    <path d="M90 130 H720"/><path d="M90 250 H720"/><path d="M90 340 H720"/>
+  </g>
+  <path d="M90 70 V380 H720" fill="none" stroke="var(--ink)" stroke-width="2"/>
+  <text x="405" y="418" text-anchor="middle" class="axis">算术强度 I（FLOP/byte，对数）</text>
+  <text x="44" y="225" text-anchor="middle" class="axis" transform="rotate(-90 44 225)">可达性能 P（FLOP/s，对数）</text>
+
+  <path d="M100 360 L430 140" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M430 140 H700" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="430" cy="140" r="11" fill="var(--yellow)" stroke="var(--ink)" stroke-width="3"/>
+  <text x="512" y="122" class="ridge">转折点 I* = P / R</text>
+
+  <text x="255" y="196" text-anchor="middle" class="region">带宽受限</text>
+  <text x="255" y="222" text-anchor="middle" class="small">斜线斜率 ≈ 带宽</text>
+  <text x="590" y="230" text-anchor="middle" class="region">算力受限</text>
+  <text x="590" y="256" text-anchor="middle" class="small">平顶 ≈ 峰值算力</text>
+
+  <circle cx="180" cy="315" r="8" fill="var(--yellow)" stroke="var(--ink)" stroke-width="2"/>
+  <text x="180" y="350" text-anchor="middle" class="small">decode / 低强度</text>
+  <circle cx="560" cy="140" r="8" fill="var(--yellow)" stroke="var(--ink)" stroke-width="2"/>
+  <text x="560" y="168" text-anchor="middle" class="small">prefill / 高强度</text>
+
+  <text x="400" y="441" text-anchor="middle" class="small">斜线的斜率是带宽，平顶的高度是峰值算力；交点是硬件的转折点。</text>
+</svg>

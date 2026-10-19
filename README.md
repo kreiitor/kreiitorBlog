@@ -28,7 +28,7 @@ npm run preview
 
 `build` 会依次注入标题永久链接、生成 Pagefind 索引，并运行 `scripts/check-site.mjs` 校验每页单一 H1、KaTeX 错误、站内链接与锚点，以及同站分享图是否存在。搜索索引只在构建产物中生成；要验证搜索，请使用 `npm run preview` 或部署后的网站。
 
-快速迭代时可以用：
+完整验证只在批次收尾或发布前跑一次，不要每改一个文件就全量执行。快速迭代时可以用：
 
 ```sh
 npm run check:watch          # 首次检查后增量检查
@@ -64,6 +64,7 @@ src/components/         页面组件
 src/styles/global.css   颜色、间距、字体层级与组件样式
 src/styles/fonts.css    自托管字体声明
 public/covers/          SVG 封面与同名分享 PNG
+public/figures/         正文自绘 SVG 插图
 public/gallery/         画廊原图与优化候选图
 docs/templates/         文章、章节、专题、项目模板
 docs/cover-catalog.html 离线封面选图册
@@ -142,10 +143,11 @@ cover: /covers/project-benchmark.svg
 - Markdown 中以 `/` 开头的站内链接会自动适配部署子目录。
 - 脚注使用 `[^1]` 与 `[^1]: 说明`，构建会生成带返回链接的文末脚注区；脚注标签不会进入目录。
 - 图注直接写原生 HTML。短句放 `<figcaption>`，长解释放 `title`，无障碍描述放 `alt`，三者不要重复；`width` / `height` 必须填写。
+- 正文插图放在 `public/figures/<series>/`，优先自绘 SVG。文章页使用相对路径 `../../figures/...`，根路径和子目录部署都能解析。
 
   ```html
-  <figure>
-    <img src="/covers/post-math.svg" alt="用文字描述图的内容" width="800" height="420">
+  <figure class="diagram">
+    <img src="../../figures/ai-agent/agent-environment-loop.svg" alt="用文字描述图的内容" width="800" height="450" loading="lazy" decoding="async">
     <figcaption>短句说明。</figcaption>
   </figure>
   ```

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+  <title id="fig-title">Prefill–Decode 分离</title>
+  <desc id="fig-desc">Prefill 池与 Decode 池各自持有完整权重，分别处理输入和逐 token 生成；两池之间需要交接上下文 KV。</desc>
+  <style>
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink)}
+    .sub{font-size:14px;fill:var(--muted)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink)}
+    .s{font-size:12px;fill:var(--muted)}
+    .tiny{font-size:11px;fill:var(--muted)}
+    .onblue{fill:var(--on-blue)}
+    .onyellow{fill:var(--on-yellow)}
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+  </defs>
+  <rect width="800" height="450" fill="var(--paper)"/>
+  <text x="400" y="34" text-anchor="middle" class="title">Prefill–Decode 分离</text>
+  <text x="400" y="58" text-anchor="middle" class="sub">两个阶段放在不同资源池，KV 从 P 传到 D</text>
+
+  <rect x="280" y="76" width="240" height="34" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <text x="400" y="98" text-anchor="middle" class="b">统一调用接口</text>
+  <path d="M340 110 V124 H190 V132" stroke="var(--line)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M460 110 V124 H610 V132" stroke="var(--line)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="132" width="280" height="196" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <rect x="40" y="132" width="280" height="42" rx="10" fill="var(--blue)"/>
+  <rect x="40" y="160" width="280" height="14" fill="var(--blue)"/>
+  <text x="180" y="160" text-anchor="middle" class="h onblue">P 池 · Prefill</text>
+  <text x="62" y="200" class="b">完整模型权重</text>
+  <text x="62" y="226" class="s">一次处理 P 个输入 token</text>
+  <text x="62" y="252" class="s">大矩阵计算，算力密集</text>
+  <rect x="62" y="276" width="236" height="30" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="180" y="296" text-anchor="middle" class="b">产出首 token 与上下文 KV</text>
+
+  <rect x="480" y="132" width="280" height="196" rx="10" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="2"/>
+  <rect x="480" y="132" width="280" height="42" rx="10" fill="var(--yellow)"/>
+  <rect x="480" y="160" width="280" height="14" fill="var(--yellow)"/>
+  <text x="620" y="160" text-anchor="middle" class="h onyellow">D 池 · Decode</text>
+  <text x="502" y="200" class="b">完整模型权重</text>
+  <text x="502" y="226" class="s">每步处理 1 个新 token</text>
+  <text x="502" y="252" class="s">反复读权重与 KV，带宽密集</text>
+  <rect x="502" y="276" width="236" height="30" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="620" y="296" text-anchor="middle" class="b">续写后续 G−1 个 token</text>
+
+  <path d="M324 230 H476" stroke="var(--blue)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="400" y="212" text-anchor="middle" class="b">KV 交接</text>
+  <text x="400" y="256" text-anchor="middle" class="tiny">1.125 GiB</text>
+  <text x="400" y="272" text-anchor="middle" class="tiny">48.3 ms @25 GB/s</text>
+
+  <rect x="120" y="366" width="560" height="36" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <text x="400" y="390" text-anchor="middle" class="b">分离不切模型：两个池都持有完整权重，收益来自互不排队</text>
+  <text x="400" y="430" text-anchor="middle" class="tiny">代价是状态搬移；值不值得，先看 KV 交接贵不贵。</text>
+</svg>
