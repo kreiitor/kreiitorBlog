@@ -2,7 +2,7 @@
   <title id="fig-title">SFT 到 RL 的两阶段诊断</title>
   <desc id="fig-desc">Mid-training 位于最前，之后是阶段一 SFT 固化格式，再到阶段二 RL 最大化任务奖励，最后以格式稳定加策略泛化作为部署判据；侧边失败链为输出无结构、无法解析 JSON、奖励 NaN、梯度全零、训练失败</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,9 +11,9 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="45" y="186" width="153.5" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="121.75" y="238.75" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">Mid-training</text>
-  <text x="121.75" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">位于两个对齐阶段之前</text><rect x="230.5" y="186" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="121.75" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">位于两个对齐阶段之前</text><rect x="230.5" y="186" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="307.25" y="230.625" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">阶段一：SFT</text>
-  <text x="307.25" y="246.875" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">固化格式 · 数千条示范</text><text x="307.25" y="263.075" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">· 格式稳定</text><rect x="416" y="186" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="307.25" y="246.875" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">固化格式 · 数千条示范</text><text x="307.25" y="263.075" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">· 格式稳定</text><rect x="416" y="186" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="492.75" y="230.625" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">阶段二：RL</text>
   <text x="492.75" y="246.875" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">最大化任务奖励 · 策略</text><text x="492.75" y="263.075" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">泛化</text><rect x="601.5" y="186" width="153.5" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="678.25" y="238.75" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">部署就绪</text>

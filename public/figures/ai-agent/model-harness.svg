@@ -2,7 +2,7 @@
   <title id="fig-title">Agent 内部的 Model 与 Harness</title>
   <desc id="fig-desc">Agent 边界内，Harness 负责上下文管理、工具接口、约束、验证和纠正；Model 负责理解、推理与选择行动，工具接口连接外部环境。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:30px;font-weight:700;fill:var(--ink,#202735)}
@@ -26,15 +26,15 @@
   <text x="700" y="142" text-anchor="end" class="small">运行与治理</text>
 
   <g>
-    <rect x="96" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)"/>
+    <rect x="96" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)"/>
     <text x="152" y="183" text-anchor="middle" class="pill">上下文管理</text>
-    <rect x="220" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)"/>
+    <rect x="220" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)"/>
     <text x="276" y="183" text-anchor="middle" class="pill">工具接口</text>
-    <rect x="344" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)"/>
+    <rect x="344" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)"/>
     <text x="400" y="183" text-anchor="middle" class="pill">约束</text>
-    <rect x="468" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)"/>
+    <rect x="468" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)"/>
     <text x="524" y="183" text-anchor="middle" class="pill">验证</text>
-    <rect x="592" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)"/>
+    <rect x="592" y="158" width="112" height="38" rx="19" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)"/>
     <text x="648" y="183" text-anchor="middle" class="pill">纠正</text>
   </g>
 
@@ -42,7 +42,7 @@
   <text x="243" y="248" text-anchor="middle" class="label">上下文</text>
   <text x="243" y="274" text-anchor="middle" class="small">观察 · 历史 · 记忆 · 任务状态</text>
 
-  <rect x="418" y="220" width="278" height="72" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="418" y="220" width="278" height="72" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="557" y="248" text-anchor="middle" class="label on-yellow">Model</text>
   <text x="557" y="274" text-anchor="middle" class="small on-yellow">理解 · 推理 · 选择行动</text>
 

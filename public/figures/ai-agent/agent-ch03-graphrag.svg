@@ -2,7 +2,7 @@
   <title id="fig-title">实体与关系的知识图谱</title>
   <desc id="fig-desc">用户节点分出两条边，分别指向张医生-A 与张医生-B；张医生-A 就职于仁爱口腔医院，该医院地址为徐汇区 XX 路；张医生-B 就职于华山医院，并连到心血管中心</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,9 +11,9 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><line x1="80" y1="252.24137931034483" x2="300" y2="138.44827586206895" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="252.24137931034483" x2="300" y2="366.0344827586207" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="138.44827586206895" x2="500" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="110" x2="680" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="366.0344827586207" x2="500" y2="385" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="385" x2="680" y2="385" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="30" y="228.24137931034483" width="100" height="48" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="80" y="256.3663793103448" font-size="11" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">用户</text>
-  <rect x="250" y="114.44827586206895" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="250" y="114.44827586206895" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="300" y="142.57327586206895" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">张医生-A</text>
-  <rect x="250" y="342.0344827586207" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="250" y="342.0344827586207" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="300" y="370.1594827586207" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">张医生-B</text>
   <rect x="450" y="86" width="100" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="500" y="114.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">仁爱口腔医院</text>

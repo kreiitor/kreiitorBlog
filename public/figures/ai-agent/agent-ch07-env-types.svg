@@ -2,7 +2,7 @@
   <title id="fig-title">两类评估环境的验证路径</title>
   <desc id="fig-desc">工具调用型只有一条检查：Agent 调用工具执行，断言或测试通过即得 reward 1.0。人机交互型里 Agent 与用户模拟器多轮对话，之后既要查数据库状态，又要确认对话里确实说明了必要信息，两处都过才得分</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -23,7 +23,7 @@
   <rect x="276" y="110" width="92" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
   <text x="322" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">断言 / 测试</text>
   <path d="M322 150 L322 196" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="262" y="200" width="120" height="38" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="262" y="200" width="120" height="38" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
   <text x="322" y="224" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#202735)">reward 1.0</text>
   <text x="36" y="290" font-size="10.5" fill="var(--muted,#596171)">一处判定：状态或测试通过即得分</text>
   <text x="36" y="310" font-size="10.5" fill="var(--muted,#596171)" class="mono">run_python → assert fib(10) == 55</text>
@@ -48,7 +48,7 @@
 
   <path d="M470 234 L470 264 M660 234 L660 264 M470 264 L660 264" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none"/>
   <path d="M590 264 L590 282" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="516" y="286" width="148" height="38" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="516" y="286" width="148" height="38" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
   <text x="590" y="310" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#202735)">reward 0 / 1</text>
   <text x="424" y="356" font-size="10.5" fill="var(--muted,#596171)">两处都过才得分：改对了，还要把退款金额与到账时间说到</text>
 </svg>

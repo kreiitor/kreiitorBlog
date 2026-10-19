@@ -2,7 +2,7 @@
   <title id="fig-title">Skill 目录与正文在三轮请求中的缓存状态</title>
   <desc id="fig-desc">第 1 轮里静态前缀、目录与正文全部新写入，合计约 2.5k tokens；第 2、3 轮这三段全部命中缓存，只有末尾新增的 tool_use 与 tool_result 需要计算，分别约 0.5k 与 0.4k</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -14,28 +14,28 @@
   <text x="56" y="128" font-size="10.5" fill="var(--muted,#596171)">第 2 轮</text>
   <text x="56" y="188" font-size="10.5" fill="var(--muted,#596171)">第 3 轮</text>
 
-  <rect x="128" y="46" width="180" height="26" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
+  <rect x="128" y="46" width="180" height="26" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
   <text x="218" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">静态前缀</text>
-  <rect x="308" y="46" width="56" height="26" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
+  <rect x="308" y="46" width="56" height="26" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
   <text x="336" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">目录</text>
-  <rect x="364" y="46" width="236" height="26" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
+  <rect x="364" y="46" width="236" height="26" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
   <text x="482" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">Skill 正文</text>
   <text x="616" y="63" font-size="10.5" fill="var(--muted,#596171)">写入 2.5k</text>
 
-  <rect x="128" y="110" width="180" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="128" y="110" width="180" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="218" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">静态前缀</text>
-  <rect x="308" y="110" width="56" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="308" y="110" width="56" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="336" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">目录</text>
-  <rect x="364" y="110" width="236" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="364" y="110" width="236" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="482" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">Skill 正文</text>
   <rect x="600" y="110" width="40" height="26" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="616" y="152" font-size="10.5" fill="var(--muted,#596171)">新增 0.5k</text>
 
-  <rect x="128" y="174" width="180" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="128" y="174" width="180" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="218" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">静态前缀</text>
-  <rect x="308" y="174" width="56" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="308" y="174" width="56" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="336" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">目录</text>
-  <rect x="364" y="174" width="236" height="26" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="364" y="174" width="236" height="26" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="482" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink,#202735)">Skill 正文</text>
   <rect x="600" y="174" width="32" height="26" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="616" y="216" font-size="10.5" fill="var(--muted,#596171)">新增 0.4k</text>
@@ -44,9 +44,9 @@
   <text x="128" y="256" font-size="10.5" fill="var(--muted,#596171)">目录与正文在第 1 轮各写一次，位置此后不再移动</text>
   <text x="128" y="276" font-size="10.5" fill="var(--muted,#596171)">第 2、3 轮只付末尾新增的 tool_use 与 tool_result</text>
 
-  <rect x="128" y="312" width="14" height="14" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
+  <rect x="128" y="312" width="14" height="14" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
   <text x="150" y="323" font-size="10.5" fill="var(--muted,#596171)">首轮写入</text>
-  <rect x="222" y="312" width="14" height="14" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="222" y="312" width="14" height="14" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="244" y="323" font-size="10.5" fill="var(--muted,#596171)">命中缓存</text>
   <rect x="316" y="312" width="14" height="14" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
   <text x="338" y="323" font-size="10.5" fill="var(--muted,#596171)">本轮新增</text>

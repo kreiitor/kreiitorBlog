@@ -2,7 +2,7 @@
   <title id="fig-title">MHA、GQA 与 MQA 的 KV 共享方式</title>
   <desc id="fig-desc">四个查询头分别对应四组、两组或一组 KV；查询头本身不被合并，减少的是需要保存和读取的 KV 份数。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -20,22 +20,22 @@
   <text x="143" y="132" text-anchor="middle" class="b">MHA · 多头</text>
   <text x="143" y="154" text-anchor="middle" class="tiny">每头一组 KV</text>
 
-  <rect x="43" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="43" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="63" y="198" text-anchor="middle" class="tiny">Q1</text>
-  <rect x="93" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="93" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="113" y="198" text-anchor="middle" class="tiny">Q2</text>
-  <rect x="143" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="143" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="163" y="198" text-anchor="middle" class="tiny">Q3</text>
-  <rect x="193" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="193" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="213" y="198" text-anchor="middle" class="tiny">Q4</text>
 
-  <rect x="43" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="43" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="63" y="319" text-anchor="middle" class="tiny">KV1</text>
-  <rect x="93" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="93" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="113" y="319" text-anchor="middle" class="tiny">KV2</text>
-  <rect x="143" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="143" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="163" y="319" text-anchor="middle" class="tiny">KV3</text>
-  <rect x="193" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="193" y="298" width="40" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="213" y="319" text-anchor="middle" class="tiny">KV4</text>
 
   <path d="M63 208 L63 298" stroke="var(--blue,#2647d7)" stroke-width="1.6" fill="none"/>
@@ -48,18 +48,18 @@
   <text x="400" y="132" text-anchor="middle" class="b">GQA · 分组</text>
   <text x="400" y="154" text-anchor="middle" class="tiny">每两个查询共用一组</text>
 
-  <rect x="300" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="300" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="320" y="198" text-anchor="middle" class="tiny">Q1</text>
-  <rect x="350" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="350" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="370" y="198" text-anchor="middle" class="tiny">Q2</text>
-  <rect x="400" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="400" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="420" y="198" text-anchor="middle" class="tiny">Q3</text>
-  <rect x="450" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="450" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="470" y="198" text-anchor="middle" class="tiny">Q4</text>
 
-  <rect x="318" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="318" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="360" y="319" text-anchor="middle" class="tiny">KV1</text>
-  <rect x="418" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="418" y="298" width="84" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="460" y="319" text-anchor="middle" class="tiny">KV2</text>
 
   <path d="M320 208 L320 280 L360 280 L360 298" stroke="var(--blue,#2647d7)" stroke-width="1.6" fill="none"/>
@@ -72,16 +72,16 @@
   <text x="657" y="132" text-anchor="middle" class="b">MQA · 多查询</text>
   <text x="657" y="154" text-anchor="middle" class="tiny">所有查询共用一组</text>
 
-  <rect x="557" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="557" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="577" y="198" text-anchor="middle" class="tiny">Q1</text>
-  <rect x="607" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="607" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="627" y="198" text-anchor="middle" class="tiny">Q2</text>
-  <rect x="657" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="657" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="677" y="198" text-anchor="middle" class="tiny">Q3</text>
-  <rect x="707" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="707" y="178" width="40" height="30" rx="5" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="727" y="198" text-anchor="middle" class="tiny">Q4</text>
 
-  <rect x="607" y="298" width="100" height="34" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="607" y="298" width="100" height="34" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="657" y="319" text-anchor="middle" class="tiny">KV1</text>
 
   <path d="M577 208 L577 280 L657 280 L657 298" stroke="var(--blue,#2647d7)" stroke-width="1.6" fill="none"/>

@@ -2,7 +2,7 @@
   <title id="fig-title">一次生成请求的执行路径</title>
   <desc id="fig-desc">应用把输入交给服务入口，路由器在实例之间选择一个实例；实例内部由调度器组 batch，CPU 提交 kernel，GPU 执行算子并流式返回 token。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -25,14 +25,14 @@
   <text x="207" y="210" text-anchor="middle" class="b">服务入口</text>
   <text x="207" y="232" text-anchor="middle" class="tiny">鉴权 · 配额</text>
 
-  <rect x="286" y="184" width="110" height="72" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
+  <rect x="286" y="184" width="110" height="72" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
   <text x="341" y="210" text-anchor="middle" class="b">路由器</text>
   <text x="341" y="232" text-anchor="middle" class="tiny">按模型与负载选实例</text>
 
   <rect x="430" y="82" width="330" height="300" rx="10" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2" stroke-dasharray="7 5"/>
   <text x="595" y="106" text-anchor="middle" class="b">被选中的推理实例</text>
 
-  <rect x="452" y="120" width="286" height="64" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="452" y="120" width="286" height="64" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="595" y="145" text-anchor="middle" class="b">实例调度器</text>
   <text x="595" y="166" text-anchor="middle" class="tiny">排队 · 组 batch · 分配 KV 空间</text>
 
@@ -40,7 +40,7 @@
   <text x="513" y="239" text-anchor="middle" class="b">CPU 运行时</text>
   <text x="513" y="260" text-anchor="middle" class="tiny">提交 kernel</text>
 
-  <rect x="616" y="214" width="122" height="64" rx="7" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
+  <rect x="616" y="214" width="122" height="64" rx="7" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
   <text x="677" y="239" text-anchor="middle" class="b">GPU</text>
   <text x="677" y="260" text-anchor="middle" class="tiny">执行算子</text>
 

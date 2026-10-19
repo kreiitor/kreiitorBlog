@@ -2,7 +2,7 @@
   <title id="fig-title">LLM-as-a-Judge 的评分流水线</title>
   <desc id="fig-desc">Rubric、候选回答与可选参考答案送入 Judge 模型，输出逐维分数与理由，再按加权平均、一票否决、多评委等规则聚合。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -56,12 +56,12 @@
   <text x="754" y="222" text-anchor="end" class="tiny">PASS</text>
   <text x="494" y="250" class="tiny">逻辑连贯性</text>
   <text x="754" y="250" text-anchor="end" class="tiny">4/4</text>
-  <rect x="494" y="266" width="260" height="30" rx="5" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="494" y="266" width="260" height="30" rx="5" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="624" y="286" text-anchor="middle" class="tiny">幻觉一票否决：FAIL → 总分 0</text>
 
   <path d="M428 230 L478 230" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="478" y="330" width="292" height="70" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="478" y="330" width="292" height="70" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="494" y="354" class="b">评分聚合</text>
   <text x="494" y="378" class="tiny">加权平均 · 一票否决 · 多评委取中位数 · 分歧送人审</text>
 

@@ -2,7 +2,7 @@
   <title id="fig-title">按列切分：拼接输出元素</title>
   <desc id="fig-desc">输入 [2,3] 同时送入两张卡；卡 0 用权重第一列算出 8，卡 1 用第二列算出 23；两个结果并排拼接得到 [8,23]</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -13,7 +13,7 @@
   <text x="214.5" y="165.375" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">输入 [2,3]</text>
   <rect x="480.5" y="104.5" width="210" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="585.5" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">卡 0</text>
-  <text x="585.5" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">权重列 [1,2] → 8</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="585.5" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">权重列 [1,2] → 8</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="214.5" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">卡 1</text>
   <text x="214.5" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">权重列 [4,5] → 23</text><rect x="480.5" y="267.5" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="585.5" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">并排拼接</text>

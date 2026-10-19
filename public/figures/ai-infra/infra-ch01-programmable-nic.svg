@@ -2,7 +2,7 @@
   <title id="fig-title">可编程网卡的包处理位置</title>
   <desc id="fig-desc">网络数据先到可编程网卡，在网卡内完成包处理，再进入主机 CPU 运行应用；包处理发生在数据进入主机的路径上</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,9 +11,9 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="47.66666666666667" y="186" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="238.75" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">网络数据</text>
-  <text x="152.66666666666669" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">进入主机前</text><rect x="295.00000000000006" y="186" width="210" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">进入主机前</text><rect x="295.00000000000006" y="186" width="210" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="238.75" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">可编程网卡</text>
-  <text x="400.00000000000006" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">完成包处理</text><rect x="542.3333333333334" y="186" width="210" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">完成包处理</text><rect x="542.3333333333334" y="186" width="210" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="647.3333333333334" y="238.75" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">主机 CPU</text>
   <text x="647.3333333333334" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">运行应用</text><path d="M257.6666666666667 242 L295.00000000000006 242" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M505.00000000000006 242 L542.3333333333334 242" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="332" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">实线跟踪数据从网络到主机的路径。</text>
 </svg>

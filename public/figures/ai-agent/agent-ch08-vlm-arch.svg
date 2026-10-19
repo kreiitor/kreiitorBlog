@@ -2,7 +2,7 @@
   <title id="fig-title">视觉语言模型的三段结构</title>
   <desc id="fig-desc">输入 224×224 图像先经 CLIP ViT 得到 196 个 768 维视觉 token，再由 Linear(768, 512) 投影层对齐到语言空间，最后 MiniMind 100M 生成描述；训练策略是先冻结语言模型只训投影层，再解冻做 SFT</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,9 +11,9 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="45" y="104.5" width="153.5" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="121.75" y="149.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">输入图像</text>
-  <text x="121.75" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">224×224 · 瀑布 / 城市</text><text x="121.75" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">/ 自然</text><rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="121.75" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">224×224 · 瀑布 / 城市</text><text x="121.75" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">/ 自然</text><rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="307.25" y="149.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">视觉编码器</text>
-  <text x="307.25" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">CLIP ViT · 固定 · 196</text><text x="307.25" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">token × 768</text><rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="307.25" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">CLIP ViT · 固定 · 196</text><text x="307.25" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">token × 768</text><rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="492.75" y="149.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">投影层</text>
   <text x="492.75" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">Linear(768, 512) · 约</text><text x="492.75" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">400K 参数</text><rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="678.25" y="149.125" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">语言模型</text>

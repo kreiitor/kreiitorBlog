@@ -2,7 +2,7 @@
   <title id="fig-title">失败归因：首个错误与后续症状</title>
   <desc id="fig-desc">一条轨迹中首个导致任务偏离的错误往往没有报错，后面的报错只是连锁反应；归因记录要标出首错步号、错误类别、证据与主因。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -20,7 +20,7 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="55" y="76" width="220" height="52" rx="7" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="55" y="76" width="220" height="52" rx="7" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="165" y="98" text-anchor="middle" class="b">首个错误：第 4 步</text>
   <text x="165" y="117" text-anchor="middle" class="tiny">读取了错误的文件，不一定报错</text>
   <path d="M165 128 V158" stroke="var(--yellow,#ffe04b)" stroke-width="2.5" fill="none" marker-end="url(#arrow-y)"/>
@@ -53,7 +53,7 @@
   <text x="65" y="356" class="s">截到第 k 步交给人接手</text>
   <text x="65" y="376" class="tiny">不能只搜索 error 关键字</text>
 
-  <rect x="415" y="238" width="340" height="150" rx="9" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="415" y="238" width="340" height="3" fill="var(--blue,#2647d7)"/><rect x="415" y="238" width="340" height="150" rx="9" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
   <text x="435" y="266" class="h">结构化归因记录</text>
   <text x="435" y="294" class="b">首错步号：4</text>
   <text x="435" y="316" class="b">错误类别：工具调用错误</text>

@@ -2,7 +2,7 @@
   <title id="fig-title">路由重放的记录与计算</title>
   <desc id="fig-desc">生成端记录样本 A、token 17、层 3 的专家 ID [2, 7]；训练端按同一组 ID 选择专家，并用当前权重计算路由分数、输出与梯度</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -13,7 +13,7 @@
   <text x="214.5" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">生成端</text>
   <text x="214.5" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">记录样本 A / token 17 / 层 3</text><rect x="480.5" y="104.5" width="210" height="112" rx="8" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="585.5" y="157.25" font-size="13" fill="var(--on-yellow,#202735)" font-weight="700" text-anchor="middle">专家 ID [2, 7]</text>
-  <text x="585.5" y="173.5" font-size="12" fill="var(--on-yellow,#202735)" font-weight="400" text-anchor="middle">离散选择</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="585.5" y="173.5" font-size="12" fill="var(--on-yellow,#202735)" font-weight="400" text-anchor="middle">离散选择</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="214.5" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">训练端</text>
   <text x="214.5" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">仍选专家 2、7</text><rect x="480.5" y="267.5" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="585.5" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">当前权重计算</text>

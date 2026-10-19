@@ -2,7 +2,7 @@
   <title id="fig-title">压缩权重的两条计算路径</title>
   <desc id="fig-desc">两条路径都从压缩 8.5 MiB 出发：左路先展开为 32 MiB 的 BF16 副本再计算；右路直接做低精度计算，再完成缩放与合并</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,13 +11,13 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="45" y="104.5" width="153.5" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="121.75" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">压缩权重</text>
-  <text x="121.75" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">8.5 MiB</text><rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="121.75" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">8.5 MiB</text><rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="307.25" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">展开</text>
   <text x="307.25" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">32 MiB BF16 副本</text><rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="492.75" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">BF16 计算</text>
-  <text x="492.75" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">一次矩阵乘</text><rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="492.75" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">一次矩阵乘</text><rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="678.25" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">低精度计算</text>
-  <text x="678.25" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">分组执行</text><rect x="45" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="678.25" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">分组执行</text><rect x="45" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="121.75" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">缩放与合并</text>
   <text x="121.75" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">组内结果相加</text><path d="M198.5 160.5 L230.5 160.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M384 160.5 L416 160.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M198.5 160.5 L601.5 160.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M678.25 216.5 L678.25 242 L121.75 242 L121.75 267.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="418" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">左路需要保存高精度副本；右路需要多次调用 kernel 完成分组缩放与合并。</text>
 </svg>

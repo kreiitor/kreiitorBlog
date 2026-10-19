@@ -2,7 +2,7 @@
   <title id="fig-title">环形 AllReduce 的 ReduceScatter 与 AllGather</title>
   <desc id="fig-desc">四张卡组成有向环，块 0 依次经过卡 0 到卡 3 并累加，三轮完成 ReduceScatter，再经三轮 AllGather 让每张卡收齐所有块。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -17,19 +17,19 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="96" y="98" width="100" height="58" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="96" y="98" width="100" height="58" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="146" y="122" text-anchor="middle" class="b">卡 0</text>
   <text x="146" y="144" text-anchor="middle" class="tiny">1（起点）</text>
 
-  <rect x="274" y="196" width="100" height="58" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="274" y="196" width="100" height="58" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="324" y="220" text-anchor="middle" class="b">卡 1</text>
   <text x="324" y="242" text-anchor="middle" class="tiny">11（+10）</text>
 
-  <rect x="96" y="294" width="100" height="58" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="96" y="294" width="100" height="58" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="146" y="318" text-anchor="middle" class="b">卡 2</text>
   <text x="146" y="340" text-anchor="middle" class="tiny">111（+100）</text>
 
-  <rect x="18" y="196" width="100" height="58" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="18" y="196" width="100" height="58" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="68" y="220" text-anchor="middle" class="b">卡 3</text>
   <text x="68" y="242" text-anchor="middle" class="tiny">1111（满）</text>
 
@@ -56,7 +56,7 @@
   <text x="430" y="274" class="s">每卡把已完成的块继续向下一卡转发，</text>
   <text x="430" y="294" class="s">每轮多获得一块；三轮后每卡收齐四块。</text>
 
-  <rect x="430" y="314" width="320" height="58" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
+  <rect x="430" y="314" width="320" height="58" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.4"/>
   <text x="446" y="336" class="tiny">总轮数 2(n−1) = 6</text>
   <text x="446" y="358" class="tiny">每卡发送 2(n−1)M/n = 1.5M bytes（四卡）</text>
 

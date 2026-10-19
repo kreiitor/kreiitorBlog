@@ -2,7 +2,7 @@
   <title id="fig-title">算子融合减少中间张量的读写</title>
   <desc id="fig-desc">分开执行时 SiLU 的完整结果 T 写回再读回，多出 48 MiB；融合后局部结果直接进入乘法，读写量从 120 MiB 降到 72 MiB。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -20,7 +20,7 @@
   <text x="44" y="106" class="b">分开执行</text>
   <text x="756" y="106" text-anchor="end" class="h">读写 120 MiB</text>
 
-  <rect x="44" y="132" width="90" height="52" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="44" y="132" width="90" height="52" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="89" y="154" text-anchor="middle" class="b">G</text>
   <text x="89" y="173" text-anchor="middle" class="tiny">24 MiB</text>
 
@@ -28,14 +28,14 @@
   <text x="218" y="154" text-anchor="middle" class="b">SiLU</text>
   <text x="218" y="173" text-anchor="middle" class="tiny">逐元素</text>
 
-  <rect x="302" y="132" width="90" height="52" rx="7" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="302" y="132" width="90" height="52" rx="7" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="347" y="154" text-anchor="middle" class="b">T</text>
   <text x="347" y="173" text-anchor="middle" class="tiny">24 MiB · 落地</text>
 
   <circle cx="436" cy="158" r="18" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="436" y="163" text-anchor="middle" class="b">⊙</text>
 
-  <rect x="490" y="132" width="90" height="52" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="490" y="132" width="90" height="52" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="535" y="154" text-anchor="middle" class="b">Z</text>
   <text x="535" y="173" text-anchor="middle" class="tiny">24 MiB</text>
 
@@ -53,19 +53,19 @@
   <text x="44" y="266" class="b">融合执行</text>
   <text x="756" y="266" text-anchor="end" class="h">读写 72 MiB</text>
 
-  <rect x="44" y="292" width="90" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="44" y="292" width="90" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="89" y="313" text-anchor="middle" class="b">G</text>
   <text x="89" y="331" text-anchor="middle" class="tiny">24 MiB</text>
 
   <rect x="44" y="350" width="90" height="42" rx="7" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
   <text x="89" y="376" text-anchor="middle" class="tiny">U · 24 MiB</text>
 
-  <rect x="190" y="296" width="190" height="80" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="190" y="296" width="190" height="80" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="285" y="324" text-anchor="middle" class="b">SiLU + 逐元素乘</text>
   <text x="285" y="346" text-anchor="middle" class="tiny">局部 t 直接传给乘法</text>
   <text x="285" y="364" text-anchor="middle" class="tiny">中间结果不写回显存</text>
 
-  <rect x="460" y="308" width="90" height="52" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="460" y="308" width="90" height="52" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="505" y="330" text-anchor="middle" class="b">Z</text>
   <text x="505" y="349" text-anchor="middle" class="tiny">24 MiB</text>
 

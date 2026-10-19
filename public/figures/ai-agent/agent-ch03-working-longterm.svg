@@ -2,7 +2,7 @@
   <title id="fig-title">工作记忆与长期记忆</title>
   <desc id="fig-desc">工作记忆在当前任务一侧，长期记忆在另一侧；向上箭头表示重要信息选择性转移到长期记忆，向下箭头表示相关长期记忆被激活加载进工作记忆。长期记忆包含情景、语义、程序三类</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,7 +11,7 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="109.5" y="186" width="210" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="214.5" y="238.75" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">工作记忆</text>
-  <text x="214.5" y="255" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">当前任务状态</text><rect x="480.5" y="186" width="210" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="214.5" y="255" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">当前任务状态</text><rect x="480.5" y="186" width="210" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="585.5" y="238.75" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">长期记忆</text>
   <text x="585.5" y="255" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">情景 · 语义 · 程序</text><path d="M319.5 242 L480.5 242" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M480.5 242 L319.5 242" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><text x="400" y="332" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">情景记忆带元数据的事件序列；语义记忆是抽象出的一般知识；程序记忆是可复用的行为流程。</text>
 </svg>

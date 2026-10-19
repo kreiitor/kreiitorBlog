@@ -2,7 +2,7 @@
   <title id="fig-title">Coding Agent 的五段工作流</title>
   <desc id="fig-desc">从项目文档化、需求澄清、设计、编码测试到审查交付，测试与审查形成内循环，完成标准由验证结果判定。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -24,7 +24,7 @@
   <text x="96" y="148" text-anchor="middle" class="s onblue">读代码与约定</text>
   <text x="96" y="168" text-anchor="middle" class="s onblue">生成项目指南</text>
 
-  <rect x="188" y="96" width="136" height="96" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="188" y="96" width="136" height="96" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="256" y="124" text-anchor="middle" class="h">② 需求澄清</text>
   <text x="256" y="148" text-anchor="middle" class="s">ask_user</text>
   <text x="256" y="168" text-anchor="middle" class="s">确认目标与权衡</text>
@@ -39,7 +39,7 @@
   <text x="576" y="148" text-anchor="middle" class="s">edit_file</text>
   <text x="576" y="168" text-anchor="middle" class="s">跑测试并修复</text>
 
-  <rect x="668" y="96" width="104" height="96" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="668" y="96" width="104" height="96" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="720" y="124" text-anchor="middle" class="h">⑤ 审查交付</text>
   <text x="720" y="148" text-anchor="middle" class="s">lint + 自审</text>
   <text x="720" y="168" text-anchor="middle" class="s">同步文档</text>

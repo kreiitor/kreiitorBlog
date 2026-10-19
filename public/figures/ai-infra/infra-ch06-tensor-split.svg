@@ -2,7 +2,7 @@
   <title id="fig-title">一层内的两处张量切分</title>
   <desc id="fig-desc">输入 X 分成两路进入注意力：每路做 QKV 列投影、处理一半注意力头、再经输出投影行切得到部分和；两路部分和经 AllReduce 相加。FFN 子层同样把中间维分成两半，上投影列切、下投影行切，最后归约</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,17 +11,17 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="47.66666666666667" y="96" width="210" height="74.66666666666667" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="130.08333333333334" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">输入 X</text>
-  <text x="152.66666666666669" y="146.33333333333334" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">每卡一份</text><rect x="295.00000000000006" y="96" width="210" height="74.66666666666667" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="146.33333333333334" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">每卡一份</text><rect x="295.00000000000006" y="96" width="210" height="74.66666666666667" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="130.08333333333334" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">QKV 投影（列）</text>
   <text x="400.00000000000006" y="146.33333333333334" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">注意力 · 头 0–15</text><rect x="542.3333333333334" y="96" width="210" height="74.66666666666667" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="647.3333333333334" y="130.08333333333334" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">注意力 + 输出投影（行）</text>
-  <text x="647.3333333333334" y="146.33333333333334" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">部分和 m×h</text><rect x="47.66666666666667" y="204.66666666666669" width="210" height="74.66666666666667" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="146.33333333333334" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">部分和 m×h</text><rect x="47.66666666666667" y="204.66666666666669" width="210" height="74.66666666666667" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="238.75000000000003" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">QKV 投影（列）</text>
   <text x="152.66666666666669" y="255.00000000000003" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">注意力 · 头 16–31</text><rect x="295.00000000000006" y="204.66666666666669" width="210" height="74.66666666666667" rx="8" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="238.75000000000003" font-size="13" fill="var(--on-yellow,#202735)" font-weight="700" text-anchor="middle">注意力 + 输出投影（行）</text>
   <text x="400.00000000000006" y="255.00000000000003" font-size="12" fill="var(--on-yellow,#202735)" font-weight="400" text-anchor="middle">部分和 m×h</text><rect x="542.3333333333334" y="204.66666666666669" width="210" height="74.66666666666667" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="647.3333333333334" y="238.75000000000003" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">AllReduce</text>
-  <text x="647.3333333333334" y="255.00000000000003" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">两路部分和相加</text><rect x="47.66666666666667" y="313.33333333333337" width="210" height="74.66666666666667" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="255.00000000000003" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">两路部分和相加</text><rect x="47.66666666666667" y="313.33333333333337" width="210" height="74.66666666666667" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="339.2916666666667" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">FFN 子层</text>
   <text x="152.66666666666669" y="355.5416666666667" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">中间维切半 · 上投影列切、下投影</text><text x="152.66666666666669" y="371.7416666666667" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">行切</text><rect x="295.00000000000006" y="313.33333333333337" width="210" height="74.66666666666667" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="347.4166666666667" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">AllReduce</text>

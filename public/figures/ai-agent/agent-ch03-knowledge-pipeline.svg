@@ -2,7 +2,7 @@
   <title id="fig-title">从判例到决策逻辑的流水线</title>
   <desc id="fig-desc">阶段一从 CAIL2018 判例文书出发，经 LLM 因子发现得到结构化 JSON，再归纳为模块化数据模式；阶段二做特征向量化、KMeans 聚类与因子重要性建模；最后接入对话式法律咨询 Agent</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -13,15 +13,15 @@
   <text x="121.75" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">原始判例文书</text>
   <text x="121.75" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">CAIL2018 数据集</text><rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="307.25" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">LLM 因子发现</text>
-  <text x="307.25" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">自下而上 Schema</text><rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="307.25" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">自下而上 Schema</text><rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="492.75" y="149.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">结构化 JSON</text>
-  <text x="492.75" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">自首 · 赔偿 50 万 · 重</text><text x="492.75" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">伤二级</text><rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="492.75" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">自首 · 赔偿 50 万 · 重</text><text x="492.75" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">伤二级</text><rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="678.25" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">模块化数据模式</text>
-  <text x="678.25" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">核心 + 罪名扩展</text><rect x="45" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="678.25" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">核心 + 罪名扩展</text><rect x="45" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="121.75" y="312.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">特征向量化</text>
-  <text x="121.75" y="328.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">独热 · 多热 · 对数 ·</text><text x="121.75" y="344.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">标准化</text><rect x="230.5" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="121.75" y="328.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">独热 · 多热 · 对数 ·</text><text x="121.75" y="344.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">标准化</text><rect x="230.5" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="307.25" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">KMeans 聚类</text>
-  <text x="307.25" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">发现案件原型</text><rect x="416" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="307.25" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">发现案件原型</text><rect x="416" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="492.75" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">因子重要性模型</text>
   <text x="492.75" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">量化各因素权重</text><rect x="601.5" y="267.5" width="153.5" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="678.25" y="312.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">对话式法律咨询 Agent</text>

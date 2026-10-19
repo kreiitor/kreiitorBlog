@@ -2,7 +2,7 @@
   <title id="fig-title">分块矩阵乘的累加顺序</title>
   <desc id="fig-desc">三对输入块依次乘加，结果都写进同一份 FP32 累加器；累加器在三次乘加之间留在片上，K 走完后才转成 BF16 输出块</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -67,7 +67,7 @@
   <path d="M250 96 L250 316" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none"/>
   <path d="M250 206 L296 206" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="304" y="150" width="256" height="166" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="304" y="150" width="256" height="166" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="316" y="176" font-size="12" font-weight="600" fill="var(--ink,#202735)">FP32 累加器 m×n</text>
   <text x="316" y="196" font-size="10.5" fill="var(--muted,#596171)">三次乘加写同一份缓冲</text>
   <line x1="316" y1="212" x2="544" y2="212" stroke="var(--line,#a2aec1)" stroke-width="1"/>

@@ -2,7 +2,7 @@
   <title id="fig-title">递归算法第三轮的四跳</title>
   <desc id="fig-desc">16 卡物理环上，递归算法第三轮的对端距离翻倍到 4；卡 0 发往卡 4，沿 0→1→2→3→4 经过四条链路</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,11 +11,11 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="45" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="121.75" y="165.375" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">卡 0</text>
-  <rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="230.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="307.25" y="165.375" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">卡 1</text>
-  <rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="416" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="492.75" y="165.375" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">卡 2</text>
-  <rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="601.5" y="104.5" width="153.5" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="678.25" y="165.375" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">卡 3</text>
   <rect x="45" y="267.5" width="153.5" height="112" rx="8" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="121.75" y="328.375" font-size="13" fill="var(--on-yellow,#202735)" font-weight="700" text-anchor="middle">卡 4</text>

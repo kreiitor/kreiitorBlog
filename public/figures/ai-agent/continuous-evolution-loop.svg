@@ -2,7 +2,7 @@
   <title id="fig-title">Agent 持续进化的闭环</title>
   <desc id="fig-desc">执行任务、记录轨迹、形成信号、生成候选更新、验证与发布五步构成闭环；候选更新分为知识、指令、程序与参数四类，只有通过验证的更新才改变下一轮运行。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -23,7 +23,7 @@
   <text x="92" y="122" text-anchor="middle" class="h onblue">① 执行任务</text>
   <text x="92" y="146" text-anchor="middle" class="tiny onblue">用户 · 环境 · 工具</text>
 
-  <rect x="184" y="92" width="136" height="86" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="184" y="92" width="136" height="86" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="252" y="122" text-anchor="middle" class="h">② 记录轨迹</text>
   <text x="252" y="146" text-anchor="middle" class="tiny">动作 · 结果 · 反馈</text>
 
@@ -31,7 +31,7 @@
   <text x="412" y="122" text-anchor="middle" class="h">③ 形成信号</text>
   <text x="412" y="146" text-anchor="middle" class="tiny">结果 · 过程 · 质量</text>
 
-  <rect x="504" y="92" width="136" height="86" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="504" y="92" width="136" height="86" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="572" y="122" text-anchor="middle" class="h">④ 候选更新</text>
   <text x="572" y="146" text-anchor="middle" class="tiny">先形成待验证版本</text>
 
@@ -53,7 +53,7 @@
   <text x="640" y="318" text-anchor="middle" class="tiny">选择依据是能力的表示性质</text>
   <path d="M572 182 V248" stroke="var(--yellow,#ffe04b)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="24" y="252" width="456" height="76" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="24" y="252" width="456" height="76" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="44" y="278" class="h">三层验证</text>
   <text x="44" y="302" class="s">结果验证器：环境真实状态</text>
   <text x="248" y="302" class="s">过程验证器：规则与动作</text>

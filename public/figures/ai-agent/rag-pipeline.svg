@@ -2,7 +2,7 @@
   <title id="fig-title">RAG 查询流程</title>
   <desc id="fig-desc">用户查询先经混合检索得到 Top-K 文本块，再与查询一起构造成完整提示词，最后由语言模型生成带依据的回答。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -23,7 +23,7 @@
   <text x="115" y="122" text-anchor="middle" class="h onblue">① 查询</text>
   <text x="115" y="145" text-anchor="middle" class="tiny onblue">用户问题</text>
 
-  <rect x="220" y="92" width="160" height="76" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="220" y="92" width="160" height="76" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="300" y="122" text-anchor="middle" class="h">② 检索</text>
   <text x="300" y="145" text-anchor="middle" class="tiny">稠密 + BM25</text>
 
@@ -31,7 +31,7 @@
   <text x="485" y="122" text-anchor="middle" class="h">③ 增强</text>
   <text x="485" y="145" text-anchor="middle" class="tiny">拼接完整 Prompt</text>
 
-  <rect x="590" y="92" width="160" height="76" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="590" y="92" width="160" height="76" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="670" y="122" text-anchor="middle" class="h">④ 生成</text>
   <text x="670" y="145" text-anchor="middle" class="tiny">基于上下文作答</text>
 

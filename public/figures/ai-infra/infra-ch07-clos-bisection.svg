@@ -2,7 +2,7 @@
   <title id="fig-title">两层 Clos 与半分割集</title>
   <desc id="fig-desc">上方两台脊交换机，下方四台叶交换机，每台叶交换机都连到两台脊交换机；每台叶交换机下挂 32 个端点，中间虚线把端点分成左右两半，穿过虚线的叶—脊链路构成半分割集</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,15 +11,15 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><line x1="80" y1="240" x2="270" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="240" x2="470" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="270" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="470" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="270" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="470" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="270" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="470" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="240" x2="80" y2="380" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="270" y1="240" x2="270" y2="380" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="460" y1="240" x2="460" y2="380" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="650" y1="240" x2="650" y2="380" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="220" y="86" width="100" height="48" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="270" y="114.125" font-size="11" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">脊交换机 0</text>
-  <rect x="420" y="86" width="100" height="48" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="420" y="86" width="100" height="48" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="470" y="114.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">脊交换机 1</text>
-  <rect x="30" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="30" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="80" y="244.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">叶交换机 0</text>
-  <rect x="220" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="220" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="270" y="244.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">叶交换机 1</text>
-  <rect x="410" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="410" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="460" y="244.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">叶交换机 2</text>
-  <rect x="600" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <rect x="600" y="216" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="650" y="244.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">叶交换机 3</text>
   <rect x="30" y="356" width="100" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="80" y="384.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">32 端点</text>

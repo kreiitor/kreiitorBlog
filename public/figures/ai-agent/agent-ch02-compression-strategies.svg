@@ -2,7 +2,7 @@
   <title id="fig-title">六种压缩策略的处理方式与代价</title>
   <desc id="fig-desc">每次搜索约 52K 字符进入六条路线：无压缩累计 166K 并在第 5 轮失败，个体摘要 277K，组合摘要 93K，上下文感知 40K 且迭代最少，感知加引用 223K 换取可溯源，自适应窗口 175K 换取前期完整</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -37,7 +37,7 @@
   <text x="690" y="198" font-size="11.5" fill="var(--ink,#202735)" class="mono">10 轮</text>
   <line x1="196" y1="210" x2="760" y2="210" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
 
-  <rect x="188" y="216" width="580" height="40" fill="var(--blue-soft,#e9eefe)"/>
+  <rect x="188" y="216" width="580" height="40" fill="var(--blue-soft,#f2f5fc)"/>
   <text x="196" y="241" font-size="11.5" font-weight="600" fill="var(--ink,#202735)">④ 上下文感知：带查询与已有信息做针对性压缩</text>
   <text x="520" y="241" font-size="11.5" font-weight="600" fill="var(--ink,#202735)" class="mono">40K</text>
   <text x="630" y="241" font-size="11.5" font-weight="600" fill="var(--ink,#202735)" class="mono">3.0%</text>

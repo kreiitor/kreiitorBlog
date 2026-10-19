@@ -2,7 +2,7 @@
   <title id="fig-title">两层工具匹配：先选服务器，再选工具</title>
   <desc id="fig-desc">Agent 用自然语言提出需求，系统先在服务器层按相似度选出 GitHub，再在它的 26 个工具中选出前三个 schema 注入上下文。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -26,7 +26,7 @@
   <rect x="214" y="86" width="202" height="188" rx="8" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="230" y="110" class="b">① 服务器匹配</text>
   <text x="230" y="130" class="tiny">5 个候选 · 取 Top-1</text>
-  <rect x="228" y="142" width="174" height="22" rx="4" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="228" y="142" width="174" height="22" rx="4" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="238" y="158" class="tiny">GitHub</text>
   <text x="394" y="158" text-anchor="end" class="tiny">0.92</text>
   <text x="238" y="184" class="tiny">File System</text>
@@ -41,13 +41,13 @@
   <rect x="458" y="70" width="228" height="284" rx="8" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="474" y="94" class="b">② 工具匹配</text>
   <text x="474" y="114" class="tiny">GitHub 服务器 · 26 个工具</text>
-  <rect x="472" y="126" width="200" height="26" rx="4" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="472" y="126" width="200" height="26" rx="4" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="482" y="144" class="tiny">list_contributors</text>
   <text x="662" y="144" text-anchor="end" class="tiny">0.89</text>
-  <rect x="472" y="158" width="200" height="26" rx="4" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="472" y="158" width="200" height="26" rx="4" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="482" y="176" class="tiny">get_repo_stats</text>
   <text x="662" y="176" text-anchor="end" class="tiny">0.85</text>
-  <rect x="472" y="190" width="200" height="26" rx="4" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
+  <rect x="472" y="190" width="200" height="26" rx="4" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.4"/>
   <text x="482" y="208" class="tiny">get_commit_history</text>
   <text x="662" y="208" text-anchor="end" class="tiny">0.67</text>
   <text x="482" y="240" class="tiny">search_repositories</text>
@@ -58,7 +58,7 @@
   <text x="474" y="304" class="tiny">只读查询压过写操作</text>
   <text x="474" y="326" class="tiny">低于阈值 → 返回“未找到”</text>
 
-  <rect x="458" y="372" width="228" height="46" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="458" y="372" width="228" height="46" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="572" y="392" text-anchor="middle" class="b">返回 Top-3 schema</text>
   <text x="572" y="409" text-anchor="middle" class="tiny">追加到轨迹末尾，前缀保持不变</text>
 

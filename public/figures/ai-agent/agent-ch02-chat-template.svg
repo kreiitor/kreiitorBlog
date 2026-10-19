@@ -1,13 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="381" viewBox="0 64 800 381" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="148" viewBox="0 18 800 148" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">从 API 消息到 Token 流</title>
-  <desc id="fig-desc">左侧是 system 与 user 两条 JSON 消息，右侧是渲染后的 token 流：im_start system、你是助手、im_end、im_start user、你好、im_end、im_start assistant</desc>
+  <desc id="fig-desc">左侧是 system 与 user 两条消息，经 Chat Template 渲染后成为右侧的 token 序列；特殊标记 im_start 与 im_end 在序列里各占一个 token</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b3446;--yellow:#f0cd42;--yellow-soft:#3a3726;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="34" y="92" width="359" height="300" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/><text x="213.5" y="118" font-size="14" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">API 消息</text><text x="213.5" y="136" font-size="10.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">结构化 JSON</text><text x="46" y="174" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="58" y="174" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">system：你是助手</text><text x="46" y="195.95" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="58" y="195.95" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">user：你好</text><rect x="407" y="92" width="359" height="300" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/><text x="586.5" y="118" font-size="14" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">Token 流</text><text x="586.5" y="136" font-size="10.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">Chat Template 渲染</text><text x="419" y="174" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="174" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">&lt;|im_start|&gt;system</text><text x="419" y="195.95" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="195.95" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">你是助手&lt;|im_end|&gt;</text><text x="419" y="217.89999999999998" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="217.89999999999998" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">&lt;|im_start|&gt;user</text><text x="419" y="239.84999999999997" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="239.84999999999997" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">你好&lt;|im_end|&gt;</text><text x="419" y="261.79999999999995" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="261.79999999999995" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">&lt;|im_start|&gt;assistant</text><text x="419" y="283.74999999999994" font-size="12" fill="var(--ink,#202735)" font-weight="700" text-anchor="start">•</text><text x="431" y="283.74999999999994" font-size="11.5" fill="var(--ink,#202735)" font-weight="400" text-anchor="start">（模型从这里开始生成）</text><text x="400" y="418" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">特殊 token：&lt;|im_start|&gt; 与 &lt;|im_end|&gt;。</text>
+  <rect width="800" height="240" fill="var(--paper,#f9faf7)"/>
+
+  <text x="40" y="40" font-size="10.5" fill="var(--muted,#596171)">API 消息</text>
+  <rect x="40" y="54" width="62" height="22" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
+  <text x="71" y="69" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">system</text>
+  <text x="114" y="69" font-size="11" fill="var(--ink,#202735)">你是助手</text>
+  <line x1="40" y1="90" x2="300" y2="90" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <rect x="40" y="100" width="52" height="22" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
+  <text x="66" y="115" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">user</text>
+  <text x="104" y="115" font-size="11" fill="var(--ink,#202735)">你好</text>
+  <line x1="40" y1="136" x2="300" y2="136" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+
+  <path d="M312 95 L398 95" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="355" y="84" text-anchor="middle" font-size="10" fill="var(--muted,#596171)">Chat Template</text>
+
+  <text x="412" y="40" font-size="10.5" fill="var(--muted,#596171)">token 序列</text>
+
+  <rect x="412" y="54" width="78" height="22" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <text x="451" y="69" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">&lt;|im_start|&gt;</text>
+  <rect x="496" y="54" width="54" height="22" rx="3" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <text x="523" y="69" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">system</text>
+  <rect x="556" y="54" width="58" height="22" rx="3" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <text x="585" y="69" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)">你是助手</text>
+  <rect x="620" y="54" width="66" height="22" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <text x="653" y="69" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">&lt;|im_end|&gt;</text>
+
+  <rect x="412" y="84" width="78" height="22" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <text x="451" y="99" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">&lt;|im_start|&gt;</text>
+  <rect x="496" y="84" width="44" height="22" rx="3" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <text x="518" y="99" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">user</text>
+  <rect x="546" y="84" width="42" height="22" rx="3" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <text x="567" y="99" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)">你好</text>
+  <rect x="594" y="84" width="66" height="22" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <text x="627" y="99" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">&lt;|im_end|&gt;</text>
+
+  <rect x="412" y="114" width="78" height="22" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <text x="451" y="129" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">&lt;|im_start|&gt;</text>
+  <rect x="496" y="114" width="66" height="22" rx="3" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <text x="529" y="129" text-anchor="middle" font-size="9.5" fill="var(--ink,#202735)" class="mono">assistant</text>
+  <text x="572" y="129" font-size="10" fill="var(--muted,#596171)">← 模型从这里开始生成</text>
 </svg>

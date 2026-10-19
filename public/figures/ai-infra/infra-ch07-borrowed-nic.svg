@@ -2,7 +2,7 @@
   <title id="fig-title">借用相邻网卡的路径</title>
   <desc id="fig-desc">源 GPU 分出两条路径：一条直连自己的 50 GB/s 网卡；另一条先经 450 GB/s NVLink 到相邻 GPU，再经中继网卡合计 100 GB/s；两路在下游汇合</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -13,7 +13,7 @@
   <text x="152.66666666666669" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">源 GPU</text>
   <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">发送方</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">直连网卡</text>
-  <text x="400.00000000000006" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">50 GB/s</text><rect x="542.3333333333334" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="400.00000000000006" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">50 GB/s</text><rect x="542.3333333333334" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="647.3333333333334" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">NVLink 450</text>
   <text x="647.3333333333334" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">到达相邻 GPU</text><rect x="47.66666666666667" y="267.5" width="210" height="112" rx="8" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="320.25" font-size="13" fill="var(--on-yellow,#202735)" font-weight="700" text-anchor="middle">中继网卡</text>

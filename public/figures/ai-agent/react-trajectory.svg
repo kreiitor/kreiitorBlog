@@ -2,7 +2,7 @@
   <title id="fig-title">ReAct 轨迹的逐轮累积</title>
   <desc id="fig-desc">静态前缀每轮保持不变，轨迹只追加；第 1 轮只有用户输入，第 2 轮增加工具结果，第 3 轮增加最终回答。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -18,31 +18,31 @@
   <text x="30" y="100" class="b">第 1 轮</text>
   <rect x="110" y="82" width="50" height="36" rx="5" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.2"/>
   <text x="135" y="105" text-anchor="middle" class="tiny">前缀</text>
-  <rect x="160" y="82" width="75" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="160" y="82" width="75" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="197" y="105" text-anchor="middle" class="tiny">user</text>
-  <rect x="235" y="82" width="100" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="235" y="82" width="100" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="285" y="105" text-anchor="middle" class="tiny">assistant + 调用</text>
-  <rect x="335" y="82" width="60" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="335" y="82" width="60" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="365" y="105" text-anchor="middle" class="tiny">tool ×3</text>
   <text x="420" y="105" class="s">只看到三种货币的金额</text>
 
   <text x="30" y="180" class="b">第 2 轮</text>
   <rect x="110" y="162" width="50" height="36" rx="5" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.2"/>
   <text x="135" y="185" text-anchor="middle" class="tiny">前缀</text>
-  <rect x="160" y="162" width="235" height="36" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
+  <rect x="160" y="162" width="235" height="36" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
   <text x="277" y="185" text-anchor="middle" class="tiny">上一轮轨迹（完整保留）</text>
-  <rect x="395" y="162" width="75" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="395" y="162" width="75" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="432" y="185" text-anchor="middle" class="tiny">assistant</text>
-  <rect x="470" y="162" width="55" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="470" y="162" width="55" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="497" y="185" text-anchor="middle" class="tiny">tool</text>
   <text x="545" y="185" class="s">多看到三条汇率结果</text>
 
   <text x="30" y="260" class="b">第 3 轮</text>
   <rect x="110" y="242" width="50" height="36" rx="5" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.2"/>
   <text x="135" y="265" text-anchor="middle" class="tiny">前缀</text>
-  <rect x="160" y="242" width="365" height="36" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
+  <rect x="160" y="242" width="365" height="36" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
   <text x="342" y="265" text-anchor="middle" class="tiny">前两轮轨迹（只读，不改写）</text>
-  <rect x="525" y="242" width="80" height="36" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="525" y="242" width="80" height="36" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="565" y="265" text-anchor="middle" class="tiny">最终回答</text>
   <text x="625" y="265" class="s">多看到汇总结果</text>
 

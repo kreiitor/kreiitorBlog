@@ -2,16 +2,16 @@
   <title id="fig-title">自主 Agent 的执行循环</title>
   <desc id="fig-desc">思考、行动、观察三个环节首尾相连；判断框检查退出条件，满足则输出最终结果，否则回到思考</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><path d="M400 130 Q508.25317547305485 220 616.5063509461097 310" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M616.5063509461097 310 Q400.00000000000006 310 183.49364905389038 310.00000000000006" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M183.49364905389038 310.00000000000006 Q291.7468245269452 220.00000000000003 400 130" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="334" y="102" width="132" height="56" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><path d="M400 130 Q508.25317547305485 220 616.5063509461097 310" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M616.5063509461097 310 Q400.00000000000006 310 183.49364905389038 310.00000000000006" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M183.49364905389038 310.00000000000006 Q291.7468245269452 220.00000000000003 400 130" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="334" y="102" width="132" height="56" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="400" y="127.25" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">① 思考</text>
-  <text x="400" y="141" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">还需更多信息</text><rect x="550.5063509461097" y="282" width="132" height="56" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="400" y="141" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">还需更多信息</text><rect x="550.5063509461097" y="282" width="132" height="56" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="616.5063509461097" y="307.25" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">② 行动</text>
   <text x="616.5063509461097" y="321" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">web_search(...)</text><rect x="117.49364905389038" y="282.00000000000006" width="132" height="56" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="183.49364905389038" y="307.25000000000006" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">③ 观察</text>

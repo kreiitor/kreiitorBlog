@@ -2,7 +2,7 @@
   <title id="fig-title">数据路径与控制路径的三种组织方式</title>
   <desc id="fig-desc">普通路径的载荷经过主机内存；GPUDirect RDMA 让网卡直接读写 GPU 内存但仍由 CPU 提交；设备发起则让 GPU 自己提交请求并检查完成。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -24,7 +24,7 @@
   <text x="688" y="100" class="tiny">控制</text>
 
   <text x="28" y="128" class="b">① CPU 提交：载荷经主机内存</text>
-  <rect x="28" y="140" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="28" y="140" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="78" y="170" text-anchor="middle" class="tiny">GPU A</text>
   <rect x="158" y="140" width="120" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="218" y="162" text-anchor="middle" class="tiny">主机内存</text>
@@ -33,7 +33,7 @@
   <text x="353" y="170" text-anchor="middle" class="tiny">网卡 A</text>
   <rect x="428" y="140" width="90" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="473" y="170" text-anchor="middle" class="tiny">网卡 B</text>
-  <rect x="548" y="140" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="548" y="140" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="598" y="170" text-anchor="middle" class="tiny">GPU B</text>
 
   <path d="M128 164 L158 164" stroke="var(--blue,#2647d7)" stroke-width="2.4" fill="none" marker-end="url(#arrow)"/>
@@ -44,13 +44,13 @@
   <text x="353" y="112" text-anchor="middle" class="tiny">CPU 提交</text>
 
   <text x="28" y="230" class="b">② GPUDirect RDMA：载荷绕过主机内存，仍由 CPU 提交</text>
-  <rect x="28" y="242" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="28" y="242" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="78" y="272" text-anchor="middle" class="tiny">GPU A</text>
   <rect x="198" y="242" width="90" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="243" y="272" text-anchor="middle" class="tiny">网卡 A</text>
   <rect x="368" y="242" width="90" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="413" y="272" text-anchor="middle" class="tiny">网卡 B</text>
-  <rect x="538" y="242" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="538" y="242" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="588" y="272" text-anchor="middle" class="tiny">GPU B</text>
 
   <path d="M128 266 L198 266" stroke="var(--blue,#2647d7)" stroke-width="2.4" fill="none" marker-end="url(#arrow)"/>
@@ -61,13 +61,13 @@
   <text x="700" y="270" class="tiny">无主机内存中转</text>
 
   <text x="28" y="334" class="b">③ 设备发起：控制也绕过 CPU</text>
-  <rect x="28" y="346" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="28" y="346" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="78" y="376" text-anchor="middle" class="tiny">GPU A</text>
   <rect x="228" y="346" width="90" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="273" y="376" text-anchor="middle" class="tiny">网卡 A</text>
   <rect x="408" y="346" width="90" height="48" rx="7" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="453" y="376" text-anchor="middle" class="tiny">网卡 B</text>
-  <rect x="588" y="346" width="100" height="48" rx="7" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <rect x="588" y="346" width="100" height="48" rx="7" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="638" y="376" text-anchor="middle" class="tiny">GPU B</text>
 
   <path d="M128 370 L228 370" stroke="var(--blue,#2647d7)" stroke-width="2.4" fill="none" marker-end="url(#arrow)"/>

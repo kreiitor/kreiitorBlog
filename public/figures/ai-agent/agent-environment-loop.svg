@@ -2,7 +2,7 @@
   <title id="fig-title">Agent 与 Environment 的观察—行动闭环</title>
   <desc id="fig-desc">Agent 在边界内由 Model、上下文和 Harness 组成；Environment 在 Agent 之外。环境向 Agent 提供观察，Agent 向环境施加行动。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:28px;font-weight:700;fill:var(--ink,#202735)}
@@ -21,7 +21,7 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="55" y="70" width="360" height="310" rx="14" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="55" y="70" width="360" height="3" fill="var(--blue,#2647d7)"/><rect x="55" y="70" width="360" height="310" rx="14" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
   <text x="235" y="102" text-anchor="middle" class="head">Agent</text>
 
   <rect x="85" y="145" width="300" height="58" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
@@ -44,7 +44,7 @@
   <text x="622" y="204" text-anchor="middle" class="small">网页 · API · 应用</text>
   <text x="622" y="232" text-anchor="middle" class="small">用户 · 其他 Agent</text>
   <text x="622" y="260" text-anchor="middle" class="small">仿真或物理世界</text>
-  <rect x="545" y="300" width="155" height="42" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="545" y="300" width="155" height="42" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="622" y="326" text-anchor="middle" class="small on-yellow">真实状态</text>
 
   <path d="M500 190 H425" class="arrow-blue"/>

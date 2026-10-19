@@ -2,7 +2,7 @@
   <title id="fig-title">上下文窗口的组成</title>
   <desc id="fig-desc">一次模型调用看到的上下文窗口由系统提示词、工具定义、对话历史、本轮思考和当前生成位置组成，最终序列化为 token 流交给 Transformer。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:28px;font-weight:700;fill:var(--ink,#202735)}
@@ -21,7 +21,7 @@
   <text x="295" y="130" text-anchor="middle" class="label on-blue">系统提示词</text>
   <text x="295" y="149" text-anchor="middle" class="small on-blue">角色 · 规则 · 输出约束</text>
 
-  <rect x="102" y="168" width="386" height="58" rx="6" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="102" y="168" width="386" height="58" rx="6" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="295" y="191" text-anchor="middle" class="label">工具定义</text>
   <text x="295" y="213" text-anchor="middle" class="small">名称 · 参数 · 描述</text>
 
@@ -30,7 +30,7 @@
   <text x="295" y="283" text-anchor="middle" class="small">用户消息 · 模型回复</text>
   <text x="295" y="302" text-anchor="middle" class="small">工具调用 · 工具结果</text>
 
-  <rect x="102" y="326" width="386" height="40" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="102" y="326" width="386" height="40" rx="6" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="295" y="351" text-anchor="middle" class="label on-yellow">本轮思考 / 当前生成位置</text>
 
   <path d="M295 386 V402" stroke="var(--blue,#2647d7)" stroke-width="3" fill="none"/>

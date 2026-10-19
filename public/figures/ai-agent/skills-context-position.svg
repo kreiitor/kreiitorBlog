@@ -2,7 +2,7 @@
   <title id="fig-title">Skills 在上下文中的位置</title>
   <desc id="fig-desc">系统提示词与工具定义构成稳定前缀，Skill 目录与完整正文各自只在首次出现时写入一次，之后的新内容只追加到消息数组末尾。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -27,7 +27,7 @@
   <text x="92" y="152" class="b">user：从 PDF 生成 PPT</text>
   <text x="92" y="169" class="tiny">真实用户消息</text>
 
-  <rect x="72" y="184" width="450" height="42" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="72" y="184" width="450" height="42" rx="6" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="92" y="202" class="b">Skill 目录（约 300 tokens）</text>
   <text x="92" y="219" class="tiny">emit-once：首轮写入，之后命中</text>
 
@@ -38,7 +38,7 @@
   <text x="92" y="298" class="b">tool：Launching skill: pptx</text>
   <text x="500" y="298" text-anchor="end" class="tiny">占位符</text>
 
-  <rect x="72" y="318" width="450" height="42" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="72" y="318" width="450" height="42" rx="6" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="92" y="336" class="b">Skill 正文（约 2k tokens）</text>
   <text x="92" y="353" class="tiny">emit-once：追加在调用位置</text>
 

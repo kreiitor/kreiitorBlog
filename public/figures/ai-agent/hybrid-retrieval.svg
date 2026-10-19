@@ -2,7 +2,7 @@
   <title id="fig-title">混合检索与重排序流水线</title>
   <desc id="fig-desc">查询同时进入稠密检索和 BM25 稀疏检索，两路结果经 RRF 融合成候选池，再由跨编码器重排序输出最终顺序。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -45,7 +45,7 @@
   <path d="M160 210 L200 170" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <path d="M160 234 L200 300" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="440" y="184" width="120" height="76" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="440" y="184" width="120" height="76" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="500" y="209" text-anchor="middle" class="b">RRF 融合</text>
   <text x="500" y="231" text-anchor="middle" class="tiny">6 篇 → 5 篇</text>
   <text x="500" y="249" text-anchor="middle" class="tiny">只看名次</text>

@@ -724,7 +724,7 @@ You are a helpful assistant.<|im_end|>
   图注说明：左侧是结构化的 JSON 消息，右侧是模型实际处理的线性 token 流。`<|im_start|>` 和 `<|im_end|>` 是特殊 token，告诉模型每条消息的角色和边界。
 
 <figure class="diagram">
-  <img src="../../figures/ai-agent/agent-ch02-chat-template.svg" alt="左侧是 system 与 user 两条 JSON 消息，右侧是渲染后的 token 流：im_start system、你是助手、im_end、im_start user、你好、im_end、im_start assistant" width="800" height="381" loading="lazy" decoding="async">
+  <img src="../../figures/ai-agent/agent-ch02-chat-template.svg" alt="左侧是 system 与 user 两条 JSON 消息，右侧是渲染后的 token 流：im_start system、你是助手、im_end、im_start user、你好、im_end、im_start assistant" width="800" height="148" loading="lazy" decoding="async">
   <figcaption><strong>两套表示。</strong> 开发者写的是带 role 的结构化消息，模型读的是用特殊标记分段的线性 token 流；末尾停在 assistant 起点，模型从这里开始生成。</figcaption>
 </figure>
 

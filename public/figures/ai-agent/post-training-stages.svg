@@ -2,7 +2,7 @@
   <title id="fig-title">从预训练到 RL 的四阶段</title>
   <desc id="fig-desc">预训练、Mid-training、SFT 与 RL 使用不同的数据与优化目标，分别形成语言与世界知识、领域基础能力、指令与格式协议、可迁移决策策略。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -30,7 +30,7 @@
   <text x="48" y="294" class="b onblue">语言与世界知识</text>
   <text x="48" y="322" class="tiny onblue">代价：极高</text>
 
-  <rect x="224" y="92" width="172" height="244" rx="9" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="224" y="92" width="172" height="244" rx="9" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="310" y="124" text-anchor="middle" class="h">② Mid-training</text>
   <text x="310" y="146" text-anchor="middle" class="tiny">继续预训练</text>
   <text x="240" y="180" class="tiny">数据</text>
@@ -52,7 +52,7 @@
   <text x="432" y="294" class="b">指令、格式、流程</text>
   <text x="432" y="322" class="tiny">代价：低</text>
 
-  <rect x="608" y="92" width="160" height="244" rx="9" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="608" y="92" width="160" height="244" rx="9" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
   <text x="688" y="124" text-anchor="middle" class="h">④ RL</text>
   <text x="688" y="146" text-anchor="middle" class="tiny">强化学习</text>
   <text x="624" y="180" class="tiny">数据</text>

@@ -2,7 +2,7 @@
   <title id="fig-title">τ²-bench 的双控结构与四层记录</title>
   <desc id="fig-desc">对话层是用户模拟器与 Agent 的多轮交互；中间是共享环境，用户侧与 Agent 侧各有工具，都能改写同一份状态；底层把终态、动作、信息与语言分四层记录，奖励只取环境断言这一层</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -45,7 +45,7 @@
 
   <text x="36" y="302" font-size="11" font-weight="600" fill="var(--ink,#202735)">验证层</text>
   <path d="M377 252 L377 294" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="150" y="298" width="140" height="52" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="150" y="298" width="140" height="52" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
   <text x="220" y="320" text-anchor="middle" font-size="11" fill="var(--ink,#202735)">环境断言</text>
   <text x="220" y="338" text-anchor="middle" font-size="10" fill="var(--muted,#596171)">数据可用 / 测速达标</text>
   <rect x="307" y="298" width="140" height="52" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.2"/>

@@ -2,7 +2,7 @@
   <title id="fig-title">VLA 与物理引擎的闭环</title>
   <desc id="fig-desc">指令与三路 224×224 RGB 观测进入 VLA：SigLIP 视觉编码器、Llama 2 7B 语言模型、14 维动作解码器；动作送入 SAPIEN 双臂物理引擎，观测再返回模型形成闭环</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
@@ -11,11 +11,11 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="47.66666666666667" y="104.5" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">指令</text>
-  <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">将罐子放入锅中</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">将罐子放入锅中</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="149.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">多模态观测</text>
   <text x="400.00000000000006" y="165.375" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">三路 224×224 RGB + 14 维关节状</text><text x="400.00000000000006" y="181.575" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">态</text><rect x="542.3333333333334" y="104.5" width="210" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
   <text x="647.3333333333334" y="149.125" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">VLA 模型</text>
-  <text x="647.3333333333334" y="165.375" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">SigLIP → Llama 2 7B → 14 维动</text><text x="647.3333333333334" y="181.575" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">作</text><rect x="47.66666666666667" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="647.3333333333334" y="165.375" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">SigLIP → Llama 2 7B → 14 维动</text><text x="647.3333333333334" y="181.575" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">作</text><rect x="47.66666666666667" y="267.5" width="210" height="112" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">SAPIEN 物理引擎</text>
   <text x="152.66666666666669" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">双臂各 7 自由度 · 随机化 · 碰撞</text><rect x="295.00000000000006" y="267.5" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="312.125" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">评估指标</text>

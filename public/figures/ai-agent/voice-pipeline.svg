@@ -2,7 +2,7 @@
   <title id="fig-title">语音级联流水线的串行延迟</title>
   <desc id="fig-desc">VAD、ASR、LLM 首 token、LLM 生成与 TTS 五段依次执行；空载总延迟最优约 950 毫秒，最差约 2300 毫秒。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
+    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
     .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
@@ -17,27 +17,27 @@
   </defs>
   <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="28" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="28" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="96" y="118" text-anchor="middle" class="b">VAD</text>
   <text x="96" y="142" text-anchor="middle" class="tiny">500–800 ms</text>
   <text x="96" y="164" text-anchor="middle" class="tiny">判断是否说完</text>
 
-  <rect x="176" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="176" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="244" y="118" text-anchor="middle" class="b">ASR</text>
   <text x="244" y="142" text-anchor="middle" class="tiny">50–200 ms</text>
   <text x="244" y="164" text-anchor="middle" class="tiny">音频转文字</text>
 
-  <rect x="324" y="94" width="136" height="92" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
+  <rect x="324" y="94" width="136" height="92" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
   <text x="392" y="118" text-anchor="middle" class="b">LLM 首 token</text>
   <text x="392" y="142" text-anchor="middle" class="tiny">100–500 ms</text>
   <text x="392" y="164" text-anchor="middle" class="tiny">用户感知的等待起点</text>
 
-  <rect x="472" y="94" width="136" height="92" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
+  <rect x="472" y="94" width="136" height="92" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
   <text x="540" y="118" text-anchor="middle" class="b">LLM 生成</text>
   <text x="540" y="142" text-anchor="middle" class="tiny">100–300 ms</text>
   <text x="540" y="164" text-anchor="middle" class="tiny">逐 token 生成</text>
 
-  <rect x="620" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="620" y="94" width="136" height="92" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
   <text x="688" y="118" text-anchor="middle" class="b">TTS</text>
   <text x="688" y="142" text-anchor="middle" class="tiny">200–500 ms</text>
   <text x="688" y="164" text-anchor="middle" class="tiny">首包合成与播放</text>
@@ -62,27 +62,27 @@
 
   <text x="28" y="325" class="b">最优</text>
   <rect x="60" y="306" width="142" height="32" fill="var(--blue,#2647d7)"/>
-  <rect x="202" y="306" width="14" height="32" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
+  <rect x="202" y="306" width="14" height="32" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
   <rect x="216" y="306" width="28" height="32" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
-  <rect x="244" y="306" width="28" height="32" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <rect x="244" y="306" width="28" height="32" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
   <rect x="272" y="306" width="57" height="32" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1"/>
   <text x="340" y="327" class="b">950 ms</text>
 
   <text x="28" y="367" class="b">最差</text>
   <rect x="60" y="348" width="227" height="32" fill="var(--blue,#2647d7)"/>
-  <rect x="287" y="348" width="57" height="32" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
+  <rect x="287" y="348" width="57" height="32" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
   <rect x="344" y="348" width="142" height="32" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
-  <rect x="486" y="348" width="85" height="32" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <rect x="486" y="348" width="85" height="32" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
   <rect x="571" y="348" width="141" height="32" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1"/>
   <text x="720" y="369" class="b">2300 ms</text>
 
   <rect x="60" y="396" width="10" height="10" fill="var(--blue,#2647d7)"/>
   <text x="76" y="405" class="tiny">VAD</text>
-  <rect x="170" y="396" width="10" height="10" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
+  <rect x="170" y="396" width="10" height="10" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1"/>
   <text x="186" y="405" class="tiny">ASR</text>
   <rect x="280" y="396" width="10" height="10" fill="var(--yellow,#ffe04b)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
   <text x="296" y="405" class="tiny">LLM 首 token</text>
-  <rect x="430" y="396" width="10" height="10" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
+  <rect x="430" y="396" width="10" height="10" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1"/>
   <text x="446" y="405" class="tiny">LLM 生成</text>
   <rect x="560" y="396" width="10" height="10" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1"/>
   <text x="576" y="405" class="tiny">TTS</text>
