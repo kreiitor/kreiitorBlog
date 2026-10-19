@@ -1,13 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
-  <title id="fig-title">两类评估环境的结构对照</title>
-  <desc id="fig-desc">左侧工具调用型中 Agent 调用 run_python 得到结果，执行器用 assert 判定并给出 reward = 1.0；右侧人机交互型中用户模拟器与 Agent 对话，再做数据库与对话的双重验证，reward = 0/1</desc>
+  <title id="fig-title">两类评估环境的验证路径</title>
+  <desc id="fig-desc">工具调用型只有一条检查：Agent 调用工具执行，断言或测试通过即得 reward 1.0。人机交互型里 Agent 与用户模拟器多轮对话，之后既要查数据库状态，又要确认对话里确实说明了必要信息，两处都过才得分</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper)"/><rect x="34" y="92" width="359" height="300" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/><text x="213.5" y="118" font-size="14" fill="var(--ink)" font-weight="700" text-anchor="middle">工具调用型</text><text x="213.5" y="136" font-size="10.5" fill="var(--ink)" font-weight="400" text-anchor="middle">Verifiers</text><text x="46" y="174" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="58" y="174" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">Agent（LLM）→ 工具执行环境</text><text x="46" y="195.95" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="58" y="195.95" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">run_python(&quot;def fib(n): ...&quot;) → 结果</text><text x="46" y="217.89999999999998" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="58" y="217.89999999999998" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">可执行验证器：assert 通过</text><text x="46" y="239.84999999999997" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="58" y="239.84999999999997" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">reward = 1.0（全部通过）</text><text x="46" y="261.79999999999995" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="58" y="261.79999999999995" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">无需人工 / LLM 评判</text><rect x="407" y="92" width="359" height="300" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/><text x="586.5" y="118" font-size="14" fill="var(--ink)" font-weight="700" text-anchor="middle">人机交互型</text><text x="586.5" y="136" font-size="10.5" fill="var(--ink)" font-weight="400" text-anchor="middle">τ-bench</text><text x="419" y="174" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="431" y="174" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">用户模拟器与 Agent 多轮对话</text><text x="419" y="195.95" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="431" y="195.95" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">lookup_booking(...) → 订单状态</text><text x="419" y="217.89999999999998" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="431" y="217.89999999999998" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">双重验证：数据库 + 对话</text><text x="419" y="239.84999999999997" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="431" y="239.84999999999997" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">reward = 0/1（双重均通过）</text><text x="419" y="261.79999999999995" font-size="12" fill="var(--ink)" font-weight="700" text-anchor="start">•</text><text x="431" y="261.79999999999995" font-size="11.5" fill="var(--ink)" font-weight="400" text-anchor="start">渐进式信息透露 + 状态验证</text><line x1="70" y1="408" x2="730" y2="408" stroke="var(--line)" stroke-width="1.5" marker-end="url(#arrow)"/><text x="70" y="400" font-size="10" fill="var(--muted)" font-weight="600" text-anchor="start">只做</text><text x="730" y="400" font-size="10" fill="var(--muted)" font-weight="600" text-anchor="end">做且说</text><text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">左例：run_python 返回 [1,1,2,3,5,8]，assert fib(10) == 55 与 assert fib(0) == 0 均通过，reward = 1.0。右例：lookup_booking(&quot;BK-98712&quot;) 返回</text><text x="400" y="429.4" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">confirmed / UA123；数据库断言 booking.status == &quot;cancelled&quot;，对话需包含“退款 $150”与“3-5 个工作日到账”。</text>
+  <rect width="800" height="450" fill="var(--paper)"/>
+
+  <text x="36" y="64" font-size="12" font-weight="600" fill="var(--ink)">工具调用型</text>
+  <text x="36" y="82" font-size="10.5" fill="var(--muted)">只做</text>
+  <rect x="36" y="110" width="92" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="82" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink)">Agent</text>
+  <path d="M128 130 L152 130" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="156" y="110" width="92" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="202" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink)">工具执行</text>
+  <path d="M248 130 L272 130" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="276" y="110" width="92" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="322" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink)">断言 / 测试</text>
+  <path d="M322 150 L322 196" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="262" y="200" width="120" height="38" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.3"/>
+  <text x="322" y="224" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">reward 1.0</text>
+  <text x="36" y="290" font-size="10.5" fill="var(--muted)">一处判定：状态或测试通过即得分</text>
+  <text x="36" y="310" font-size="10.5" fill="var(--muted)" class="mono">run_python → assert fib(10) == 55</text>
+
+  <line x1="400" y1="56" x2="400" y2="330" stroke="var(--line-soft)" stroke-width="1"/>
+
+  <text x="424" y="64" font-size="12" font-weight="600" fill="var(--ink)">人机交互型</text>
+  <text x="424" y="82" font-size="10.5" fill="var(--muted)">做且说</text>
+  <rect x="424" y="110" width="92" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="470" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink)">Agent</text>
+  <path d="M516 122 L596 122" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M596 140 L516 140" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="600" y="110" width="120" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="660" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink)">用户模拟器</text>
+
+  <path d="M470 150 L470 190" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M660 150 L660 190" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="410" y="194" width="120" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="470" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink)">数据库状态</text>
+  <rect x="600" y="194" width="120" height="40" fill="var(--surface)" stroke="var(--blue)" stroke-width="1.2"/>
+  <text x="660" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink)">对话内容</text>
+
+  <path d="M470 234 L470 264 M660 234 L660 264 M470 264 L660 264" stroke="var(--blue)" stroke-width="1.5" fill="none"/>
+  <path d="M590 264 L590 282" stroke="var(--blue)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="516" y="286" width="148" height="38" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.3"/>
+  <text x="590" y="310" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">reward 0 / 1</text>
+  <text x="424" y="356" font-size="10.5" fill="var(--muted)">两处都过才得分：改对了，还要把退款金额与到账时间说到</text>
 </svg>

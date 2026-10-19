@@ -22,7 +22,7 @@ const figureRules = [
 
 const proseRules = [
   {id: 'meta-note', re: /这里(补充|复算|补算|整理|特意|明确指出)|（这里|图内|图侧|图底|原文|本书/g, hint: '编辑过程/出处交代：直接陈述事实'},
-  {id: 'ai-connector', re: /换句话说|本质上|值得注意的是|不仅.{0,12}而且|这就解释了|这解释了|一句话总结|一句话说/g, hint: '套话连接词：删掉后句子通常更清楚'},
+  {id: 'ai-connector', re: /换句话说|值得注意的是|一句话总结|这就解释了|这解释了|本质上就是/g, hint: '套话连接词：删掉后句子通常更清楚'},
 ];
 
 function walk(dir, ext) {
