@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="325" viewBox="0 74 800 325" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">自主 Agent 的执行循环</title>
   <desc id="fig-desc">思考、行动、观察三个环节首尾相连；判断框检查退出条件，满足则输出最终结果，否则回到思考</desc>
   <style>
@@ -7,13 +7,13 @@
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper)"/><path d="M400 130 Q508.25317547305485 220 616.5063509461097 310" fill="none" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><path d="M616.5063509461097 310 Q400.00000000000006 310 183.49364905389038 310.00000000000006" fill="none" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><path d="M183.49364905389038 310.00000000000006 Q291.7468245269452 220.00000000000003 400 130" fill="none" stroke="var(--blue)" stroke-width="2" marker-end="url(#arrow)"/><rect x="334" y="102" width="132" height="56" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
-  <text x="400" y="127.25" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">① 思考</text>
-  <text x="400" y="141" font-size="10" fill="var(--ink)" font-weight="400" text-anchor="middle">还需更多信息</text><rect x="550.5063509461097" y="282" width="132" height="56" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
-  <text x="616.5063509461097" y="307.25" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">② 行动</text>
-  <text x="616.5063509461097" y="321" font-size="10" fill="var(--ink)" font-weight="400" text-anchor="middle">web_search(...)</text><rect x="117.49364905389038" y="282.00000000000006" width="132" height="56" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
-  <text x="183.49364905389038" y="307.25000000000006" font-size="11" fill="var(--ink)" font-weight="700" text-anchor="middle">③ 观察</text>
-  <text x="183.49364905389038" y="321.00000000000006" font-size="10" fill="var(--ink)" font-weight="400" text-anchor="middle">tool_result: ...</text><text x="400" y="242.8" font-size="12" fill="var(--muted)" font-weight="600" text-anchor="middle">满足退出条件？ 是 → 输</text><text x="400" y="259" font-size="12" fill="var(--muted)" font-weight="600" text-anchor="middle">出结果 否 → 继续下一轮</text><text x="400" y="418" font-size="9.5" fill="var(--muted)" font-weight="400" text-anchor="middle">退出条件（任一满足）：任务完成 · 调用 final_answer · 无工具调用返回 · 错误次数超限 · 达到最大轮次</text>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><path d="M400 130 Q508.25317547305485 220 616.5063509461097 310" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M616.5063509461097 310 Q400.00000000000006 310 183.49364905389038 310.00000000000006" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><path d="M183.49364905389038 310.00000000000006 Q291.7468245269452 220.00000000000003 400 130" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="334" y="102" width="132" height="56" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
+  <text x="400" y="127.25" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">① 思考</text>
+  <text x="400" y="141" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">还需更多信息</text><rect x="550.5063509461097" y="282" width="132" height="56" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
+  <text x="616.5063509461097" y="307.25" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">② 行动</text>
+  <text x="616.5063509461097" y="321" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">web_search(...)</text><rect x="117.49364905389038" y="282.00000000000006" width="132" height="56" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
+  <text x="183.49364905389038" y="307.25000000000006" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">③ 观察</text>
+  <text x="183.49364905389038" y="321.00000000000006" font-size="10" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">tool_result: ...</text><text x="400" y="242.8" font-size="12" fill="var(--muted,#596171)" font-weight="600" text-anchor="middle">满足退出条件？ 是 → 输</text><text x="400" y="259" font-size="12" fill="var(--muted,#596171)" font-weight="600" text-anchor="middle">出结果 否 → 继续下一轮</text><text x="400" y="372" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">退出条件（任一满足）：任务完成 · 调用 final_answer · 无工具调用返回 · 错误次数超限 · 达到最大轮次</text>
 </svg>

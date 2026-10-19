@@ -1,53 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="396" viewBox="0 54 800 396" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">从任务到硬件的六层分工</title>
   <desc id="fig-desc">应用与任务、模型与负载、训练与推理系统、算子与编译运行时、处理器与存储、互联与数据中心，六层自上而下把任务变成计算与数据访问。</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink)}
-    .sub{font-size:14px;fill:var(--muted)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink)}
-    .s{font-size:13px;fill:var(--muted)}
-    .tiny{font-size:12px;fill:var(--muted)}
-    .num{font-size:15px;font-weight:700;fill:var(--on-blue)}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
+    .sub{font-size:14px;fill:var(--muted,#596171)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
+    .s{font-size:13px;fill:var(--muted,#596171)}
+    .tiny{font-size:12px;fill:var(--muted,#596171)}
+    .num{font-size:15px;font-weight:700;fill:var(--on-blue,#fffefa)}
   </style>
-  <rect width="800" height="450" fill="var(--paper)"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
   <g>
-    <rect x="80" y="82" width="640" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-    <circle cx="56" cy="106" r="16" fill="var(--blue)"/>
+    <rect x="80" y="82" width="640" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+    <circle cx="56" cy="106" r="16" fill="var(--blue,#2647d7)"/>
     <text x="56" y="111" text-anchor="middle" class="num">1</text>
     <text x="102" y="111" class="h">应用与任务</text>
     <text x="380" y="111" class="s">要完成什么，何时完成</text>
 
-    <rect x="80" y="138" width="640" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-    <circle cx="56" cy="162" r="16" fill="var(--blue)"/>
+    <rect x="80" y="138" width="640" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+    <circle cx="56" cy="162" r="16" fill="var(--blue,#2647d7)"/>
     <text x="56" y="167" text-anchor="middle" class="num">2</text>
     <text x="102" y="167" class="h">模型与负载</text>
     <text x="380" y="167" class="s">需要哪些计算和数据</text>
 
-    <rect x="80" y="194" width="640" height="48" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
-    <circle cx="56" cy="218" r="16" fill="var(--blue)"/>
+    <rect x="80" y="194" width="640" height="48" rx="8" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+    <circle cx="56" cy="218" r="16" fill="var(--blue,#2647d7)"/>
     <text x="56" y="223" text-anchor="middle" class="num">3</text>
     <text x="102" y="223" class="h">训练与推理系统</text>
     <text x="380" y="223" class="s">请求、batch 与加速器</text>
 
-    <rect x="80" y="250" width="640" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-    <circle cx="56" cy="274" r="16" fill="var(--blue)"/>
+    <rect x="80" y="250" width="640" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+    <circle cx="56" cy="274" r="16" fill="var(--blue,#2647d7)"/>
     <text x="56" y="279" text-anchor="middle" class="num">4</text>
     <text x="102" y="279" class="h">算子与编译运行时</text>
     <text x="380" y="279" class="s">运算如何变成程序</text>
 
-    <rect x="80" y="306" width="640" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-    <circle cx="56" cy="330" r="16" fill="var(--blue)"/>
+    <rect x="80" y="306" width="640" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+    <circle cx="56" cy="330" r="16" fill="var(--blue,#2647d7)"/>
     <text x="56" y="335" text-anchor="middle" class="num">5</text>
     <text x="102" y="335" class="h">处理器与存储</text>
     <text x="380" y="335" class="s">计算并保存数据</text>
 
-    <rect x="80" y="362" width="640" height="48" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
-    <circle cx="56" cy="386" r="16" fill="var(--yellow)"/>
-    <text x="56" y="391" text-anchor="middle" class="num" fill="var(--on-yellow)">6</text>
+    <rect x="80" y="362" width="640" height="48" rx="8" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+    <circle cx="56" cy="386" r="16" fill="var(--yellow,#ffe04b)"/>
+    <text x="56" y="391" text-anchor="middle" class="num" fill="var(--on-yellow,#202735)">6</text>
     <text x="102" y="391" class="h">互联与数据中心</text>
     <text x="380" y="391" class="s">连接设备，供电散热</text>
   </g>

@@ -69,16 +69,16 @@ cover: /covers/series-ai-infra.svg
 三种资源的账要分开算，单位也不同。CPU 工作量按这 30 秒里工具实际占核的时间累计：一个 CPU 核执行三次、每次 1 秒，得到 3 秒。这里给“CPU 时间”下的定义是各个核实际执行时间的总和，记作 CPU·秒，所以一个核执行 3 秒或者三个核各执行 1 秒，都是 3 CPU·秒。内存按容量乘时间记账：环境始终占用 2 GiB 内存，内存占用量与时间的乘积为 $2 \times 30 = 60$ GiB·秒。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-task-timeline.svg" alt="横轴 0–30 秒，两条泳道：模型调用占 0–9、10–19、20–29 秒，各 9 秒；工具执行占 9–10、19–20、29–30 秒，各 1 秒，形成模型与工具交替的六段" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-task-timeline.svg" alt="横轴 0–30 秒，两条泳道：模型调用占 0–9、10–19、20–29 秒，各 9 秒；工具执行占 9–10、19–20、29–30 秒，各 1 秒，形成模型与工具交替的六段" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>同一任务里两类资源此起彼伏。</strong> 模型调用每轮占 9 秒，工具只占 1 秒；三轮串行结束于第 30 秒，工具累计只消耗 3 CPU·秒。</figcaption>
 </figure>
 
 这种等待来自控制器与执行器之间的交接：模型调用结束时，控制器取得完整工具参数，随后把参数发给执行器；执行器修改文件、启动测试、保存结果，再将结果交回控制器。工具必须等模型给出完整参数才能执行，因此在任务的大部分时间里都不占用 CPU。
 
-模型采用流式输出时，可以更早返回部分文本，但工具仍需等待完整的调用参数：收到目标文件、修改内容和操作类型之后，执行器才能执行这次修改。而模板下载和运行时初始化只依赖预先确定的环境类型，可以提前放到模型生成期间。这里指出第 11.2 节将利用这段时间准备环境。
+模型采用流式输出时，可以更早返回部分文本，但工具仍需等待完整的调用参数：收到目标文件、修改内容和操作类型之后，执行器才能执行这次修改。而模板下载和运行时初始化只依赖预先确定的环境类型，可以提前放到模型生成期间。第 11.2 节将利用这段时间准备环境。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-memory-residency.svg" alt="横轴 0–30 秒，一条 2 GiB 的内存占用条从 0 延续到 30 秒；整条面积为 2 乘 30 等于 60 GiB·秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-memory-residency.svg" alt="横轴 0–30 秒，一条 2 GiB 的内存占用条从 0 延续到 30 秒；整条面积为 2 乘 30 等于 60 GiB·秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>等待模型的时间也要付内存。</strong> 工具只在三段各 1 秒里执行，环境却在全部 30 秒里保持 2 GiB 占用，矩形面积因此是 60 GiB·秒。</figcaption>
 </figure>
 
@@ -88,7 +88,7 @@ $$
 T_{\text{task}} = T_{\text{queue}} + T_{\text{prepare}} + \sum_{r=1}^{R}\left(T_{\text{model},r} + T_{\text{tool},r}\right) + T_{\text{commit}}
 $$
 
-  其中 $T_{\text{task}}$ 是任务从到达到最终提交的总时间；$T_{\text{queue}}$ 是排队等待进入系统的时间；$T_{\text{prepare}}$ 是环境准备时间；$R$ 是任务的轮数（章首任务 $R = 3$）；$T_{\text{model},r}$ 是第 $r$ 轮模型调用时间，这里说明它**包括处理请求和返回结果**；$T_{\text{tool},r}$ 是第 $r$ 轮工具执行时间，这里说明它**包括保存本轮结果**；$T_{\text{commit}}$ 是**最终提交还需花费的时间**。
+  其中 $T_{\text{task}}$ 是任务从到达到最终提交的总时间；$T_{\text{queue}}$ 是排队等待进入系统的时间；$T_{\text{prepare}}$ 是环境准备时间；$R$ 是任务的轮数（章首任务 $R = 3$）；$T_{\text{model},r}$ 是第 $r$ 轮模型调用时间，这说明它**包括处理请求和返回结果**；$T_{\text{tool},r}$ 是第 $r$ 轮工具执行时间，这说明它**包括保存本轮结果**；$T_{\text{commit}}$ 是**最终提交还需花费的时间**。
 
 这里接着指出一个关键变化：**如果在模型调用期间准备环境，两者都完成后，工具即可开始执行**。原本串行的两个阶段有了重叠，**任务总时间和环境占用时间也随之改变**。
 
@@ -130,7 +130,7 @@ $$
 
 “稳定运行时模型服务每秒接收 30 次调用”这句话里的“稳定”二字，排除掉了系统刚启动或者突发流量涌入的瞬态。突发的情形要等到 11.3.2 才处理，那里会看到同样 48 核、80 次调用同时到达时平均要等 0.4 秒。
 
-上面这条路径是先从资源需求率出发的，反过来也可以先求环境数量。每项任务占用环境 30 秒，每秒有 10 项任务开始使用环境，因此系统稳定运行时平均有 300 个环境正在使用。这里指出这就是 Little 定律在本题中的形式：
+上面这条路径是先从资源需求率出发的，反过来也可以先求环境数量。每项任务占用环境 30 秒，每秒有 10 项任务开始使用环境，因此系统稳定运行时平均有 300 个环境正在使用。这就是 Little 定律在本题中的形式：
 
 $$
 N_{\text{env}} = \lambda_{\text{env}} T_{\text{env}} = 10 \times 30 = 300
@@ -143,12 +143,12 @@ $$
 把每次模型调用从 9 秒延长到 12 秒，工具执行保持不变：任务时间变成 39 秒，平均内存需求升到 780 GiB，同时处理的模型调用增至 360 次，工具仍然只需平均使用 30 个 CPU 核。这里的结论是，内存缺口进一步扩大，模型调用并发数也超过了 320 个并发槽，排队的任务更多了。由此得出一句重要判断：模型响应变慢，也会增加工具平台的内存需求，因为环境需要保留得更久。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-capacity-9s.svg" alt="三根柱：CPU 核 30/48 为 62.5%，模型并发 270/320 约 84%，内存 600/358 约 168%；内存柱越过 100% 容量线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-capacity-9s.svg" alt="三根柱：CPU 核 30/48 为 62.5%，模型并发 270/320 约 84%，内存 600/358 约 168%；内存柱越过 100% 容量线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>前两项还有余量，内存已经越线。</strong> 柱高是需求量除以可用容量；虚线 100% 表示容量上限，只有内存柱穿过它。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-capacity-12s.svg" alt="三根柱：CPU 核仍为 62.5%，模型并发 360/320 为 112.5%，内存 780/358 约 218%；CPU 柱不变，并发柱与内存柱都越过 100%" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-capacity-12s.svg" alt="三根柱：CPU 核仍为 62.5%，模型并发 360/320 为 112.5%，内存 780/358 约 218%；CPU 柱不变，并发柱与内存柱都越过 100%" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>只改模型调用时长，两根柱一起越线。</strong> CPU 需求保持 30 核，并发与环境内存随每次调用从 9 秒延长到 12 秒而上升。</figcaption>
 </figure>
 
@@ -156,7 +156,7 @@ $$
 
 生产规模的 Agent 训练平台也是这样。DeepSeek 的 DSec 平台为 RL rollout 和评测提供沙箱，按其一周的运行记录：约九成容器和 microVM 平均只用到所申请 CPU 的 5% 以内，而 agent 修改的文件、安装的依赖和启动的服务，在模型生成期间却一直保留；沙箱存活时间的中位数约一刻钟，长的超过三小时。既然 CPU 大多闲置，平台便实行超卖（overcommit），各沙箱申请的 CPU 加起来远多于物理核数。DSec 的单个节点曾稳定运行 3,200 个容器或 800 个 microVM。密度再往上提，制约因素有两个：等待期间一直占用的内存，以及挤在同一物理核上的任务相互拖慢。
 
-除了缩短环境保留时间，还可以错开工具执行，减少同时占用内存的进程。这里给出一组四进程 CPU 工具实验：同时启动与错开启动的累计 CPU 时间分别约为 0.29 秒和 0.27 秒，工作量接近；驻留集大小（resident set size，RSS）是进程当前驻留在物理内存中的页所占的容量，采样得到的 RSS 峰值从约 320 MiB 降到 80 MiB，而整组完成时间从约 0.10 秒延长到 0.54 秒。这里的结论是，错开启动后同时运行的进程减少，内存峰值随之下降，但整组任务也需要更长时间才能完成。
+除了缩短环境保留时间，还可以错开工具执行，减少同时占用内存的进程。给出一组四进程 CPU 工具实验：同时启动与错开启动的累计 CPU 时间分别约为 0.29 秒和 0.27 秒，工作量接近；驻留集大小（resident set size，RSS）是进程当前驻留在物理内存中的页所占的容量，采样得到的 RSS 峰值从约 320 MiB 降到 80 MiB，而整组完成时间从约 0.10 秒延长到 0.54 秒。这里的结论是，错开启动后同时运行的进程减少，内存峰值随之下降，但整组任务也需要更长时间才能完成。
 
 脚注说明，该结论来自书中 `environment-resources` 的固定计算及工具子进程记录；工具实验包含九组、36 个进程，累计内存占用由采样 RSS 对时间积分得到。
 
@@ -194,9 +194,9 @@ DSec 那组生产数据是对本章全部假设的现实校验。九成沙箱的
 
 记录这些信息时，任务、工具操作和每一次执行尝试需要各自的标识。这里区分了两种“重复”：同一份测试结果可能被传送两次，这种情况只需对消息去重；同一项测试也可能实际执行两次，后一种情况已经消耗了两次资源；而且文件版本不相同时，两次同名测试甚至不是同一个工具操作。
 
-记录每次尝试之后，还要区分尝试失败的原因。测试结果决定控制器的下一步：如果程序运行结果不正确，控制器就需要修复程序；如果工具进程因资源不足而中止，则需要恢复执行。两类失败对应不同的后续工作，完成概率也不同。这里指出同样的区分也出现在模型训练中：RL 根据样本的验证结果更新模型，其验证也要区分这两种情况，答案是否正确用于计算学习反馈，执行故障则先由运行系统处理。
+记录每次尝试之后，还要区分尝试失败的原因。测试结果决定控制器的下一步：如果程序运行结果不正确，控制器就需要修复程序；如果工具进程因资源不足而中止，则需要恢复执行。两类失败对应不同的后续工作，完成概率也不同。同样的区分也出现在模型训练中：RL 根据样本的验证结果更新模型，其验证也要区分这两种情况，答案是否正确用于计算学习反馈，执行故障则先由运行系统处理。
 
-一次提交可以触发多次尝试。平台为每次尝试支付模型、工具和环境成本，用户得到的是最后完成的任务。这里说明第 11.5 节将沿这些分支累积支出，再除以通过测试的任务数。
+一次提交可以触发多次尝试。平台为每次尝试支付模型、工具和环境成本，用户得到的是最后完成的任务。这说明第 11.5 节将沿这些分支累积支出，再除以通过测试的任务数。
 
 这一小节回答的是“释放环境之前必须先回答什么”。三类状态的恢复代价差别极大。文件只要写进了持久存储，重建环境后取回即可，代价近似等于一次传输。进程与内存麻烦得多：进程里可能放着数据库连接、内存缓存、后台服务，这些未必能序列化进文件，丢了要么恢复快照，要么整个重跑。外部操作最硬，已经对外部系统提交过的动作（比如推了分支、发了请求）无法靠重来一遍抹掉，只能查询状态、去重或按业务规则补偿。
 
@@ -217,7 +217,7 @@ DSec 那组生产数据是对本章全部假设的现实校验。九成沙箱的
 本节的任务衔接：第 11.1.3 节区分了需要保留的文件、进程和操作结果，本节说明承载这些状态的环境如何创建和释放。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/environment-lifecycle.svg" alt="工具环境从创建、执行、暂停驻留、恢复到释放的生命周期" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/environment-lifecycle.svg" alt="工具环境从创建、执行、暂停驻留、恢复到释放的生命周期" width="800" height="395" loading="lazy" decoding="async">
   <figcaption><strong>工具环境的生命周期。</strong> 创建、执行、暂停驻留、恢复与释放五个阶段保留不同的文件、进程与内存状态；创建和释放策略决定启动开销与资源占用。</figcaption>
 </figure>
 
@@ -226,7 +226,7 @@ DSec 那组生产数据是对本章全部假设的现实校验。九成沙箱的
 工具调用需要由普通程序执行。执行器将调用转换成文件操作、进程启动、浏览器动作或设备任务。运行环境提供代码执行所需的操作系统接口、文件系统、内存、网络以及资源限制，还需要隔离不同任务，防止相互干扰。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-two-paths.svg" alt="任务控制器分别连接模型服务与工具环境：向模型服务发送模型请求并取回完整工具参数，向工具环境发送工具操作并取回保存结果；环境平台位于 m5d.metal 的 48 核与约 358 GiB 内存中" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-two-paths.svg" alt="任务控制器分别连接模型服务与工具环境：向模型服务发送模型请求并取回完整工具参数，向工具环境发送工具操作并取回保存结果；环境平台位于 m5d.metal 的 48 核与约 358 GiB 内存中" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>两条路径在控制器处汇合。</strong> 模型服务提供 320 个并发调用槽，工具环境在执行节点上运行；控制器负责在两段之间传递参数与结果。</figcaption>
 </figure>
 
@@ -237,17 +237,17 @@ DSec 那组生产数据是对本章全部假设的现实校验。九成沙箱的
 隔离方式要随任务而定。隔离越强、系统功能越完整，启动就越慢，每个环境的资源开销也越大。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-isolation-process.svg" alt="上层是任务 0 与任务 1，各自拥有私有地址空间；两者直接落在同一层宿主操作系统内核上，通过权限限制访问" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-isolation-process.svg" alt="上层是任务 0 与任务 1，各自拥有私有地址空间；两者直接落在同一层宿主操作系统内核上，通过权限限制访问" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>最轻的隔离只隔地址空间。</strong> 进程各有独立地址空间，但系统调用进入的是同一个宿主内核，内核缺陷会同时影响所有任务。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-isolation-container.svg" alt="任务 0 与任务 1 各有一层私有视图与配额，提供进程编号、网络、文件系统和资源控制视图；两层都落到同一个宿主操作系统内核" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-isolation-container.svg" alt="任务 0 与任务 1 各有一层私有视图与配额，提供进程编号、网络、文件系统和资源控制视图；两层都落到同一个宿主操作系统内核" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>容器补上视图与配额。</strong> 每个任务看到自己的资源视图，但系统调用仍由同一宿主内核处理，隔离强度受内核边界限制。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-isolation-microvm.svg" alt="任务 0 与任务 1 各自运行独立虚拟机内核；虚拟机内核经虚拟硬件访问宿主资源，最下层是宿主操作系统内核" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-isolation-microvm.svg" alt="任务 0 与任务 1 各自运行独立虚拟机内核；虚拟机内核经虚拟硬件访问宿主资源，最下层是宿主操作系统内核" width="800" height="242" loading="lazy" decoding="async">
   <figcaption><strong>microVM 保留虚拟机边界、削减虚拟设备。</strong> 每个任务环境有自己的内核，宿主内核不再直接执行任务代码；精简虚拟硬件用于压低启动与内存开销。</figcaption>
 </figure>
 
@@ -258,7 +258,7 @@ DSec 为此提供四类后端，由调用方按任务选用：判题、编译等
 相应的防护分三个方向（图 11-9）：沙箱与沙箱之间靠虚拟化和资源配额隔开；沙箱内的 agent 与平台自己的代理进程之间，用 AppArmor（Linux 按程序限制文件与网络访问的安全模块）规定可以读写哪些文件和 socket，agent 即使以 root 身份运行也无法越权；沙箱与外部网络之间，用 eBPF（在内核中运行经过校验的小程序的机制）逐包检查地址、端口和协议，只放行本任务白名单里的软件源。这里另加一条限制：输出量和写盘量另设上限（图注中给出）。这里的清醒判断是，这些手段只能堵住已经发现的捷径，单看最终输出，判断不了 agent 是否按预期完成了任务。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-sandbox-boundaries.svg" alt="沙箱内部有 agent 进程与平台代理进程，两者之间由 AppArmor 限制；沙箱经 eBPF 白名单访问外部网络，经虚拟化与配额与其他沙箱隔开，另有输出与写盘上限" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-sandbox-boundaries.svg" alt="沙箱内部有 agent 进程与平台代理进程，两者之间由 AppArmor 限制；沙箱经 eBPF 白名单访问外部网络，经虚拟化与配额与其他沙箱隔开，另有输出与写盘上限" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>三个方向各用一套机制。</strong> 虚拟化与配额处理沙箱之间，AppArmor 处理沙箱内 agent 与平台代理之间，eBPF 白名单处理沙箱到外部网络；三者不能互相替代。</figcaption>
 </figure>
 
@@ -282,14 +282,14 @@ DSec 的四类后端是按任务选隔离的实例，可以记成一张对照表
 
 ### 11.2.2 资源分配与环境创建
 
-确定隔离方式以后，平台还需为环境分配资源并加载程序所需的数据。工具平台用 CPU 配额、内存上限以及文件和设备访问权限分配资源。这里指出一组关键区分：给等待模型的环境增加 CPU 配额，并不会改变其文件和内存状态；销毁该环境会释放内存，但下一次执行前要重建这些内容。
+确定隔离方式以后，平台还需为环境分配资源并加载程序所需的数据。工具平台用 CPU 配额、内存上限以及文件和设备访问权限分配资源。一组关键区分：给等待模型的环境增加 CPU 配额，并不会改变其文件和内存状态；销毁该环境会释放内存，但下一次执行前要重建这些内容。
 
 有些工具还需要 GPU，例如验证 CUDA 程序时，还要向加速器资源池申请 GPU。设备直通让虚拟机直接操作分配给它的物理设备，可由虚拟机程序 QEMU 配合 Linux 的 VFIO 设备访问接口完成。
 
-创建环境需要取得模板、建立私有状态并准备首次工作所需的数据。这里给出三种方式：完整复制模板（最简单）；共享只读内容，只复制需要写入的页；按访问需求加载数据。它们的取舍是，创建环境时少加载数据可以缩短启动时间，但程序首次访问这些数据时仍需等待加载。
+创建环境需要取得模板、建立私有状态并准备首次工作所需的数据。给出三种方式：完整复制模板（最简单）；共享只读内容，只复制需要写入的页；按访问需求加载数据。它们的取舍是，创建环境时少加载数据可以缩短启动时间，但程序首次访问这些数据时仍需等待加载。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-template-memory.svg" alt="上层是共享模板与每个环境的私有内容，两者经加载执行所需内容进入下层活跃环境内存；活跃内存包含进程、工作页与缓冲区" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-template-memory.svg" alt="上层是共享模板与每个环境的私有内容，两者经加载执行所需内容进入下层活跃环境内存；活跃内存包含进程、工作页与缓冲区" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>模板空间与运行时内存分别记账。</strong> 模板可被多个环境共享，私有部分只记录各环境的修改；进程与缓冲区属于运行期开销，不与模板加载量混算。</figcaption>
 </figure>
 
@@ -300,7 +300,7 @@ DSec 的四类后端是按任务选隔离的实例，可以记成一张对照表
 这里汇总：四种加载方式依次占用约 200、50、13 和 38 GiB，并另保留一份共享的 2 GiB 模板。章首为每个活跃环境分配的 2 GiB 内存，还包括进程、缓冲区等工具运行所需的空间。共享只读内容可以减少重复存储，将常用数据保留在本地则可以减少远端读取；具体保留多少，要看工具首次访问哪些页，以及此后多久再次访问。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-per-env-memory.svg" alt="四根柱：完整复制 2052 MiB、按需加载 516 MiB、仅私有页 132 MiB、保留热点页 388 MiB；横轴 0–2500 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-per-env-memory.svg" alt="四根柱：完整复制 2052 MiB、按需加载 516 MiB、仅私有页 132 MiB、保留热点页 388 MiB；横轴 0–2500 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>复制的内容越少，本地占用越低。</strong> 四根柱使用同一尺度；完整复制把 2 GiB 模板全部放入每个环境，只读共享只保留脏页与管理开销。</figcaption>
 </figure>
 
@@ -314,19 +314,19 @@ $$
 
 这里继续：如果工具首次执行时又访问 1 GiB 尚未加载到内存的页，这条链路便再工作约 0.34 秒。对这一机制的总结是，按需加载让创建接口更早返回，尚未访问的数据留到真正需要时再取。E2B 的页与文件读取就是这样组织的：启动过程先提供可运行的环境，随后的访问逐步补齐内容。首次工具执行的完成时间包含环境启动，以及首次访问缺失页时的等待，按需加载将一部分准备工作推迟到了工具执行期间。
 
-实际负载中，工具读取的比例往往更低。DSec 抽查了 C++、Go、Java、JavaScript 和 Python 五类任务的容器镜像，每个 4–12 GB，运行时只读到其中 4%–13%，这里说这比例 11-2 假定的 25% 还低（例 11-2 假定访问 512 MiB / 模板 2 GiB，恰好是 25%）。这里的推论是，整份复制既推迟启动，传输和写盘的大头又都花在根本不会读的数据上；提前拉取镜像也省不掉这部分工作，数据照样要传输、解压、写盘，只是提早做了。实测结果：数千个容器同时启动时，按需加载完成整批任务的时间与镜像全部预先缓存在本地时差不多，先整份拉取镜像则要慢约 1.7 倍。
+实际负载中，工具读取的比例往往更低。DSec 抽查了 C++、Go、Java、JavaScript 和 Python 五类任务的容器镜像，每个 4–12 GB，运行时只读到其中 4%–13%，这比例 11-2 假定的 25% 还低（例 11-2 假定访问 512 MiB / 模板 2 GiB，恰好是 25%）。这里的推论是，整份复制既推迟启动，传输和写盘的大头又都花在根本不会读的数据上；提前拉取镜像也省不掉这部分工作，数据照样要传输、解压、写盘，只是提早做了。实测结果：数千个容器同时启动时，按需加载完成整批任务的时间与镜像全部预先缓存在本地时差不多，先整份拉取镜像则要慢约 1.7 倍。
 
 到了虚拟机里，只读内容还多一层重复。microVM 经虚拟块设备读取模板时，宿主机的 page cache（内核用来缓存文件数据的内存页）存一份，每台虚拟机自己的 page cache 再存一份。同一节点上许多 microVM 读同一个基础镜像，内存里就堆着许多份相同的数据（图 11-12）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-page-cache-copy.svg" alt="三台 microVM 并排在上方，各自持有一份镜像页副本；下方的宿主机 page cache 保存镜像页，箭头表示经虚拟块设备复制到每台虚拟机" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-page-cache-copy.svg" alt="三台 microVM 并排在上方，各自持有一份镜像页副本；下方的宿主机 page cache 保存镜像页，箭头表示经虚拟块设备复制到每台虚拟机" width="800" height="300" loading="lazy" decoding="async">
   <figcaption><strong>虚拟块设备让同一份只读数据存两遍。</strong> 宿主机为了供给虚拟机已缓存镜像页，虚拟机内核又把它放进自己的 page cache；多台虚拟机读取同一镜像时按台数放大。</figcaption>
 </figure>
 
 DSec 的解法是让只读镜像层改走 virtio-pmem 设备并开启 DAX（direct access，直接访问），虚拟机把文件页直接映射到宿主机的缓存页上，不再往自己的内存里复制，同一节点的 microVM 共用一份数据（图 11-13），内存峰值因此下降约四成。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-dax-mapping.svg" alt="三台 microVM 并排在上方，每台只映射宿主机页；下方宿主机 page cache 保存唯一一份镜像页，箭头表示经 DAX 直接映射而不复制" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-dax-mapping.svg" alt="三台 microVM 并排在上方，每台只映射宿主机页；下方宿主机 page cache 保存唯一一份镜像页，箭头表示经 DAX 直接映射而不复制" width="800" height="340" loading="lazy" decoding="async">
   <figcaption><strong>把复制改成映射。</strong> 只读镜像层改走 virtio-pmem 并开启 DAX 后，虚拟机地址空间直接指向宿主机缓存页，同一节点的 microVM 共用一份数据。</figcaption>
 </figure>
 
@@ -367,12 +367,12 @@ virtio-balloon 与 DAMON 的分工要分清。balloon 负责报告与交还，�
 按 E2B 文档，暂停一个沙箱时每 GiB 内存约需 4 秒，恢复约需 1 秒，保存和恢复期间环境仍占 2 GiB。于是暂停 2 GiB 环境需要 8 秒：第 10–18 秒保存状态，第 18–19 秒恢复。下一次工具仍能在第 19 秒开始，但整个间隔都被保存和恢复占满，占用仍是 18 GiB·秒，没有任何节省。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-pause-resident.svg" alt="横轴标出 10、14、18、19 秒；一条 2 GiB 的内存占用条从第 10 秒延续到第 19 秒，面积为 18 GiB·秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-pause-resident.svg" alt="横轴标出 10、14、18、19 秒；一条 2 GiB 的内存占用条从第 10 秒延续到第 19 秒，面积为 18 GiB·秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>不暂停时，整段模型等待都占着环境。</strong> 第二轮工具执行从第 19 秒开始，第 10–19 秒的 9 秒间隔全部计入内存占用。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-pause-save-restore.svg" alt="横轴同 10–19 秒；内存条分为第 10–18 秒保存 8 秒、第 18–19 秒恢复两段，整个区间仍占 2 GiB，面积仍是 18 GiB·秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-pause-save-restore.svg" alt="横轴同 10–19 秒；内存条分为第 10–18 秒保存 8 秒、第 18–19 秒恢复两段，整个区间仍占 2 GiB，面积仍是 18 GiB·秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>暂停本身不释放内存。</strong> 保存要读内存、恢复要写内存，2 GiB 环境每 GiB 保存 4 秒，正好用满 9 秒等待；下一次工具仍在第 19 秒开始。</figcaption>
 </figure>
 
@@ -380,7 +380,7 @@ virtio-balloon 与 DAMON 的分工要分清。balloon 负责报告与交还，�
 
 恢复已保存状态的方式不止一种：暂停后恢复，继续同一个任务的执行；快照派生，从同一状态建立多个分支；从初始环境重新创建，不继承先前任务的修改。三者都能重新得到可运行的环境，但继承的状态不同。
 
-这里给出的选型依据是：Agent 从运行快照恢复，会继承先前修改过的文件和进程；RL 验证常常要求每条样本从同一份初始目录出发，因此从干净模板派生；快照中的文件若包含上一次测试输出，恢复时也会带回这份输出。总结成一句对照，初始模板用于重复试验，运行快照用于延续进度，二者保存的是不同时间点的状态。
+给出的选型依据是：Agent 从运行快照恢复，会继承先前修改过的文件和进程；RL 验证常常要求每条样本从同一份初始目录出发，因此从干净模板派生；快照中的文件若包含上一次测试输出，恢复时也会带回这份输出。总结成一句对照，初始模板用于重复试验，运行快照用于延续进度，二者保存的是不同时间点的状态。
 
 什么时候暂停才开始划算？回到章首任务中那段 9 秒的模型等待，环境内存更小或者间隔更长时，暂停才开始有收益。同样 9 秒的间隔，512 MiB 的环境约 2 秒即可保存完毕，可以释放 6 秒；间隔短于保存与恢复之和时，恢复还会推迟下一次工具执行。
 
@@ -392,12 +392,12 @@ $$
 p_M \, M \, G > C_{\text{transition}}
 $$
 
-  其中左边是**省下来的内存占用费用**（释放掉的容量 $M$ 乘以空闲时长 $G$，再乘单位价格 $p_M$），**随释放时间增长**；右边是**每次保存和恢复需要支付的成本**。这里指出，令两者相等，就能求出暂停开始节省成本所需的空闲时间（即 $G^* = C_{\text{transition}}/(p_M M)$，整理）。
+  其中左边是**省下来的内存占用费用**（释放掉的容量 $M$ 乘以空闲时长 $G$，再乘单位价格 $p_M$），**随释放时间增长**；右边是**每次保存和恢复需要支付的成本**。令两者相等，就能求出暂停开始节省成本所需的空闲时间（即 $G^* = C_{\text{transition}}/(p_M M)$，整理）。
 
 章首任务的间隔只有 9 秒，上式左边几乎为零；RL 训练中还有长得多的间隔。这里举的例子是第 10.4.4 节 MiMo 的 RL 运行，从中断到重启通常要一到三小时：GPU 训练作业被抢占或中断时，rollout 用的沙箱不能销毁，里面保存着未完成轨迹的文件和进程，但训练恢复之前也不会有工具调用进来；DSec 上一个作业最多可以申请 32K 个沙箱，若每个按章首规格占 2 GiB，合计约 70 TB，超过 DSec 一个集群单元内存总量（约 250 TB）的四分之一；2 GiB 的沙箱保存加恢复仍只要 9 秒左右，释放出来的时间却以小时计，暂停两小时，内存空出来的时间约为保存和恢复期间照常占用时间的 800 倍。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-preemption-pause.svg" alt="两条泳道：GPU 作业依次为训练、被抢占、训练；沙箱内存依次为驻留、保存、内存已释放、恢复、驻留，保存与恢复各占一小段，中间大段内存空出" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-preemption-pause.svg" alt="两条泳道：GPU 作业依次为训练、被抢占、训练；沙箱内存依次为驻留、保存、内存已释放、恢复、驻留，保存与恢复各占一小段，中间大段内存空出" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>抢占以小时计，保存与恢复以秒计。</strong> GPU 作业被抢占后，RL 框架暂停对应沙箱；状态搬到下一级存储后内存空出，训练恢复前再载入。</figcaption>
 </figure>
 
@@ -434,12 +434,12 @@ $p_M M G > C_{\text{transition}}$ 要理解成盈亏平衡点。左边是省下�
 时间线可以排得很精确。已知第一轮模型会在第 9 秒返回，平台就在第 7 秒开始准备环境，第 9 秒执行工具，第 10 秒保存结果并销毁环境。后两轮分别在第 17 秒和第 27 秒开始准备。三次准备都落在模型调用期间，任务仍在第 30 秒完成，环境只需要在每轮准备和执行的 3 秒窗口内保留。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-always-resident.svg" alt="横轴 0–30 秒，一条 2 GiB 内存条从任务开始持续到结束；三轮模型调用各 9 秒、工具各 1 秒，累计占用 60 GiB·秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-always-resident.svg" alt="横轴 0–30 秒，一条 2 GiB 内存条从任务开始持续到结束；三轮模型调用各 9 秒、工具各 1 秒，累计占用 60 GiB·秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>环境从任务开始保留到结束。</strong> 三段工具执行之间的大段模型等待也计入驻留，因此面积是完整的 30 秒乘 2 GiB。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-rebuild-windows.svg" alt="横轴 0–30 秒，2 GiB 内存条只出现在第 7–10、17–20、27–30 秒三段，每段 3 秒；其余时间空白，三次合计 18 GiB·秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-rebuild-windows.svg" alt="横轴 0–30 秒，2 GiB 内存条只出现在第 7–10、17–20、27–30 秒三段，每段 3 秒；其余时间空白，三次合计 18 GiB·秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>只保留准备与执行的窗口。</strong> 每轮在模型返回前 2 秒开始准备，工具执行 1 秒后立即销毁环境；工作目录和结果已持久化，任务仍在第 30 秒完成。</figcaption>
 </figure>
 
@@ -462,33 +462,33 @@ $E[W]$ 是发出调用后等待环境就绪的平均时间（s），$P$ 是一�
 这几组数字在这里配了五幅对照图。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-prefetch-on-demand.svg" alt="横轴 0–6 秒，环境准备占第 4–6 秒；调用在第 4 秒到达，环境第 6 秒就绪，等待 2 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-prefetch-on-demand.svg" alt="横轴 0–6 秒，环境准备占第 4–6 秒；调用在第 4 秒到达，环境第 6 秒就绪，等待 2 秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>按需创建把准备放在调用之后。</strong> 调用到达才开始准备，准备耗时全部变成工具执行前的等待；后续四幅图使用同一横轴。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-prefetch-1s.svg" alt="横轴 0–6 秒，环境准备占第 3–5 秒；调用在第 4 秒到达，环境第 5 秒就绪，仍需等待 1 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-prefetch-1s.svg" alt="横轴 0–6 秒，环境准备占第 3–5 秒；调用在第 4 秒到达，环境第 5 秒就绪，仍需等待 1 秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>提前量不足准备时间时，等待只缩短一段。</strong> 准备提前 1 秒开始，但总共要 2 秒，调用到达时还差 1 秒。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-prefetch-2s.svg" alt="横轴 0–6 秒，环境准备占第 2–4 秒，在第 4 秒调用到达时刚好就绪，等待为零" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-prefetch-2s.svg" alt="横轴 0–6 秒，环境准备占第 2–4 秒，在第 4 秒调用到达时刚好就绪，等待为零" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>提前量等于准备时间时，等待降为零。</strong> 准备窗口与模型调用重叠 2 秒，调用到达即可交给工具执行。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-prefetch-3s.svg" alt="横轴 0–6 秒，环境准备占第 1–3 秒；第 3 秒完成后环境就绪，但调用第 4 秒才到达，橙色区间表示 1 秒空转" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-prefetch-3s.svg" alt="横轴 0–6 秒，环境准备占第 1–3 秒；第 3 秒完成后环境就绪，但调用第 4 秒才到达，橙色区间表示 1 秒空转" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>提前量超过准备时间，等待不再减少。</strong> 多出的 1 秒只让环境提前占着内存；调用仍在第 4 秒到达。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-prefetch-miss.svg" alt="横轴 0–6 秒，第 2–4 秒准备了不需要的误选环境；调用第 4 秒到达后取消它，再从第 4 秒到第 6 秒准备实际所需环境" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-prefetch-miss.svg" alt="横轴 0–6 秒，第 2–4 秒准备了不需要的误选环境；调用第 4 秒到达后取消它，再从第 4 秒到第 6 秒准备实际所需环境" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>猜错时两段准备都要付。</strong> 误选环境从第 2 秒占到第 4 秒被取消，实际环境要到第 6 秒才就绪；此图假设立即取消且无资源争用。</figcaption>
 </figure>
 
 这里由此总结三种减少等待的办法：缓存模板，省去重复获取数据的开销；保留已经启动的环境，调用到达后可以立即执行，代价是持续占用内存；每轮重新建立环境，把准备工作放在模型调用的时间里完成。章首任务已经知道下一轮所需的运行时，所以选择在模型调用期间准备下一轮环境；多种工具交替出现时，计算里还要计入预测命中率。
 
-提前准备也有实测的反面。本地工具重放把"提前 50 ms 准备"改成"在模型等待一开始就准备"之后，累计工具调用时间仍约为 0.26–0.28 秒，而按采样结果计算的累计内存占用从约 0.0193 增到 0.467 GiB·秒，约是原来的 24 倍。这里指出多出来的占用主要落在环境已经就绪、调用还没到达的区间，结论是只要能在工具调用到达前准备好环境，就没有必要更早创建。（这项实验是本地工具预热重放，实际调用、预测命中与采样窗口边界都保存在原记录里。）
+提前准备也有实测的反面。本地工具重放把"提前 50 ms 准备"改成"在模型等待一开始就准备"之后，累计工具调用时间仍约为 0.26–0.28 秒，而按采样结果计算的累计内存占用从约 0.0193 增到 0.467 GiB·秒，约是原来的 24 倍。多出来的占用主要落在环境已经就绪、调用还没到达的区间，结论是只要能在工具调用到达前准备好环境，就没有必要更早创建。（这项实验是本地工具预热重放，实际调用、预测命中与采样窗口边界都保存在原记录里。）
 
 每轮重建能成立，靠的是章首题设里那句"下一轮要用的状态已全部写入持久存储"。许多 Agent 任务达不到这一点：模型会安装依赖、启动数据库或后台服务，后续调用要用到这些进程及其内存状态，只保存文件的话，重建出来的环境与原来并不相同。DSec 的沙箱在整段交互中一直存在，走的是另一条路，环境保留下来，把每个环境的驻留成本压下去，办法包括 11.2.2 的按需加载、只读页共享与冷页回收，以及 11.2.3 的在长间隔中暂停。选哪条路，判据就在轮间状态能不能完整写进持久存储：能写入，就花少量创建工作换回大量内存；写不进去，就只能保留环境，再设法压缩驻留。
 
@@ -496,7 +496,7 @@ $E[W]$ 是发出调用后等待环境就绪的平均时间（s），$P$ 是一�
 
 时间线建议亲手摆一遍。模型第 0–9 秒生成、第 9 秒返回，工具第 9–10 秒执行，所以环境第 7 秒起准备（2 秒热路径），第 9 秒就绪开跑，第 10 秒存结果并销毁；下一轮模型第 10–19 秒生成，第二轮准备就从第 17 秒开始。每一轮的准备都正好落在上一轮模型调用的尾巴上。三轮三个 3 秒窗口合起来 9 秒，乘以 2 GiB 就是 18 GiB·秒。
 
-前面那些账可以复算一遍：60 GiB·秒/任务 × 10 项/s 得 600 GiB，重建后 18 GiB·秒/任务 × 10 项/s 得 180 GiB，省下 420 GiB，正是这里说的"节省了原本要在等待期间保留的 420 GiB 状态"。CPU 一侧是每秒 30 次创建 × 0.1 CPU·秒 = 3 个核，30 + 3 = 33 核，仍在 48 核之内。创建速率 30 个/s 对上 Firecracker 的 150 个/s 上限，余量 5 倍，这个余量有意义，因为 11.3.2 的突发场景会让创建速率瞬时抬高。
+前面那些账可以复算一遍：60 GiB·秒/任务 × 10 项/s 得 600 GiB，重建后 18 GiB·秒/任务 × 10 项/s 得 180 GiB，省下 420 GiB，正是的"节省了原本要在等待期间保留的 420 GiB 状态"。CPU 一侧是每秒 30 次创建 × 0.1 CPU·秒 = 3 个核，30 + 3 = 33 核，仍在 48 核之内。创建速率 30 个/s 对上 Firecracker 的 150 个/s 上限，余量 5 倍，这个余量有意义，因为 11.3.2 的突发场景会让创建速率瞬时抬高。
 
 $E[W]$ 的两个分支值得拆开看。猜对时（概率 $h$）准备已经提前了 $L$，所以只需再等 $\max(P - L, 0)$，$L \ge P$ 时环境早就绪，等待为 0；猜错时（概率 $1-h$）从零开始准备，等 $P$。合并成 $h\max(P-L,0) + (1-h)P$，整理为 $P - h\min(P,L)$ 更直观，提前量的收益被命中率打折，而且最多只能减掉整个准备时间 $P$。代入 $P=2, h=0.75$：$L=0$ 得 2 秒；$L=1$ 得 $2 - 0.75 = 1.25$ 秒；$L=2$ 得 $2 - 1.5 = 0.5$ 秒；$L=3$ 还是 $2 - 0.75 \times 2 = 0.5$ 秒，因为 $\min(P,L)$ 封顶在 2。提前 3 秒不再降低等待、只增加空闲内存，原因就在这里。
 
@@ -519,7 +519,7 @@ $E[W]$ 的两个分支值得拆开看。猜对时（概率 $h$）准备已经提
 例 11-3 把这个矛盾摆得很清楚：某作业需要四张 H100 和 16 个 CPU 核，并要求这些资源位于同一节点。节点 1 是一台 **DGX H100**，8 张 H100 SXM，双路 Xeon Platinum 8480C 共 112 核，但已有作业占用了四张 H100 和 104 个核，只剩四张 H100 和 8 个空闲核。节点 2 是一台 DGX A100，8 张 A100，双路 EPYC 7742 共 128 核，空着四张 A100 和 32 个核。整个资源池既有四张空闲 H100，也有足够多的 CPU 核，可是没有一个节点满足全部条件。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-fragment-before.svg" alt="新作业需要同节点四张 H100 与 16 个 CPU 核。节点 1 有 4 张空闲 H100 但只有 8 个空闲核；节点 2 有 32 个空闲核但空闲卡是 4 张 A100" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-fragment-before.svg" alt="新作业需要同节点四张 H100 与 16 个 CPU 核。节点 1 有 4 张空闲 H100 但只有 8 个空闲核；节点 2 有 32 个空闲核但空闲卡是 4 张 A100" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>总量满足，联合约束不满足。</strong> 空闲 H100 都在节点 1，空闲 CPU 核主要在节点 2；没有单个节点同时提供所需卡型与核数。</figcaption>
 </figure>
 
@@ -538,7 +538,7 @@ $$
 - 跨节点分散启动：这里设另一种兼容的跨节点配置准备需 1 秒、执行需 32 秒，则 $1 + 32 = 33$ 秒，反而更晚。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-fragment-after.svg" alt="迁移后节点 1 有 4 张空闲 H100 与 16 个空闲 CPU 核，满足新作业；节点 2 有 4 张空闲 A100 与 24 个空闲核，接收了原占 8 核的任务" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-fragment-after.svg" alt="迁移后节点 1 有 4 张空闲 H100 与 16 个空闲 CPU 核，满足新作业；节点 2 有 4 张空闲 A100 与 24 个空闲核，接收了原占 8 核的任务" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>把 8 核任务从节点 1 挪到节点 2，资源就拼齐了。</strong> 迁移不增加总量，只改变空闲资源的分布；代价是打断被迁移的任务。</figcaption>
 </figure>
 
@@ -550,7 +550,7 @@ $$
 
 例 11-3 的设计很巧妙。全局有 4 张空闲 H100（都在节点 1），也有 32 个空闲核（都在节点 2），却没有任何一个节点同时满足"4 张 H100 + 16 核"。碎片的本质落在约束的联合不满足上，总量其实是够的；这跟 11.1 里内存需求 168% 那种纯容量不足是两类完全不同的问题，前者要靠迁移、重排、抢占解决，后者只能买卡。
 
-三方案比较的要点，是把"等待"换算成可以互相比较的完成时间。等待是让别人自然结束（12 秒）；迁移是主动让别人挪走（4 秒），代价是打断别人；分散不挪任何人，但跨节点通信让执行时间从 20 秒涨到 32 秒。$4 + 20 = 24$ 秒在这三者里最短，所以迁移胜出。这里还给了临界条件：迁移耗时涨到 12 秒时，24 变成 32，与等待方案打平。判据就是预测的迁移耗时与原任务剩余时间谁小用谁。这个比较之所以能做成在线决策，是因为两边都估得出来：原任务剩余时间由调度器掌握，迁移耗时可以随状态大小预测，这里说"随着状态增大，迁移耗时也会增长"。
+三方案比较的要点，是把"等待"换算成可以互相比较的完成时间。等待是让别人自然结束（12 秒）；迁移是主动让别人挪走（4 秒），代价是打断别人；分散不挪任何人，但跨节点通信让执行时间从 20 秒涨到 32 秒。$4 + 20 = 24$ 秒在这三者里最短，所以迁移胜出。这里还给了临界条件：迁移耗时涨到 12 秒时，24 变成 32，与等待方案打平。判据就是预测的迁移耗时与原任务剩余时间谁小用谁。这个比较之所以能做成在线决策，是因为两边都估得出来：原任务剩余时间由调度器掌握，迁移耗时可以随状态大小预测，"随着状态增大，迁移耗时也会增长"。
 
 生产数据 68% → 93% 说明这套思路的收益有多大。引入可抢占的低优先级作业，等于把暂时用不上的加速器利用起来，再把它们当作随时可以让出的缓冲。这里的因果顺序要看准，让调度器敢于把资源借出去的，是"能抢占"这个前提；等需要成组的作业到来，收回加迁移两招齐用即可。这里提到的 ASI 研究覆盖六个月、155,410 张 GPU（章首脚注），68% 提到 93% 意味着多利用了约 25 个百分点的集群算力，这是调度这类软件工作能带来的最直观的收益。
 
@@ -565,12 +565,12 @@ $$
 最小的例子是单个执行进程，每项工具工作需要 1 秒。十项工作在第 0、1、……、9 秒分别到达时，每项到达即可执行，排队时间都是零。十项都在第 0 秒到达时，执行仍需 10 秒，但各项的排队时间依次为 0、1、……、9 秒，平均 4.5 秒。这里由此说清分工：总工作量决定执行进程要工作多久，到达时刻和执行顺序决定每个任务先等多久。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-queue-staggered.svg" alt="十条工具调用泳道，横轴 0–10 秒；第 1 到第 10 次调用分别在第 0 到第 9 秒到达，每次到达后立即执行 1 秒，没有等待" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-queue-staggered.svg" alt="十条工具调用泳道，横轴 0–10 秒；第 1 到第 10 次调用分别在第 0 到第 9 秒到达，每次到达后立即执行 1 秒，没有等待" width="800" height="361" loading="lazy" decoding="async">
   <figcaption><strong>到达间隔等于服务时间时，队列不增长。</strong> 单个执行进程每次处理 1 秒，十次调用每隔 1 秒到达，每次都能立即开始。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-queue-simultaneous.svg" alt="十条工具调用泳道，十次调用都在第 0 秒到达；第 1 行立即执行，第 2 行等待 1 秒，依次递增到第 10 行等待 9 秒，每行执行 1 秒，平均排队 4.5 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-queue-simultaneous.svg" alt="十条工具调用泳道，十次调用都在第 0 秒到达；第 1 行立即执行，第 2 行等待 1 秒，依次递增到第 10 行等待 9 秒，每行执行 1 秒，平均排队 4.5 秒" width="800" height="361" loading="lazy" decoding="async">
   <figcaption><strong>总工作量不变，等待分布完全改变。</strong> 灰色是排队、蓝色是执行；执行进程仍只工作 10 秒，但各项完成时刻被到达时刻和先到先服务顺序拉开。</figcaption>
 </figure>
 
@@ -585,7 +585,7 @@ $$
 麻烦在于调度器掌握的节点负载是定期汇总的，汇总之后新放下的请求还没有反映进来。如果每次都挑当前最空闲的节点，同一时刻到达的一批请求就会一齐挤到同一个节点上。DSec 用三项措施解决这个问题（图 11-28）：每次只随机抽几个节点，从中挑负载最低的那个，也就是 **power-of-k-choices**，同时做出的决定自然就分散了；每个调度实例把自己最近放下、汇总里还没有的沙箱补记到本地视图上；最终是否接收由节点决定，本地资源紧张就拒绝，调度器再换一个节点。由此得到的系统性质是：全局视图可以有些过时，不超出容量由节点自己的检查保证，调度器和负载汇总都不需要持久状态，实例可以随时增减或替换。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-scheduler-local-view.svg" alt="调度器视图列出节点 A 70%、B 35%、C 55%、D 60%、E 80%，随机抽取 2 个后选中 B；节点收到请求后检查本地容量，不足则拒绝，调度器改选" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-scheduler-local-view.svg" alt="调度器视图列出节点 A 70%、B 35%、C 55%、D 60%、E 80%，随机抽取 2 个后选中 B；节点收到请求后检查本地容量，不足则拒绝，调度器改选" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>用随机抽样打散羊群效应。</strong> 调度器在定期汇总上补记自己刚放下的沙箱，每次只随机抽几个节点并选负载较低者；最终接纳由节点本地容量检查决定。</figcaption>
 </figure>
 
@@ -594,12 +594,12 @@ $$
 设了优先级，硬件上不一定分得开。**超卖**让延迟敏感（latency-sensitive，LS）任务与可以等待的尽力而为（best-effort，BE）任务共用 CPU，例如每步都有时限的下棋 agent 与普通代码任务同在一个节点上。把 BE 任务放进 Linux 的 SCHED_IDLE 调度类，只要 LS 任务可以运行，BE 任务就让出 CPU。问题出在开启同时多线程（simultaneous multithreading，SMT，即超线程）之后：一个物理核有两个硬件线程，共用执行单元和一级缓存，而调度器以硬件线程为单位分配，LS 任务和 BE 任务仍可能同时跑在同一物理核的两个硬件线程上（图 11-29）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-smt-shared-core.svg" alt="一个物理核包含硬件线程 0 与硬件线程 1，分别运行 LS 任务与 BE 任务；两个线程共享执行单元与一级缓存" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-smt-shared-core.svg" alt="一个物理核包含硬件线程 0 与硬件线程 1，分别运行 LS 任务与 BE 任务；两个线程共享执行单元与一级缓存" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>SCHED_IDLE 只排同一硬件线程内的先后。</strong> 开启 SMT 后，一个物理核有两个硬件线程；BE 任务仍可占着另一个线程，与 LS 任务争用执行单元和一级缓存。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-core-scheduling.svg" alt="一个物理核的硬件线程 0 运行 LS 任务，硬件线程 1 保持空闲；开启 core scheduling 后，同一物理核的两个线程只运行同一组任务" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-core-scheduling.svg" alt="一个物理核的硬件线程 0 运行 LS 任务，硬件线程 1 保持空闲；开启 core scheduling 后，同一物理核的两个线程只运行同一组任务" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>把调度粒度从硬件线程提到物理核。</strong> 无关任务不能与 LS 任务共用一个物理核，另一个硬件线程宁可空闲，也不跑 BE 任务。</figcaption>
 </figure>
 
@@ -665,7 +665,7 @@ $$
 T_{\text{iter}} = T_{\text{generate}} + T_{\text{verify}} + T_{\text{update}} + T_{\text{publish}}
 $$
 
-这里给了一组具体数字：生成、验证、更新和发布分别需 40、10、30 和 5 秒，一轮共 85 秒。只把生成速率提高一倍，生成降到 20 秒，一轮降到 65 秒，整体只加速约 1.3 倍；就算生成时间降为零，其余三段仍需 45 秒，整体加速也不会超过约 1.9 倍。道理不难想：随着生成时间缩短，验证和更新占总时间的比例越来越大，继续堆生成加速器能省下的时间越来越少。
+给了一组具体数字：生成、验证、更新和发布分别需 40、10、30 和 5 秒，一轮共 85 秒。只把生成速率提高一倍，生成降到 20 秒，一轮降到 65 秒，整体只加速约 1.3 倍；就算生成时间降为零，其余三段仍需 45 秒，整体加速也不会超过约 1.9 倍。道理不难想：随着生成时间缩短，验证和更新占总时间的比例越来越大，继续堆生成加速器能省下的时间越来越少。
 
 这两个数其实是 Amdahl 定律在 RL 迭代上的具体体现。设生成从 $T_g$ 缩到 $T_g'$，加速比就是
 
@@ -716,22 +716,22 @@ DSec 早期把 agent 循环同模型服务、RL 框架一起放在可抢占的 G
 这里对这一改动的总结是：换了状态的存放位置，状态放在存活时间最长的资源上，存活时间短的资源失效时状态也不会跟着丢。经常被抢占的 GPU 只做丢了可以重算的计算，要跨过中断保留下来的轨迹状态，交给不会被抢占的 CPU 平台。按存活时间给状态分层，短存活、可重算的（GPU 上的前向反向计算、临时 KV、正在跑的推理）留在会被抢占的 GPU 侧，丢了就重算；跨中断必须保住的（沙箱里改过的文件与进程、agent 循环的对话与工具结果）放到不会被抢占的 CPU 平台。早期那种绑法违反的正是这条原则：GPU 一被抢占，沙箱还在、循环没了，两边状态对不上，只能靠命令日志重放重新对齐，而重放本身带风险，同一条命令不能再执行一遍。改动看着只是挪了个位置，实质是把「恢复」从训练框架的职责变成了架构的自然结果：agent 循环和沙箱同生共死，GPU 恢复后重连即可，框架不必再实现重放逻辑。用部署位置的调整消掉一整套恢复代码，这个例子很干净。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-iter-stages.svg" alt="两条泳道：原配置为生成 0–40 秒、验证 40–50 秒、更新 50–80 秒、发布 80–85 秒；生成加速后为 0–20、20–30、30–60、60–65 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-iter-stages.svg" alt="两条泳道：原配置为生成 0–40 秒、验证 40–50 秒、更新 50–80 秒、发布 80–85 秒；生成加速后为 0–20、20–30、30–60、60–65 秒" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>四个阶段依次执行，只有生成段变短。</strong> 生成从 40 秒降到 20 秒，验证、更新与发布仍共需 45 秒，因此每轮总时间从 85 秒降到 65 秒。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-weight-broadcast.svg" alt="左侧发送端为 200 Gbit/s，向右侧六个接收实例各发一份 16.38 GB 权重；每个接收实例接口为 50 Gbit/s，六路共传 98.3 GB，单份至少 2.62 秒，全部至少 3.93 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-weight-broadcast.svg" alt="左侧发送端为 200 Gbit/s，向右侧六个接收实例各发一份 16.38 GB 权重；每个接收实例接口为 50 Gbit/s，六路共传 98.3 GB，单份至少 2.62 秒，全部至少 3.93 秒" width="800" height="386" loading="lazy" decoding="async">
   <figcaption><strong>单份由接收端限制，总量由发送端限制。</strong> 每个实例都要完整的 16.38 GB；六路共用发送出口，发送方累计要推出 98.3 GB。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-agent-loop-gpu.svg" alt="上层可抢占 GPU 资源中并排放着模型服务、RL 框架与 agent 循环；下层 CPU 沙箱平台中只有沙箱及其文件与进程" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-agent-loop-gpu.svg" alt="上层可抢占 GPU 资源中并排放着模型服务、RL 框架与 agent 循环；下层 CPU 沙箱平台中只有沙箱及其文件与进程" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>状态被放在会失效的一侧。</strong> GPU 容器被抢占后，沙箱仍在 CPU 平台，agent 循环的对话与工具结果却丢失，恢复时只能靠命令日志重新对齐。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-agent-loop-cpu.svg" alt="上层可抢占 GPU 资源只剩模型服务与 RL 框架；下层 CPU 沙箱平台中，agent 循环与沙箱及其文件、进程放在一起" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-agent-loop-cpu.svg" alt="上层可抢占 GPU 资源只剩模型服务与 RL 框架；下层 CPU 沙箱平台中，agent 循环与沙箱及其文件、进程放在一起" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>把跨中断状态放到不会被抢占的资源上。</strong> GPU 作业恢复后重新连上 agent 循环即可继续，训练框架不必再实现命令日志重放。</figcaption>
 </figure>
 
@@ -772,17 +772,17 @@ $$
 安排了完成时刻，还有最后一步要确认：结束或超时的任务确实停止了执行，资源才能交给下一项任务。一次受控验证中，等待方返回超时之后，后台线程仍工作约 130 ms；而主动终止子进程后，约 0.8 ms 就观察到进程退出。「报告超时」和「任务真的停了」之间隔着两个数量级的时间。如果超时一到就把同一资源交给下一项任务，只报告超时而不终止后台线程，两项任务就会同时使用资源。对 CUDA 性能验证来说，后果不止是慢：两个测量互相干扰，测得的执行时间和奖励都会变，奖励一歪，RL 训练就被污染了，这正好呼应本节开头说的并发执行对 GPU 性能测量的干扰。正确做法是把「释放」当成一个需要确认的事件，收到超时后主动终止子进程并确认进程退出，然后再把资源交给下一项任务。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-batch-eager.svg" alt="横轴 0–50 秒，验证进程连续工作：样本 1 在第 0 秒到达并执行 0–10 秒，样本 2 在第 10 秒到达并执行 10–20 秒，样本 3 在第 20 秒到达并执行 20–30 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-batch-eager.svg" alt="横轴 0–50 秒，验证进程连续工作：样本 1 在第 0 秒到达并执行 0–10 秒，样本 2 在第 10 秒到达并执行 10–20 秒，样本 3 在第 20 秒到达并执行 20–30 秒" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>到达即提交，验证与后续生成可以重叠。</strong> 每条验证 10 秒，第三条第 20 秒到达、第 30 秒验完，整批完成时刻由最后到达的样本决定。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-batch-wait-all.svg" alt="横轴同 0–50 秒；三条样本都等到第 20 秒才进入验证进程，随后依次执行第 20–30、30–40、40–50 秒，整批第 50 秒完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-batch-wait-all.svg" alt="横轴同 0–50 秒；三条样本都等到第 20 秒才进入验证进程，随后依次执行第 20–30、30–40、40–50 秒，整批第 50 秒完成" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>提交时机推迟了完成时刻。</strong> 验证工作量仍是三段各 10 秒，但三条样本都在第 20 秒才就绪，验证只能从第 20 秒开始。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-long-tail.svg" alt="横轴 0–100 秒，十条验证泳道：样本 1 到 9 各为 1 秒的短条，样本 10 为 1 条到 100 秒的长条；第 10 秒处有一条虚线，仍未结束的只有样本 10，剩余 90 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-long-tail.svg" alt="横轴 0–100 秒，十条验证泳道：样本 1 到 9 各为 1 秒的短条，样本 10 为 1 条到 100 秒的长条；第 10 秒处有一条虚线，仍未结束的只有样本 10，剩余 90 秒" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>条件剩余时间不能拿总体均值减已跑时间。</strong> 已执行 10 秒仍未结束这个观测筛掉了九条短样本，只剩 100 秒那条，剩余是 90 秒而不是 0.9 秒。</figcaption>
 </figure>
 
@@ -829,7 +829,7 @@ $$
 思考预算是个可调旋钮，但要按质量和成本联动来调。照这里的顺序做比较，先在「输出都能通过测试」这个质量约束下比成本，再比任务级总成本。它有一个由重试率决定的最优点，越短并不越好。至于「单次调用便宜」和「任务便宜」的区别，重试账已经说明白了；「每个副本服务多少会话」属于服务配置参数，例子里模型没变、通过率也没变，别把它记成「换了个小模型」。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-thinking-cost.svg" alt="两根堆叠柱：1000 思考为输入 0.020、思考 0.010、可见输出 0.002，合计 0.032 美元；100 思考为输入 0.020、思考 0.001、可见输出 0.002，合计 0.023 美元" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-thinking-cost.svg" alt="两根堆叠柱：1000 思考为输入 0.020、思考 0.010、可见输出 0.002，合计 0.032 美元；100 思考为输入 0.020、思考 0.001、可见输出 0.002，合计 0.023 美元" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>缩短思考只动其中一段。</strong> 输入与可见输出保持不变，思考从 0.010 降到 0.001；总成本由 0.032 降到 0.023 美元，降幅约 28%。</figcaption>
 </figure>
 
@@ -878,7 +878,7 @@ $$
 另外两个成本项也不能忘。缓存不是免费的，存着缓存要付存储费 $C_{\text{storage}}$，工具调用也可能单独计费 $C_{\text{tool}}$。这里把它们并列放进 $C_{\text{call}}$，是在提醒：比较「开不开缓存」时这四项都要在场，否则会把便宜算虚。至于入口和后端的分工也要分清，入口管鉴权、路由、限流，后端管输入处理与输出生成，缓存能不能命中取决于后端是否存有该前缀，这也是 11.4.3 要讲的「缓存只有在请求到达保存了相应前缀的后端时才能复用」。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-billing-paths.svg" alt="任务控制器进入统一服务入口，入口再分到外部 API 与自建副本；外部 API 按调用用量计费，自建副本按设备预留及运行支出计价，两条路径都把成本归到任务及尝试" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-billing-paths.svg" alt="任务控制器进入统一服务入口，入口再分到外部 API 与自建副本；外部 API 按调用用量计费，自建副本按设备预留及运行支出计价，两条路径都把成本归到任务及尝试" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>入口负责鉴权、路由与限流，后端负责推理。</strong> 两条路径的差别在结账方式：一条随调用量付费，一条先付设备预留再分摊；输入拆为普通处理、缓存创建与缓存读取，生成单独计量。</figcaption>
 </figure>
 
@@ -922,12 +922,12 @@ $$
 两个门槛搁在一起才是结论。本例每次前缀都是 19,000 个 token，所以请求命中率 $h$ 也等于前缀内部的 token 命中比例；相对于完整的 20,000 个 token 输入，缓存读取占比为 $0.95h$（$19000/20000 = 0.95$，这里补的复算）。成本交点约为 79.5%，业务门槛约为 91.8%。从低命中率向右移动，B 先变得便宜，随后才满足按时完成的目标，所以最终可选区域是 $h \ge 91.8\%$ 那一段，而不只是「便宜就行」的 79.5%。这正是这里那句「把服务目标放到成本曲线上，就能直接读出最终可选区域」。顺便说一句，$h$ 等于 token 命中比例这件事只在本例成立，因为每次请求的前缀长度都一样；前缀长度各不相同的话，请求命中率和 token 命中率就得分开算，那正是 11.4.2 敲过的钉子。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-cost-vs-hit.svg" alt="横轴为 B 的请求命中率 0–100%，纵轴为每个成功任务的成本：B 的曲线从 0.0439 美元随命中率下降，在 79.5% 处约 0.0161 美元；A 的水平线约 0.0161 美元" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-cost-vs-hit.svg" alt="横轴为 B 的请求命中率 0–100%，纵轴为每个成功任务的成本：B 的曲线从 0.0439 美元随命中率下降，在 79.5% 处约 0.0161 美元；A 的水平线约 0.0161 美元" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>两条成本线在约 79.5% 处相交。</strong> B 的单价更高，但实际生成量少、成功率高；命中率足够高时，按成功任务计算的成本反而低于 A。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-deadline-vs-hit.svg" alt="横轴为 B 的请求命中率 0–100%，纵轴为按时成功的提交比例 0–100%；直线为 0.98 乘命中率，命中率 91.8% 时达到约 90%" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-deadline-vs-hit.svg" alt="横轴为 B 的请求命中率 0–100%，纵轴为按时成功的提交比例 0–100%；直线为 0.98 乘命中率，命中率 91.8% 时达到约 90%" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>期限把可选区域收窄。</strong> 只有 B 命中的 4 秒路径满足 6 秒期限，再乘 98% 的验收通过率；要求 90% 按时成功，命中率至少要 91.8%。</figcaption>
 </figure>
 
@@ -943,7 +943,7 @@ $$
 F + Nv < Nc \quad\Longleftrightarrow\quad N > \frac{F}{c - v}\quad (c > v)
 $$
 
-这条不等式可以拆成两句话看。自建的总成本是一条从 $F$ 出发、斜率为 $v$ 的直线 $F + Nv$；按量的总成本是一条从 0 出发、斜率为 $c$ 的直线 $Nc$。两条直线求交，得到 $N^{*} = F/(c-v)$，交点左边选按量，右边选自建。若 $c \le v$，两条线永不相交，按量永远落在下面，这正是这里说的「API 在所有使用量下都更省」，因为 API 每项成本已经不高于自建的新增成本，而固定投入又是正的。这个模型跟本节的具体数字无关，换成任何「固定投入加变动成本」对比「纯变动成本」的场合都成立，订阅也是同一个形状：按月付钱换来一段使用权限，本质是固定支出加额度内的变动成本。还要留意一个口径问题，若两边成功率不同，分母得换成 $N p_{\text{self}}$ 与 $N p_{\text{api}}$，比较的单位就从「每项任务」换成了每个成功任务的成本。
+这条不等式可以拆成两句话看。自建的总成本是一条从 $F$ 出发、斜率为 $v$ 的直线 $F + Nv$；按量的总成本是一条从 0 出发、斜率为 $c$ 的直线 $Nc$。两条直线求交，得到 $N^{*} = F/(c-v)$，交点左边选按量，右边选自建。若 $c \le v$，两条线永不相交，按量永远落在下面，这正是的「API 在所有使用量下都更省」，因为 API 每项成本已经不高于自建的新增成本，而固定投入又是正的。这个模型跟本节的具体数字无关，换成任何「固定投入加变动成本」对比「纯变动成本」的场合都成立，订阅也是同一个形状：按月付钱换来一段使用权限，本质是固定支出加额度内的变动成本。还要留意一个口径问题，若两边成功率不同，分母得换成 $N p_{\text{self}}$ 与 $N p_{\text{api}}$，比较的单位就从「每项任务」换成了每个成功任务的成本。
 
 这里的算例把同一模型、同一种 GPU 放在两种付费方式下比，两边 batch size 相同、任务质量也相同，只差计费方式。预留这一侧按 GPU 云平台 Runpod 公开的 B200 Pod 价格租 4 张卡一个月，即 720 小时；B200 Pod 是按小时计费、独占使用的 GPU 实例，每卡时 6.79 美元，于是
 
@@ -962,7 +962,7 @@ $$
 这几笔数自己代一遍也就几分钟：预留是 $4 \times 720 = 2880$ 卡时，$2880 \times 6.79 = 19{,}555.2$ 美元；按量是每项 $3 \times 1.125 = 3.375$ B200·秒，$3.375 \times 8.64 = 29.16$ 美元·秒，再除以 3600 得 0.0081 美元；交点是 $19{,}555.2/0.0081 = 2{,}414{,}222$，约 241 万项；处理上限要先算时间，一个月 $720 \times 3600 = 2{,}592{,}000$ 秒，32 个会话并行、每项占 27 秒，于是 $32 \times 2{,}592{,}000/27 = 3{,}072{,}000$，即 307.2 万项。这些复算都是我按给出的式子重走一遍得到的，这里只给了结论。交点利用率 $241.4/307.2 \approx 78.6\%$ 与单价比 $6.79/8.64 \approx 78.6\%$ 相等这件事有原因：自建按 6.79、按量按 8.64 收的是同一个「卡时」，两边换算成利用率时共同的卡时吞吐因子就约掉了，交点利用率必然是两者单价之比。**按量贵 27%、自建就得跑到 78.6% 的利用率才划算**，这句话可以直接背下来。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-reserved-vs-ondemand.svg" alt="横轴为每月提交任务数 0–300 万项，纵轴为每月总成本；预留 4 张 B200 为 19,555.2 美元的水平线，按量成本从原点上升，两线在约 241 万项处相交" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-reserved-vs-ondemand.svg" alt="横轴为每月提交任务数 0–300 万项，纵轴为每月总成本；预留 4 张 B200 为 19,555.2 美元的水平线，按量成本从原点上升，两线在约 241 万项处相交" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>固定投入与纯变动成本求交。</strong> 交点左边按量更省，右边预留更省；交点对应预留 GPU 约 78.6% 的利用率，预留线止于每月 307.2 万项的处理上限。</figcaption>
 </figure>
 
@@ -1015,7 +1015,7 @@ Agent 运行时也要规定清楚同样的东西：向调用者报告完成时�
 异步上传的经典陷阱就在这里。为了少等，可以每轮先存本地，再在后台上传该轮新增的记录。这里的情景是这样：上传失败后暂不重试，也不中止本地执行，第一轮运行测试取得失败结果，第二轮修改代码取得工具确认，第三轮再次测试取得新结果。三轮记录都写进了本地 JSONL，但第二轮上传失败、第三轮上传成功。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-async-upload.svg" alt="三行三列表格：本地记录三轮都已保存；云端记录第 1、3 轮已保存，第 2 轮上传失败；云端进度只到第 1 轮，注明第 2 轮缺失、不能跳到第 3 轮" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-async-upload.svg" alt="三行三列表格：本地记录三轮都已保存；云端记录第 1、3 轮已保存，第 2 轮上传失败；云端进度只到第 1 轮，注明第 2 轮缺失、不能跳到第 3 轮" width="800" height="230" loading="lazy" decoding="async">
   <figcaption><strong>“最后收到哪一轮”不等于“连续保存到哪一轮”。</strong> 第 3 轮上传成功也无法补上第 2 轮的缺口；恢复能力取决于从起点连续保存的前缀长度。</figcaption>
 </figure>
 
@@ -1043,7 +1043,7 @@ Agent 运行时也要规定清楚同样的东西：向调用者报告完成时�
 恢复过程还有个隐藏收益：确认能从哪里继续之后，控制器可以选择换用更强的模型。前提是原模型已完成的两轮里补丁和测试结果都已完整保存，新模型就能接着求解，无需重做前两轮，这样只需支付下一次模型调用的成本，成功率还可能提高。这正是按轮提交带来的可组合性：状态干净、连续、版本一致，所以可以换执行者接着干。这里最后一句给后面的概率计算定了规矩：后续修复有多大把握，取决于此前为什么失败。所以下文计算恢复树中各分支的概率时，都以任务已经到达该节点为条件。这一点在 11.5.2 的例 11-8 里会直接用上。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-lost-ack.svg" alt="控制器与外部系统之间：外部系统已执行并提交操作 K，确认消息丢失；控制器恢复后先按操作标识 K 查询结果，再决定是否继续" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-lost-ack.svg" alt="控制器与外部系统之间：外部系统已执行并提交操作 K，确认消息丢失；控制器恢复后先按操作标识 K 查询结果，再决定是否继续" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>恢复环境撤不回外部副作用。</strong> 实线表示请求与执行，虚线表示确认与恢复查询；只要查询到结果，就不应再次执行同一操作。</figcaption>
 </figure>
 
@@ -1098,20 +1098,20 @@ $$
 
 局部修复成功时任务在第 14 秒结束；修复失败后再升级，就比直接升级多用 4 秒，总成功率提高之后仍有一部分成功结果超过期限，原因就在这一条额外分支。「修复成功」这条 14 秒的支路是净赚的，拖后腿的是「修复失败后再升级」这条 22 秒的支路。
 
-这里的结论是：恢复提高了完成比例，也提高了单位完成成本。成功率从 80% 提到 99.7%，涨了 19.7 个百分点，而每项成功任务的成本从 0.0125 涨到 0.0146 美元，贵了 16.8%；这 19.7 个百分点里还有 4.7 个点是花了钱却不算按时成功的。业务上怎么取舍，这里给了判据：业务若要求至少 95% 的提交按时成功，就需要这项额外投入；若只比较单次成本，则会遗漏它带来的完成量。有限恢复的按时成功率恰好是 95.0%，刚好卡在这条线上，而只做首次只有 80%，远远不够。这个例子的恢复策略因此算不上「更划算」，它属于不做就达不到业务线的选择。
+这里的结论是：恢复提高了完成比例，也提高了单位完成成本。成功率从 80% 提到 99.7%，涨了 19.7 个百分点，而每项成功任务的成本从 0.0125 涨到 0.0146 美元，贵了 16.8%；这 19.7 个百分点里还有 4.7 个点是花了钱却不算按时成功的。业务上怎么取舍，给了判据：业务若要求至少 95% 的提交按时成功，就需要这项额外投入；若只比较单次成本，则会遗漏它带来的完成量。有限恢复的按时成功率恰好是 95.0%，刚好卡在这条线上，而只做首次只有 80%，远远不够。这个例子的恢复策略因此算不上「更划算」，它属于不做就达不到业务线的选择。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-recovery-cost.svg" alt="三根柱：仅首次的成功任务成本 0.0125 美元；有限恢复的成功任务成本 0.0146 美元；有限恢复的按时成功任务成本 0.0153 美元" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-recovery-cost.svg" alt="三根柱：仅首次的成功任务成本 0.0125 美元；有限恢复的成功任务成本 0.0146 美元；有限恢复的按时成功任务成本 0.0153 美元" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>分子是同一笔总支出，分母不同。</strong> 只做首次尝试成功率约 80%，有限恢复约 99.7%，其中约 95.0% 在 20 秒内成功；恢复提高了完成比例，也提高了单位完成成本。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-retry-first.svg" alt="首次尝试在第 10 秒后分成三支：首次成功占 80%，局部修复占 12%，直接升级占 8%；比例均以全部提交为分母" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-retry-first.svg" alt="首次尝试在第 10 秒后分成三支：首次成功占 80%，局部修复占 12%，直接升级占 8%；比例均以全部提交为分母" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>一次提交可能走三条路。</strong> 80% 直接成功；12% 进入局部修复，8% 跳过修复直接升级。下一图展开修复节点内部的条件分支。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-retry-repair.svg" alt="进入修复的 12% 向下分成两支：修复成功占全部提交 7.2%，累计 14 秒，条件成功率 60%；修复后升级占全部提交 4.8%，累计 22 秒，条件 40%" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-retry-repair.svg" alt="进入修复的 12% 向下分成两支：修复成功占全部提交 7.2%，累计 14 秒，条件成功率 60%；修复后升级占全部提交 4.8%，累计 22 秒，条件 40%" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>条件分支要乘以上一级概率。</strong> 12% 乘 60% 得 7.2%，12% 乘 40% 得 4.8%；升级再用 8 秒，因此后一条路径累计 22 秒。</figcaption>
 </figure>
 
@@ -1120,7 +1120,7 @@ $$
 模型加速之后，瓶颈会搬家。这是本章反复出现的同一个模式，11.3.3 的生成加速器、11.4.4 的 decode 加速都是它的不同形态。这里的具体情形是：下一次工具调用必然发生，快速服务还需 6 秒生成，而模板不在本机、走冷路径创建环境约需 2.7 秒，在模型开始生成时创建环境，这 2.7 秒准备时间就完全与模型生成重叠；若模型阶段缩短到 1 秒，同样时机开始创建仍要再等约 1.7 秒（$2.7-1$ 是这里补的复算），环境准备于是成了工具开始执行前的新等待来源。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-env-vs-model.svg" alt="横轴 0–8 秒，两组时间条：快速服务下模型 0–6 秒与环境创建 0–2.7 秒并行；加速模型下模型 0–1 秒与环境创建 0–2.7 秒并行，模型结束后多出 1.7 秒额外等待" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-env-vs-model.svg" alt="横轴 0–8 秒，两组时间条：快速服务下模型 0–6 秒与环境创建 0–2.7 秒并行；加速模型下模型 0–1 秒与环境创建 0–2.7 秒并行，模型结束后多出 1.7 秒额外等待" width="800" height="321" loading="lazy" decoding="async">
   <figcaption><strong>模型越快，环境准备越可能成为关键路径。</strong> 两种情况都在零时刻开始创建环境；工具必须同时等待模型决策与环境就绪，模型缩到 1 秒后还要再等约 1.7 秒。</figcaption>
 </figure>
 
@@ -1149,7 +1149,7 @@ $$
 图 11-49 先按期限筛方案：普通模型的最后一轮结束于期限之后，快速模型的三轮都能在期限内完成。接下来只需在使用快速模型的两种环境策略之间比成本，同时检查是否超过平台容量。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch11-deadline-filter.svg" alt="两条泳道：普通模型每轮 9 秒模型加 1 秒工具，三轮结束于第 30 秒；快速模型每轮 6 秒模型加 1 秒工具，三轮结束于第 21 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch11-deadline-filter.svg" alt="两条泳道：普通模型每轮 9 秒模型加 1 秒工具，三轮结束于第 30 秒；快速模型每轮 6 秒模型加 1 秒工具，三轮结束于第 21 秒" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>期限筛掉了普通模型。</strong> 两种方案都在模型调用期间准备环境；模型调用从每轮 9 秒降到 6 秒，三轮完成时刻从第 30 秒提前到第 21 秒。</figcaption>
 </figure>
 
@@ -1192,9 +1192,9 @@ $f$ 是原时间中可加速部分的占比，$s$ 是这部分的加速倍数，
 
 ## 练习与实验
 
-> 这里说明：以下练习沿用 11-1 至 11-10 的资料编号。核心题 11-1、11-2 和 11-10 构成从需求到设计的完整练习；实验原始记录与选做运行入口见本章配套。
+> 说明：以下练习沿用 11-1 至 11-10 的资料编号。核心题 11-1、11-2 和 11-10 构成从需求到设计的完整练习；实验原始记录与选做运行入口见本章配套。
 >
-> 这里说明：下面每题先照录题干（保留这里数字与问法），再给「参考解答」。这里只给题设，不给答案；解答中的推导过程属于若与这里后续章节的结论不一致，以这里为准。平台每秒接收 8 项任务，其中一半执行两轮，另一半执行四轮。每轮模型调用耗时 6 秒，工具占用一个 CPU 核执行 1 秒。求模型调用率、平均并发模型调用数与平均使用的 CPU 核数。若每个环境在任务全程占用 2 GiB，求平台的平均环境内存占用。再假设环境只在每轮 2 秒的准备阶段和 1 秒的工具执行阶段保留，重新计算平均内存占用，以及每秒需要创建的环境数量。
+> 说明：下面每题先照录题干（保留这里数字与问法），再给「参考解答」。这里只给题设，不给答案；解答中的推导过程属于若与这里后续章节的结论不一致，以这里为准。平台每秒接收 8 项任务，其中一半执行两轮，另一半执行四轮。每轮模型调用耗时 6 秒，工具占用一个 CPU 核执行 1 秒。求模型调用率、平均并发模型调用数与平均使用的 CPU 核数。若每个环境在任务全程占用 2 GiB，求平台的平均环境内存占用。再假设环境只在每轮 2 秒的准备阶段和 1 秒的工具执行阶段保留，重新计算平均内存占用，以及每秒需要创建的环境数量。
 
 参考解答：平均轮数为 $0.5\times 2 + 0.5\times 4 = 3$ 轮一项；模型调用率 $8 \times 3 = 24$ 次/秒；按 Little 定律 $L=\lambda W$、$W=6$ 秒，平均并发模型调用数为 $24 \times 6 = 144$ 次；平均使用的 CPU 核数是 $24 \times 1 = 24$ 个核，也就是每秒 24 个 CPU·秒的工具工作。
 
@@ -1364,20 +1364,20 @@ CPU 这边，工具要 $15 \times 3 \times 1 = 45$ 个核，准备工作按 11.5
 ## 这里练习与思考题索引
 
 - **例 11-1 至例 11-3**：见本章前文。
-- **例 11-4**（共享的发送出口如何限制多实例的权重分发速度？）：，见 11.3.3。
-- **例 11-5**（思考长度缩短到十分之一，总成本减少多少？）：，见 11.4.1。
-- **例 11-6**（跨轮缓存公共前缀能节省多少输入费用？）：，见 11.4.2。
-- **例 11-7**（缓存命中与成功率何时能抵消更高的服务单价？）：，见 11.4.3。
-- **例 11-8**（局部修复对成功率与超时比例的影响。）：，见 11.5.2。
-- **例 11-9**（如何选择模型服务与环境管理方式，才能按期完成且成本最低？）：，见 11.5.3。
-- **实验 11-1〔核心〕**（从多轮任务推算模型并发、CPU 与环境内存）：，见「练习与实验」第 1 题。
-- **实验 11-2〔核心〕**（重建环境与恢复快照如何影响工具等待和内存占用时长）：，见第 2 题。
-- **实验 11-3**（提前准备环境能省多少等待，又占用多少内存）：，见第 3 题。
-- **实验 11-4**（不同作业完成目标下，迁移何时优于等待）：，见第 4 题。
-- **实验 11-5**（启动耗时如何影响短期实例的有效产出）：，见第 5 题。
-- **实验 11-6**（验证进程数量与长尾样本如何决定整批完成时间）：，见第 6 题。
-- **实验 11-7**（缓存命中与结果正确性相关时，如何计算成本与按时成功率）：，见第 7 题。
-- **实验 11-8**（自建与 API 服务的成功任务成本交点）：，见第 8 题。
-- **实验 11-9**（任务期限与提前停止如何改变重试成本和成功率）：，见第 9 题。
-- **实验 11-10〔核心〕**（到达率提高后如何扩容并选择环境驻留策略）：，见第 10 题。
+- **例 11-4**（共享的发送出口如何限制多实例的权重分发速度？）：见 11.3.3。
+- **例 11-5**（思考长度缩短到十分之一，总成本减少多少？）：见 11.4.1。
+- **例 11-6**（跨轮缓存公共前缀能节省多少输入费用？）：见 11.4.2。
+- **例 11-7**（缓存命中与成功率何时能抵消更高的服务单价？）：见 11.4.3。
+- **例 11-8**（局部修复对成功率与超时比例的影响。）：见 11.5.2。
+- **例 11-9**（如何选择模型服务与环境管理方式，才能按期完成且成本最低？）：见 11.5.3。
+- **实验 11-1〔核心〕**（从多轮任务推算模型并发、CPU 与环境内存）：见「练习与实验」第 1 题。
+- **实验 11-2〔核心〕**（重建环境与恢复快照如何影响工具等待和内存占用时长）：见第 2 题。
+- **实验 11-3**（提前准备环境能省多少等待，又占用多少内存）：见第 3 题。
+- **实验 11-4**（不同作业完成目标下，迁移何时优于等待）：见第 4 题。
+- **实验 11-5**（启动耗时如何影响短期实例的有效产出）：见第 5 题。
+- **实验 11-6**（验证进程数量与长尾样本如何决定整批完成时间）：见第 6 题。
+- **实验 11-7**（缓存命中与结果正确性相关时，如何计算成本与按时成功率）：见第 7 题。
+- **实验 11-8**（自建与 API 服务的成功任务成本交点）：见第 8 题。
+- **实验 11-9**（任务期限与提前停止如何改变重试成本和成功率）：见第 9 题。
+- **实验 11-10〔核心〕**（到达率提高后如何扩容并选择环境驻留策略）：见第 10 题。
 - **思考题**：第 11 章这里未设「思考题」栏目。

@@ -148,7 +148,7 @@ cover: /covers/project-benchmark.svg
 
   ```html
   <figure class="diagram">
-    <img src="../../figures/ai-agent/agent-environment-loop.svg" alt="用文字描述图的内容" width="800" height="450" loading="lazy" decoding="async">
+    <img src="../../figures/ai-agent/agent-environment-loop.svg" alt="用文字描述图的内容" width="800" height="384" loading="lazy" decoding="async">
     <figcaption>短句说明。</figcaption>
   </figure>
   ```

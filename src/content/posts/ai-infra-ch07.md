@@ -34,14 +34,14 @@ cover: /covers/series-ai-infra.svg
 
 每轮启动时间 0.83 μs 是本章反复出现的启动开销常数，来历值得说清楚。公开的 nccl-tests 记录显示，在两台这样的服务器上，十六张卡对 16 B 到 128 B 的数据做一次 AllReduce 约需 25 μs；数据量这么小，传输时间可以忽略，把 25 μs 平均到下一节环形 AllReduce 的 30 轮上，每轮约 0.83 μs（$25/30 = 0.833\ \mu s$）。这是典型的模型标定做法：拿一次可测量的完整通信除以模型预测的轮数，剩下说不清的部分全部归到「每轮启动」上。这里自己交代了这个口径的边界，NCCL 在小消息上实际选用的算法未随日志公开，这里只按本章的环模型折算。0.83 μs 并不在硬件手册上，它是为了让模型对得上实测反推出来的模型参数。
 
-贯穿算例的定标是 192 MiB 的梯度张量，要求十六个参与者都拿到它的归约结果。例题 7.6（第 7.6.2 节）里训练步算作 20 ms，梯度在第 17 ms 就绪，要让通信完全藏在计算后面，就得在 3 ms 内完成，本章把这个 3 ms 当作这次通信的预算。这就是一个关键路径的算法：总时长由最晚就绪的输入决定，其余时间都可以被覆盖。这里说这一算例便于逐轮计算，也能说明跨服务器协作的主要困难，本地计算结果必须经过带宽远低于 NVLink 的网卡，才能传给另一台服务器。
+贯穿算例的定标是 192 MiB 的梯度张量，要求十六个参与者都拿到它的归约结果。例题 7.6（第 7.6.2 节）里训练步算作 20 ms，梯度在第 17 ms 就绪，要让通信完全藏在计算后面，就得在 3 ms 内完成，本章把这个 3 ms 当作这次通信的预算。这就是一个关键路径的算法：总时长由最晚就绪的输入决定，其余时间都可以被覆盖。这一算例便于逐轮计算，也能说明跨服务器协作的主要困难，本地计算结果必须经过带宽远低于 NVLink 的网卡，才能传给另一台服务器。
 
 放置策略的第一原则由此而来。网卡比 NVLink 慢得多，所以要先决定哪类通信放在服务器之间。本章沿用第 6.1.4 节的并行方式一览表，不再逐一定义。把频繁的张量并行归约留在较快的互联内，把数据并行的梯度同步或流水线并行的阶段交接放到服务器之间，是应当首先计算的一类候选方案；若本地容量不够，上下文并行需要更大范围的上下文，或者专家并行的路由跨越多个节点，通信范围就必须扩大。到底怎么放，要由实际流量和关键路径决定。
 
 最后一条是免责声明，也是很重要的一条工程判断。跨越超节点边界本身不会改变需要交换的数据量；算法、放置、精度和接收方是否去重决定要传多少字节，路径决定这些字节经过哪个出口、要等多久。只知道网络是 InfiniBand 还是 RoCE，推不出有效带宽、传输延迟、超售比（交换机下联与上联带宽之比）、在途窗口和故障恢复时间。同样是 400 Gbit/s 的链路，超售比不同、在途窗口不同、接收方是否去重不同，实际有效带宽可以差三倍（7.1.2 节会算出这个三倍）。所以看别人的组网方案时，先问参数，再问结论。后文一律用明确给定的网络参数计算，实际部署时换成对应系统的测量值。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-baseline-topology.svg" alt="两台服务器各含八张 GPU，服务器 A 为 GPU 0–7，服务器 B 为 GPU 8–15；服务器内部经 NVSwitch 以每方向 450 GB/s 互联，每张 GPU 配一张 50 GB/s 网卡，经各自的 rail 交换机相连" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-baseline-topology.svg" alt="两台服务器各含八张 GPU，服务器 A 为 GPU 0–7，服务器 B 为 GPU 8–15；服务器内部经 NVSwitch 以每方向 450 GB/s 互联，每张 GPU 配一张 50 GB/s 网卡，经各自的 rail 交换机相连" width="800" height="386" loading="lazy" decoding="async">
   <figcaption><strong>基准配置与服务器边界。</strong> 发送方 GPU 的数据先经本卡网卡进入 rail 交换网络，再从接收方同编号网卡进入接收方 GPU；服务器边界就是跨服务器通信的边界。</figcaption>
 </figure>
 
@@ -64,7 +64,7 @@ $$
 超售比是最容易踩坑的商业参数。3:1 意味着下联能同时给 48 张卡喂数据，上联只能同时给 16 张卡喂数据。如果流量全是本叶内的，超售比毫无影响；一旦流量全部向外走，有效带宽就只剩三分之一。本节末尾的讨论会给出一条精确判据：设一张网卡发出的字节中只有比例 $f$ 需要离开本叶交换机，则上联不成为瓶颈的条件是 $f \le 1/r$。$r=3$ 时只有不到三分之一的字节跨叶才不受限；$r=1$（无阻塞）时任何 $f$ 都不受限。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-card-scaling.svg" alt="横轴为加速器数量相对基准的倍数 1 到 8，纵轴为每步时间 0 到 30 ms；计算线从 20 ms 按反比下降，串行线收敛到 7.5 ms，完全重叠线在交叉点后保持 7.5 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-card-scaling.svg" alt="横轴为加速器数量相对基准的倍数 1 到 8，纵轴为每步时间 0 到 30 ms；计算线从 20 ms 按反比下降，串行线收敛到 7.5 ms，完全重叠线在交叉点后保持 7.5 ms" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>计算、串行与完全重叠三条曲线。</strong> 传输量固定时，增加卡数缩短计算时间，但串行方式仍要加上固定的通信时间；完全重叠取计算与通信的较大值。</figcaption>
 </figure>
 
@@ -139,7 +139,7 @@ $$
 超售比为 3 时的账要会算：叶交换机 48 下行、16 上联，两层能接 3072 个端点（$64\times48$），只用 80 台交换机（64 叶 + 16 脊）；64 台叶交换机共 1024 条上联，半分带宽为其中一半的合计 25.6 TB/s（$512\times50$ GB/s）。这三个数分别来自 64 台叶 × 48 下行、64 台叶 × 16 上联取一半、再乘 50 GB/s。对照无阻塞网络中同样 3072 个端点所得的 76.8 TB/s，只有它的三分之一，每个端点穿过半分割集的份额从 50 GB/s 降到 16.7 GB/s（$25.6\ \text{TB/s} \div 1536 = 16.67$ GB/s，除数是 3072 的一半，因为半分带宽本来就是一半端点到另一半端点的合计）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-clos-bisection.svg" alt="上方两台脊交换机，下方四台叶交换机，每台叶交换机都连到两台脊交换机；每台叶交换机下挂 32 个端点，中间虚线把端点分成左右两半，穿过虚线的叶—脊链路构成半分割集" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-clos-bisection.svg" alt="上方两台脊交换机，下方四台叶交换机，每台叶交换机都连到两台脊交换机；每台叶交换机下挂 32 个端点，中间虚线把端点分成左右两半，穿过虚线的叶—脊链路构成半分割集" width="800" height="386" loading="lazy" decoding="async">
   <figcaption><strong>两层 Clos 的连接方式。</strong> 任意两台叶交换机都能经任一脊交换机相通；把端点切成两半时，所有跨越切口的流量都要经过叶—脊链路。</figcaption>
 </figure>
 
@@ -204,7 +204,7 @@ $k = 128$、无阻塞时：两层端点数 $k^{2}/2 = 8192$，交换机数 $k + 
 这里还把这个思路收成一句：先求必需的流量，再求充分利用带宽所需的并发请求数，最后分析应用要求的操作顺序。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/cluster-hierarchy.svg" alt="超节点内部的高速互联与超节点之间的交换网络构成两级互联" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/cluster-hierarchy.svg" alt="超节点内部的高速互联与超节点之间的交换网络构成两级互联" width="800" height="396" loading="lazy" decoding="async">
   <figcaption><strong>超节点与集群的两级互联。</strong> 超节点内部用高速互联做 scale-up，超节点之间通过网卡与交换网络做 scale-out；紧密协作留在机柜内。</figcaption>
 </figure>
 
@@ -233,22 +233,22 @@ $$
 先算各归约方案的跨服务器传输量。连续环按 $0, 1, \dots, 15$ 排列，十六条有向边只有 $7\to8$ 和 $15\to0$ 跨服务器；每轮每边发送 12 MiB，三十轮每方向各发送 360 MiB，两方向合计 720 MiB，这些字节在服务器 A 只经过参与者 7 的网卡，在服务器 B 只经过参与者 15 的网卡，其余十四张网卡闲置。交错环改成 $0, 8, 1, 9, \dots, 7, 15$ 的交错排列，十六条边全部跨服务器，每轮每张网卡各发送 12 MiB，跨服务器总量增至 5760 MiB。分层归约分三步：先在各服务器内由八个参与者执行 ReduceScatter，七轮之后每个参与者保存本服务器归约结果的八分之一，即 24 MiB；两台服务器上负责同一分片的两个参与者再执行一次 AllReduce，各自把 24 MiB 分成两份，用一轮交换并归约其中一份，再用一轮交换得到另一份，每一对在两个方向合计发送 48 MiB，八对共发送 384 MiB，每一对各走自己的一条 rail，八张网卡同时工作；最后各服务器内用七轮 AllGather 得到完整结果。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-contiguous-ring.svg" alt="0 到 15 排成一个环，服务器 A 的 0–7 连续相连，服务器 B 的 8–15 连续相连；只有 7 到 8 和 15 到 0 两条边跨越服务器，跨服务器流量集中在两张网卡上" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-contiguous-ring.svg" alt="0 到 15 排成一个环，服务器 A 的 0–7 连续相连，服务器 B 的 8–15 连续相连；只有 7 到 8 和 15 到 0 两条边跨越服务器，跨服务器流量集中在两张网卡上" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>连续编号的环。</strong> 十六个参与者围成一圈时，服务器边界只被切开两次，其余十四条有向边都在服务器内部完成。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-interleaved-ring.svg" alt="参与者按服务器 A、服务器 B 交替排列为 0、8、1、9、2、10 等，任意相邻两点都分属不同服务器，因此十六条有向边全部跨服务器，十六张网卡都在发送" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-interleaved-ring.svg" alt="参与者按服务器 A、服务器 B 交替排列为 0、8、1、9、2、10 等，任意相邻两点都分属不同服务器，因此十六条有向边全部跨服务器，十六张网卡都在发送" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>交错编号的环。</strong> 相邻节点始终来自不同服务器，每条边都要跨服务器；每个参与者的总发送量仍是 360 MiB，只是分散到全部网卡。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-hierarchical-reduction.svg" alt="服务器 A 与服务器 B 两列并行执行：本地 ReduceScatter 得到八个 24 MiB 分片，对应分片跨服务器交换，两卡 AllReduce 各走一条 rail，最后本地 AllGather 得到完整归约结果" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-hierarchical-reduction.svg" alt="服务器 A 与服务器 B 两列并行执行：本地 ReduceScatter 得到八个 24 MiB 分片，对应分片跨服务器交换，两卡 AllReduce 各走一条 rail，最后本地 AllGather 得到完整归约结果" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>分层归约的四段执行。</strong> 每列从上向下执行，跨服务器交换只发生在中间一步；每一对参与者各用一条 rail。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-logical-send-volume.svg" alt="三根堆叠柱分别对应连续环、交错环、分层归约，总量都为 5760 MiB；连续环的跨服务器段为 720 MiB，交错环为 5760 MiB，分层归约为 384 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-logical-send-volume.svg" alt="三根堆叠柱分别对应连续环、交错环、分层归约，总量都为 5760 MiB；连续环的跨服务器段为 720 MiB，交错环为 5760 MiB，分层归约为 384 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>本地与跨服务器发送量的构成。</strong> 三种方案的逻辑发送总量相同，但连续环把大部分流量留在本地，交错环全部跨服务器，分层归约的跨服务器部分最小。</figcaption>
 </figure>
 
@@ -258,7 +258,7 @@ $$
 T_{\text{comm}} = \sum_{r}\left(\alpha + \max_{e} \frac{V_{r,e}}{B_e}\right).
 $$
 
-其中 $\alpha$ 是每轮启动时间（本节取 0.83 μs），$\max_e (\cdot)$ 表示一轮之内由最慢的那条传输决定，外层求和表示各轮之间依次相加。这里强调："该式分开了两种关系：**一轮之内由最慢的传输决定，各轮之间依次相加**。这里只算数据传输和每轮启动的时间。"
+其中 $\alpha$ 是每轮启动时间（本节取 0.83 μs），$\max_e (\cdot)$ 表示一轮之内由最慢的那条传输决定，外层求和表示各轮之间依次相加。："该式分开了两种关系：**一轮之内由最慢的传输决定，各轮之间依次相加**。这里只算数据传输和每轮启动的时间。"
 
 这个式子有两个建模假设要记住。轮与轮之间完全串行，有屏障同步，所以 30 轮就是 30 乘每轮时间；每轮内部取最慢资源，只要有一条慢边整轮都被它拖住，其他快边的时间完全被浪费，这正是连续环「十四张网卡闲置」的数学表达。它把延迟 $\alpha$ 和带宽 $V/B$ 分开，也让人一眼看出：轮数多的时候要压轮数，单轮数据大的时候要压最慢那条边的数据量。
 
@@ -284,7 +284,7 @@ $$
 
 也就是说，只要本地互联不慢于一张网卡，分层归约就更快，NVLink 的 450 GB/s 远高于该界限。分层归约在这台服务器上没有代价，因为每个参与者的本地发送量（336 MiB）不比连续环的（360 MiB）多，跨服务器阶段又用上了全部八张网卡。
 
-分层归约并不总是免费的，这里给了一组对照配置：每台四张 A100 80GB PCIe，卡与卡之间经 PCIe Gen4 x16 点对点传输，每方向 32 GB/s；每台配一张双端口 ConnectX-7，两个 200 Gbit/s 端口各 25 GB/s，共用这张网卡的 PCIe Gen4 x16 插槽，每方向也只有 32 GB/s。在这组配置下，连续环的八个参与者十四轮各发送 24 MiB，本地边受点对点链路限制，跨服务器边受网卡插槽限制，每轮都按 32 GB/s 计，约需 11.0 ms；分层归约两个跨服务器轮次每方向各要通过插槽传送 96 MiB，共约 6.3 ms，加上六轮本地通信约 9.4 ms，合计约 15.7 ms，反而比连续环慢。令两者相等，交叉点的本地带宽约为 64 GB/s，约是网卡插槽带宽的两倍。A100 PCIe 的 NVLink 桥接器每方向 300 GB/s，远高于该界限，但一座桥只连两张卡，四卡环上仍有两条边走 PCIe；若四卡环的每条边都有这样的带宽，分层归约降到约 7.3 ms，才快于连续环。差别的来源是共享接口：跨服务器阶段把八个参与者的分片集中到两轮里，这两轮的流量都要经过同一个 32 GB/s 的插槽，本地归约节省的远端字节被更长的远端轮次抵消了一部分，本地链路又不比该插槽快，本地归约增加的时间也就无法补回。
+分层归约并不总是免费的，给了一组对照配置：每台四张 A100 80GB PCIe，卡与卡之间经 PCIe Gen4 x16 点对点传输，每方向 32 GB/s；每台配一张双端口 ConnectX-7，两个 200 Gbit/s 端口各 25 GB/s，共用这张网卡的 PCIe Gen4 x16 插槽，每方向也只有 32 GB/s。在这组配置下，连续环的八个参与者十四轮各发送 24 MiB，本地边受点对点链路限制，跨服务器边受网卡插槽限制，每轮都按 32 GB/s 计，约需 11.0 ms；分层归约两个跨服务器轮次每方向各要通过插槽传送 96 MiB，共约 6.3 ms，加上六轮本地通信约 9.4 ms，合计约 15.7 ms，反而比连续环慢。令两者相等，交叉点的本地带宽约为 64 GB/s，约是网卡插槽带宽的两倍。A100 PCIe 的 NVLink 桥接器每方向 300 GB/s，远高于该界限，但一座桥只连两张卡，四卡环上仍有两条边走 PCIe；若四卡环的每条边都有这样的带宽，分层归约降到约 7.3 ms，才快于连续环。差别的来源是共享接口：跨服务器阶段把八个参与者的分片集中到两轮里，这两轮的流量都要经过同一个 32 GB/s 的插槽，本地归约节省的远端字节被更长的远端轮次抵消了一部分，本地链路又不比该插槽快，本地归约增加的时间也就无法补回。
 
 这里的小结是：分层归约先在较快的本地互联上完成部分归约，再把结果经网卡发出。它减少跨服务器的字节，更重要的是让每张网卡都有自己要传的分片。跨服务器带宽由多张独立网卡提供时，分层几乎没有代价；跨服务器带宽是共享接口时，只有本地归约增加的时间少于其节省的远端传输时间，分层归约才更快。
 
@@ -315,7 +315,7 @@ $$
 | 32 | 46.5 MiB | 62 | 1.027 ms | 24 MiB | 0.504 ms |
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-shard-holders.svg" alt="横轴为持有同一分片的服务器数 2 到 32，纵轴为跨服务器阶段 0 到 1.2 ms；环形 AllReduce 从 0.505 ms 上升到 1.03 ms，在网归约始终为 0.50 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-shard-holders.svg" alt="横轴为持有同一分片的服务器数 2 到 32，纵轴为跨服务器阶段 0 到 1.2 ms；环形 AllReduce 从 0.505 ms 上升到 1.03 ms，在网归约始终为 0.50 ms" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>两种归约方式随规模的变化。</strong> 环形 AllReduce 的每网卡发送量和轮数随服务器数增长，在网归约始终只处理一个分片、一轮。</figcaption>
 </figure>
 
@@ -325,7 +325,7 @@ $$
 
 模型边界要特意点出：这个对比只计网卡的串行发送与启动，交换机归约引擎每秒能归约多少字节、支持哪些数据类型，是要另外给定的输入，流量超过它时瓶颈从网卡转到交换机。这里的表和讨论因此都有一层隐含前提，引擎足够快。实验 7-4 就是在补这个边界。工程上一旦决定用在网归约，第一件事就是查交换机的归约吞吐和它支持的浮点格式，SHARP 只支持部分数据类型，这直接决定了它能不能用在 BF16／FP8 梯度上。
 
-SHARP 的实测数据也是同一个道理：SHARP 论文在 128 台主机上测得 8 字节 AllReduce 从 6.01 μs 降到 2.83 μs，4096 字节从 46.93 μs 降到 14.48 μs，小消息节省的主要是轮数带来的启动时间。8 字节的数据传输时间完全可以忽略，6.01 μs 几乎全是 $2(S-1) = 254$ 轮的启动开销；改成交换机归约后轮数降到 1，节省 $6.01-2.83 = 3.18$ μs、约 53%。4096 字节则节省 $46.93-14.48 = 32.45$ μs、约 69%，比小消息还高，这里强调的是节省量的来源。
+SHARP 的实测数据也是同一个道理：SHARP 论文在 128 台主机上测得 8 字节 AllReduce 从 6.01 μs 降到 2.83 μs，4096 字节从 46.93 μs 降到 14.48 μs，小消息节省的主要是轮数带来的启动时间。8 字节的数据传输时间完全可以忽略，6.01 μs 几乎全是 $2(S-1) = 254$ 轮的启动开销；改成交换机归约后轮数降到 1，节省 $6.01-2.83 = 3.18$ μs、约 53%。4096 字节则节省 $46.93-14.48 = 32.45$ μs、约 69%，比小消息还高，的是节省量的来源。
 
 **实验7-4 ・延伸：在网归约何时值得**
 
@@ -376,7 +376,7 @@ $$
 看图的两种读法都要会。沿图7-9 里相同的编号看，一个 micro-batch 必须走完四个阶段；沿同一行看，一个阶段可以连续处理八个 micro-batch。左下和右上的空白，就是流水线启动和结束时的空闲。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-pipeline-gantt.svg" alt="四个阶段各占一行，横轴 0 到 11 ms；阶段 0 在 0–8 ms 处理 mb0–7，阶段 1 在 1–9 ms，阶段 2 在 2–10 ms，阶段 3 在 3–11 ms；左下和右上各留出 3 ms 空白" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-pipeline-gantt.svg" alt="四个阶段各占一行，横轴 0 到 11 ms；阶段 0 在 0–8 ms 处理 mb0–7，阶段 1 在 1–9 ms，阶段 2 在 2–10 ms，阶段 3 在 3–11 ms；左下和右上各留出 3 ms 空白" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>流水线的启动与结束。</strong> 同一 micro-batch 每小时隙向右下移动一格，阶段 3 的前三格和阶段 0 的后三格为空，对应流水线填充与排空。</figcaption>
 </figure>
 
@@ -415,17 +415,17 @@ $$
 这 32 MiB 怎么分配到接收方，同样影响传输时间。全部发给一张 50 GB/s 的网卡，接收至少约 0.67 ms（图7-10）；平均分给接收服务器的八张网卡，每张收 4 MiB，时间降到约 0.08 ms（图7-11）；对照配置的双端口网卡两个端口共用一个 32 GB/s 的 PCIe 插槽，无论怎么分到两个端口，接收 32 MiB 都至少要约 1.05 ms。也就是说，把流量均匀分给网卡能消除单张网卡的瓶颈，而端口共用插槽时，共享的插槽随后就成了新瓶颈。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-single-nic.svg" alt="一个 32 MiB 数据块经箭头指向一张 50 GB/s 网卡，下方标注接收阶段至少 0.67 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-single-nic.svg" alt="一个 32 MiB 数据块经箭头指向一张 50 GB/s 网卡，下方标注接收阶段至少 0.67 ms" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>单卡接收的时间下界。</strong> 所有跨服务器流量挤在一张网卡上，接收时间由 32 MiB 除以 50 GB/s 决定。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-eight-nics.svg" alt="32 MiB 数据块分成八条路径，每条 4 MiB，分别指向八张独立网卡，下方标注接收阶段至少 0.08 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-eight-nics.svg" alt="32 MiB 数据块分成八条路径，每条 4 MiB，分别指向八张独立网卡，下方标注接收阶段至少 0.08 ms" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>并行接收消除单卡瓶颈。</strong> 八张网卡同时工作，把接收时间压到单卡方案的八分之一。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-shared-pcie-slot.svg" alt="32 MiB 先经过一个 PCIe Gen4 x16 插槽，标注 32 GB/s，然后分成 16 MiB 和 16 MiB 两路进入双端口网卡，接收阶段至少 1.05 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-shared-pcie-slot.svg" alt="32 MiB 先经过一个 PCIe Gen4 x16 插槽，标注 32 GB/s，然后分成 16 MiB 和 16 MiB 两路进入双端口网卡，接收阶段至少 1.05 ms" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>共享入口才是瓶颈。</strong> 无论两个端口怎样分摊，全部 32 MiB 都必须先通过同一个 PCIe 插槽，端口数量不能绕开这个入口。</figcaption>
 </figure>
 
@@ -469,7 +469,7 @@ $$
 数值上，1.125 GiB 载荷在直接 50 GB/s 路径上约需 24.2 ms，下游支持 100 GB/s 时降至 12.1 ms，支持 150 GB/s 时降至 8.1 ms。这三个数可以自己验：$1.125\ \text{GiB}/50\ \text{GB/s} = 1\ 207\ 959\ 552/(50\times10^{9}) = 24.16$ ms，100 GB/s 对应 12.08 ms，150 GB/s 对应 8.05 ms，三者正好按带宽成反比，说明在这个量级上启动开销可以忽略。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-borrowed-nic.svg" alt="源 GPU 分出两条路径：一条直连自己的 50 GB/s 网卡；另一条先经 450 GB/s NVLink 到相邻 GPU，再经中继网卡合计 100 GB/s；两路在下游汇合" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-borrowed-nic.svg" alt="源 GPU 分出两条路径：一条直连自己的 50 GB/s 网卡；另一条先经 450 GB/s NVLink 到相邻 GPU，再经中继网卡合计 100 GB/s；两路在下游汇合" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>直接发送与中继发送。</strong> 直连路径最多 50 GB/s；中继路径要先占用 450 GB/s 的 NVLink，且两张中继网卡合计只有 100 GB/s。</figcaption>
 </figure>
 
@@ -516,7 +516,7 @@ NVLink 争用的那句提醒非常实战：中继免费是假的。借用相邻�
 同一条规则可以用到 128 卡超节点上（第7.6.4 节）。那里有十六台服务器各八张卡，张量并行组占一台服务器的八张卡；张量并行坐标为 $t$ 的卡在每台服务器里都是第 $t$ 张卡，用第 $t$ 条 rail；同一坐标上的十六个数据并行成员在超节点内归约后，跨超节点交换的就是这一坐标的梯度分片；八个坐标的分片一样大（每张卡 $G = 8$ GB），所以八条 rail 各承载跨超节点发送量的八分之一，即 112 GB 中的 14 GB，没有哪条 rail 更忙。只有当分片大小不同（例如不均匀的张量切分），或者一张网卡故障、其流量经 NVLink 借用相邻网卡（第7.2.4 节）时，才会出现更忙的 rail。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-rail-pairing.svg" alt="八条 rail 各有一条竖直车道，每条车道里是一台叶交换机；服务器 A 的网卡 0–7 为橙色，服务器 B 的网卡 8–15 为紫色。上半图 rank i 与 i+8 在本车道直连，下半图 rank i 与 i+9 经脊交换机换到下一车道" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-rail-pairing.svg" alt="八条 rail 各有一条竖直车道，每条车道里是一台叶交换机；服务器 A 的网卡 0–7 为橙色，服务器 B 的网卡 8–15 为紫色。上半图 rank i 与 i+8 在本车道直连，下半图 rank i 与 i+9 经脊交换机换到下一车道" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>配对方式决定是否经过脊层。</strong> 对齐配对只经过一台叶交换机；错位配对必须经脊交换机换道，每个方向的 192 MiB 全部经过脊层。</figcaption>
 </figure>
 
@@ -569,7 +569,7 @@ NVLink 争用的那句提醒非常实战：中继免费是假的。借用相邻�
 编码方式直接影响路径开销。JSON 是文本形式的数据交换格式；base64 把每3 个二进制字节编码为4 个文本字符。把 1 MiB 二进制数据放进 JSON 的 base64 字段，编码载荷约增加三分之一（$4/3$）。配套的跨主机 RPC 测量给出了两组数：请求大小从约1.33 MiB 降至1.00 MiB，客户端 CPU 处理时间中位数从约9.8 ms 降至1.1 ms，20 对正式调用中有11 对整体变快，网络传输和转发等待的耗时波动更大。这些测量区分了两类耗时：减少编码可以节省本地 CPU 时间；要缩短整个调用，还要减少网络、转发和远端执行中的等待。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-host-rpc.svg" alt="CPU A 经网卡 A 和网络到达网卡 B，再到 CPU B；实线表示数据，虚线表示控制提交，接收方按完成条件使用结果" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-host-rpc.svg" alt="CPU A 经网卡 A 和网络到达网卡 B，再到 CPU B；实线表示数据，虚线表示控制提交，接收方按完成条件使用结果" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>主机级远程过程调用。</strong> 参数从发起主机出发，经网卡与网络到达接收主机；返回结果沿相反方向传送。</figcaption>
 </figure>
 
@@ -610,19 +610,19 @@ base64 的“增加三分之一”是 $4/3 \approx 1.333$，所以 1 MiB 变约1
 URMA 是 UB 提供的统一远程内存访问接口。GPU 经 NVLink 访问对端内存、设备经 UB 发起异步访问，都是这种直接协作在各自路径上的实现。图7-15 到图7-18 依次画出主机 RPC、CPU 提交的 GPUDirect RDMA、GPU 经 NVLink 访问和设备发起的 URMA 访问。数据绕过主机内存之后，还可以进一步改变由谁发起：图7-17 中 GPU 自己发起对端内存访问，省去了每次都由 CPU 提交的交接。图7-18 把同样的发起与完成关系放到 UB 的异步访问接口上，沿实线追踪载荷，沿提交与完成关系追踪控制，便能区分数据传输和请求管理各自的开销。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/gpu-direct-path.svg" alt="普通路径载荷经主机内存；GPUDirect RDMA 让载荷直达 GPU 内存但仍由 CPU 提交；设备发起让 GPU 自己提交并检查完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/gpu-direct-path.svg" alt="普通路径载荷经主机内存；GPUDirect RDMA 让载荷直达 GPU 内存但仍由 CPU 提交；设备发起让 GPU 自己提交并检查完成" width="800" height="405" loading="lazy" decoding="async">
   <figcaption><strong>数据路径与控制路径。</strong> 实线是载荷，虚线是提交与完成控制；两种优化分别去掉主机内存中转和 CPU 往返。</figcaption>
 </figure>
 
 GPUDirect RDMA 解决的是数据路径，设备发起解决的是控制路径，两者可以独立采用。收益取决于启动开销在总时间中的占比，因此只对小消息显著。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-gpu-nvlink.svg" alt="GPU A 经 NVLink 连接到 GPU B，实线表示数据，虚线表示控制提交；发起者提交操作，接收方按完成条件使用结果" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-gpu-nvlink.svg" alt="GPU A 经 NVLink 连接到 GPU B，实线表示数据，虚线表示控制提交；发起者提交操作，接收方按完成条件使用结果" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>GPU 直连访问。</strong> GPU A 通过 NVLink 访问 GPU B 的内存，访问由发起的 GPU 执行，不经过主机 CPU。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-urma-access.svg" alt="设备 A 经 UB 互联连接到设备 B，实线表示数据，虚线表示控制提交；设备通过 URMA 提交异步读写，完成后检查完成状态和结果" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-urma-access.svg" alt="设备 A 经 UB 互联连接到设备 B，实线表示数据，虚线表示控制提交；设备通过 URMA 提交异步读写，完成后检查完成状态和结果" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>设备级异步访问。</strong> 发起设备提交读写后继续执行，载荷经 UB 互联到达目标设备，完成后按接口规定检查状态与结果。</figcaption>
 </figure>
 
@@ -695,12 +695,10 @@ Load 的结果可以直接成为后续指令的输入，处理器记录这条依
 | **合计（推导）** | | **2222** | **746** | **419** |
 | **仿真测得** | | **2236** | **757** | **500** |
 
-，这里合并为一张。）
-
-这里对表的说明：表中网卡流水线的时间已经取整，合计按取整前的值相加。经 PCIe 外设网卡的路径合计2222 ns，其中五次 PCIe 穿越占1650 ns；UB 异步路径没有 PCIe 阶段，合计746 ns；Load 路径连软件提交和轮询也省去了，合计419 ns。笔者的 OpenURMA 实现在两节点周期级仿真中、相同条件下测得2236、757 和500 ns，与推导值相差14、11 和81 ns。差值来自仿真器在模块之间传递数据的固定开销；Load 路径的阶段最少、总时间最短，这项开销所占的比例也就最大。
+表里的时间已经取整，合计按取整前的值相加。经 PCIe 外设网卡的路径合计2222 ns，其中五次 PCIe 穿越占1650 ns；UB 异步路径没有 PCIe 阶段，合计746 ns；Load 路径连软件提交和轮询也省去了，合计419 ns。笔者的 OpenURMA 实现在两节点周期级仿真中、相同条件下测得2236、757 和500 ns，与推导值相差14、11 和81 ns。差值来自仿真器在模块之间传递数据的固定开销；Load 路径的阶段最少、总时间最短，这项开销所占的比例也就最大。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-path-breakdown.svg" alt="三组柱分别对应外设式 RoCE 读取、UB 异步读取和 UB Load；推导值分别为 2222、746、419 ns，仿真值分别为 2236、757、500 ns" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-path-breakdown.svg" alt="三组柱分别对应外设式 RoCE 读取、UB 异步读取和 UB Load；推导值分别为 2222、746、419 ns，仿真值分别为 2236、757、500 ns" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>推导与仿真的总量对照。</strong> 外设式 RoCE 读取经过 PCIe 外设网卡，关键路径最长；两条片上总线路径省去这段穿越，UB Load 还省去软件提交与完成轮询。</figcaption>
 </figure>
 
@@ -719,13 +717,13 @@ $$
 三条直线斜率相同、截距不同，绝对差距始终约为1.8 μs（$2222 - 419 = 1803$ ns），相对差距则从 $L = 100$ ns 时的5.3 倍缩小到 $L = 500$ ns 时的2.5 倍。线路越短，控制器位置带来的相对收益越大，所以这项收益在超节点内部最明显；在跨越数据中心的长链路上，线路时延本身成为总时间的主要部分。这两部分性质不同：$2L$ 由信号传播速度决定，任何路径都省不掉，是一次远程读取的物理下限；截距中高出 Load 路径的部分是抽象层的代价，其中五次 PCIe 穿越就占1650 ns。推导值与仿真值相差的14、11 和81 ns，则属于第1.3.4 节所说的第一类差距：模型漏计了仿真器模块之间的固定开销，补上这一项差距就消失了，不必再去找实现开销。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-latency-slope.svg" alt="横轴为线路单程时延 50 到 500 ns，纵轴为一次 64 B 读取 0 到 3 μs；外设式 RoCE、UB 异步读取、UB Load 三条线斜率都为 2，截距分别为 2022、546、219 ns" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-latency-slope.svg" alt="横轴为线路单程时延 50 到 500 ns，纵轴为一次 64 B 读取 0 到 3 μs；外设式 RoCE、UB 异步读取、UB Load 三条线斜率都为 2，截距分别为 2022、546、219 ns" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>固定开销决定路径差距。</strong> 三条线都包含往返 2L，因此平行上升；外设式 RoCE 的固定开销最大，UB Load 最小。</figcaption>
 </figure>
 
 用相同的访问延迟比较并发和依赖。考察八个互不依赖的远端读取，硬件能同时处理八项，每项按上表经 PCIe 外设网卡的路径要等约2.2 μs（提交开销已计在其中）。逐个“发出、等待、使用”要约17.8 μs（$8\times2.2$）；八项一起发出，结果约2.2 μs 后一起到达。若第一次读取返回的是第二次的地址，第二次又返回第三次的地址，就只能等上一次返回后再发下一次。能同时发起多少次读取，取决于有多少个地址已知且互不依赖的请求。
 
-按需远程访问和预先搬回本地之间的取舍，这里给了一个完整算例。前提是消费者将完整读取一个144 MiB 的不变 KV 快照，本地有足够空间容纳它，远程读取和搬回都经过本章的网卡、每方向50 GB/s，本地读取按 H100 的 HBM 带宽3350 GB/s 计。计入启动与目的端写入，得：一次远程读取约为3.02 ms，一次搬回的固定成本约为3.07 ms，之后每次本地读取约为0.046 ms。令复用次数为 $r$，两条路径的时间近似为
+按需远程访问和预先搬回本地之间的取舍，给了一个完整算例。前提是消费者将完整读取一个144 MiB 的不变 KV 快照，本地有足够空间容纳它，远程读取和搬回都经过本章的网卡、每方向50 GB/s，本地读取按 H100 的 HBM 带宽3350 GB/s 计。计入启动与目的端写入，得：一次远程读取约为3.02 ms，一次搬回的固定成本约为3.07 ms，之后每次本地读取约为0.046 ms。令复用次数为 $r$，两条路径的时间近似为
 
 $$
 T_{\text{remote}} = 3.02\,r\ \text{ms}, \qquad
@@ -743,17 +741,17 @@ $$
 改变每次读取的范围，结论会不一样。若一次调用只访问快照的少量位置，就可以按引用传递，让远端函数按需读取数据。设每次仅访问快照的10%，而搬回方案仍复制全部快照：按需远程读取的成本变为约0.302 $r$ ms，搬回后每次本地访问约为0.0046 ms；交点约在10.3 次，因而从第11 次读取开始，先搬回本地的方案才会节省总读取时间。所以应该根据访问范围和复用次数，决定按需远程读取还是将整个快照搬回本地。URPC 是统一互联上的远程过程调用接口，以函数调用的形式提供远端访问，支持这种方式；按引用传递让被调用方只取实际需要的数据。第7.4 节将说明何时通知其他设备使用这些对象，以及何时释放对象占用的空间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-snapshot-paths.svg" alt="上半图从远端快照直接到消费者，每次使用都跨网络读取；下半图先把远端快照一次搬回本地副本，再由消费者多次读取" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-snapshot-paths.svg" alt="上半图从远端快照直接到消费者，每次使用都跨网络读取；下半图先把远端快照一次搬回本地副本，再由消费者多次读取" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>远程读取与本地复用。</strong> 两种路径处理同一份不变快照；前者每次使用都重复传送，后者用一次固定搬回成本换取后续本地读取。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-snapshot-cumulative.svg" alt="横轴为复用次数 1 到 5，纵轴为累计时间；每次远程读取从 3.02 ms 起按 3.02 ms 每次上升，先搬回本地从 3.07 ms 起按 0.046 ms 每次缓慢上升，两线在约 1.03 次相交" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-snapshot-cumulative.svg" alt="横轴为复用次数 1 到 5，纵轴为累计时间；每次远程读取从 3.02 ms 起按 3.02 ms 每次上升，先搬回本地从 3.07 ms 起按 0.046 ms 每次缓慢上升，两线在约 1.03 次相交" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>固定搬回成本很快被摊薄。</strong> 第一次搬回比远程读取略贵，但从第二次读取开始，本地复用的累计时间增长远慢于远程读取。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-partial-read-cumulative.svg" alt="横轴为复用次数 0 到 25，纵轴为累计时间 0 到 7 ms；每次远程读取按 0.302 ms 每次上升，先搬回本地从 3.07 ms 起按 0.0046 ms 每次缓慢上升，两线在约 10.3 次相交" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-partial-read-cumulative.svg" alt="横轴为复用次数 0 到 25，纵轴为累计时间 0 到 7 ms；每次远程读取按 0.302 ms 每次上升，先搬回本地从 3.07 ms 起按 0.0046 ms 每次缓慢上升，两线在约 10.3 次相交" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>读取比例降低后的交点。</strong> 每次只读 10% 让远程读取变便宜，但搬回仍要复制全部快照，因此需要更多次复用才能抵消固定成本。</figcaption>
 </figure>
 
@@ -761,7 +759,7 @@ $$
 
 “同步访问不等于串行”这个澄清很重要。很多人看到 Load 就以为读一次要等一次，其实现代处理器可以并行发出多个互不依赖的 Load（乱序执行加多个未完成槽位），真正的串行来自地址依赖：如果第二次读取的地址要等第一次的结果才知道，那就只能串行。这里用八个独立读取（并行约2.2 μs）对比链式读取（必须串行）来区分这两种情况。并发能力取决于地址已知且互不依赖的请求有多少，和接口叫什么名字无关。
 
-延迟表是这一章最“工程”的一页，值得逐列理解。PCIe 外设网卡2222 ns 里有五次 PCIe 穿越共1650 ns，占74%，所以把控制器搬到片上总线是最值钱的优化，它一次性消掉这1650 ns 里的大部分。UB 异步746 ns 没有 PCIe 阶段，但保留了软件提交（50＋30 ns）和轮询（5＋30 ns），以及四次78 ns 的网卡流水线（共312 ns）。UB Load 419 ns 连软件提交和轮询都省了，只剩四次25 ns 的流水线（共100 ns）、两次片上总线穿越60 ns、两次线路200 ns、内存行命中30 ns 和一次片上总线完成30 ns。逐列验算：PCIe 列 $50+30+150+500+28+100+28+500+30+28+100+28+250+250+70+30+50 = 2222$ ✓；UB 异步列 $50+30+30+78+100+78+30+30+78+100+78+30+5+30 = 747$，这里说明合计按取整前的值相加，78 ns 实为 $25/322\ \text{MHz} = 77.6$ ns，四次共少计约1.4 ns，故为746 ✓；UB Load 列 $30+25+100+25+30+30+25+100+25+30 = 420$，同理取整前为419 ✓。四次网卡流水线的出处也对得上：外设网卡9 个周期 $= 27.95$ ns ≈28 ns、UB 异步25 个周期 $= 77.6$ ns ≈78 ns、Load 8 个周期 $= 24.8$ ns ≈25 ns，都在 $322$ MHz 下换算，这正是“网卡流水线按322 MHz 时钟的周期数换算”的展开。
+延迟表是这一章最“工程”的一页，值得逐列理解。PCIe 外设网卡2222 ns 里有五次 PCIe 穿越共1650 ns，占74%，所以把控制器搬到片上总线是最值钱的优化，它一次性消掉这1650 ns 里的大部分。UB 异步746 ns 没有 PCIe 阶段，但保留了软件提交（50＋30 ns）和轮询（5＋30 ns），以及四次78 ns 的网卡流水线（共312 ns）。UB Load 419 ns 连软件提交和轮询都省了，只剩四次25 ns 的流水线（共100 ns）、两次片上总线穿越60 ns、两次线路200 ns、内存行命中30 ns 和一次片上总线完成30 ns。逐列验算：PCIe 列 $50+30+150+500+28+100+28+500+30+28+100+28+250+250+70+30+50 = 2222$ ✓；UB 异步列 $50+30+30+78+100+78+30+30+78+100+78+30+5+30 = 747$，这说明合计按取整前的值相加，78 ns 实为 $25/322\ \text{MHz} = 77.6$ ns，四次共少计约1.4 ns，故为746 ✓；UB Load 列 $30+25+100+25+30+30+25+100+25+30 = 420$，同理取整前为419 ✓。四次网卡流水线的出处也对得上：外设网卡9 个周期 $= 27.95$ ns ≈28 ns、UB 异步25 个周期 $= 77.6$ ns ≈78 ns、Load 8 个周期 $= 24.8$ ns ≈25 ns，都在 $322$ MHz 下换算，这正是“网卡流水线按322 MHz 时钟的周期数换算”的展开。
 
 三个结构性原因这一段是“不要逐项优化低效环节”的范例。逐个去优化门铃写、描述符 DMA、完成记录 DMA，最多只能省一点；真正的解法是改结构，把控制器接到片上总线（第二类阶段合并成一次片上总线穿越），或者改用 Load 指令让依赖跟踪取代完成通知（第一、三类阶段消失）。这是系统设计里结构优先于调优的典型论断。
 
@@ -775,7 +773,7 @@ $2L$ 与截距的区分是这一节最漂亮的结论。$2L$ 是物理下限，�
 
 10% 访问那一问最有实战价值，因为它说明访问范围同样重要。每次只访问10% 时，按需读取的每次成本降到0.302 ms（原来的十分之一），而搬回的固定成本不变（还是复制整份快照3.07 ms），只是后续本地访问降到0.0046 ms。交叉点因此从1.03 次推到10.3 次，要读11 次以上才值得搬回整份。稀疏访问的场景下，懒加载或按引用传递往往比预取一整份更划算；稠密、反复访问的场景下，整份搬回更划算。这里的关键不对称是：按需读取的成本随访问比例线性缩减，搬回的固定成本不缩减。这是所有预取与按需决策的通用结构。这里最后还给了一个有用的命名：直接远程读取不等于 Load，预先搬回也不对应某一种特定接口。也就是说，访问范围与复用次数这个维度，和 Load／Store 与 Read／Write 这个维度是正交的，两种接口都能实现两种放置策略，不要把它们绑在一起记。
 
-几处容易混的地方。同步访问指的是依赖由硬件跟踪，不等于阻塞，这里明确说过这里把 Load／Store 称为同步访问，是强调指令依赖由硬件管理，并非指处理器每次只能有一个访存在途。内存语义也不等于缓存一致：两种接口都可以采用内存语义，但都不保证缓存一致，OpenURMA 的 Load／Store 路径不维护跨节点缓存一致，写入、发布、读取的顺序要应用自己安排，“接口叫 Load”和“缓存一致”是两件不相干的事。公式里的 $L$ 是线路单程时延，$2L$ 是去程加回程，$L=100$ ns 说的是单程。一次搬回3.07 ms 比一次远程读取3.02 ms 更贵，因为多了目的端写入，但它只付一次，这两个数字不要记反。144 MiB 快照的口径是 Qwen3-8B 的1024 个token、BF16 全层KV（脚注另记为“391 个256 B 事务在途”，属并发模型的输入）；$144\ \text{MiB}/1024 = 144$ KiB／token，即每token 的KV 为144 KiB。这里未给出该模型的层数、KV 头数与头维，这里不代填具体配置，只要满足 $2\times L\times H_{kv}\times D\times 2\ \text{bytes} = 144$ KiB 的组合都能得到这个数。10% 访问下的0.302 ms 是每次访问的成本，不是总成本，总成本还要乘 $r$。
+几处容易混的地方。同步访问指的是依赖由硬件跟踪，不等于阻塞，过这里把 Load／Store 称为同步访问，是强调指令依赖由硬件管理，并非指处理器每次只能有一个访存在途。内存语义也不等于缓存一致：两种接口都可以采用内存语义，但都不保证缓存一致，OpenURMA 的 Load／Store 路径不维护跨节点缓存一致，写入、发布、读取的顺序要应用自己安排，“接口叫 Load”和“缓存一致”是两件不相干的事。公式里的 $L$ 是线路单程时延，$2L$ 是去程加回程，$L=100$ ns 说的是单程。一次搬回3.07 ms 比一次远程读取3.02 ms 更贵，因为多了目的端写入，但它只付一次，这两个数字不要记反。144 MiB 快照的口径是 Qwen3-8B 的1024 个token、BF16 全层KV（脚注另记为“391 个256 B 事务在途”，属并发模型的输入）；$144\ \text{MiB}/1024 = 144$ KiB／token，即每token 的KV 为144 KiB。这里未给出该模型的层数、KV 头数与头维，这里不代填具体配置，只要满足 $2\times L\times H_{kv}\times D\times 2\ \text{bytes} = 144$ KiB 的组合都能得到这个数。10% 访问下的0.302 ms 是每次访问的成本，不是总成本，总成本还要乘 $r$。
 
 Load／Store 把未完成请求的记录交给硬件（提交便宜、并发受限），异步 Read／Write 交给软件队列（并发可控、提交较贵）；外设网卡的2222 ns 里有1650 ns 是五次 PCIe 穿越，换到片上总线加 Load 可压到419 ns，但谁都省不掉 $2L$ 这段物理下限；按需远程读还是搬回本地，只取决于访问范围和复用次数。
 
@@ -789,10 +787,10 @@ $$
 N \ge \left\lceil \frac{BT}{m} \right\rceil.
 $$
 
-其中 $B$ 是目标带宽（GB/s），$T$ 是一项请求占用槽位的时间（s），$m$ 是每事务载荷（bytes），$N$ 是在途请求数（个）。$BT$ 就是带宽—时延积，即目标带宽与等待时间的乘积，表示在等待期间持续利用链路所需的在途数据量；再除以每事务载荷，就得到请求数量。这里给了三条直觉：链路越快，等待越长，每次返回的数据越少，系统就需要同时记录更多尚未完成的请求。
+其中 $B$ 是目标带宽（GB/s），$T$ 是一项请求占用槽位的时间（s），$m$ 是每事务载荷（bytes），$N$ 是在途请求数（个）。$BT$ 就是带宽—时延积，即目标带宽与等待时间的乘积，表示在等待期间持续利用链路所需的在途数据量；再除以每事务载荷，就得到请求数量。给了三条直觉：链路越快，等待越长，每次返回的数据越少，系统就需要同时记录更多尚未完成的请求。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-slot-lifecycle.svg" alt="横向时间轴依次经过分配槽位、传输与等待、处理通知、释放槽位四个阶段，下方标注占用时间从分配到释放共 2 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-slot-lifecycle.svg" alt="横向时间轴依次经过分配槽位、传输与等待、处理通知、释放槽位四个阶段，下方标注占用时间从分配到释放共 2 μs" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>槽位占用的四个阶段。</strong> 请求从分配记录开始占用，传输完成并被软件处理后归还记录；2 μs 覆盖完整占用区间。</figcaption>
 </figure>
 
@@ -800,10 +798,10 @@ $$
 
 题干：每个事务传输256 B，占用槽位2 μs，路径带宽为50 GB/s。求使用128 个活跃槽位时的有效读取带宽；再设请求处理单元连续两项事务的最短启动间隔为18.6 ns（本节后文RoCE 可靠连接实现的取值），求同时受槽位数量与启动速率限制时的有效带宽上界。
 
-解答：128 个槽位每2 μs 周转一次，提供的载荷为 $128\times256$ B，因此最多约为16.4 GB/s（$128\times256/2\ \mu s = 16.384$ GB/s）。若只让一个事务在途，则为0.128 GB/s（$256/2\ \mu s$）。这里强调：“分配了多少槽位与实际同时使用多少槽位，是两个不同的数量。”
+解答：128 个槽位每2 μs 周转一次，提供的载荷为 $128\times256$ B，因此最多约为16.4 GB/s（$128\times256/2\ \mu s = 16.384$ GB/s）。若只让一个事务在途，则为0.128 GB/s（$256/2\ \mu s$）。：“分配了多少槽位与实际同时使用多少槽位，是两个不同的数量。”
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-slot-count.svg" alt="两行时间轴对比：128 个槽位时蓝色载荷发送到约 0.66 μs 结束，随后灰色空闲到 2 μs，再继续发送；391 个槽位时蓝色发送段连续不断" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-slot-count.svg" alt="两行时间轴对比：128 个槽位时蓝色载荷发送到约 0.66 μs 结束，随后灰色空闲到 2 μs，再继续发送；391 个槽位时蓝色发送段连续不断" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>槽位数量决定能否覆盖等待。</strong> 128 个槽位在约 0.66 μs 内用完，只能等最早槽位在 2 μs 释放；391 个槽位足以让发送持续。</figcaption>
 </figure>
 
@@ -818,7 +816,7 @@ $$
 其中 $T$ 是一项请求占用槽位的时间，$\delta$ 是连续两项请求之间的最短启动间隔。前者决定槽位多久可以复用，后者决定每秒最多能发起多少请求。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-bandwidth-limit.svg" alt="两根柱对比高活跃槽位下的吞吐上限：只受路径与槽位限制时为 50 GB/s，再加入 18.6 ns 启动间隔后为 13.7 GB/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-bandwidth-limit.svg" alt="两根柱对比高活跃槽位下的吞吐上限：只受路径与槽位限制时为 50 GB/s，再加入 18.6 ns 启动间隔后为 13.7 GB/s" width="800" height="388" loading="lazy" decoding="async">
   <figcaption><strong>槽位足够后仍有提交速率上限。</strong> 路径与槽位限制随活跃槽位数线性升高，但每次提交之间的 18.6 ns 启动间隔把吞吐压在约 13.7 GB/s。</figcaption>
 </figure>
 
@@ -835,14 +833,14 @@ OpenURMA 的实现里，发送流水线中最慢的一级每2 个时钟周期接
 式中的 $N$ 和 $\delta$ 在 PCIe 上有明确的来源。PCIe 是分组交换的总线，每次 DMA 读或写都是一个事务层报文（TLP）。写是 posted 事务：报文带着地址和数据发出，发出即完成，不等回应。读是 non-posted 事务：请求报文带一个标签发出，数据由一个或多个完成报文带回，靠标签对应到原来的请求。发起方同时在途的读请求数受两项限制：接收方为每类事务预先发放的信用，以及发起方能分配的标签数。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-posted-read.svg" alt="上半图写事务只有从发起方到接收方的一个报文，包含地址和数据，没有回程；下半图读事务先发读请求报文，接收方再发带同一标签的完成报文把数据送回" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-posted-read.svg" alt="上半图写事务只有从发起方到接收方的一个报文，包含地址和数据，没有回程；下半图读事务先发读请求报文，接收方再发带同一标签的完成报文把数据送回" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>posted 与 non-posted 的区别。</strong> 写报文发出即完成；读必须先发请求，再等带同一标签的完成报文，在途读数量受标签与信用限制。</figcaption>
 </figure>
 
 信用与标签的限制在实际平台上就能观察到，KV-Direct 的测量是一组完整例子。所用的可编程网卡经 PCIe Gen3 x8 访问主机内存，理论带宽7.87 GB/s；每个64 B 的 DMA 读写都要带26 B 的报文头和填充，按报文开销算的上限是5.6 GB/s，即每秒8700 万次操作；随机 DMA 读的往返约1050 ns，要用满链路需要92 个读同时在途；但主机端为 DMA 读发放的信用只有84 个，FPGA 的 DMA 引擎又只支持64 个标签，于是在途读最多64 个，除以1050 ns 的往返，上限约为每秒6100 万次；实测64 B 随机读每秒6000 万次，与这个上限基本一致；写不需要回应、不占标签，实测接近报文开销给出的上限。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-kv-direct-limits.svg" alt="四根柱分别表示链路带宽换算 123、报文头开销上限 87、在途标签上限 61、实测 60，单位为每秒百万次 64 B 随机 DMA 读" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-kv-direct-limits.svg" alt="四根柱分别表示链路带宽换算 123、报文头开销上限 87、在途标签上限 61、实测 60，单位为每秒百万次 64 B 随机 DMA 读" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>逐层收紧的上限。</strong> 链路带宽换算给出 1.23 亿次，报文头开销压到 8700 万次，64 个在途标签除以往返时间只允许 6100 万次，实测 6000 万次。</figcaption>
 </figure>
 
@@ -853,7 +851,7 @@ OpenURMA 的实现里，发送流水线中最慢的一级每2 个时钟周期接
 同一条 PCIe 链路被两类流量共用时会出现非对称争用。设 GPU 的 PCIe 链路在进入 GPU 的方向上同时有两路流量：网卡把远端数据以 posted 写直接送进 GPU 内存；GPU 的复制引擎正在把主机内存的数据复制到 GPU，它发出的是读请求，数据以完成报文回到 GPU。链路一旦饱和，posted 写按协议必须持续推进，读这一方的在途标签用完后就发不出新请求，只能等完成报文回来，分到的带宽远小于一半。离开 GPU 的方向则不同：GPU 向主机的复制是 GPU 发出的 posted 写，远端读 GPU 内存则要 GPU 回复完成报文，两路都要先从 HBM 取出数据、再经 GPU 的发送通路送上链路，瓶颈在 GPU 内部而不在链路，两路的退化更接近。判断这类争用的方法是：先分清每一路是 posted 写还是带完成的读，再看它们在链路的哪一侧、经过哪个共用部件汇合。后来的 PCIe 性能测试工具 rPCIeBench 对共享 PCIe 路径的研究也显示，在途工作量与入口竞争会改变带宽分配。可以用上式判断瓶颈：是链路带宽已用尽，是请求槽位尚未释放，还是请求发起速率太低。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-pcie-direction.svg" alt="进入 GPU 的方向上，posted 写与带完成的读竞争，posted 写持续推进而读受标签限制；离开 GPU 的方向上，两路都先从 HBM 取数再经 GPU 发送通路，瓶颈在 GPU 内部" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-pcie-direction.svg" alt="进入 GPU 的方向上，posted 写与带完成的读竞争，posted 写持续推进而读受标签限制；离开 GPU 的方向上，两路都先从 HBM 取数再经 GPU 发送通路，瓶颈在 GPU 内部" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>两个方向的瓶颈不同。</strong> 进入方向在链路上争用，读分到的带宽远小于一半；离开方向两路都要先读 HBM 并共用内部发送通路。</figcaption>
 </figure>
 
@@ -883,7 +881,7 @@ PCIe 两个方向的非对称争用是最容易被忽略的坑。进 GPU 方向�
 
 机制上的解释承接本章前文最后一段。进 GPU 的方向，网卡把远端数据以 posted 写直接送进 GPU 内存；GPU 的复制引擎正在把主机内存的数据复制到 GPU，它发出的是读请求，数据以完成报文回到 GPU。链路一旦饱和，posted 写按协议必须持续推进，读这一方的在途标签用完后就发不出新请求，只能等完成报文回来，分到的带宽远小于一半。出 GPU 的方向不一样：GPU 向主机的复制是 GPU 发出的 posted 写，远端读 GPU 内存则要 GPU 回复完成报文，两路都要先从 HBM 取出数据、再经 GPU 的发送通路送上链路，瓶颈落在 GPU 内部而不在链路上，两路的退化更接近。
 
-这里给出一套可操作的判断方法：先分清每一路是 posted 写还是带完成的读，再看它们在链路的哪一侧、经过哪个共用部件汇合。这里在工程上用得很多，典型症状是某条链路利用率不到 100%，却谁也快不起来；遇到这种情况，先给每一路流量贴上 posted 写或带完成的读的标签，再去找它们汇合的公共部件。第三章第3.3.4 节的检查顺序在这里同样适用：先用链路带宽、再用报文开销、再用在途标签这三道上限逐层修正模型，直到与实测接近为止。它还提到 PCIe 性能测试工具 rPCIeBench 对共享 PCIe 路径的研究，结论是在途工作量与入口竞争会改变带宽分配，可见这种不对称在共享 PCIe 路径上普遍存在。
+给出一套可操作的判断方法：先分清每一路是 posted 写还是带完成的读，再看它们在链路的哪一侧、经过哪个共用部件汇合。这里在工程上用得很多，典型症状是某条链路利用率不到 100%，却谁也快不起来；遇到这种情况，先给每一路流量贴上 posted 写或带完成的读的标签，再去找它们汇合的公共部件。第三章第3.3.4 节的检查顺序在这里同样适用：先用链路带宽、再用报文开销、再用在途标签这三道上限逐层修正模型，直到与实测接近为止。它还提到 PCIe 性能测试工具 rPCIeBench 对共享 PCIe 路径的研究，结论是在途工作量与入口竞争会改变带宽分配，可见这种不对称在共享 PCIe 路径上普遍存在。
 
 本小节末尾的实验：
 
@@ -891,7 +889,7 @@ PCIe 两个方向的非对称争用是最容易被忽略的坑。进 GPU 方向�
 > 在例题7.3 中，将槽位的占用时间从2 μs 增为4 μs；该时间从请求发出算起，到槽位可以复用为止。分别求每次传输256 B 和4 KiB 时，维持目标带宽所需的在途事务数。固定18.6 ns 启动间隔，求达到50 GB/s 所需的最小事务大小；再换成UB 实现的6.2 ns 重算。最后将独立地址改成指针链，解释完成整条指针链的读取所需时间如何随链长增长。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-pcie-two-sides.svg" alt="进入 GPU 方向：网卡 posted 写直接写 GPU 内存，主机内存到 GPU 复制的读完成报文带标签并受在途数限制；离开 GPU 方向：D2H posted 写与远端读取 GPU 内存的完成报文都先经 HBM，再共用 GPU 内部发送通路" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-pcie-two-sides.svg" alt="进入 GPU 方向：网卡 posted 写直接写 GPU 内存，主机内存到 GPU 复制的读完成报文带标签并受在途数限制；离开 GPU 方向：D2H posted 写与远端读取 GPU 内存的完成报文都先经 HBM，再共用 GPU 内部发送通路" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>一条链路、两类瓶颈。</strong> 进入方向的 posted 写不等回应，读只能利用剩余机会；离开方向的两路都先从 HBM 取数，瓶颈不在链路而在 GPU 内部。</figcaption>
 </figure>
 
@@ -948,7 +946,7 @@ $$
 缓冲区的归属还会影响复制次数。通信库如果为发送另设一块已注册的缓冲区，计算结果就得先复制进去，元数据还要与数据打包，接收方再拆开、搬到连续的区域，这些复制和打包都占用 SM 时间。让计算直接写入已注册的缓冲区能省掉这一步，代价是本节的事件顺序随之变严：计算写完并对网卡可见之后才能发起发送，发送真正结束之前不能覆盖这块缓冲，接收方也要按同样的规则判断何时可以读、何时可以回收。（脚注23 说明：DeepEP README 快照中给出了为 NVLink 与 RDMA 分别预留的缓冲区大小；复制与打包的开销按本节的事件模型推断，不是对某一版本的测量。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-buffer-lifetime.svg" alt="时间轴 0 到 14 μs：源缓冲占用从 0 到 5 μs 发送完成，目的缓冲占用从 0 持续到 12 μs 消费者用完，消费者在 8–12 μs 读取" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-buffer-lifetime.svg" alt="时间轴 0 到 14 μs：源缓冲占用从 0 到 5 μs 发送完成，目的缓冲占用从 0 持续到 12 μs 消费者用完，消费者在 8–12 μs 读取" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>缓冲区释放时刻不同。</strong> 发送完成不等于数据可用；目的缓冲要等消费者读完才能复用，消费者读取区间为 8–12 μs。</figcaption>
 </figure>
 
@@ -960,7 +958,7 @@ $$
 
 注册缓冲与计算缓冲合用是个容易踩的工程坑。它能省掉一次「计算→通信缓冲」的复制和元数据打包，代价是同步变严：计算必须真正写完，并对网卡可见（通常要一次显式的内存屏障或发布操作），才能发起发送；发送未真正结束前不能改写这块内存；接收侧的读与回收也要按同样的规则。省下的 SM 时间与新增的同步等待哪个更大，要按本节的依赖图画出来算，不能凭直觉。
 
-剩下两处区分也容易混。「传输完成」是网络侧事件，源缓冲通常在此时可复用；「消费完成」是应用侧事件，目的缓冲到这时才可覆盖。可见说的是数据本身可被读到，可能要靠内存序或刷新保证；通知是应用层的约定信号，比如标志位、完成队列项，这里强调顺序要求最终要落到真正读取数据的时刻上。源缓冲的复用看接口的完成语义就够了，目的缓冲还要多看一层，也就是接收方用完了没有。
+剩下两处区分也容易混。「传输完成」是网络侧事件，源缓冲通常在此时可复用；「消费完成」是应用侧事件，目的缓冲到这时才可覆盖。可见说的是数据本身可被读到，可能要靠内存序或刷新保证；通知是应用层的约定信号，比如标志位、完成队列项，顺序要求最终要落到真正读取数据的时刻上。源缓冲的复用看接口的完成语义就够了，目的缓冲还要多看一层，也就是接收方用完了没有。
 
 发送完成只让源缓冲可复用，目的缓冲要等消费者用完。状态管理盯的就是这几类事件，字节数只是表象。
 
@@ -968,7 +966,7 @@ $$
 
 这些依赖和完成状态得由系统保存，于是有个绕不开的问题：每增加一条通信关系，是否都要再保存一套相同的传输记录？
 
-规模的来源很清楚。十六个参与者之间的归约只涉及少量通信关系；系统扩展以后，一个进程有多个线程，每个线程又访问多个远端目标，关系数量便按乘积增长。应用需要记录谁提交了请求、完成通知应发送给谁；传输层需要维护序号、确认、重传和拥塞状态。前者用来标识应用，后者保证数据可靠传输。这里给了两个定义：应用端点是程序提交通信和接收完成通知的逻辑身份；传输状态则保存序号、确认、重传与发送速率等通信进度。
+规模的来源很清楚。十六个参与者之间的归约只涉及少量通信关系；系统扩展以后，一个进程有多个线程，每个线程又访问多个远端目标，关系数量便按乘积增长。应用需要记录谁提交了请求、完成通知应发送给谁；传输层需要维护序号、确认、重传和拥塞状态。前者用来标识应用，后者保证数据可靠传输。给了两个定义：应用端点是程序提交通信和接收完成通知的逻辑身份；传输状态则保存序号、确认、重传与发送速率等通信进度。
 
 用一组教学取值算一下。取 64 个应用端点，每个访问 128 个远端目标，共有 $64 \times 128 = 8192$ 条关系。如果为每条关系单独保存一份 1 KiB 的传输状态，仅传输部分就占 $8192 \times 1\ \text{KiB} = 8\ \text{MiB}$。若指向同一目标的关系共享一份传输状态，只需 128 份，共 128 KiB。省下来的正是为同一目标的不同通信关系分别保存的那些传输状态。
 
@@ -1014,22 +1012,22 @@ $$
 > 保持64 个端点，只访问一个远端目标，分别计算独占与共享传输状态时所需的总存储空间。再将活跃目标数量改为128 个，将可用存储空间提高到2 MiB，求最多容纳多少个完整的隔离组。比较增加端点数和增加目标数对固定状态与传输状态的影响。最后改用实现中的记录尺寸（Jetty 20 B、传输通道56 B、连接上下文512 B），求片上缓存为1 MiB 时两种组织方式各自的溢出端点数。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-endpoint-shared-state.svg" alt="端点 0 与端点 1 各带一份关系绑定记录，分别保存身份与绑定；两条绑定箭头共同指向右侧同一个目标传输状态方框" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-endpoint-shared-state.svg" alt="端点 0 与端点 1 各带一份关系绑定记录，分别保存身份与绑定；两条绑定箭头共同指向右侧同一个目标传输状态方框" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>身份分开、状态共享。</strong> 共享部分维护传输进度，端点仍能区分各自请求；两条绑定箭头表示端点与目标状态的关联。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-state-organization.svg" alt="三种策略对照：逐关系独占为每条关系保存端点记录、绑定和传输状态；按目标共享让多个端点共用目标传输状态；八类隔离为各目标保存八份独立传输状态" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-state-organization.svg" alt="三种策略对照：逐关系独占为每条关系保存端点记录、绑定和传输状态；按目标共享让多个端点共用目标传输状态；八类隔离为各目标保存八份独立传输状态" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>状态占用与隔离程度的权衡。</strong> 逐关系独占复制最多状态；按目标共享压缩传输状态；八类隔离在共享与隔离之间取折中。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-state-growth.svg" alt="双对数坐标下，RoCE 的 N×M 份连接状态斜率为 2，UB 的 N 个 Jetty 加 M 条通道斜率为 1；逐对连接在 N 略大于 20 时超过 256 KiB，端点加通道到 N=1024 时仍不到缓存一半" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-state-growth.svg" alt="双对数坐标下，RoCE 的 N×M 份连接状态斜率为 2，UB 的 N 个 Jetty 加 M 条通道斜率为 1；逐对连接在 N 略大于 20 时超过 256 KiB，端点加通道到 N=1024 时仍不到缓存一半" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>增长阶数决定缓存能否容纳。</strong> 逐对连接的状态量随端点数平方增长，很快超过片上缓存；端点加通道只按线性增长。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-cache-overflow.svg" alt="双对数横轴为活跃端点数 1 到 4096，纵轴为一次 64 B 读取的延迟；RoCE 读取在 N=23 处上升 1000 ns，UB Load 在 N=2428 处上升 200 ns" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-cache-overflow.svg" alt="双对数横轴为活跃端点数 1 到 4096，纵轴为一次 64 B 读取的延迟；RoCE 读取在 N=23 处上升 1000 ns，UB Load 在 N=2428 处上升 200 ns" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>溢出点对应缓存容量。</strong> 端点数超过片上缓存能容纳的状态量后，读取延迟出现台阶；两种实现的缓存占用阶数不同，溢出点相差很大。</figcaption>
 </figure>
 
@@ -1081,17 +1079,17 @@ $O(L+P)$ 与 $O(LP)$ 有适用边界。需要说明，这一结论只针对可�
 > 将例题7.4 中独立操作C 的耗时改为50 μs，求两种安排的整组操作和独立操作的完成时间。再假设消费者收到通知后需要30 μs 处理数据，标出目的缓冲区最早可以写入新数据的时刻。对旧值反例分别画出等待后读取、提前读取后重读两条执行路径。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-serial-publish.svg" alt="一条时间轴上，写入 0–20 μs，恢复并使数据可见 20–100 μs，通知 100–102 μs，独立传输排在最后 102–112 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-serial-publish.svg" alt="一条时间轴上，写入 0–20 μs，恢复并使数据可见 20–100 μs，通知 100–102 μs，独立传输排在最后 102–112 μs" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>串行安排。</strong> 独立传输必须等写入、恢复和通知全部完成，整组在 112 μs 结束。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-parallel-publish.svg" alt="两条并行条带：上面是写入 0–20 μs、恢复 20–100 μs、通知 100–102 μs；下面独立传输从 0 到 10 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-parallel-publish.svg" alt="两条并行条带：上面是写入 0–20 μs、恢复 20–100 μs、通知 100–102 μs；下面独立传输从 0 到 10 μs" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>并行安排。</strong> 独立传输不再等待发布完成，自身提前了 102 μs；但整组仍受发布链约束，只从 112 μs 提前到 102 μs。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-read-write-race.svg" alt="时间顺序：1 μs 提前读取得到旧值，2 μs 生产者写入新值，3 μs 就绪标志可见，4 μs 消费者读到就绪标志，5 μs 返回先前读到的旧值，6 μs 若重读得到新值" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-read-write-race.svg" alt="时间顺序：1 μs 提前读取得到旧值，2 μs 生产者写入新值，3 μs 就绪标志可见，4 μs 消费者读到就绪标志，5 μs 返回先前读到的旧值，6 μs 若重读得到新值" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>旧值已经进入返回路径。</strong> 消费者在 4 μs 才看到就绪标志，但 5 μs 返回的仍是 1 μs 读到的旧值；只有在 4 μs 发现冲突并重读，6 μs 才能拿到新值。</figcaption>
 </figure>
 
@@ -1128,12 +1126,12 @@ $O(L+P)$ 与 $O(LP)$ 有适用边界。需要说明，这一结论只针对可�
 故障与取消也归在这一节。发生故障后，必须先结束旧请求，再释放它们占用的空间。取消请求之后，系统先停止新提交，再等待或隔离旧的在途访问，最后释放空间；否则迟到的旧写入会覆盖新对象。给每次复用的对象分配新的版本号、撤销访问权、隔离失联端点，都是为了防止旧请求访问已经重新分配的空间。超时触发恢复后，系统要先确认旧请求已经结束，或阻止其继续访问，再复用空间。多个端点共享网络时，同样的到达速度与处理速度之差，会变成交换机里的队列。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-slot-shortage.svg" alt="请求编号 0、4、8、12、15 的传输被橙色完成等待切断，分批推进到 48 μs 才传完，橙色等待一直延续到 80 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-slot-shortage.svg" alt="请求编号 0、4、8、12、15 的传输被橙色完成等待切断，分批推进到 48 μs 才传完，橙色等待一直延续到 80 μs" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>传输完成与槽位释放分离。</strong> 8 个槽位不足时，后续请求只能等前面的完成通知被处理；蓝色传输因此分成多批。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-more-slots.svg" alt="增加槽位后，后续请求的蓝色传输条带明显左移、更早提交，但完成通知仍每 20 μs 批量处理四项，最后一个槽位的橙色等待仍在 80 μs 结束" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-more-slots.svg" alt="增加槽位后，后续请求的蓝色传输条带明显左移、更早提交，但完成通知仍每 20 μs 批量处理四项，最后一个槽位的橙色等待仍在 80 μs 结束" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>传输提前不等于释放提前。</strong> 槽位充足后请求能更早提交，但软件处理完成通知的节奏不变，槽位释放时间仍受通知周期约束。</figcaption>
 </figure>
 
@@ -1172,12 +1170,12 @@ $O(L+P)$ 与 $O(LP)$ 有适用边界。需要说明，这一结论只针对可�
 其中 $\lambda$ 是平均到达速率（byte/s），$Q_{\max}$ 是最大积压（byte）；两个 50 分别是单作业高峰速率与共享出口速率（GB/s）。图7-40 画出不同重叠程度下的到达速率，图7-41 画出对应的积压（脚注31 说明：算例的到达速率按给定周期变化）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-arrival-overlap.svg" alt="三根柱对比到达速率峰值：重叠 20 ms 时为 100 GB/s，重叠 5 ms 时仍为 100 GB/s，不重叠时为 50 GB/s；共享出口为 50 GB/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-arrival-overlap.svg" alt="三根柱对比到达速率峰值：重叠 20 ms 时为 100 GB/s，重叠 5 ms 时仍为 100 GB/s，不重叠时为 50 GB/s；共享出口为 50 GB/s" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>重叠区间决定峰值。</strong> 两个作业各自以 50 GB/s 发送；高峰期完全重合时到达速率翻倍，不重叠时恰好等于出口速率。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-backlog-peaks.svg" alt="三根柱表示积压峰值：重叠 20 ms 为 1000 MB，重叠 5 ms 为 250 MB，不重叠为 0 MB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-backlog-peaks.svg" alt="三根柱表示积压峰值：重叠 20 ms 为 1000 MB，重叠 5 ms 为 250 MB，不重叠为 0 MB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>到达速率与出口速率的差额累积。</strong> 重叠时间越长，超额到达持续越久，积压峰值越高；不重叠时到达不超过出口，积压为零。</figcaption>
 </figure>
 
@@ -1211,21 +1209,21 @@ $$
 
 其中 $Q_{\text{free}}$ 是可用的剩余缓冲（byte），$T_f$ 是反馈时延（s），$\lambda - B$ 是到达与出口的差额（byte/s）。这里据此给出两条定性结论：剩余空间加倍，可容忍的反馈时延加倍；到达与出口的差额加倍，可容忍的反馈时延减半。在上述速率下，若经过 50 μs 才降速，就会多积压 $50\times10^9\times50\times10^{-6} = 2.5\times10^6\ \text{B} = 2.5$ MB 数据。
 
-反馈后还要消除积压，这一步常被忽略。只把发送降到 50 GB/s，到达速率恰好等于出口发送速率，已有队列保持不变，只能算止血；降到 40 GB/s 后，每秒有 10 GB 余量用于排空，512 KiB 约需 $524288/(10\times10^9) = 52.4\ \mu s$，从起点算队列约在 $20 + 52 = 72\ \mu s$ 回到零。这里的结论是，拥塞控制既要阻止队列继续增长，也要为排空积压留出余量。降到刚好持平并不够，目标通常是「快速降速→保持低位→缓慢恢复」，因为排空那段路上缓冲仍然是满的，吸收不了新的突发。图7-42 画出这条反馈回路，图7-43 画出缓冲的填满与排空。这里指出：反馈生效时刻决定队列满载状态持续多久，降速幅度决定下降段有多陡，各种拥塞控制机制改变队列靠的都是这两个量。
+反馈后还要消除积压，这一步常被忽略。只把发送降到 50 GB/s，到达速率恰好等于出口发送速率，已有队列保持不变，只能算止血；降到 40 GB/s 后，每秒有 10 GB 余量用于排空，512 KiB 约需 $524288/(10\times10^9) = 52.4\ \mu s$，从起点算队列约在 $20 + 52 = 72\ \mu s$ 回到零。这里的结论是，拥塞控制既要阻止队列继续增长，也要为排空积压留出余量。降到刚好持平并不够，目标通常是「快速降速→保持低位→缓慢恢复」，因为排空那段路上缓冲仍然是满的，吸收不了新的突发。图7-42 画出这条反馈回路，图7-43 画出缓冲的填满与排空。：反馈生效时刻决定队列满载状态持续多久，降速幅度决定下降段有多陡，各种拥塞控制机制改变队列靠的都是这两个量。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-feedback-loop.svg" alt="发送者以 100 GB/s 把数据送入缓冲队列，出口以 50 GB/s 发走；一条反馈从队列/出口方向返回发送者，生效后发送降至 40 GB/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-feedback-loop.svg" alt="发送者以 100 GB/s 把数据送入缓冲队列，出口以 50 GB/s 发走；一条反馈从队列/出口方向返回发送者，生效后发送降至 40 GB/s" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>反馈到达前队列继续填充。</strong> 发送速率高于出口速率时，多余数据进入缓冲；反馈生效后发送降到 40 GB/s，低于出口的 50 GB/s。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-queue-drain.svg" alt="队列占用从初始 256 KiB 上升，5.2 μs 时达到 512 KiB 并保持到 20 μs，期间持续丢弃超额数据；反馈生效后按约 10 GB/s 净速率下降，约 72 μs 归零" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-queue-drain.svg" alt="队列占用从初始 256 KiB 上升，5.2 μs 时达到 512 KiB 并保持到 20 μs，期间持续丢弃超额数据；反馈生效后按约 10 GB/s 净速率下降，约 72 μs 归零" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>填满、丢弃与排空。</strong> 到达 100 GB/s、出口 50 GB/s 时队列在 5.2 μs 填满；20 μs 发送降到 40 GB/s 后，队列以 10 GB/s 的净速率下降。</figcaption>
 </figure>
 
 机制谱系是这样的：**显式拥塞通知（ECN）** 由交换机在报文上打标记，把队列信息带回发送方；**DCQCN** 是利用这种通知调节 RDMA 发送速率的算法；基于时延的方法 从往返时间的变化观察排队；UB 的 C-AQM 让端点与交换网络协同做主动队列管理，在队列溢出之前就依据队列状态让发送方减速。理解这些机制，先分清各自缩短了哪一段反馈路径、发送方收到信息后改变了什么；阈值、更新步长和反馈频率共同决定队列响应的速度与幅度。
 
-回头再看那个 100 GB/s 的到达，它来自两项作业，而集合通信自身也会制造更陡的到达速率。ReduceScatter 若按直接方式实现，每个参与者把第 $j$ 片直接发给持有者 $j$，一轮就完成。$N$ 个参与者若按同一顺序逐个目标发送，每个目标都以网卡的全速 $B$ 发出，那么轮到持有者 $j$ 的时段，另外 $N-1$ 个发送方同时向它发送，通向它的交换机出口以 $(N-1)B$ 的速率收到数据；发送顺序若按 rank 错开，每个目标在任一时刻只收到一条流。这里给出术语：多个发送方同时向同一个出口发送的情形称为 **incast**（入拥塞）。
+回头再看那个 100 GB/s 的到达，它来自两项作业，而集合通信自身也会制造更陡的到达速率。ReduceScatter 若按直接方式实现，每个参与者把第 $j$ 片直接发给持有者 $j$，一轮就完成。$N$ 个参与者若按同一顺序逐个目标发送，每个目标都以网卡的全速 $B$ 发出，那么轮到持有者 $j$ 的时段，另外 $N-1$ 个发送方同时向它发送，通向它的交换机出口以 $(N-1)B$ 的速率收到数据；发送顺序若按 rank 错开，每个目标在任一时刻只收到一条流。给出术语：多个发送方同时向同一个出口发送的情形称为 **incast**（入拥塞）。
 
 把 $\lambda = (N-1)B$ 代入上面的式子，每个发送方 $B = 50\ \text{GB/s}$、出口也是 50 GB/s、剩余缓冲 1 MiB，就得到下表（脚注35：$N-1$ 个发送方各 50 GB/s 向 50 GB/s 出口发送，流体模型；一跳反馈距离为 30 m 线缆的往返传播加一个 1500 B 报文的串行化，端到端反馈距离取 20 μs 往返；PFC 按流量类别暂停全双工链路的定义取自 IEEE 802.1Qbb 条目；1500 B MTU 与每端口每优先级 22.4 KB 的 headroom 取自 DCQCN 论文 §4）：
 
@@ -1242,7 +1240,7 @@ $$
 对照之下，端到端拥塞控制（ECN 标记与 DCQCN 降速）的反馈距离是一个 20 μs 的往返，这 20 μs 内涌入的超额数据为 6.0、14、62 MB，即 5.7、13.4、59.1 MiB，没有一个能放进 1 MiB 缓冲。图7-44 画出三种 $N$ 下的队列增长与这两段反馈距离。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-pfc-fill-time.svg" alt="三根柱表示 1 MiB 剩余缓冲被填满的时刻：N=8 为 3.50 μs，N=16 为 1.50 μs，N=64 为 0.34 μs；PFC 一跳反馈为 0.33 μs，端到端反馈 20 μs 在横轴之外" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-pfc-fill-time.svg" alt="三根柱表示 1 MiB 剩余缓冲被填满的时刻：N=8 为 3.50 μs，N=16 为 1.50 μs，N=64 为 0.34 μs；PFC 一跳反馈为 0.33 μs，端到端反馈 20 μs 在横轴之外" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>本地反馈来不及阻止填满。</strong> 只有 N=64 的填满时刻接近 PFC 一跳反馈的 0.33 μs；其余两条曲线在本地反馈到达前仍有缓冲余量。</figcaption>
 </figure>
 
@@ -1277,12 +1275,12 @@ $$
 把第二条路径的传播时延改为 9 μs，这条路径上的最后一个报文在约 9.33 μs 才到达。快路径上提前到达的后续报文要等前面缺失的报文补齐，接收方最多要缓存 12 KiB 乱序数据。这里的判断很干脆：总字节数相同，多用一条路径却比单路径慢得多，因为节省的串行发送时间只有约 0.33 μs，远小于新增的 8 μs 路径时延。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-equal-delay-paths.svg" alt="两条路径都在 0–1 μs 传播，报文到达后没有缺口等待，八个报文约在 1.33 μs 全部交付给应用" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-equal-delay-paths.svg" alt="两条路径都在 0–1 μs 传播，报文到达后没有缺口等待，八个报文约在 1.33 μs 全部交付给应用" width="800" height="237" loading="lazy" decoding="async">
   <figcaption><strong>时延相等时没有缺口。</strong> 两条路径的传播时间相同，报文按序到达，应用在约 1.33 μs 拿到全部八个报文。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-unequal-delay-paths.svg" alt="快路径传播 1 μs 后到达，但前方缺口未补齐，持续等待到约 9.33 μs；第二条路径传播 9 μs，到达后补齐缺口，应用才能交付" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-unequal-delay-paths.svg" alt="快路径传播 1 μs 后到达，但前方缺口未补齐，持续等待到约 9.33 μs；第二条路径传播 9 μs，到达后补齐缺口，应用才能交付" width="800" height="237" loading="lazy" decoding="async">
   <figcaption><strong>快路径发完不等于数据可用。</strong> 第二条路径时延增加到 9 μs，快路径的后续报文只能等待前方缺口，整份数据在约 9.33 μs 才可交付。</figcaption>
 </figure>
 
@@ -1291,7 +1289,7 @@ $$
 丢包是另一种情形，造成的等待也不同。让序号 0 丢失，在它原来发送结束的 20 μs 后重传，整份数据约在 21.2 μs 才能交付，交付要等缺口补齐，不取决于其余报文多早到达。此时其他七个报文都已到达，接收方缓存了 28 KiB 载荷，只需重传缺失的 4 KiB；若从缺失报文开始重发它及其后的所有报文（**回退 N 步**），则要再传输 32 KiB。这里把前者称为**选择性重传**：用记录接收进度的状态，换来更少的重复传输（脚注37：字节数按应用载荷统计；两条路径各 50 GB/s、报文 4 KiB，采用固定载荷与轮转分配，恢复时刻由题设给定；从缺失报文起重发的 32 KiB 数据用于计算额外载荷）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-retransmission.svg" alt="序号 0 丢失后等待重传，其余七个报文保留在接收方；只补发缺失报文，约 21.2 μs 后全部可交付" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-retransmission.svg" alt="序号 0 丢失后等待重传，其余七个报文保留在接收方；只补发缺失报文，约 21.2 μs 后全部可交付" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>只补缺失报文。</strong> 接收方保留其余七个报文，重传只覆盖序号 0；补齐后整份数据在约 21.2 μs 交付。</figcaption>
 </figure>
 
@@ -1311,10 +1309,10 @@ $$
 | 32 | 16 | 2 | 4.83 | 8 | 0 | 41.4% |
 | 128 | 16 | 8 | 13.36 | 18 | 0 | 59.9% |
 
-这里对这五行有一条完整解读。一台叶上只有八条跨组流时，无阻塞叶有 38.6% 的概率完全不冲突；一旦冲突，两条流集中在一条上联上，各得一半带宽，最忙的一条上联平均分到 1.66 条流，整组平均只剩无冲突时 60.1% 的速度。超售叶的上联减半，无冲突概率降到 12.1%，速度降到 48.5%。整组 32 台服务器各出一条跨组流、无阻塞叶恰好 32 条上联时最差：流数与上联数相等，几乎必然有若干条上联空着、另一些挤了三四条，整组只剩 28.3%。流数远多于上联数时，随机分配的波动相对变小，32 条流分到 16 条上联为 41.4%，128 条流分到 16 条上联为 59.9%。这里给出的「翻转条件」是：流数与上联数接近时冲突代价最大，流数远少于或远多于上联数时代价较小；要避开这一代价，一是用 rail 对齐减少同一台叶上的跨组流，二是改用逐包喷洒。
+这里对这五行有一条完整解读。一台叶上只有八条跨组流时，无阻塞叶有 38.6% 的概率完全不冲突；一旦冲突，两条流集中在一条上联上，各得一半带宽，最忙的一条上联平均分到 1.66 条流，整组平均只剩无冲突时 60.1% 的速度。超售叶的上联减半，无冲突概率降到 12.1%，速度降到 48.5%。整组 32 台服务器各出一条跨组流、无阻塞叶恰好 32 条上联时最差：流数与上联数相等，几乎必然有若干条上联空着、另一些挤了三四条，整组只剩 28.3%。流数远多于上联数时，随机分配的波动相对变小，32 条流分到 16 条上联为 41.4%，128 条流分到 16 条上联为 59.9%。给出的「翻转条件」是：流数与上联数接近时冲突代价最大，流数远少于或远多于上联数时代价较小；要避开这一代价，一是用 rail 对齐减少同一台叶上的跨组流，二是改用逐包喷洒。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-uplink-imbalance.svg" alt="五根柱按流数与上联数分组：8 流 32 上联约 1.66，32 流 32 上联约 3.53，8 流 16 上联约 2.06，32 流 16 上联约 2.42，128 流 16 上联约 1.67" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-uplink-imbalance.svg" alt="五根柱按流数与上联数分组：8 流 32 上联约 1.66，32 流 32 上联约 3.53，8 流 16 上联约 2.06，32 流 16 上联约 2.42，128 流 16 上联约 1.67" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>流数与上联数的匹配程度。</strong> 比值是最忙上联流数相对无冲突值的倒数；32 条流分到 32 条上联时最不均衡，流数增加到 128 后反而摊薄。</figcaption>
 </figure>
 
@@ -1349,12 +1347,12 @@ $$
 在归约系统里，这种循环可以跨越多个层次：请求占满接收缓冲，完成响应等待发送队列，发送队列又等待远端释放请求所占的空间。把「持有前一项资源、申请后一项资源」画成边，就得到**资源依赖图**。环上的每项资源都被持有时，所有释放条件就同时停滞。图7-49 画出这种循环，图7-50 画出下面为响应预留通路的解法。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-deadlock.svg" alt="请求 0 持有 A 并等待 B，请求 1 持有 B 并等待 A，两个箭头互相指向对方，形成循环等待" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-deadlock.svg" alt="请求 0 持有 A 并等待 B，请求 1 持有 B 并等待 A，两个箭头互相指向对方，形成循环等待" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>循环等待导致死锁。</strong> 两个请求都已持有资源，又都在等对方释放，谁也不肯先退出，因此无法完成并释放资源。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-independent-response.svg" alt="请求资源、执行资源、独立响应资源三个方框依次排列，一条箭头从独立响应资源返回原请求" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-independent-response.svg" alt="请求资源、执行资源、独立响应资源三个方框依次排列，一条箭头从独立响应资源返回原请求" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>用独立响应资源打破等待。</strong> 请求、执行、响应按顺序申请不同资源；响应有预留缓冲和发送机会，能够返回并释放原请求。</figcaption>
 </figure>
 
@@ -1364,7 +1362,7 @@ $$
 
 死锁这一节很短，却是 7.5 全节的收口。7.5.2 的背压加上 7.5.3 的乱序缓存，构成一条会向上游传播的等待链，这条链首尾相接就是死锁。归约系统里特别容易出这种环，因为「请求」「执行」「响应」三个环节分布在不同的设备上（发起方、接收方，甚至第三方的归约目标），本地看不到全局的资源图；再加上融合的集合通信（7.3 节的在网归约）和共享传输状态（7.4.2 节），一条环可以跨过好几个层次。
 
-这里有两组容易混的概念。拥塞和死锁不是一回事，拥塞是慢，队列会波动、最终还能清空；死锁是永远不动，环上所有资源的释放条件互相等待，时间再长也不会好。背压和死锁也要分开看，背压本身是正常机制，用来限制未完成的工作，只有在形成「持有—等待」环时才变成死锁。至于预留容量和提高优先级，这里强调起作用的是独立容量与使用次序，只提高优先级并不能解开一个资源已经被全部占满的环。真到工程上，检查清单可以按这个顺序走：列出所有会被「等满」的资源，画持有—等待图，若两两之间存在环就先试申请次序再试独立预留，最后为完成通知、地址转换、故障恢复分别预留容量，这三类是这里明确点名的。
+这里有两组容易混的概念。拥塞和死锁不是一回事，拥塞是慢，队列会波动、最终还能清空；死锁是永远不动，环上所有资源的释放条件互相等待，时间再长也不会好。背压和死锁也要分开看，背压本身是正常机制，用来限制未完成的工作，只有在形成「持有—等待」环时才变成死锁。至于预留容量和提高优先级，起作用的是独立容量与使用次序，只提高优先级并不能解开一个资源已经被全部占满的环。真到工程上，检查清单可以按这个顺序走：列出所有会被「等满」的资源，画持有—等待图，若两两之间存在环就先试申请次序再试独立预留，最后为完成通知、地址转换、故障恢复分别预留容量，这三类是这里明确点名的。
 
 ## 7.6 从通信改进到任务完成
 
@@ -1372,20 +1370,20 @@ $$
 
 7.2 至 7.5 节沿一份数据追踪了传输、等待、完成通知和空间释放。要判断这些改进能节省多少训练时间，还得把产生和使用这份数据的计算过程一并计入，并确定通信何时开始。这里点出一个常见的归因错误：一张卡很早就进入集合通信调用，另一张卡的梯度还没算出来，前者就在调用里等后者；这段等待记在通信调用的耗时里，根源却在前面的计算或数据准备。
 
-数值算例把这件事量出来了。四个要做本地归约的参与者分别在 0、0、0、2 ms 就绪，全部到齐后执行 0.4 ms 的交换。按 7.4 节的依赖图，交换的开始时刻等于四个就绪时刻中的最大值，全组在 2.4 ms 完成。把交换耗时减半（0.4 → 0.2 ms），完成时间变为 2.2 ms；如果四个参与者都在起点准备好，完成时间就变成 0.4 ms。这里强调，这两个优化分别作用于依赖图上的不同节点（脚注42：就绪偏差教学记录、100 条混合记录、两条恢复记录；p99 取排序后第 $\lceil 0.99N \rceil$ 项）。
+数值算例把这件事量出来了。四个要做本地归约的参与者分别在 0、0、0、2 ms 就绪，全部到齐后执行 0.4 ms 的交换。按 7.4 节的依赖图，交换的开始时刻等于四个就绪时刻中的最大值，全组在 2.4 ms 完成。把交换耗时减半（0.4 → 0.2 ms），完成时间变为 2.2 ms；如果四个参与者都在起点准备好，完成时间就变成 0.4 ms。这两个优化分别作用于依赖图上的不同节点（脚注42：就绪偏差教学记录、100 条混合记录、两条恢复记录；p99 取排序后第 $\lceil 0.99N \rceil$ 项）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-wait-for-late-peer.svg" alt="参与者 0、1、2 在 0 ms 就绪并等待到 2 ms，参与者 3 在 2 ms 就绪；四者随后交换 0.4 ms，全组在 2.4 ms 完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-wait-for-late-peer.svg" alt="参与者 0、1、2 在 0 ms 就绪并等待到 2 ms，参与者 3 在 2 ms 就绪；四者随后交换 0.4 ms，全组在 2.4 ms 完成" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>先就绪者必须等待。</strong> 全组交换要等最后一个参与者；前三个的等待时间就是 2 ms 的就绪差距。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-faster-exchange.svg" alt="参与者 0、1、2 仍从 0 ms 等待到 2 ms，参与者 3 在 2 ms 就绪；交换时间从 0.4 ms 减到 0.2 ms，全组在 2.2 ms 完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-faster-exchange.svg" alt="参与者 0、1、2 仍从 0 ms 等待到 2 ms，参与者 3 在 2 ms 就绪；交换时间从 0.4 ms 减到 0.2 ms，全组在 2.2 ms 完成" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>缩短交换阶段。</strong> 就绪差距仍是 2 ms，但交换减半后全组完成时间只提前 0.2 ms。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-simultaneous-ready.svg" alt="参与者 0 到 3 都在 0 ms 就绪，同时交换 0.4 ms，全组在 0.4 ms 完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-simultaneous-ready.svg" alt="参与者 0 到 3 都在 0 ms 就绪，同时交换 0.4 ms，全组在 0.4 ms 完成" width="800" height="279" loading="lazy" decoding="async">
   <figcaption><strong>没有就绪差距时的下限。</strong> 四个参与者同时开始，全组完成时间就等于一次交换的 0.4 ms。</figcaption>
 </figure>
 
@@ -1426,7 +1424,7 @@ $$
 这里对第五种情形有一段总结：数据在 17 ms 就绪并与计算重叠时，连续环整步约为 26.6 ms，分层归约约为 22.0 ms；分层通信约在 18.3 ms 结束，早于 20 ms 的计算结束时刻，更新紧接在计算之后开始。数据最晚在 18.7 ms 就绪，分层通信仍能藏在计算后面（这个条件来自 $t_{\text{ready}} \le 20 - 1.3 = 18.7$ ms）。继续缩短通信不再改变这条关键路径，此时需要缩短计算或更新，才能进一步减少总时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-six-schedules.svg" alt="六根柱表示六种安排的完成时间：连续环串行 29.6 ms，分层归约串行 23.3 ms，分层并发不足 24.3 ms，连续环提前通信 26.6 ms，分层提前通信 22.0 ms，分层提前通信但只剩一张网卡 23.8 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-six-schedules.svg" alt="六根柱表示六种安排的完成时间：连续环串行 29.6 ms，分层归约串行 23.3 ms，分层并发不足 24.3 ms，连续环提前通信 26.6 ms，分层提前通信 22.0 ms，分层提前通信但只剩一张网卡 23.8 ms" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>计算、通信与更新的排布差异。</strong> 串行连续环最慢；提前通信能缩短总时间，但并发不足或只剩一张网卡都会抵消部分收益。</figcaption>
 </figure>
 
@@ -1453,13 +1451,13 @@ $$
 图7-60（原配置为每轮启动 5 μs、带宽 50 GB/s）画出三条曲线：原配置、带宽增至三倍的 150 GB/s、每轮启动减至 2 μs。这里的解读是：数据量小时主要受启动影响，数据量大时主要受传输影响；沿横轴从左向右看，数据量小的一段总时间接近水平，数据量大的一段随载荷增大而上升；提高带宽主要放缓右侧的斜坡，缩短启动时间主要使左侧平坦区的曲线下移。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-reduction-time.svg" alt="双对数横轴为每参与者输入 10^3 到 10^8 bytes，纵轴为归约时间；原配置左侧平台约 70 μs，带宽三倍后右侧斜坡降低，启动缩短后左侧平台下移" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-reduction-time.svg" alt="双对数横轴为每参与者输入 10^3 到 10^8 bytes，纵轴为归约时间；原配置左侧平台约 70 μs，带宽三倍后右侧斜坡降低，启动缩短后左侧平台下移" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>启动次数与带宽分别作用在两段。</strong> 小数据量时 14 轮启动决定平台高度；大数据量时载荷除以带宽决定斜坡。</figcaption>
 </figure>
 
 定量对照给出的差距很大。对 8 MiB 输入，带宽由 50 增至 150 GB/s，一次归约从约 364 μs 降至 168 μs；对 8 KiB 输入，则只从约 70.3 μs 降至 70.1 μs。假设执行一个 36 层模型，每层注意力与 FFN 各有一次这样的归约，72 次串行归约在两种带宽下均约为 5.1 ms，差值只有约 14 μs；而把每轮启动从 5 μs 降到 2 μs，72 次归约却能减少约 3.0 ms（脚注45：小消息算例设每轮启动 5 μs、每个参与者有效带宽为本章网卡的 50 GB/s 及其三倍 150 GB/s，环形模型只计载荷传输与启动，数值见本章教学算例的 small_messages 项；前述大块归约用由 nccl-tests 记录推得的每轮 0.833 μs）。复算一遍：8 MiB @ 50 GB/s 是 $1.75\times8388608/(50\times10^9) = 293.6\ \mu s$，加 70 μs 得 363.6 ≈ 364 μs，@ 150 GB/s 是 97.9 μs 加 70 得 167.9 ≈ 168 μs；8 KiB @ 50 GB/s 是 0.287 μs 加 70 得 70.29 ≈ 70.3 μs，@ 150 GB/s 是 0.096 μs 加 70 得 70.10 ≈ 70.1 μs。72 次归约分别是 $72\times70.3 = 5061.6\ \mu s \approx 5.06$ ms 与 $72\times70.1 = 5047.2\ \mu s \approx 5.05$ ms，差约 14 μs，带宽提高三倍几乎没帮上忙；启动从 5 μs 降到 2 μs 则每次省 $14\times3 = 42\ \mu s$，72 次省 $72\times42 = 3024\ \mu s \approx 3.0$ ms，这才是低并发 decode 的主要矛盾。
 
-由此这里给出分工：训练和大 batch prefill 更容易从减少字节、增加带宽和重叠中获益；低并发 decode 更需要减少层内跨服务器同步、缩短发起与完成路径。这也解释了第7.2 节讨论的流水线并行方案，把一个阶段放在本地可以减少阶段内部的远程通信，而同时处理多少个独立请求则决定流水线的利用率。
+由此给出分工：训练和大 batch prefill 更容易从减少字节、增加带宽和重叠中获益；低并发 decode 更需要减少层内跨服务器同步、缩短发起与完成路径。这也解释了第7.2 节讨论的流水线并行方案，把一个阶段放在本地可以减少阶段内部的远程通信，而同时处理多少个独立请求则决定流水线的利用率。
 
 **尾延迟**是平均耗时之外的另一个问题，偶发的长时间等待也会推迟任务完成。取 100 次通信，其中 98 次为 0.4 ms，一次因晚就绪而多等 2 ms，一次因恢复而多等 10 ms。平均约为 0.52 ms；p99 取由小到大排序的第 99 项（$\lceil 0.99\times100\rceil = 99$），落在「晚就绪」那一项上，得到 2.4 ms。把正常传输时间减半（0.2 ms），p99 降至 2.2 ms；若恢复事件增加为两次，p99 就由包含故障恢复的那次通信决定，变为 10.4 ms。复算：平均值 $(98\times0.4 + 2.4 + 10.4)/100 = 52/100 = 0.52$ ms；传输减半后 $(98\times0.2 + 2.2 + 10.2)$ 的第 99 项是 2.2 ms。平均 0.52 ms 而 p99 是 2.4 ms，这就是为什么一个平均耗时很好看的服务仍然会被投诉。要压 p99，必须压尾事件，也就是数据准备延迟和故障恢复，压正常路径的收益极小，这与 7.6.1 节的就绪偏差是同一件事的两种表现。这里的结论是：正常传输、数据准备延迟和故障恢复，都可能成为决定任务完成时间的主要因素。频繁的小数据量传输需要降低每次的启动开销，耗时较长的故障恢复则需要缩小故障影响范围。训练中发生通信故障后，还需要重建通信组并恢复训练状态，第10 章将进一步说明这一过程。
 
@@ -1488,7 +1486,7 @@ $$
 设超节点有 $S$ 张卡，超节点数就是 $H = 1024/S$，每个超节点内落在同一张量并行坐标上的数据并行成员有 $q = S/8$ 个。图7-61 画的是 64 卡超节点的分组方式。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-supernode-grid.svg" alt="8 行 8 列的方阵，共 64 张卡；每一行的八张卡处理同一 micro-batch 的不同模型分片，每一列的八张卡先汇合对应梯度再与其他超节点交换同一分片" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-supernode-grid.svg" alt="8 行 8 列的方阵，共 64 张卡；每一行的八张卡处理同一 micro-batch 的不同模型分片，每一列的八张卡先汇合对应梯度再与其他超节点交换同一分片" width="800" height="371" loading="lazy" decoding="async">
   <figcaption><strong>行与列承担不同通信。</strong> 行内是张量并行分片，列内先做节点内梯度汇合；使用全部 64 张卡不等于它们同属一个张量并行组。</figcaption>
 </figure>
 
@@ -1514,7 +1512,7 @@ $$
 T_{\text{grad}} = 2(q-1)\alpha_L + \frac{2(q-1)G}{qB_L} + 2(H-1)\alpha_R + \max\left(\frac{2(H-1)G}{HqB_{\text{NIC}}},\ \frac{V_{\text{out}}}{B_{\text{out}}}\right).
 $$
 
-其中 $T_{\text{grad}}$ 是梯度同步时间（s），$2(q-1)$ 是节点内 ReduceScatter 与 AllGather 的轮数合计，$\alpha_L$ 是节点内每轮启动时间（s），$q$ 是超节点内同一张量并行坐标上的数据并行成员数，$G$ 是每卡梯度分片（byte），$B_L$ 是节点内每卡每方向带宽（byte/s），$2(H-1)$ 是跨超节点 AllReduce 的轮数，$\alpha_R$ 是跨节点每轮启动时间（s），$H$ 是超节点数，$B_{\text{NIC}}$ 是每张网卡每方向带宽（byte/s），$V_{\text{out}}$ 是每超节点每方向跨节点发送量（byte），$B_{\text{out}}$ 是超节点单向出口带宽（byte/s）。这里说明，式中依次是本地归约与收集、跨节点的启动，以及网卡与共享出口两者中较慢的一项；真实系统还可能受交换网络割集和本地并发通信的影响，本例假设网络能提供所列带宽，各阶段不重叠。
+其中 $T_{\text{grad}}$ 是梯度同步时间（s），$2(q-1)$ 是节点内 ReduceScatter 与 AllGather 的轮数合计，$\alpha_L$ 是节点内每轮启动时间（s），$q$ 是超节点内同一张量并行坐标上的数据并行成员数，$G$ 是每卡梯度分片（byte），$B_L$ 是节点内每卡每方向带宽（byte/s），$2(H-1)$ 是跨超节点 AllReduce 的轮数，$\alpha_R$ 是跨节点每轮启动时间（s），$H$ 是超节点数，$B_{\text{NIC}}$ 是每张网卡每方向带宽（byte/s），$V_{\text{out}}$ 是每超节点每方向跨节点发送量（byte），$B_{\text{out}}$ 是超节点单向出口带宽（byte/s）。这说明，式中依次是本地归约与收集、跨节点的启动，以及网卡与共享出口两者中较慢的一项；真实系统还可能受交换网络割集和本地并发通信的影响，本例假设网络能提供所列带宽，各阶段不重叠。
 
 训练步的总时间从计算项起算。每卡的有效算力取 H100 SXM 的 BF16 稠密峰值 989.4 TFLOP/s 乘 41%，约 405.7 TFLOP/s；41% 是 Llama 3 405B 在 16384 张 H100 上以 TP8、PP16（流水线并行 16 段）、DP128 训练时报告的 BF16 MFU。按第1.2.2 节的定义，41% 意味着有 59% 的峰值算力没有转化为模型计算，其中一部分是这类一阶估算没有计入的工作（例如注意力的二次项，以及训练中为节省显存而重复的计算），另一部分是可以减少的等待（例如第7.6.1 节的就绪偏差和第7.3.4 节的在途请求不足）。计算项用
 
@@ -1537,14 +1535,14 @@ $$
 | 128 | 8 | 16 | 112 GB | 0.672 s／156.0 万 token/s | 0.935 s／112.2 万 token/s |
 | 256 | 4 | 32 | 96 GB | 0.663 s／158.1 万 token/s | 0.896 s／117.1 万 token/s |
 
-「出口随卡数增长」取 $B_{\text{out}} = S \times 50\ \text{GB/s}$，也就是每张卡的 400 Gbit/s 网卡都接入交换网络，意味着为更大的节点配置更多可同时工作的外部端口和足够的交换网络。这里提醒了一句：**出口不会随节点变大而自动变宽。** 「出口固定」则让每个超节点只有 8 条 400 Gbit/s 链路接入 QM9700 交换网络，共 400 GB/s，与一台 HGX 服务器相同。后者的 64 卡方案中，分层归约需约 $31.1 + 300.0 = 331.1$ ms，反而比连续环约 317.7 ms 慢，表里因此选了连续环。这和第7.2 节关于本地归约是否合算的判断相同。
+「出口随卡数增长」取 $B_{\text{out}} = S \times 50\ \text{GB/s}$，也就是每张卡的 400 Gbit/s 网卡都接入交换网络，意味着为更大的节点配置更多可同时工作的外部端口和足够的交换网络。要提醒了一句：**出口不会随节点变大而自动变宽。** 「出口固定」则让每个超节点只有 8 条 400 Gbit/s 链路接入 QM9700 交换网络，共 400 GB/s，与一台 HGX 服务器相同。后者的 64 卡方案中，分层归约需约 $31.1 + 300.0 = 331.1$ ms，反而比连续环约 317.7 ms 慢，表里因此选了连续环。这和第7.2 节关于本地归约是否合算的判断相同。
 
 「出口随卡数增长」那一列还隐含交换网络无阻塞。第7.1.2 节算过，3:1 超售把每超节点出口降到三分之一，128 卡节点的跨域项从约 17.5 ms 增至约 52.5 ms，步时间增加约 35 ms；第7.2.5 节说明了这些跨域字节在多轨拓扑上均匀落在八条 rail 上。
 
 图7-62 画出三种网络条件下吞吐随超节点大小的变化。这里的读图结论有两条。从 8 卡增至 64 卡，在出口随卡数增长时吞吐提高约 36%：8 卡超节点只有一台服务器，每张卡要把自己的整份 8 GB 梯度分片经网卡同步，要 0.318 s，占步时间的三分之一；64 卡时先在 NVLink 上把它归约成八分之一，每张卡跨节点只交换这一小片，梯度同步降到约 69 ms。从 128 卡增至 256 卡只提高约 1.3%，因为此时计算与张量并行通信已占步时间的 86%。若内部带宽另从 450 增到 900 GB/s，也就是第五代 NVLink 的每方向带宽，128 卡节点约为 0.614 s、170.9 万 token/s；这部分收益来自内部带宽的提高，不能归功于节点大小本身。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch07-supernode-throughput.svg" alt="三条配置曲线：出口扩展随每超节点 8、64、128、256 卡提升吞吐；出口封顶在 400 GB/s 后趋平；出口扩展并把本地带宽从 450 提到 900 GB/s 后继续提升" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch07-supernode-throughput.svg" alt="三条配置曲线：出口扩展随每超节点 8、64、128、256 卡提升吞吐；出口封顶在 400 GB/s 后趋平；出口扩展并把本地带宽从 450 提到 900 GB/s 后继续提升" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>出口与本地带宽的两种限制。</strong> 每个点都在连续环与分层归约之间取较快者；出口封顶后增加卡数不再提升吞吐，本地带宽加倍则能继续释放算力。</figcaption>
 </figure>
 
@@ -1579,7 +1577,7 @@ $S = 64$ 时 $q = 8$、$H = 16$，出口随卡数增长意味着 $B_{\text{out}}
 
 出口封顶带来的那个翻转值得单独记一句：$B_{\text{out}} = S\times50\ \text{GB/s}$ 是一个假设（每张卡都有独立的外部端口），不是物理必然。把它封在 400 GB/s 后，64 卡节点上分层归约（331.1 ms）反而比连续环（317.7 ms）慢，因为分层归约把跨域字节汇聚到共享出口，出口一封顶，分层就失去了优势。归约算法的选择依赖于出口带宽与本地带宽的比值，这正是第7.2 节实验7-5 讨论的翻转条件。
 
-128 卡到 256 卡只有 1.3% 的原因也清楚了：$T_{\text{grad}}$ 从 50.8 ms 降到 41.9 ms，可 $0.485+0.086+0.050 = 0.621$ s 的固定部分才是步时间的主体。这里说的 86% 是计算与张量并行通信之和占出口扩展下步时间的比例，也就是 $0.485+0.086 = 0.571$ s 除以 0.663 s 得 86.1%。瓶颈一旦不在梯度同步上，把超节点继续做大就没有意义。本地带宽加倍那 0.614 s 也能对上：$B_L$ 从 450 提到 900 GB/s 后，节点内项从 33.3 减到 16.7 ms，张量并行通信那 0.086 s 同样走 NVLink、也跟着减半到约 0.043 s，于是 $T_{\text{step}} = 0.485+0.043+0.034+0.050 = 0.612$ s，与这里的 0.614 s 只差取整。需要提醒，这部分收益来自内部带宽，不能记到「节点更大」头上，这是对比实验设计里最常见的陷阱。
+128 卡到 256 卡只有 1.3% 的原因也清楚了：$T_{\text{grad}}$ 从 50.8 ms 降到 41.9 ms，可 $0.485+0.086+0.050 = 0.621$ s 的固定部分才是步时间的主体。的 86% 是计算与张量并行通信之和占出口扩展下步时间的比例，也就是 $0.485+0.086 = 0.571$ s 除以 0.663 s 得 86.1%。瓶颈一旦不在梯度同步上，把超节点继续做大就没有意义。本地带宽加倍那 0.614 s 也能对上：$B_L$ 从 450 提到 900 GB/s 后，节点内项从 33.3 减到 16.7 ms，张量并行通信那 0.086 s 同样走 NVLink、也跟着减半到约 0.043 s，于是 $T_{\text{step}} = 0.485+0.043+0.034+0.050 = 0.612$ s，与这里的 0.614 s 只差取整。需要提醒，这部分收益来自内部带宽，不能记到「节点更大」头上，这是对比实验设计里最常见的陷阱。
 
 并行度重选那四行里，只有 TP8 这一项能按这里公式完整复算；TP16/32/64 涉及「每个副本要处理的序列数增加、局部矩阵行数与张量并行传输量都要重算」，这里没有展开逐项推导，这里也就不另造数据。趋势本身很清楚：张量并行组越大，每卡要交换的激活越多（激活量随每个副本的 token 数上升），本地梯度同步省下的时间抵不过新增的激活交换。这与第7.2.2 节「张量并行通信量随规模线性增长」的判断一致。
 

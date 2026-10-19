@@ -1,31 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="396" viewBox="0 54 800 396" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">超节点与集群的两级互联</title>
   <desc id="fig-desc">超节点内部用高速互联做 scale-up，追求低延迟；超节点之间通过网卡与交换网络做 scale-out，追求规模。</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink)}
-    .sub{font-size:14px;fill:var(--muted)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink)}
-    .b{font-size:13px;font-weight:600;fill:var(--ink)}
-    .s{font-size:12px;fill:var(--muted)}
-    .tiny{font-size:11px;fill:var(--muted)}
-    .onblue{fill:var(--on-blue)}
-    .onyellow{fill:var(--on-yellow)}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
+    .sub{font-size:14px;fill:var(--muted,#596171)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
+    .s{font-size:12px;fill:var(--muted,#596171)}
+    .tiny{font-size:11px;fill:var(--muted,#596171)}
+    .onblue{fill:var(--on-blue,#fffefa)}
+    .onyellow{fill:var(--on-yellow,#202735)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper)"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="34" y="82" width="732" height="300" rx="12" fill="var(--paper)" stroke="var(--line)" stroke-width="2"/>
+  <rect x="34" y="82" width="732" height="300" rx="12" fill="var(--paper,#f9faf7)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
   <text x="54" y="108" class="h">集群（scale-out）</text>
 
-  <rect x="62" y="124" width="296" height="228" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <rect x="62" y="124" width="296" height="228" rx="10" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="82" y="150" class="h">超节点 A（scale-up）</text>
 
-  <g fill="var(--surface)" stroke="var(--blue)" stroke-width="1.5">
+  <g fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.5">
     <rect x="86" y="170" width="70" height="42" rx="5"/><rect x="168" y="170" width="70" height="42" rx="5"/>
     <rect x="86" y="224" width="70" height="42" rx="5"/><rect x="168" y="224" width="70" height="42" rx="5"/>
   </g>
@@ -33,12 +33,12 @@
     <text x="121" y="196">GPU</text><text x="203" y="196">GPU</text>
     <text x="121" y="250">GPU</text><text x="203" y="250">GPU</text>
   </g>
-  <rect x="88" y="286" width="148" height="34" rx="6" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.5"/>
+  <rect x="88" y="286" width="148" height="34" rx="6" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="162" y="308" text-anchor="middle" class="b onblue">NVLink / 高速互联</text>
 
-  <rect x="442" y="124" width="296" height="228" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
+  <rect x="442" y="124" width="296" height="228" rx="10" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
   <text x="462" y="150" class="h">超节点 B（scale-up）</text>
-  <g fill="var(--surface)" stroke="var(--blue)" stroke-width="1.5">
+  <g fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.5">
     <rect x="466" y="170" width="70" height="42" rx="5"/><rect x="548" y="170" width="70" height="42" rx="5"/>
     <rect x="466" y="224" width="70" height="42" rx="5"/><rect x="548" y="224" width="70" height="42" rx="5"/>
   </g>
@@ -46,11 +46,11 @@
     <text x="501" y="196">GPU</text><text x="583" y="196">GPU</text>
     <text x="501" y="250">GPU</text><text x="583" y="250">GPU</text>
   </g>
-  <rect x="468" y="286" width="148" height="34" rx="6" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.5"/>
+  <rect x="468" y="286" width="148" height="34" rx="6" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="542" y="308" text-anchor="middle" class="b onblue">NVLink / 高速互联</text>
 
-  <path d="M358 220 H438" stroke="var(--blue)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
-  <path d="M438 248 H358" stroke="var(--blue)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M358 220 H438" stroke="var(--blue,#2647d7)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M438 248 H358" stroke="var(--blue,#2647d7)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
   <text x="398" y="208" text-anchor="middle" class="b">网卡 + 交换</text>
   <text x="398" y="274" text-anchor="middle" class="tiny">跨节点通信</text>
 

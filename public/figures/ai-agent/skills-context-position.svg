@@ -1,61 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="412" viewBox="0 38 800 412" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">Skills 在上下文中的位置</title>
   <desc id="fig-desc">系统提示词与工具定义构成稳定前缀，Skill 目录与完整正文各自只在首次出现时写入一次，之后的新内容只追加到消息数组末尾。</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink)}
-    .sub{font-size:14px;fill:var(--muted)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink)}
-    .b{font-size:14px;font-weight:600;fill:var(--ink)}
-    .s{font-size:13px;fill:var(--muted)}
-    .tiny{font-size:12px;fill:var(--muted)}
-    .onblue{fill:var(--on-blue)}
-    .onyellow{fill:var(--on-yellow)}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
+    .sub{font-size:14px;fill:var(--muted,#596171)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
+    .b{font-size:14px;font-weight:600;fill:var(--ink,#202735)}
+    .s{font-size:13px;fill:var(--muted,#596171)}
+    .tiny{font-size:12px;fill:var(--muted,#596171)}
+    .onblue{fill:var(--on-blue,#fffefa)}
+    .onyellow{fill:var(--on-yellow,#202735)}
   </style>
-  <rect width="800" height="450" fill="var(--paper)"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <path d="M60 84 V420" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M60 84 V420" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="60" y="78" text-anchor="middle" class="tiny">只追加</text>
 
-  <rect x="72" y="84" width="450" height="42" rx="6" fill="var(--blue)"/>
+  <rect x="72" y="84" width="450" height="42" rx="6" fill="var(--blue,#2647d7)"/>
   <text x="92" y="102" class="b onblue">system + tools</text>
   <text x="92" y="119" class="tiny onblue">固定前缀</text>
 
-  <rect x="72" y="134" width="450" height="42" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="72" y="134" width="450" height="42" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="92" y="152" class="b">user：从 PDF 生成 PPT</text>
   <text x="92" y="169" class="tiny">真实用户消息</text>
 
-  <rect x="72" y="184" width="450" height="42" rx="6" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <rect x="72" y="184" width="450" height="42" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="92" y="202" class="b">Skill 目录（约 300 tokens）</text>
   <text x="92" y="219" class="tiny">emit-once：首轮写入，之后命中</text>
 
-  <rect x="72" y="234" width="450" height="34" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="72" y="234" width="450" height="34" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="92" y="256" class="b">assistant：Skill(pptx)</text>
 
-  <rect x="72" y="276" width="450" height="34" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="72" y="276" width="450" height="34" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="92" y="298" class="b">tool：Launching skill: pptx</text>
   <text x="500" y="298" text-anchor="end" class="tiny">占位符</text>
 
-  <rect x="72" y="318" width="450" height="42" rx="6" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <rect x="72" y="318" width="450" height="42" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="92" y="336" class="b">Skill 正文（约 2k tokens）</text>
   <text x="92" y="353" class="tiny">emit-once：追加在调用位置</text>
 
-  <rect x="72" y="368" width="450" height="34" rx="6" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="72" y="368" width="450" height="34" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="92" y="390" class="b">Read / Write 的 tool_use 与 result</text>
   <text x="500" y="390" text-anchor="end" class="tiny">持续追加</text>
 
-  <rect x="560" y="120" width="200" height="230" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <rect x="560" y="120" width="200" height="230" rx="10" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
   <text x="660" y="148" text-anchor="middle" class="h">缓存状态</text>
-  <line x1="580" y1="160" x2="740" y2="160" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <line x1="580" y1="160" x2="740" y2="160" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
 
-  <circle cx="590" cy="186" r="5" fill="var(--yellow)"/>
+  <circle cx="590" cy="186" r="5" fill="var(--yellow,#ffe04b)"/>
   <text x="606" y="191" class="b">Turn 1</text>
   <text x="606" y="209" class="s">新增内容：NEW</text>
   <text x="606" y="226" class="tiny">付一次 cache_creation</text>
 
-  <circle cx="590" cy="256" r="5" fill="var(--blue)"/>
+  <circle cx="590" cy="256" r="5" fill="var(--blue,#2647d7)"/>
   <text x="606" y="261" class="b">Turn 2+</text>
   <text x="606" y="279" class="s">已有前缀：HIT</text>
   <text x="606" y="296" class="tiny">边际成本为零</text>

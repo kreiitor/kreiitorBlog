@@ -1,28 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="379" viewBox="0 71 800 379" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">一次请求的三个时间指标</title>
   <desc id="fig-desc">请求到达、首个输出与末个输出把时间线切成 TTFT、输出间隔与完整请求时间三个区间。</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink)}
-    .sub{font-size:14px;fill:var(--muted)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink)}
-    .b{font-size:13px;font-weight:600;fill:var(--ink)}
-    .s{font-size:12px;fill:var(--muted)}
-    .tiny{font-size:11px;fill:var(--muted)}
-    .onblue{fill:var(--on-blue)}
-    .onyellow{fill:var(--on-yellow)}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
+    .sub{font-size:14px;fill:var(--muted,#596171)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
+    .s{font-size:12px;fill:var(--muted,#596171)}
+    .tiny{font-size:11px;fill:var(--muted,#596171)}
+    .onblue{fill:var(--on-blue,#fffefa)}
+    .onyellow{fill:var(--on-yellow,#202735)}
   </style>
-  <rect width="800" height="450" fill="var(--paper)"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <line x1="90" y1="212" x2="720" y2="212" stroke="var(--ink)" stroke-width="2"/>
+  <line x1="90" y1="212" x2="720" y2="212" stroke="var(--ink,#202735)" stroke-width="2"/>
 
-  <circle cx="110" cy="212" r="7" fill="var(--blue)"/>
-  <circle cx="330" cy="212" r="7" fill="var(--yellow)" stroke="var(--ink)" stroke-width="1.5"/>
-  <circle cx="680" cy="212" r="7" fill="var(--blue)"/>
+  <circle cx="110" cy="212" r="7" fill="var(--blue,#2647d7)"/>
+  <circle cx="330" cy="212" r="7" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="1.5"/>
+  <circle cx="680" cy="212" r="7" fill="var(--blue,#2647d7)"/>
 
-  <g fill="var(--yellow)" stroke="var(--ink)" stroke-width="1.2">
+  <g fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="1.2">
     <circle cx="355" cy="212" r="4"/><circle cx="380" cy="212" r="4"/><circle cx="405" cy="212" r="4"/>
     <circle cx="430" cy="212" r="4"/><circle cx="455" cy="212" r="4"/><circle cx="480" cy="212" r="4"/>
     <circle cx="505" cy="212" r="4"/><circle cx="530" cy="212" r="4"/><circle cx="555" cy="212" r="4"/>
@@ -30,25 +30,25 @@
     <circle cx="655" cy="212" r="4"/>
   </g>
 
-  <path d="M110 122 V132 H680 V122" stroke="var(--blue)" stroke-width="2" fill="none"/>
+  <path d="M110 122 V132 H680 V122" stroke="var(--blue,#2647d7)" stroke-width="2" fill="none"/>
   <text x="395" y="112" text-anchor="middle" class="b">完整请求时间 T_request</text>
 
-  <path d="M110 162 V172 H330 V162" stroke="var(--yellow)" stroke-width="2" fill="none"/>
+  <path d="M110 162 V172 H330 V162" stroke="var(--yellow,#ffe04b)" stroke-width="2" fill="none"/>
   <text x="220" y="152" text-anchor="middle" class="b">TTFT 首响应</text>
 
-  <path d="M330 262 V272 H680 V262" stroke="var(--blue)" stroke-width="2" fill="none"/>
+  <path d="M330 262 V272 H680 V262" stroke="var(--blue,#2647d7)" stroke-width="2" fill="none"/>
   <text x="505" y="294" text-anchor="middle" class="b">输出间隔 T_token = (t_G − t_1) / (G − 1)</text>
 
   <text x="110" y="240" text-anchor="middle" class="s">请求到达 t_a</text>
   <text x="330" y="240" text-anchor="middle" class="s">首个输出 t_1</text>
   <text x="680" y="240" text-anchor="middle" class="s">末个输出 t_G</text>
 
-  <rect x="90" y="330" width="300" height="70" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="90" y="330" width="300" height="70" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="110" y="356" class="b">TTFT 包含</text>
   <text x="110" y="378" class="s">排队 · 输入准备 · 首轮计算 · 返回</text>
   <text x="110" y="394" class="tiny">缩短排队只直接改善 TTFT</text>
 
-  <rect x="410" y="330" width="300" height="70" rx="8" fill="var(--surface)" stroke="#dce1e8" stroke-width="1.5"/>
+  <rect x="410" y="330" width="300" height="70" rx="8" fill="var(--surface,#fffefa)" stroke="#dce1e8" stroke-width="1.5"/>
   <text x="430" y="356" class="b">输出间隔只看生成过程</text>
   <text x="430" y="378" class="s">从首个输出到末个输出</text>
   <text x="430" y="394" class="tiny">reasoning 模型另记首个有用输出</text>

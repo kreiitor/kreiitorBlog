@@ -25,7 +25,7 @@ cover: /covers/series-ai-infra.svg
 用更多的卡，通常出于三种需求：模型权重超过单卡内存，要分散存储；单个请求执行过慢，要把计算分给多张卡；同时到来的请求过多，要增加能独立处理请求的实例。这三件事分别对应容量、延迟和吞吐三个目标。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-instance-grouping.svg" alt="八张卡排成三行：第一行八个独立实例各有 1 张卡，第二行两个实例各有 4 张卡，第三行一个实例占满 8 张卡；每行分别可同时处理 8、2、1 个请求" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-instance-grouping.svg" alt="八张卡排成三行：第一行八个独立实例各有 1 张卡，第二行两个实例各有 4 张卡，第三行一个实例占满 8 张卡；每行分别可同时处理 8、2、1 个请求" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>实例划分决定并发请求数。</strong> 外框表示独立实例，框内连线表示一个请求需要多卡协作；同样八张卡，实例越大，可同时处理的请求越少。</figcaption>
 </figure>
 
@@ -77,7 +77,7 @@ $$
 $F$ 是运算量（FLOPs），$P$ 是矩阵运算性能（FLOP/s），$V$ 是 HBM 访问量、单位为字节，$B_{\text{HBM}}$ 是 HBM 带宽（B/s）。计算和内存访问同时进行，耗时较长的一项决定算子的执行时间；后一个算子要等前一个算子的输出，所以依次执行的各段时间要相加。式(6-2) 就是第 4.8.1 节的 Roofline 模型。按第 1.2.2 节的定义，单个 token 调用的 MFU 不会超过 $0.31/90.1$，即约 0.3%，这是 batch 为 1 时硬件允许的上限，与实现好坏无关；本章讨论的各种并行方式，都是在这一约束下重新组织权重的读取与复用。第 6.2 节将说明如何把这一层的权重和计算分配到多张卡，第 6.4 节再计算各卡交换结果所需的时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-per-card-memory.svg" alt="堆叠柱状图对比两种放置的每卡内存：单卡实例约 473.9 GB，远超 80 GB 参考线；八卡中的每卡约 61.50 GB，由权重、KV 和工作区三部分组成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-per-card-memory.svg" alt="堆叠柱状图对比两种放置的每卡内存：单卡实例约 473.9 GB，远超 80 GB 参考线；八卡中的每卡约 61.50 GB，由权重、KV 和工作区三部分组成" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量先决定能否单卡运行。</strong> 单卡实例的柱高远超八卡方案；八卡方案中权重占绝大部分，KV 与 2 GiB 工作区只占小段。</figcaption>
 </figure>
 
@@ -128,7 +128,7 @@ Prefill 与 decode 的瓶颈方向正好相反。prefill 是行多、权重复�
 激活有三个维度：一次处理的样本数 $B$（推理时就是同时处理的请求数）；每个样本的序列位置数 $S$；每个位置的隐藏特征数 $H$。第 5 章的矩阵乘把 $B$ 和 $S$ 合成了行数 $M$，注意力却要区分同一序列内的不同位置，所以这里把两者分开。模型本身还有两个可以切分的结构：层 $L$，以及 MoE 模型中每层的专家集合 $E$。图6-3 把这五个维度画在一起，并标出六种常用并行方式各自切在哪里。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/parallel-dimensions.svg" alt="样本、序列、特征、层与专家五个维度分别对应 DP、SP/CP、TP、PP 与 EP" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/parallel-dimensions.svg" alt="样本、序列、特征、层与专家五个维度分别对应 DP、SP/CP、TP、PP 与 EP" width="800" height="406" loading="lazy" decoding="async">
   <figcaption><strong>六个并行方式与五个切分维度。</strong> 样本 B 对应 DP，序列 S 对应 SP 与 CP，特征 H 对应 TP，层 L 对应 PP，专家 E 对应 EP。</figcaption>
 </figure>
 
@@ -184,7 +184,7 @@ SP 与 CP 都切序列位置 $S$，但 SP 只切「逐 token 算子」（LayerNo
 数据并行（data parallelism，DP）让每张卡保存一份完整模型，各自处理不同的样本。图6-4 中，两张卡分别处理 batch 的前四个和后四个样本，各自得到自己那部分输出。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-data-parallel.svg" alt="样本 0–7 分成两批：卡 0 接收样本 0–3，卡 1 接收样本 4–7；两张卡各保存一份完整模型并各自输出，训练时通过梯度 AllReduce 汇合" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-data-parallel.svg" alt="样本 0–7 分成两批：卡 0 接收样本 0–3，卡 1 接收样本 4–7；两张卡各保存一份完整模型并各自输出，训练时通过梯度 AllReduce 汇合" width="800" height="344" loading="lazy" decoding="async">
   <figcaption><strong>推理复制、训练汇合。</strong> 两张卡持有相同权重；推理时各自处理独立样本、互不等待，训练时先汇合梯度再更新各自的参数副本。</figcaption>
 </figure>
 
@@ -205,7 +205,7 @@ DP 是唯一一种不切开模型的并行方式，每张卡上都是一份完�
 多实例能同时处理更多请求，却不会缩短某个请求在单张卡上的执行时间，也无助于单卡无法容纳的会话。要让两张卡共同承担一个请求，就要把一层内部的计算和状态分开。张量并行（tensor parallelism，TP）把同一层内的矩阵分给多张卡，每卡各算一部分，再交换结果，图6-5 标出一层里的两处切分位置。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-tensor-split.svg" alt="输入 X 分成两路进入注意力：每路做 QKV 列投影、处理一半注意力头、再经输出投影行切得到部分和；两路部分和经 AllReduce 相加。FFN 子层同样把中间维分成两半，上投影列切、下投影行切，最后归约" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-tensor-split.svg" alt="输入 X 分成两路进入注意力：每路做 QKV 列投影、处理一半注意力头、再经输出投影行切得到部分和；两路部分和经 AllReduce 相加。FFN 子层同样把中间维分成两半，上投影列切、下投影行切，最后归约" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>列切得输出分片，行切得部分和。</strong> 注意力按头分配计算，输出投影按行切分；FFN 按中间维分半。两条支路末端都只持有部分和，需要 AllReduce 才能得到完整 m×h。</figcaption>
 </figure>
 
@@ -235,7 +235,7 @@ KV 容量由注意力设计决定，与稠密还是 MoE 无关。这里比较三
 这张表说明几点。batch 为 1 时，两个 MoE 模型每步只读约十分之一的权重；batch 为 64 时，64 个 token 选中的专家几乎覆盖全部专家，权重读取回到 60～68 GB，与稠密模型的 64 GB 相当。矩阵运算量始终只有稠密模型的 1/12～1/4，这是 MoE 一直保留的优势。上下文长、batch 大时，状态读取成为每步的主要部分：按 3350 GB/s，batch 64、32K 上下文时三个模型读取状态分别约需 164、62 和 14 ms，读取权重只需 18～20 ms。这一项的差距来自注意力设计：Qwen3-30B-A3B 同样是 MoE，每 token 仍要保存 96 KiB 的 KV。补充：5 给出数据来源与口径：Qwen3-32B batch 1 与 batch 64、Qwen3-30B-A3B batch 1 与 batch 64 均匀路由、Qwen3.6-35B-A3B batch 1 与 batch 64、Qwen3.6 的 128K 状态与 256K 状态；能放下的请求数按 $\lfloor (n \times (80\,\text{GB} - 2\,\text{GiB}) - W)/S \rfloor$ 计，$n$ 为卡数，$W$ 为常驻权重，$S$ 为每请求状态，汇总见第 6 章计算结果的 dense_moe 字段；Qwen3.6 的状态读取包括完整注意力层的 KV、线性注意力层的递推状态与卷积状态。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-kv-state-read.svg" alt="右图为三个模型在 batch 64、32K 上下文时一次 decode 的读取时间堆叠柱：Qwen3-32B 约 183 ms，Qwen3-30B-A3B 约 80 ms，Qwen3.6-35B-A3B 约 34 ms；每根柱由权重与状态两段组成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-kv-state-read.svg" alt="右图为三个模型在 batch 64、32K 上下文时一次 decode 的读取时间堆叠柱：Qwen3-32B 约 183 ms，Qwen3-30B-A3B 约 80 ms，Qwen3.6-35B-A3B 约 34 ms；每根柱由权重与状态两段组成" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>读状态而不是读权重拉开差距。</strong> 三种模型的权重段接近，状态段却相差十倍以上；左图则显示每请求状态随上下文增长，Qwen3-32B 与 Qwen3-30B-A3B 的上限为 128K。</figcaption>
 </figure>
 
@@ -246,12 +246,12 @@ KV 容量由注意力设计决定，与稠密还是 MoE 无关。这里比较三
 要理解为什么一种切法只需拼接、另一种却必须求和，考虑一个最小的矩阵乘。输入为 $x = [2, 3]$，权重矩阵为 $W = \begin{bmatrix} 1 & 2 \\ 4 & 5 \end{bmatrix}$，输出是 $xW = [8, 23]$。按权重矩阵的列切分，也就是把输出特征分给不同的卡：卡0 保存第一列，得到输出的第一个元素 8；卡1 保存第二列，得到第二个元素 23，两个元素并排拼接，就得到完整输出。改为按权重矩阵的行切分，也就是把同一个 token 的输入特征分给不同的卡：卡0 用输入 2 乘第一行，得到 $[2, 8]$；卡1 用输入 3 乘第二行，得到 $[6, 15]$。两张卡各得到一个含两个元素的向量，但每个向量只包含一行权重的贡献，对应位置相加后，才得到完整输出 $[8, 23]$。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-column-split.svg" alt="输入 [2,3] 同时送入两张卡；卡 0 用权重第一列算出 8，卡 1 用第二列算出 23；两个结果并排拼接得到 [8,23]" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-column-split.svg" alt="输入 [2,3] 同时送入两张卡；卡 0 用权重第一列算出 8，卡 1 用第二列算出 23；两个结果并排拼接得到 [8,23]" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>列切分产生输出分片。</strong> 两张卡都拿到完整输入，各自计算不同的输出元素，结果无需相加，按输出位置拼接即可。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-row-split.svg" alt="输入 [2,3] 的两个元素分别送入两张卡；卡 0 计算 2×[1,4]=[2,8]，卡 1 计算 3×[2,5]=[6,15]；两个部分和逐元素相加得到 [8,23]" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-row-split.svg" alt="输入 [2,3] 的两个元素分别送入两张卡；卡 0 计算 2×[1,4]=[2,8]，卡 1 计算 3×[2,5]=[6,15]；两个部分和逐元素相加得到 [8,23]" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>行切分产生形状相同的部分和。</strong> 每张卡只包含一行权重的贡献，必须对应位置相加，才能恢复完整输出。</figcaption>
 </figure>
 
@@ -276,7 +276,7 @@ $$
 头不能再拆，它是分配的最小单位。Qwen3-32B 有 8 个 KV 头，TP8 时每卡一个；TP16 时，共用同一个 KV 头的查询头被分到两张卡，两张卡都要保存该 KV 头的状态。上下文为 128K 时，每个 KV 头的状态占 4 GiB，八卡合计 32 GiB，十六卡合计 64 GiB。Qwen3-235B-A22B 只有 4 个 KV 头，第 6.1.2 节的八卡分法已经让每个 KV 头在两张卡上各存一份。TP 卡数一旦超过 KV 头数，继续增加就会复制 KV。本章用「实例数」表示独立推理服务的数量，用 $p$ 表示单个实例的 TP 卡数，共有八张卡时实例数为 $8/p$。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-swiglu-split.svg" alt="完整输入 X（m×h）同时进入两路；每卡的上投影取中间维的一半，经 SiLU 与乘法得到 Z0 或 Z1（m×f/2），下投影只产生 m×h 的部分和；两路部分和相加得到完整输出" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-swiglu-split.svg" alt="完整输入 X（m×h）同时进入两路；每卡的上投影取中间维的一半，经 SiLU 与乘法得到 Z0 或 Z1（m×f/2），下投影只产生 m×h 的部分和；两路部分和相加得到完整输出" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>逐元素算子可在分片上就地执行。</strong> 上投影按列切分中间维，SiLU 与乘法留在本地；下投影按行切分输入特征，两张卡各交出一份 m×h 的部分和，最后相加。</figcaption>
 </figure>
 
@@ -328,7 +328,7 @@ $p$ 越大，右侧越小。即使每次归约只增加同样一小段时间，�
 
 卡更多时，线性层还可以同时切分两个矩阵维度，把卡排成行、列两个方向的通信组。以 $[8192, 4096] \times [4096, 12288]$ 的投影为例，把输出分成 16 片放在 16 张卡上，每张卡起初只有 4 MiB 的输入分片和 6 MiB 的权重分片。排成 $4\times4$ 网格时，每张卡要横向收集同一行另外三张卡的输入分片，发送 12 MiB；纵向收集同一列另外三张卡的权重分片，发送 18 MiB。改成 $2\times8$ 网格，两个方向分别为 28 MiB 和 6 MiB；改成 $8\times2$ 则为 4 MiB 和 42 MiB。两个方向的链路独立且等速时，传输时间由较大的一方决定，因此 $4\times4$ 最快。MeshSlice 沿这种布局继续分块，让收集与矩阵乘流水执行；推理系统 Arctic 则在不同执行阶段切换分工，其状态迁移在第 9 章展开。补充：7 补充：MeshSlice 的矩阵形状与流水推算、Shift Parallelism 的状态与额外驻留；MeshSlice 的部分重叠为预测，Arctic 的 SP 定义及动态切换边界按固定实现说明。
 
-式(6-4) 是三个物理上互不相同的部分相加，读的时候要分得清。第一项 $64 \times 930$ MiB 是权重，即 64 层的注意力加 FFN 权重，每步都要从 HBM 重新读一遍；第二项 $256\ \text{KiB} \times (s+1)$ 是 KV，每 token 256 KiB 乘上历史长度加本次新写的 1 个 token；第三项是词表输出投影权重，151936 个词、每个 5120 维、BF16。复算一遍：$64 \times 930$ MiB $= 59{,}520$ MiB $= 62.41$ GB；$151936 \times 5120 \times 2 = 1{,}555{,}824{,}640$ bytes $= 1.556$ GB；两项合计 $63.97$ GB，正好是这里说的权重 63.97 GB。KV 项：$262{,}144 \times 131{,}065 = 3.4359\times10^{10}$ bytes $= 34.36$ GB。三项相加 $98.32$ GB，$/3350 = 29.35$ ms。所有数字都能对上。
+式(6-4) 是三个物理上互不相同的部分相加，读的时候要分得清。第一项 $64 \times 930$ MiB 是权重，即 64 层的注意力加 FFN 权重，每步都要从 HBM 重新读一遍；第二项 $256\ \text{KiB} \times (s+1)$ 是 KV，每 token 256 KiB 乘上历史长度加本次新写的 1 个 token；第三项是词表输出投影权重，151936 个词、每个 5120 维、BF16。复算一遍：$64 \times 930$ MiB $= 59{,}520$ MiB $= 62.41$ GB；$151936 \times 5120 \times 2 = 1{,}555{,}824{,}640$ bytes $= 1.556$ GB；两项合计 $63.97$ GB，正好是的权重 63.97 GB。KV 项：$262{,}144 \times 131{,}065 = 3.4359\times10^{10}$ bytes $= 34.36$ GB。三项相加 $98.32$ GB，$/3350 = 29.35$ ms。所有数字都能对上。
 
 「每层读取的 KV 约为 512 MiB」是这么来的：$256$ KiB $\times 131{,}064/64 \approx 512$ MiB，因为 131,064 个 token 的 KV 总量（34.36 GB）平均摊到 64 层上，每层约 512 MiB。这里要区分两件事：权重是「每层读自己那一份」，KV 是「每层都要读全部历史」，所以上下文越长，KV 在总量里的比重越大，32K 时 KV 只有 8.59 GB，128K 时是 34.36 GB。
 
@@ -347,7 +347,7 @@ $p$ 越大，右侧越小。即使每次归约只增加同样一小段时间，�
 数量感可以算一下。$[8192, 4096]$ 的 BF16 激活为 $8192 \times 4096 \times 2 = 67{,}108{,}864$ bytes $= 64$ MiB；四卡各保留连续的 $[2048, 4096]$ 分片时，每卡只占 16 MiB（$2048 \times 4096 \times 2$），总计 64 MiB；四卡各存完整张量则总计 256 MiB，差 4 倍。这一节省只发生在保持序列分片的区间，模型的所有激活与权重并不会都缩小四倍。归约维和输出维的关系仍与图6-9 相同，变化的只是下一个算子接收哪种布局。配套的实验在 JAX（支持自动求导和编译执行的数值计算框架）中展示了保持分片和重新收集两条 FFN 路径。补充：9 补充：八个正式配置通过 FP64 参考检查，配对 TP／SP 输出逐位相同；完整形状与验收见实验6-2：JAX TP／SP 实际 FFN 路径；实验在 CPU 逻辑设备上执行。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-sequence-parallel.svg" alt="卡 0 处理位置 0–3，卡 1 处理位置 4–7；两张卡各自做 LayerNorm、列并行线性、行并行线性与残差。进入列并行线性前用 AllGather 收齐全部位置，行并行线性后用 ReduceScatter 求和并重新按位置分片" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-sequence-parallel.svg" alt="卡 0 处理位置 0–3，卡 1 处理位置 4–7；两张卡各自做 LayerNorm、列并行线性、行并行线性与残差。进入列并行线性前用 AllGather 收齐全部位置，行并行线性后用 ReduceScatter 求和并重新按位置分片" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>把 AllReduce 拆到算子边界上。</strong> 逐 token 算子只需本段位置的数据，因而可以在分片上执行；需要完整输入行时先 AllGather，产生部分和后用 ReduceScatter 归约并重新分片。</figcaption>
 </figure>
 
@@ -359,14 +359,14 @@ SP 解决的问题很具体：TP 把权重和矩阵乘切开了，但 LayerNorm�
 
 工程上还要注意 SP 与 TP 必须用同一组卡：SP 不额外增加卡数（见 6.1.4 的 16 卡例子），它只是把 TP 组内的逐 token 算子也切开，所以一般写成「TP 组内启用 SP」。
 
-SP 与 TP 的分工对象不同，TP 切矩阵（有矩阵乘的算子），SP 切逐 token 算子（没有矩阵乘的算子），两者常常同时存在，通信组相同。还要避免把「激活变小」误读成「权重变小」：SP 只影响激活和逐 token 算子的中间结果，权重仍然由 TP 切分，这里明确说了模型的所有激活与权重并不会都缩小四倍。
+SP 与 TP 的分工对象不同，TP 切矩阵（有矩阵乘的算子），SP 切逐 token 算子（没有矩阵乘的算子），两者常常同时存在，通信组相同。还要避免把「激活变小」误读成「权重变小」：SP 只影响激活和逐 token 算子的中间结果，权重仍然由 TP 切分，了模型的所有激活与权重并不会都缩小四倍。
 
 ### 6.2.4 上下文并行：切分同一序列的注意力
 
 序列并行只处理逐 token 的算子，注意力却要让每个位置看到序列中的其他位置。上下文并行（context parallelism，CP）把同一个长序列的位置分给多张卡，每张卡保存自己那段位置的 Q、K、V，并计算这段位置的注意力输出。图6-11 用八个位置说明两张卡的分工。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-context-parallel.svg" alt="序列位置 0–7 分成两段：卡 0 保存并计算位置 0–3 的 Q/K/V，卡 1 保存位置 4–7 并以查询 4–7 对 K/V 0–7 计算注意力；卡 0 把 K/V 位置 0–3 传给卡 1" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-context-parallel.svg" alt="序列位置 0–7 分成两段：卡 0 保存并计算位置 0–3 的 Q/K/V，卡 1 保存位置 4–7 并以查询 4–7 对 K/V 0–7 计算注意力；卡 0 把 K/V 位置 0–3 传给卡 1" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>切分注意力会切断远端依赖。</strong> 因果注意力下，卡 1 的查询需要看到卡 0 的 K/V，因此 K/V 必须跨卡传递；非因果注意力时两个方向都要传。</figcaption>
 </figure>
 
@@ -385,7 +385,7 @@ $o$ 即新 token 在全部历史位置上的注意力输出。这与第 5 章 ti
 上下文并行减少了每张卡保存的上下文状态和本地的注意力计算，代价是 K、V 的交换或统计量的归约；生成时前后 token 之间的依赖并不因此消失。序列并行和上下文并行在不同框架里的名称有交叠，判断一种配置时，应看切了哪些算子、哪些张量、用了哪个通信组，而不只看缩写。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-causal-mask.svg" alt="8×8 网格，横轴为 key 位置 1–8，纵轴为 query 位置 1–8；实色格构成下三角，第 i 行有 i 个；前四行归卡 0，共 10 对，后四行归卡 1，共 26 对" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-causal-mask.svg" alt="8×8 网格，横轴为 key 位置 1–8，纵轴为 query 位置 1–8；实色格构成下三角，第 i 行有 i 个；前四行归卡 0，共 10 对，后四行归卡 1，共 26 对" width="800" height="371" loading="lazy" decoding="async">
   <figcaption><strong>设备边界不消除远端依赖。</strong> 虚线只是把行分给两张卡，左下区域中卡 1 对卡 0 的查询—键配对仍然必须计算。</figcaption>
 </figure>
 
@@ -397,7 +397,7 @@ CP 与 SP 的区别可以用一句话概括：SP 切的是不需要互相看的�
 
 CP 的两条实现路线按数据量选择：decode 时新 token 的查询只有一行，历史 K、V 却很长，传统计量（$m_r, l_r, u_r$）比传 K、V 划算得多，而且环形传递可以让通信与计算重叠；prefill 时查询也很多，传 K、V 往往是更直接的方案。不管走哪条路，CP 都不会让生成的串行依赖消失，第 $t+1$ 步仍要等第 $t$ 步。
 
-Ring Attention 与 CP 的关系容易被混淆。Ring Attention 说的是 K、V 块沿着环在卡之间流转、边到边算这种调度与传输方式，CP 说的是把同一个序列的位置分给多张卡这种工作划分方式。同一个 CP 划分可以不用环形传递，比如一次收齐全部 K、V，所以这里强调两者不是同义词。命名在不同框架里也不统一，判断时要看切了哪些算子、哪些张量、用了哪个通信组。还有一点要小心：切分只是设备边界，因果语义并没有变，因果掩码必须保留，远端 K、V 不能当 padding 处理。
+Ring Attention 与 CP 的关系容易被混淆。Ring Attention 说的是 K、V 块沿着环在卡之间流转、边到边算这种调度与传输方式，CP 说的是把同一个序列的位置分给多张卡这种工作划分方式。同一个 CP 划分可以不用环形传递，比如一次收齐全部 K、V，所以两者不是同义词。命名在不同框架里也不统一，判断时要看切了哪些算子、哪些张量、用了哪个通信组。还有一点要小心：切分只是设备边界，因果语义并没有变，因果掩码必须保留，远端 K、V 不能当 padding 处理。
 
 ### 6.2.5 流水线并行：按层划分阶段
 
@@ -416,12 +416,12 @@ $$
 自回归会话的下一步输入，要等当前 token 生成后才就绪。四个独立会话可以提供四个 micro-batch，同一会话未来的四个 token 则是一条先后依赖链。流水利用率因此直接取决于同时有多少 micro-batch 可以开始执行。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-pipeline-stages.svg" alt="输入进入卡 0 负责的第 0–31 层，输出激活传给卡 1 负责的第 32–63 层，再得到最终输出；训练时梯度沿同一阶段边界反向传递" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-pipeline-stages.svg" alt="输入进入卡 0 负责的第 0–31 层，输出激活传给卡 1 负责的第 32–63 层，再得到最终输出；训练时梯度沿同一阶段边界反向传递" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>按层切分，阶段间只传激活。</strong> 每个阶段只保存自己那些层的权重；前向传激活，训练反向时传梯度。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-pipeline-timeline.svg" alt="四个阶段各占 1 ms；阶段 0 在 0–4 ms 依次处理 micro-batch 0–3，阶段 1 在 1–5 ms，阶段 2 在 2–6 ms，阶段 3 在 3–7 ms。第一项结果在 4 ms 产生，最后一项在 7 ms 产生" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-pipeline-timeline.svg" alt="四个阶段各占 1 ms；阶段 0 在 0–4 ms 依次处理 micro-batch 0–3，阶段 1 在 1–5 ms，阶段 2 在 2–6 ms，阶段 3 在 3–7 ms。第一项结果在 4 ms 产生，最后一项在 7 ms 产生" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>斜向推进形成流水。</strong> 每个阶段同一时刻只处理一个 micro-batch；左上到右下的空白分别来自填充与排空。</figcaption>
 </figure>
 
@@ -431,7 +431,7 @@ PP 与前面几种方式的最大区别是它切的是深度：TP、SP、CP、EP
 
 用这里的两个数字体会一下：$q=4, b=4$ 得 $4/7 \approx 57\%$；$q=4, b=16$ 得 $16/19 \approx 84\%$。4 个阶段至少要喂 16 个以上 micro-batch 才不至于浪费近一半的卡，这也是 PP 在实践中常与大批量绑定的原因。
 
-负载不均为什么会积压？阶段2 要 2 ms 才处理完一个 micro-batch，而上游每 1 ms 就能送来一个，送入速率是处理速率的 2 倍，队列增长到缓冲上限后，上游只能停下来等（背压）。总的完成时间由最慢阶段决定：第一个 micro-batch 在 $1+1+2+1 = 5$ ms 完成，之后每隔 2 ms 出一个，8 个 micro-batch 的最后一个在 $5 + 7\times2 = 19$ ms 完成，相比均衡情况下的 $(4+8-1)\times1 = 11$ ms 慢了将近一倍。这里给出的对策很直接：按各层的实际执行时间划分阶段，让各阶段耗时尽量相等。
+负载不均为什么会积压？阶段2 要 2 ms 才处理完一个 micro-batch，而上游每 1 ms 就能送来一个，送入速率是处理速率的 2 倍，队列增长到缓冲上限后，上游只能停下来等（背压）。总的完成时间由最慢阶段决定：第一个 micro-batch 在 $1+1+2+1 = 5$ ms 完成，之后每隔 2 ms 出一个，8 个 micro-batch 的最后一个在 $5 + 7\times2 = 19$ ms 完成，相比均衡情况下的 $(4+8-1)\times1 = 11$ ms 慢了将近一倍。给出的对策很直接：按各层的实际执行时间划分阶段，让各阶段耗时尽量相等。
 
 自回归推理里 PP 的难处在于，同一会话的下一个 token 必须等上一个 token 算完，这是天然的串行链，所以 micro-batch 只能来自不同会话。PP 的利用率与同时在跑的会话数是同一件事。这一点与 6.2.1 的 DP、6.3.2 的批内复用是同一个主题：能并行的只有会话，同一个会话里相邻的 token 串在一起。
 
@@ -454,12 +454,12 @@ $$
 单层全部专家占 $128 \times 36$ MiB $= 4.5$ GiB，94 层约占423 GiB；均分到八卡，每卡约52.9 GiB，另外还要放下注意力层、路由器、输入输出层的权重，以及 KV 和工作区。专家集合可以散到各卡，注意力的头和状态仍按注意力自己的分工保存。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-alltoall.svg" alt="两张卡各持有四个专家：卡 0 有 E0–E3，卡 1 有 E4–E7。注意力和路由在 token 所在卡完成；All-to-All dispatch 把输入按专家所在卡重排发送，专家计算后再用 All-to-All 把结果送回并按路由权重合并" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-alltoall.svg" alt="两张卡各持有四个专家：卡 0 有 E0–E3，卡 1 有 E4–E7。注意力和路由在 token 所在卡完成；All-to-All dispatch 把输入按专家所在卡重排发送，专家计算后再用 All-to-All 把结果送回并按路由权重合并" width="800" height="344" loading="lazy" decoding="async">
   <figcaption><strong>两次全交换构成 dispatch 与 combine。</strong> 每张卡向另一张卡发送不同的数据，因此不是 AllReduce；发送前按目的地重排，返回后按 token 编号归位并加权。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-token-path.svg" alt="卡 0 持有 token A，选择本地专家 1 和卡 3 上的专家 6；token A 的输入经上方 dispatch 送到卡 3，两卡分别得到 y1 与 y6，再沿下方路径送回卡 0，按 a1y1+a6y6 合并" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-token-path.svg" alt="卡 0 持有 token A，选择本地专家 1 和卡 3 上的专家 6；token A 的输入经上方 dispatch 送到卡 3，两卡分别得到 y1 与 y6，再沿下方路径送回卡 0，按 a1y1+a6y6 合并" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>计算跟着权重走，结果跟着 token 走。</strong> 输入被送到专家所在卡，专家输出回到 token 原卡；每个 token 选中几个专家，就要执行几次并合并几次。</figcaption>
 </figure>
 
@@ -523,12 +523,12 @@ EP 切的是专家集合：权重常驻按全集算、每步读取按活跃集�
 **这里解答**：归约采用FP32，单个token的完整隐藏向量为 $4096 \times 4 = 16$ KiB。用第6.4.2 节的环形算法在两张卡之间归约，每张卡发送一个完整向量的大小；四张卡归约则发送1.5 倍。每层有注意力的组内归约、专家的组内归约、四个专家组之间的归约三次汇合，所以每张卡发送 $16 + 16 + 24 = 56$ KiB。八卡合计448 KiB；8192 个token的prefill 采用同样的分工，每张卡发送448 MiB。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-tp2-ep4-layout.svg" alt="八张卡排成两行四列：组 0 到组 3 各占一列，组内两张卡分别负责专家中间维的左 768 维和右 768 维；偶数卡保存 KV 头 0、1，奇数卡保存 KV 头 2、3，同一列的注意力头与 KV 重复四份" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-tp2-ep4-layout.svg" alt="八张卡排成两行四列：组 0 到组 3 各占一列，组内两张卡分别负责专家中间维的左 768 维和右 768 维；偶数卡保存 KV 头 0、1，奇数卡保存 KV 头 2、3，同一列的注意力头与 KV 重复四份" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>组内切专家矩阵，组间复制注意力。</strong> 每行是一组专家；同一列（同一专家组）的两张卡沿中间维分工，而不同组重复保存相同的注意力头与 KV，使每组都能在本地得到完整专家输入。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-reduction.svg" alt="四组各含两张卡：组 0 的卡 0、卡 1 标组贡献 1，组 1 标 2，组 2 标 3，组 3 标 4；横向箭头先把每组两卡求和，纵向箭头再把四个组相加，两列各得到 1+2+3+4=10" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-reduction.svg" alt="四组各含两张卡：组 0 的卡 0、卡 1 标组贡献 1，组 1 标 2，组 2 标 3，组 3 标 4；横向箭头先把每组两卡求和，纵向箭头再把四个组相加，两列各得到 1+2+3+4=10" width="800" height="384" loading="lazy" decoding="async">
   <figcaption><strong>归约顺序不能颠倒。</strong> 先沿专家中间维在组内相加，得到本组完整贡献；再沿专家分组维在编号相同的卡之间相加。</figcaption>
 </figure>
 
@@ -569,22 +569,22 @@ $$
 真实的路由结果由输入和模型共同决定。配套资料中的DeepSeek V4-Flash 路由记录覆盖四个输入、43 层，共约131 万次专家选择，各专家被选中的频率各不相同。把每个专家收到的token 数换算成矩阵行数，再按每张卡上的专家集合相加，就能从这份记录得到各卡的计算量分布。逐层热图见配套资料。补充：14 说明：图形与样本说明见路由热图和配套图说明；记录覆盖43 层，每题四个实际decode 输入，包含调度器提前执行的EOS forward；来源为DeepSeek V4-Flash 路由观测及原始计数分析。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-read-128.svg" alt="两根柱子：选择 128 个专家时读取约 4608 MiB（4.5 GiB），选择 8 个专家时读取约 288 MiB；64 个 token、每 token 八个专家共 512 次分派，两种分派的有效计算量相同" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-read-128.svg" alt="两根柱子：选择 128 个专家时读取约 4608 MiB（4.5 GiB），选择 8 个专家时读取约 288 MiB；64 个 token、每 token 八个专家共 512 次分派，两种分派的有效计算量相同" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>读取量由活跃专家数决定。</strong> 均匀覆盖与集中选择的计算量相同，但被选中专家的权重读取相差 16 倍；每个专家 BF16 权重为 36 MiB，批内只读一次。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-balance-even.svg" alt="四根等高的柱子，组 0 到组 3 都是 128 次 token—专家计算；合计读取 4.5 GiB 权重" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-balance-even.svg" alt="四根等高的柱子，组 0 到组 3 都是 128 次 token—专家计算；合计读取 4.5 GiB 权重" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>128 个专家被均匀使用时，计算平均分到四组。</strong> 每组处理 128 次分派，没有单组成为瓶颈。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-balance-concentrated.svg" alt="四根柱子中只有组 0 高 512，组 1、组 2、组 3 都为 0；所选八个专家都在组 0，权重读取降到 288 MiB，但计算全部压在同一组" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-balance-concentrated.svg" alt="四根柱子中只有组 0 高 512，组 1、组 2、组 3 都为 0；所选八个专家都在组 0，权重读取降到 288 MiB，但计算全部压在同一组" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>省读取不等于省时间。</strong> 集中选择把权重读取压到 288 MiB，却让组 0 承担全部 512 次计算，其余三组空转。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-expert-balance-spread.svg" alt="四根等高的柱子，组 0 到组 3 都是 128 次；同样的八个专家分散到四组后，权重读取维持在 288 MiB，计算也恢复均衡" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-expert-balance-spread.svg" alt="四根等高的柱子，组 0 到组 3 都是 128 次；同样的八个专家分散到四组后，权重读取维持在 288 MiB，计算也恢复均衡" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>分布同时决定读取与负载。</strong> 活跃专家集合没变，因此总读取量不变；把专家摊到四组后，每组各承担 128 次计算。</figcaption>
 </figure>
 
@@ -616,7 +616,7 @@ DeepSeek V4-Pro 约1.6T 参数，即使按每个参数半字节计算，权重�
 
 模型的变化因此从两个方面影响系统设计：权重增多会扩大所需的总存储容量，计算图不同会改变需要交换的数据。前者确定至少要动用多少资源，后者决定这些资源应如何连接。
 
-这一节是规模的压力测试。6.3.1、6.3.2 讨论的是"一个专家集合放得下"的世界，到了万亿参数，这个前提本身就不成立了。这里给了两级数字：284B 约568 GB（BF16）已经贴着640 GB 的天花板，还要留状态与工作区；1.6T 即使按每参数半字节（4 bit 量化）也要800 GB，2.8T 要1.4 TB，单机装不下。
+这一节是规模的压力测试。6.3.1、6.3.2 讨论的是"一个专家集合放得下"的世界，到了万亿参数，这个前提本身就不成立了。给了两级数字：284B 约568 GB（BF16）已经贴着640 GB 的天花板，还要留状态与工作区；1.6T 即使按每参数半字节（4 bit 量化）也要800 GB，2.8T 要1.4 TB，单机装不下。
 
 三条对策对应三种"切哪里"：加EP 分组数，把专家集合摊到更多卡上，切的是 $E$；加专家内部TP 卡数，把每个专家的矩阵再切小，切的是 $H$；加PP 阶段数，每个阶段只留一部分层，切的是 $L$。这三者都不改变"每卡读取量随活跃专家数变化"的基本规律，但都会增加通信，EP 增加dispatch，TP 增加归约，PP 增加阶段间激活交接。规模上去之后，容量与通信成本是同时上升的。
 
@@ -714,24 +714,24 @@ $$
 两种算法的取舍其实只看两个量。环形轮数多（$2(n-1)$）但每轮只传 $M/n$；树形轮数少（$2\log_2 n$，八卡是6 轮，四卡是4 轮）但每轮传完整的 $M$。$2(n-1)M/n$ 是每卡要发出去的总字节数，总时长还要加上每轮的固定开销 $\alpha$，小消息时后者才是主导。所以判断顺序是：先看 $M$ 落在交点哪一侧选算法，再看当前受启动开销还是传输时间支配来选优化手段。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/ring-allreduce.svg" alt="块 0 沿四卡环依次累加为 1、11、111、1111；ReduceScatter 三轮后再用 AllGather 三轮收齐所有块" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/ring-allreduce.svg" alt="块 0 沿四卡环依次累加为 1、11、111、1111；ReduceScatter 三轮后再用 AllGather 三轮收齐所有块" width="800" height="386" loading="lazy" decoding="async">
   <figcaption><strong>环形 AllReduce。</strong> ReduceScatter 负责把数值算对并切散，AllGather 负责把位置补齐；四卡共需六轮。</figcaption>
 </figure>
 
 小消息时每轮启动开销占主导，大消息时每轮传输量占主导。八卡、10 KiB 的 decode 归约里，启动开销占 99% 以上，所以优化方向是减少轮数和缩短每轮固定开销。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-allgather-table.svg" alt="表格列出三轮中四张卡持有的数据块：第 1 轮卡 0–3 分别持有 1,0、2,1、3,2、0,3；第 2 轮为 1,0,3、2,1,0、3,2,1、0,3,2；第 3 轮每卡都拥有四块，分别为 1,0,3,2、2,1,0,3、3,2,1,0、0,3,2,1" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-allgather-table.svg" alt="表格列出三轮中四张卡持有的数据块：第 1 轮卡 0–3 分别持有 1,0、2,1、3,2、0,3；第 2 轮为 1,0,3、2,1,0、3,2,1、0,3,2；第 3 轮每卡都拥有四块，分别为 1,0,3,2、2,1,0,3、3,2,1,0、0,3,2,1" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>AllGather 把分散的块补齐。</strong> ReduceScatter 结束后卡 0–3 分别持有块 1、2、3、0；此后每轮每卡转发一块，三轮后每卡都拿到全部四块。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-tp-decode-time.svg" alt="四组堆叠条形对应 TP1、TP2、TP4、TP8；本地段从 29.35 ms 缩短到 14.68、7.34、3.67 ms，归约段从 0 增至 0.21、0.64、1.48 ms，总时间分别为 29.35、14.89、7.97、5.15 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-tp-decode-time.svg" alt="四组堆叠条形对应 TP1、TP2、TP4、TP8；本地段从 29.35 ms 缩短到 14.68、7.34、3.67 ms，归约段从 0 增至 0.21、0.64、1.48 ms，总时间分别为 29.35、14.89、7.97、5.15 ms" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>加卡压低本地项，却抬高归约项。</strong> 本地项包括权重与 KV 读取，归约项是卡间集合通信；卡数越多，总时间下降得越慢。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ring-vs-tree.svg" alt="双对数坐标下比较两种算法：环形每轮传 M/n、共 2(n−1) 轮，树形每轮传完整 M、共 2log2 n 轮；两条曲线在约 680 KiB 处相交，10 KiB 的 decode 输入落在左侧，80 MiB 的 prefill 输入落在右侧" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ring-vs-tree.svg" alt="双对数坐标下比较两种算法：环形每轮传 M/n、共 2(n−1) 轮，树形每轮传完整 M、共 2log2 n 轮；两条曲线在约 680 KiB 处相交，10 KiB 的 decode 输入落在左侧，80 MiB 的 prefill 输入落在右侧" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>交点由启动开销与传输时间共同决定。</strong> 八卡时环有 14 轮、树有 6 轮；消息越小，轮数优势越重要；消息越大，树形在关键路径上反复传完整张量的代价越明显。</figcaption>
 </figure>
 
@@ -777,12 +777,12 @@ $$
 GPU 上的道理相同。增加通信线程数和通道数能够加快单独运行的传输，同时也会占用计算所需的执行资源，所以只看单独运行的通信带宽来选择配置，可能让整体变慢。集合通信自动调优系统AutoCCL 因此在训练过程中记录实际的通信时间，让反馈包含并发干扰；它先选算法、协议与传输实现，再搜索线程、通道和分块。论文报告，在重计算干扰下，AllGather 的带宽从18.26 GB/s 提高到32.44 GB/s。搜索和切换本身也要时间：若搜索额外耗时 $S$，此后每次调用节省 $\Delta$，至少要调用 $S/\Delta$ 次才能收回。补充：23 补充：AutoCCL 采用16／32 张A40 与NCCL 2.18.3，八卡NVLink 为四对连接；其直接搜索目标仍是通信性能，18.26→32.44 GB/s 为论文表6 的AllGather 在重计算干扰下的测量；NCCL 2.31.2 跨网络零CTA 的AllGather／AlltoAll 路径涉及对称注册窗口、节点内CE 和节点间CPU proxy。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-comm-compute-alone.svg" alt="两组柱：4 MiB 时通信 2.67 ms、矩阵乘 11.53 ms；64 MiB 时通信 36.92 ms、矩阵乘 11.03 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-comm-compute-alone.svg" alt="两组柱：4 MiB 时通信 2.67 ms、矩阵乘 11.53 ms；64 MiB 时通信 36.92 ms、矩阵乘 11.03 ms" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>单独测量时通信与计算互不干扰。</strong> 4 MiB 的通信远短于矩阵乘，64 MiB 的通信则超过矩阵乘三倍。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-comm-compute-overlap.svg" alt="两组柱：4 MiB 时通信 6.14 ms、矩阵乘 11.52 ms；64 MiB 时通信 45.21 ms、矩阵乘 12.89 ms。后续工作要等两者都完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-comm-compute-overlap.svg" alt="两组柱：4 MiB 时通信 6.14 ms、矩阵乘 11.52 ms；64 MiB 时通信 45.21 ms、矩阵乘 12.89 ms。后续工作要等两者都完成" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>并发执行改变各自耗时。</strong> 4 MiB 的通信增至 6.14 ms，仍在 11.52 ms 的矩阵乘之内；64 MiB 的通信增至 45.21 ms，矩阵乘也增至 12.89 ms。</figcaption>
 </figure>
 
@@ -817,7 +817,7 @@ GPU 的SM 这条路：GPU 直接在自己的内存里构造请求描述符并敲
 回到本节开头那128 次小数据量归约。框架会按数据量和连接方式选择通信实现。Qwen3-32B 一次处理1、4、16 个token时，归约输入分别为10、40、160 KiB，vLLM 等框架可以为这些小数据量选用专门的实现。式(6-5) 中的 $T_{\text{AR}}$ 由此有了两个改进方向：减少算法轮次，或缩短每轮的软件与执行开销。补充：27 指向"集合通信路径与诊断，涵盖固定框架源码、custom AllReduce 分派、就绪偏差和测量范围"。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-initiation-sites.svg" alt="三行对比：CPU 代理线程由 CPU 构造请求描述符并敲门铃，控制路径穿越 PCIe 3 次；GPU 的 SM 直接在 GPU 内存构造描述符，穿越 2 次；网卡上的处理器把构造与门铃留在网卡内，每批一次触发，穿越 0 次" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-initiation-sites.svg" alt="三行对比：CPU 代理线程由 CPU 构造请求描述符并敲门铃，控制路径穿越 PCIe 3 次；GPU 的 SM 直接在 GPU 内存构造描述符，穿越 2 次；网卡上的处理器把构造与门铃留在网卡内，每批一次触发，穿越 0 次" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>发起位置决定控制路径与资源占用。</strong> 橙色部件是构造请求描述符的位置；无论哪种方式，发起端的载荷搬出与完成记录写回都各穿越 PCIe 一次。</figcaption>
 </figure>
 
@@ -914,22 +914,22 @@ TP16 这组数值得逐项复算。本地时间方面，TP16 时权重再减半�
 DGX H100 的主机就是两路结构。两颗 Xeon 8480C 各带一个 NUMA 节点，两颗 CPU 之间最多有 4 条 UPI（Intel 处理器之间的互联）链路，每条 16 GT/s；每张 GPU 经 PCIe Gen5 x16 连到主机，每方向 64 GB/s。三种方案中每张卡经 PCIe 进出主机的数据量相同，经过 UPI 的数据量却按 2:1:2 变化，跨 CPU 的传输时间也随之变化。缓冲的位置和卡在环中的次序共同决定数据的搬移路径。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-nvswitch-ports.svg" alt="同一颗 64 端口 NVSwitch 的两种分配：32 下联加 32 上联时，下联与上联各 800 GB/s；48 下联加 16 上联时，下联升到 1200 GB/s，上联只剩 400 GB/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-nvswitch-ports.svg" alt="同一颗 64 端口 NVSwitch 的两种分配：32 下联加 32 上联时，下联与上联各 800 GB/s；48 下联加 16 上联时，下联升到 1200 GB/s，上联只剩 400 GB/s" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>端口在下联与上联之间挪动。</strong> 每个端口每方向 25 GB/s；上联是所有跨交换机流量的共同出口，因此减少上联端口会直接压低跨节点带宽。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ring-recursive.svg" alt="16 卡物理环上，递归算法第三轮的对端距离翻倍到 4；卡 0 发往卡 4，沿 0→1→2→3→4 经过四条链路" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ring-recursive.svg" alt="16 卡物理环上，递归算法第三轮的对端距离翻倍到 4；卡 0 发往卡 4，沿 0→1→2→3→4 经过四条链路" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>对端距离随轮次翻倍。</strong> 第三轮每张卡仍发送 1 MiB，但数据要经过四跳才能到达对端，最忙链路因此承载四份数据。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ring-swing.svg" alt="同一张 16 卡物理环上，Swing 算法第三轮让卡 0 发往卡 3，路径为 0→1→2→3，共三条链路；每张卡这一轮仍发送 1 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ring-swing.svg" alt="同一张 16 卡物理环上，Swing 算法第三轮让卡 0 发往卡 3，路径为 0→1→2→3，共三条链路；每张卡这一轮仍发送 1 MiB" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>改变对端来分散链路负载。</strong> 每卡发送量不变，变的是接收方；对端更近，最忙链路承载的数据随之减少。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ring-bottleneck.svg" alt="横轴为第 1、2、3 轮；递归算法的三根柱都是 4 MiB，Swing 算法为 4、2、2 MiB；纵轴是最忙单向链路传输量" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ring-bottleneck.svg" alt="横轴为第 1、2、3 轮；递归算法的三根柱都是 4 MiB，Swing 算法为 4、2、2 MiB；纵轴是最忙单向链路传输量" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>瓶颈链路决定每轮下限。</strong> 把所有发送方的数据累加到各条有向链路后取最大值；Swing 在第 2、3 轮把峰值压到 2 MiB。</figcaption>
 </figure>
 
@@ -944,12 +944,12 @@ DGX H100 的主机就是两路结构。两颗 Xeon 8480C 各带一个 NUMA 节�
 三个比较合起来就是选择拓扑的判断依据：负载以规则的集合通信为主，还是有大量目的地任意的小数据传输和 All-to-All；协作域需要多少张卡；是否愿意用交换芯片和更多线缆换取任意两卡等距。第 6.5.3 至 6.5.5 节将看到 NVIDIA、Google 和华为在这三个问题上各自作了什么选择。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-torus-vs-switch.svg" alt="左侧是三维环面的一层：4×4 共 16 张卡，每卡与四个邻居直连，虚线表示每一维首尾相连；从角上的卡到中心的卡经过四跳，加上第三维最多六跳。右侧是交换网络：每张卡接到交换芯片，任意两卡之间是两条链路加一次交换" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-torus-vs-switch.svg" alt="左侧是三维环面的一层：4×4 共 16 张卡，每卡与四个邻居直连，虚线表示每一维首尾相连；从角上的卡到中心的卡经过四跳，加上第三维最多六跳。右侧是交换网络：每张卡接到交换芯片，任意两卡之间是两条链路加一次交换" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>直连拓扑把跳数交给规模，交换网络把跳数固定为一次转发。</strong> 两侧橙色是相距最远的一对卡，粗线是它们之间的路径；环面的最远距离随维度增加，交换网络只增加链路数。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-topology-time.svg" alt="三组柱：沿维度归约（64 卡）两种拓扑都是 224 μs；均匀 All-to-All（64 卡）环面 336 μs、交换网络 112 μs；均匀 All-to-All（512 卡）环面 671 μs、交换网络 112 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-topology-time.svg" alt="三组柱：沿维度归约（64 卡）两种拓扑都是 224 μs；均匀 All-to-All（64 卡）环面 336 μs、交换网络 112 μs；均匀 All-to-All（512 卡）环面 671 μs、交换网络 112 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>规则归约都能用满端口带宽。</strong> 均匀 All-to-All 时，环面的数据平均要走三跳，512 卡时增至六跳，共享链路承载的数据随之增加；交换网络按无阻塞计。</figcaption>
 </figure>
 
@@ -975,7 +975,7 @@ $$
 T_{4\text{MiB}}=\frac{4\times 2^{20}}{50\times 10^{9}}\ \text{s}=\frac{4\,194\,304}{5\times 10^{10}}=83.9\ \mu s .
 $$
 
-递归三轮的最忙链路都是 4 MiB，每一轮还要等上一轮的对端数据到手，所以是 $3\times 83.9 = 251.7 \approx 252$ μs。Swing 那边是 $4+2+2=8$ MiB：$8\times 2^{20}/(5\times10^{10}) = 167.8\approx168$ μs。两者之比 $168/252=2/3$，也就是这里说的少了三分之一。
+递归三轮的最忙链路都是 4 MiB，每一轮还要等上一轮的对端数据到手，所以是 $3\times 83.9 = 251.7 \approx 252$ μs。Swing 那边是 $4+2+2=8$ MiB：$8\times 2^{20}/(5\times10^{10}) = 167.8\approx168$ μs。两者之比 $168/252=2/3$，也就是的少了三分之一。
 
 NUMA 那一段讲的是数据放置。环上四张卡，两张挂 CPU-A、两张挂 CPU-B。环形归约每一轮都是把数据发给环上的下一个邻居，如果中转缓冲统一放在 A 节点，那么终点在 B 节点上的数据都必须先经 UPI 从 A 跨到 B，反向同理，UPI 每个方向承担 24 MiB。把缓冲挪到发送卡自己所在的内存，并且让同一 NUMA 节点的卡在环里挨着坐，一半的跨节点流量变成了本地转一圈，UPI 每方向降到 12 MiB。再把环改成交替跨节点，卡序为 A、B、A、B，每一步都要跨 UPI，又回到 24 MiB。比例 24:12:24 就是这里的 2:1:2。这个例子的意义不在数字，而在于它说明拓扑（谁和谁相连）与数据放置（缓冲在哪）是两件独立可调的事，调错任何一个都会把本来不需要过桥的流量推到桥上。
 
@@ -1071,7 +1071,7 @@ $$
 
 **(c)** 只能按 4 台、32 卡整组增加，候选规模是 32 卡（4 台，40.8 kW，不需额外设备）、64 卡（8 台，81.6 kW，不需额外设备）、96 卡（12 台，122.4 kW，需额外 10.2 kW 共 132.6 kW，超预算）。所以最多 64 张卡。（b）能得到 80 卡而（c）只有 64 卡，差别就在必须按 32 卡的整组跳：80 卡落在 64 与 96 之间，不是一个可采购的整组配置。
 
-**(d)** 取（b）的 80 卡与（c）的 64 卡比较。按第 6.7.1 节的单实例服务时间，一个八卡实例服务一个 128K 会话的八步续写约 41.2 ms（TP8），如果把它拆成四个两卡实例同时推进四个会话，四个会话约 119.1 ms 全部完成。在卡数受限的语境下，更值得比较的是同样的卡能同时服务几个会话：80 卡可以摆 10 个八卡实例，64 卡只能摆 8 个；若服务目标是单会话延迟，两者每个实例的服务时间相同，都是 41.2 ms；若目标是吞吐，80 卡能同时推进的会话数比 64 卡多 $\frac{80}{64}=1.25$ 倍。本题的要点是，在功率与整组的双重约束下，卡数的差距会直接换算成并行实例数的差距，单实例的服务时间并不会因为卡多而变快。
+**(d)** 取（b）的 80 卡与（c）的 64 卡比较。按第 6.7.1 节的单实例服务时间，一个八卡实例服务一个 128K 会话的八步续写约 41.2 ms（TP8），如果把它拆成四个两卡实例同时推进四个会话，四个会话约 119.1 ms 全部完成。在卡数受限的语境下，更值得比较的是同样的卡能同时服务几个会话：80 卡可以摆 10 个八卡实例，64 卡只能摆 8 个；若服务目标是单会话延迟，两者每个实例的服务时间相同，都是 41.2 ms；若目标是吞吐，80 卡能同时推进的会话数比 64 卡多 $\frac{80}{64}=1.25$ 倍。本题的在功率与整组的双重约束下，卡数的差距会直接换算成并行实例数的差距，单实例的服务时间并不会因为卡多而变快。
 
 **(a) 至 (c) 三个上限不同的原因**是逐步加了两个约束。（a）只有连续功率约束，答案 112 卡；（b）加了"超过 64 卡要预留一整套二级交换设备的功率"，可用额度少 10.2 kW，答案降到 80 卡；（c）再要求按 32 卡整组扩容，80 卡这个连续约束下的最优解不可采购，答案进一步降到 64 卡。从连续上界到加上离散约束，再到加上采购颗粒度，每一步都只会让可用规模变小。
 
@@ -1120,12 +1120,12 @@ $k$ 从 4 增到 8，芯片数由 64 增到 512，涨到原来的八倍，割集
 重连要花时间，所以省下的执行时间得超过重连的耗时才值得。Morphlux 研究按任务重构光互联拓扑，让连接适合任务的通信需求。设八颗 TPU v4 芯片做 8 MiB 输入的环形 AllReduce，每颗芯片发送 14 MiB。若该切片原来每颗芯片只有一条 50 GB/s 的 ICI 链路可用于该通信组，重连后有三条，传输项就从约 293.6 μs 降到约 97.9 μs，每次节省约 195.7 μs。TPU v4 的 OCS 切换光路需要毫秒级时间：若重连需要 1 ms，重复 6 次就能收回；若需要 100 ms，则要 511 次。作业持续得越久，建立更合适的连接越值得。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-torus-cut.svg" alt="三维环面沿一个维度分成左半部与右半部：中间切面切断 k² 条链路；由于每一维首尾相连，绕回来的那一圈再切断 k² 条；合计 2k² 条" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-torus-cut.svg" alt="三维环面沿一个维度分成左半部与右半部：中间切面切断 k² 条链路；由于每一维首尾相连，绕回来的那一圈再切断 k² 条；合计 2k² 条" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>割集不止中间一刀。</strong> 每个切面是 k×k 的网格，有 k² 个点，每个点在该维度有一条向前的边被切断；首尾回绕的那一圈同样贡献 k² 条。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-bisection-growth.svg" alt="以 k=4 为基准，k=8 时加速器数从 64 增到 512，为 8 倍；二分链路数从 32 增到 128，为 4 倍" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-bisection-growth.svg" alt="以 k=4 为基准，k=8 时加速器数从 64 增到 512，为 8 倍；二分链路数从 32 增到 128，为 4 倍" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>两个量以不同速度增长。</strong> 总节点数为 k³，二分链路数为 2k²；每颗芯片平均分到的二分链路按 1/k 下降。</figcaption>
 </figure>
 
@@ -1204,22 +1204,22 @@ $$
 状态的数量也决定了作业启动时要执行多少控制操作。逐对连接的每条连接要经过创建和三次状态迁移，共 4 次系统调用，还要与对端交换一次连接编号，需要一次**带外往返**（经数据通路以外的通道往返一次）。取一次系统调用 5 μs、一次带外往返 500 μs，建立一条连接约需 0.52 ms。$N$ 个本地端点访问 $M$ 个远端端点，需要建立 $NM$ 条连接。端点加通道只需为 $N$ 个端点各执行 1 次系统调用，为 $M$ 台远端主机各执行 1 次系统调用和 1 次往返。$N=M=1024$ 时，逐对连接要建立 1,048,576 条连接，串行约需 545 s，32 个核并行也要约 17 s；端点加通道只需创建 2048 个对象，并行后约 16 ms。作业每次重启或扩缩容都要重复这一过程，所以它直接影响第 6.7.2 节讨论的故障恢复时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ub-layers.svg" alt="应用 A 与 Jetty A、应用 B 与 Jetty B 分别保留；两个 Jetty 汇入同一条共享传输通道，通道负责序号、确认、重传与拥塞控制；再往下依次是事务、报文、网络交付与远端事务层，按目标端点分派并检查权限" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ub-layers.svg" alt="应用 A 与 Jetty A、应用 B 与 Jetty B 分别保留；两个 Jetty 汇入同一条共享传输通道，通道负责序号、确认、重传与拥塞控制；再往下依次是事务、报文、网络交付与远端事务层，按目标端点分派并检查权限" width="800" height="308" loading="lazy" decoding="async">
   <figcaption><strong>拆开应用身份与可靠传输状态。</strong> 事务层区分操作及其完成归属，传输层处理报文的可靠交付；共享通道不取消权限检查，也不自动建立跨应用的全局顺序。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-ub-paths.svg" alt="左侧路径为处理器 → 片上总线 → PCIe → 网卡 → 网络，门铃与 DMA 各穿越 PCIe 一次；右侧路径为处理器 → 片上总线 → UB 控制器 → 网络，指令经片上总线直达控制器；两条路径从控制器到网络的部分相同" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-ub-paths.svg" alt="左侧路径为处理器 → 片上总线 → PCIe → 网卡 → 网络，门铃与 DMA 各穿越 PCIe 一次；右侧路径为处理器 → 片上总线 → UB 控制器 → 网络，指令经片上总线直达控制器；两条路径从控制器到网络的部分相同" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>差别集中在发起端。</strong> 左侧的控制与数据要经过 PCIe，右侧把控制器放到片上总线；网络侧路径不变，省下的时间全部来自发起端这一段。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-nic-state.svg" alt="横轴为互联内主机数，纵轴为每个 NIC 的状态；逐对连接在 8 台主机时就超出 256 KiB 的片上上下文缓存，目录式一致互联从两台主机起就远超缓存，端点加通道到上千台主机仍在缓存之内" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-nic-state.svg" alt="横轴为互联内主机数，纵轴为每个 NIC 的状态；逐对连接在 8 台主机时就超出 256 KiB 的片上上下文缓存，目录式一致互联从两台主机起就远超缓存，端点加通道到上千台主机仍在缓存之内" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>状态数量决定可扩展的主机数。</strong> 逐对连接把可靠传输状态按应用对保存，目录式一致互联还要维护副本目录；端点加通道把状态拆成按端点与按远端主机两份，增长最慢。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-connection-setup.svg" alt="横轴为本地端点数 N，纵轴为建立全部关系的时间；逐对连接随 N² 增长，在 N=1024 时标出 17.0 s；每端点一个 Jetty、每远端一条通道随 N 增长，标出 16 ms；两者都使用 32 个核并行" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-connection-setup.svg" alt="横轴为本地端点数 N，纵轴为建立全部关系的时间；逐对连接随 N² 增长，在 N=1024 时标出 17.0 s；每端点一个 Jetty、每远端一条通道随 N 增长，标出 16 ms；两者都使用 32 个核并行" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>连接对象数量决定启动成本。</strong> 逐对连接需要建立 N×M 条连接，端点加通道只需为 N 个端点和 M 台远端主机分别创建对象；N=1024 时两者相差约一千倍。</figcaption>
 </figure>
 
@@ -1230,7 +1230,7 @@ $$
 用接口带宽计算传输时间时，要分清单向带宽和双向合计带宽。例如昇腾 950 的 UB 双向合计线速为 2016 GB/s，按 72 条 lane、每条 112 Gbit/s 计，单向为 1008 GB/s。UBoE 是在以太网上承载 UB 通信的方式，UB Link 是 UB 自己的链路方式。两者按预先配置共用同一组串行器／解串器（SerDes，把芯片内的并行数据与链路串行信号互相转换的电路），所以要把同一组物理通道分配给两种用途。分配方式决定任务实际可用的带宽。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-interconnect-compare.svg" alt="三列并排：GB200 NVL72 的计算托盘经 NVLink 交换相连；TPU v4 的 64 芯片电互联单元经光电路交换机相连；Unified Bus 让主机与计算资源、主机与内存资源都接入 UB 互联" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-interconnect-compare.svg" alt="三列并排：GB200 NVL72 的计算托盘经 NVLink 交换相连；TPU v4 的 64 芯片电互联单元经光电路交换机相连；Unified Bus 让主机与计算资源、主机与内存资源都接入 UB 互联" width="800" height="352" loading="lazy" decoding="async">
   <figcaption><strong>连接对象不同，系统边界也不同。</strong> NVIDIA 用 NVLink 连接设备，TPU v4 用 OCS 连接电互联单元，Unified Bus 把主机侧计算和内存资源接入统一互联。</figcaption>
 </figure>
 
@@ -1250,7 +1250,7 @@ $$
 H_{\max}\approx\frac{262\,144}{56}=4\,681\ \text{台},
 $$
 
-正是这里说的「四千多台」。代入 CloudMatrix384 的 $H=192$：
+正是的「四千多台」。代入 CloudMatrix384 的 $H=192$：
 
 $$
 S_{\text{pair}}(192)=512\times8^2\times191+32\times8=6\,258\,688+256=6\,258\,944\ \text{B}\approx5.97\ \text{MiB}\approx6\ \text{MiB},
@@ -1306,7 +1306,7 @@ UB 的收益来自删掉抽象层：控制器接在片上总线上，省掉五�
 - **（a）** 以 DGX A100 为例：八张 A100 全部接到 NVSwitch 上，任意两张卡之间都是「GPU → NVSwitch → GPU」两条链路加一次交换，一个 TP8 通信组的每一次 AllReduce 都走这个交换层，不存在绕路。以 DGX-2 为例：16 张 V100 经 NVSwitch 全互联，一个 8 卡通信组的路径同上，只是芯片更多、交换层规模更大。以 DGX-1 为例：八张 GPU 是混合立方体网格，只有部分卡对直连；一个 8 卡 TP 组里若某两张卡不直连，它们的每一次交换都要经第三张卡中转，这条中转链路同时被别的通信组使用，因此要把通信最频繁的卡对放在直连边上，这正是这里「把频繁通信的计算任务放到相邻的 GPU 上」的意思。画图时要标出：直连边、需要中转的边，以及共享的中转卡／交换芯片。
 - **（b）** $k=4$：芯片数 $k^3=64$，二分链路 $2k^2=2\times16=32$ 条；$k=8$：芯片数 $512$，二分链路 $2\times64=128$ 条。芯片数涨了 $512/64=8$ 倍，二分链路只涨了 $128/32=4$ 倍，所以每芯片平均分到的二分链路数从 $32/64=0.5$ 条降到 $128/512=0.25$ 条，减半。原因就是两者的增长阶数不同（$k^3$ 对 $k^2$），比值 $\frac{2k^2}{k^3}=\frac{2}{k}$ 随 $k$ 增大而下降。物理含义：跨分区通信要挤过那 $2k^2$ 条链路，而需要跨区通信的芯片却按 $k^3$ 增长，于是每个人分到的过桥车道变窄了。
 - **（c）** TP2×EP4 共 $2\times4=8$ 张卡，两台主机各四张。推荐放法是把每个专家分片（EP shard）的两张 TP 卡放在同一台主机内：主机 0 放专家分片 0 和 1（各占 2 张卡），主机 1 放专家分片 2 和 3。这样 TP 组的 AllReduce 全部留在主机内（走 NVLink，延迟亚微秒级），需要跨主机的只有 EP 的 dispatch／combine，也就是主机 0 的两个专家分片与主机 1 的两个专家分片之间的专家流量（每层各一次 dispatch 和一次 combine），画图时就是主机 0 ↔ 主机 1 之间的两条粗箭头。要避免的放法是把每个专家分片的两张 TP 卡拆到两台主机上，那样每一次 TP AllReduce（decode 每层两次，层数越多次数越多）都要跨主机，而 TP 归约的频次远高于 EP 交换的频次。这也正是这里那句话的含义：「张量并行组内的频繁归约适合放在低延迟连接内，不同专家组之间交换专家结果时，则需要足够的跨组带宽。」
-- **（d）** $A=64$ 时逐对连接的增长项变成 $512A^2=512\times4096=2\,097\,152$ B $=2$ MiB/台。256 KiB 缓存下要求 $2\,097\,152(H-1)+32\times64\le262\,144$，即 $H-1\le\frac{262\,144-2048}{2\,097\,152}=0.124$，连两台主机都放不下，只能本机自用。把缓存扩到 1 MiB $=1\,048\,576$ B，仍然要求 $H-1\le\frac{1\,048\,576-2048}{2\,097\,152}=0.499$，依旧放不下两台主机，更不用说 CloudMatrix384 的 192 台。这道小题的要点是：状态按端点对相乘，端点数从 8 涨到 64 是 8 倍，状态就涨 $8^2=64$ 倍，缓存扩容 4 倍完全追不上。这正好反衬 UB 那套「端点加通道」的必要性，在几百台主机、每台上百个端点的规模上，逐对连接方案在片上缓存里根本不可能落地。
+- **（d）** $A=64$ 时逐对连接的增长项变成 $512A^2=512\times4096=2\,097\,152$ B $=2$ MiB/台。256 KiB 缓存下要求 $2\,097\,152(H-1)+32\times64\le262\,144$，即 $H-1\le\frac{262\,144-2048}{2\,097\,152}=0.124$，连两台主机都放不下，只能本机自用。把缓存扩到 1 MiB $=1\,048\,576$ B，仍然要求 $H-1\le\frac{1\,048\,576-2048}{2\,097\,152}=0.499$，依旧放不下两台主机，更不用说 CloudMatrix384 的 192 台。这道小题的：状态按端点对相乘，端点数从 8 涨到 64 是 8 倍，状态就涨 $8^2=64$ 倍，缓存扩容 4 倍完全追不上。这正好反衬 UB 那套「端点加通道」的必要性，在几百台主机、每台上百个端点的规模上，逐对连接方案在片上缓存里根本不可能落地。
 - **（e）** 带外往返改为 50 μs 后，单条 RoCE 连接成本 $=4\times5+50=70\ \mu s$。
   - 逐对连接：$1\,048\,576\times70\ \mu s=73\,400\,320\ \mu s\approx73.4$ s（串行），32 核并行约 $73.4/32\approx2.29$ s。
   - 端点加通道：$2048\times5\ \mu s+1024\times50\ \mu s=10.24\ \text{ms}+51.2\ \text{ms}=61.4$ ms（串行），32 核并行约 $61.4/32\approx1.92$ ms。
@@ -1331,12 +1331,12 @@ UB 把资源访问扩展到主机之间以后，很快就有了一个具体用�
 账要算清。其他节点原有 100 GB 空闲，其中 20 GB 借给任务 0 之后，四个节点合计还剩 80 GB。借出并没有增加物理内存，只是把闲置的那部分盘活，所以内存池提升的是可用率，总量不会变。做成本分析时这一条得摆在明面上。反过来，总需求要是超过总容量，借用也救不了，只能加卡或者压缩状态。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-memory-before.svg" alt="四根柱子表示四个节点的已占用物理内存：节点 0 为 80 GB，节点 1 为 60 GB，节点 2 与节点 3 各为 40 GB；每节点容量 80 GB，任务 0 另有 20 GB 尚未分配" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-memory-before.svg" alt="四根柱子表示四个节点的已占用物理内存：节点 0 为 80 GB，节点 1 为 60 GB，节点 2 与节点 3 各为 40 GB；每节点容量 80 GB，任务 0 另有 20 GB 尚未分配" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>局部不足而全局有余。</strong> 节点 0 的占用已到容量上限，但节点 1–3 合计还有空闲；任务 0 超出的 20 GB 暂时没有存放位置。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-memory-after.svg" alt="四根柱子仍为四个节点：节点 0 为 80 GB，节点 1 为 80 GB（其中 60 GB 属于任务 1、20 GB 属于任务 0），节点 2 与节点 3 各为 40 GB；每个节点都没有超过 80 GB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-memory-after.svg" alt="四根柱子仍为四个节点：节点 0 为 80 GB，节点 1 为 80 GB（其中 60 GB 属于任务 1、20 GB 属于任务 0），节点 2 与节点 3 各为 40 GB；每个节点都没有超过 80 GB" width="800" height="348" loading="lazy" decoding="async">
   <figcaption><strong>变化只发生在节点 1。</strong> 它从 60 GB 变为 80 GB，多出的 20 GB 正是任务 0 借用的空间；借出没有增加物理内存，只是盘活了节点 1 的空闲区。</figcaption>
 </figure>
 
@@ -1379,7 +1379,7 @@ $q$ 取得这么小是有讲究的。256 B 假设你把 KV 缓存的分块粒度
 由此得到两条工程推论。加线速没用，带宽被「在途事务数 × 事务大小 ÷ 往返时间」锁死，换更快的网卡不会改变 128 这个上限。真正要盯的是在途事务数这个旋钮，它由硬件队列深度、软件并发度（多少个 outstanding 请求）和接收端缓冲共同决定。后文 6.7.4 节讨论远端读取时也会说，若带宽受在途事务数量限制，增加事务并发才能充分利用已有链路带宽。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-inflight-requests.svg" alt="四个请求沿时间轴依次排队，每个返回 256 字节；右侧标注往返 7.52 μs、允许 128 个请求同时在途。请求像流水线在制品一样，每个都要走完一个来回才返回" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-inflight-requests.svg" alt="四个请求沿时间轴依次排队，每个返回 256 字节；右侧标注往返 7.52 μs、允许 128 个请求同时在途。请求像流水线在制品一样，每个都要走完一个来回才返回" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>在途数量决定单位时间吞吐。</strong> 一批请求发出后要经过往返时间 L 才有结果；最多 u 个在途、每个返回 q 字节时，一个往返内最多返回 uq 字节。</figcaption>
 </figure>
 
@@ -1412,7 +1412,7 @@ KV 的使用方式决定了它适合放在哪里，这里的观察很贴合推�
 状态本身有多大则取决于模型的上下文表示。第 9.2.2 节将并列比较同样 8192 个 token 的上下文在 Qwen3-8B 的 GQA 和 DeepSeek-V3 的紧凑 MLA 两种设计下的字节数与取回时间，后者约为前者的一半。这里补一句这里没展开的：省带宽有两条路，一条是少读一点（提高访问局部性），另一条是把状态本身做小（改进上下文表示），GQA 与 MLA 的对比属于后者。要注意这个对比说的是上下文状态的字节数与取回时间，与模型精度或速度无关。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-bandwidth-demand.svg" alt="斜线表示 20 GB 乘以每秒读取次数：每分钟一次约 0.33 GB/s，每秒一次 20 GB/s，每秒二十次 400 GB/s；另有 50 GB/s 的路径参考线与 4.36 GB/s 的在途窗口参考线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-bandwidth-demand.svg" alt="斜线表示 20 GB 乘以每秒读取次数：每分钟一次约 0.33 GB/s，每秒一次 20 GB/s，每秒二十次 400 GB/s；另有 50 GB/s 的路径参考线与 4.36 GB/s 的在途窗口参考线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>交点决定瓶颈位置。</strong> 读取频率低时斜线在两条水平线下方；越过 4.36 GB/s 后在途窗口先成为瓶颈，再越过 50 GB/s 后连路径本身也不够。</figcaption>
 </figure>
 
@@ -1519,22 +1519,22 @@ $$
 限制层的放置、增加存储和更新开销、增加通信依赖，这三种代价分别对应一种做法，所以要按每张卡实际保存和访问的数据分别计算资源需求。不能用一个全局的「每 token 890 B」反推每卡容量，必须逐卡算。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-tp-memory.svg" alt="四根柱子对应 TP1×8、TP2×4、TP4×2、TP8×1，每卡内存需求分别为 102.03、52.09、35.71、27.52 GB；80 GB 处有一条容量参考线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-tp-memory.svg" alt="四根柱子对应 TP1×8、TP2×4、TP4×2、TP8×1，每卡内存需求分别为 102.03、52.09、35.71、27.52 GB；80 GB 处有一条容量参考线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量先排除 TP1。</strong> 128K 会话下，单卡实例每卡需要 102.03 GB，超过 H100 的 80 GB；两卡、四卡、八卡实例分别约为 52.09、35.71、27.52 GB。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-gantt-tp2.svg" alt="四条轨道对应实例 0–3，每条轨道上有一个会话色块；四个色块同时开始、长度相同，都在约 119.1 ms 结束，完成期限为 130 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-gantt-tp2.svg" alt="四条轨道对应实例 0–3，每条轨道上有一个会话色块；四个色块同时开始、长度相同，都在约 119.1 ms 结束，完成期限为 130 ms" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>每实例两张卡，四个会话并行。</strong> 四个 TP2 实例各分到一个会话，因此四个会话的完成时刻相同，都在期限之前。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-gantt-tp4.svg" alt="两条轨道对应实例 0 与实例 1；每条轨道上依次排列两个会话色块，实例 0 的会话 0 与会话 1 分别在约 63.8 ms 和 127.6 ms 完成，实例 1 同理；完成期限为 130 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-gantt-tp4.svg" alt="两条轨道对应实例 0 与实例 1；每条轨道上依次排列两个会话色块，实例 0 的会话 0 与会话 1 分别在约 63.8 ms 和 127.6 ms 完成，实例 1 同理；完成期限为 130 ms" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>每实例四张卡，两个会话串行。</strong> 两个 TP4 实例各承担两个会话，因此第二个会话要在第一个结束后才开始，完成时刻约为 127.6 ms。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-gantt-tp8.svg" alt="一条轨道对应实例 0，上面依次排列四个会话色块；完成时刻依次约为 41.2、82.4、123.5、164.7 ms，最后一个落在 130 ms 期限右侧" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-gantt-tp8.svg" alt="一条轨道对应实例 0，上面依次排列四个会话色块；完成时刻依次约为 41.2、82.4、123.5、164.7 ms，最后一个落在 130 ms 期限右侧" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>每实例八张卡，四个会话串行。</strong> 三张甘特图使用同一时间尺度，可以直接比较色块长度与轨道数；单会话最快，但同时只能推进一个会话。</figcaption>
 </figure>
 
@@ -1544,7 +1544,7 @@ $$
 
 TP1 被排除靠的是容量而不是时间。八张卡本来可以开八个单卡实例（吞吐最大），但 128K 会话的 KV 让单卡需求达到 102.03 GB，超过 H100 的 80 GB。这是这里反复强调的顺序：先看能不能放下，再看快不快；一个装不下的方案，无论多快都没有意义。差额是 $102.03-80=22.03$ GB，也就是说要放下这个会话，单卡得有 100 GB 以上的 HBM，还得留工作区。这正好回到 6.6 节内存池的动机：如果能把一部分状态放到远端，TP1 也许就可行了，代价是每一步都要读远端状态。
 
-完成期限则决定了在可行方案里选哪个。这里给了两个不同的期限场景，答案完全不同：
+完成期限则决定了在可行方案里选哪个。给了两个不同的期限场景，答案完全不同：
 
 | 场景 | 期限 | 最优选择 | 原因 |
 | --- | --- | --- | --- |
@@ -1554,7 +1554,7 @@ TP1 被排除靠的是容量而不是时间。八张卡本来可以开八个单�
 
 表格末行值得多看一眼：期限从「全部完成」改成「至少完成三个」之后，TP8 从不可行变成了可行。服务目标本身是选择空间的一部分，这也是 6.7.2 节引入「每个按时完成会话的成本」这个指标的原因。
 
-跨服务器的代价体现在数上。TP16 跨两台服务器时单步 6.67 ms、八步 53.3 ms，达不到 50 ms，原因是跨服务器的每次归约走了网卡和交换机，比机内 NVLink 慢一个量级以上。这里给了三条降低开销的路：改连接（换更快的网卡、更短的路径）、改算法（换集合通信算法，减少轮数或让通信与计算重叠）、把卡放进更紧密的互联域（例如放进同一个 NVLink 交换域，6.5.3 节算过这一档）。这里的判断是：如果不改这三件事中的任何一件，第二台服务器就不该用来扩一个会话，而应该去跑别的实例。顺便区分一下两个容易混的数：TP16 跨服务器八步 53.3 ms，TP16 同域（6.5.3 节）单步 5.64 ms、128 次归约 3.16 ms，差距来自互联域，不是并行度。
+跨服务器的代价体现在数上。TP16 跨两台服务器时单步 6.67 ms、八步 53.3 ms，达不到 50 ms，原因是跨服务器的每次归约走了网卡和交换机，比机内 NVLink 慢一个量级以上。给了三条降低开销的路：改连接（换更快的网卡、更短的路径）、改算法（换集合通信算法，减少轮数或让通信与计算重叠）、把卡放进更紧密的互联域（例如放进同一个 NVLink 交换域，6.5.3 节算过这一档）。这里的判断是：如果不改这三件事中的任何一件，第二台服务器就不该用来扩一个会话，而应该去跑别的实例。顺便区分一下两个容易混的数：TP16 跨服务器八步 53.3 ms，TP16 同域（6.5.3 节）单步 5.64 ms、128 次归约 3.16 ms，差距来自互联域，不是并行度。
 
 固定权重（ROM）为什么会翻转结论，值得单独说清楚。第 4 章的固定权重架构把权重放进 ROM，于是「HBM 里读权重」这一项变小，而 TP 每次归约的同步时间是硬开销，不会因为权重变便宜而变小。结果是单步耗时里通信占比上升，TP 的边际收益下降，最优解就往「少切一点」的方向移动：减少 TP 卡数省掉一部分同步，把腾出的卡组成更多独立实例。代价转移到每张卡要装更大份额的请求状态，也就是容量上。这是一次典型的三方权衡，容量、时间、吞吐三者里改一个前提（权重进 ROM）就换了最优解，6.7.4 节会用具体数字把这件事算一遍。
 
@@ -1616,16 +1616,16 @@ $$
 模型的内存需求会限制可用的部署方式，本例中先被排除的是 TP1：128K 会话的 KV 让单卡需求达到 102.03 GB。上下文缩短到 32K 时，单卡可以容纳一个会话，但八步续写要 173.3 ms，仍超过 130 ms 的期限，这时 TP1 是被时间排除的。三种「先排除」的顺序因此很清楚：128K 上下文下容量先排除 TP1（102.03 GB > 80 GB，装不下）；32K 上下文下容量不再排除它，但时间排除它（173.3 ms > 130 ms）；功率在单台服务器内部不区分这四种配置（都是 8 卡，约 10.2 kW），它排除的是需要扩到更多服务器、更多机柜的方案，比如 6.5.2 节里 96 卡 122.4 kW 超过 120 kW 预算的例子。正确的顺序是先用容量筛掉装不下的，再用时间筛掉来不及的，剩下那些才轮到功率和成本来排序，这也是 6.7.3 节五步流程的雏形。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-cost-deadline.svg" alt="三条曲线分别对应 TP2、TP4、TP8，横轴为完成期限，纵轴为每个按时会话的 GPU·s；三条曲线都从至少三个会话能按时完成的位置开始，TP2 始终最低、TP8 始终最高，期限放宽时三条曲线都下降" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-cost-deadline.svg" alt="三条曲线分别对应 TP2、TP4、TP8，横轴为完成期限，纵轴为每个按时会话的 GPU·s；三条曲线都从至少三个会话能按时完成的位置开始，TP2 始终最低、TP8 始终最高，期限放宽时三条曲线都下降" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>成本以按时会话数为分母。</strong> 八卡计费至所有会话结束，成本按 H100 的 GPU·s 计；TP1 放不下 128K 会话，因此没有曲线。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-cost-fault.svg" alt="与无故障图相同，三条 TP 曲线分别对应 TP2、TP4、TP8；20 ms 时卡 0 故障，受影响实例在 60 ms 从当前会话起点重新执行，因此每条曲线都整体上移" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-cost-fault.svg" alt="与无故障图相同，三条 TP 曲线分别对应 TP2、TP4、TP8；20 ms 时卡 0 故障，受影响实例在 60 ms 从当前会话起点重新执行，因此每条曲线都整体上移" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>故障延长占用时间、减少按时会话。</strong> 两张图使用相同的计费方法，可以直接对照；故障后每个按时会话的成本上升。</figcaption>
 </figure>
 
-几个容易混的点收在这里。$C_{\text{occupied}}$ 是总账（含故障空转），$C_{\text{on time}}$ 是摊到按时会话上的单价，可能总账差不多，但单价差一倍。期限条件写「按时全部完成」还是「至少三个」，可行集完全不同，130 ms 下 TP8 全部完成不行、完成三个可行。拆分实例缩小了单次故障的影响范围，但并不改变故障率，这里强调的是范围，并提醒共用设备会破坏隔离。本例中能耗与成本同向（越早完成越省电、单位成本也越低），但这是「同功率、同卡数」前提下的巧合，如果方案卡数不同，两者可能背离。32K 时 TP1 能装下却被时间排除，说明容量只是必要条件，不是充分条件。
+几个容易混的点收在这里。$C_{\text{occupied}}$ 是总账（含故障空转），$C_{\text{on time}}$ 是摊到按时会话上的单价，可能总账差不多，但单价差一倍。期限条件写「按时全部完成」还是「至少三个」，可行集完全不同，130 ms 下 TP8 全部完成不行、完成三个可行。拆分实例缩小了单次故障的影响范围，但并不改变故障率，的是范围，并提醒共用设备会破坏隔离。本例中能耗与成本同向（越早完成越省电、单位成本也越低），但这是「同功率、同卡数」前提下的巧合，如果方案卡数不同，两者可能背离。32K 时 TP1 能装下却被时间排除，说明容量只是必要条件，不是充分条件。
 
 > 把「卡数 × 占用时长」按按时完成的会话数一除，就得到同时惩罚浪费与不可靠的单位成本；故障让占用时间延长、按时会话减少，两个方向合起来把每个会话的成本翻了一倍，而故障能否被隔离取决于电源与交换机是否共用。
 
@@ -1755,7 +1755,7 @@ $S$ 是实例内（也就是一个超节点内）的卡数。$288.8+203.1=491.9$
 | 256 卡 | 11.5 GB | 367 | 18.9 ms | 19,378 token/s |
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-supernode-scaling.svg" alt="折线显示每卡 decode 吞吐随超节点卡数变化：8 卡约 2.6 千 token/s，64 卡约 19.4 千 token/s，128 卡与 256 卡基本维持在同一水平；图中另标出每卡 37 个会话与每卡 335 个会话两个点" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-supernode-scaling.svg" alt="折线显示每卡 decode 吞吐随超节点卡数变化：8 卡约 2.6 千 token/s，64 卡约 19.4 千 token/s，128 卡与 256 卡基本维持在同一水平；图中另标出每卡 37 个会话与每卡 335 个会话两个点" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量收益在 64 卡附近饱和。</strong> 服务目标为每 token 50 ms；扩大超节点先通过分摊专家权重提升吞吐，之后 KV 读取、计算与 All-to-All 随会话数增长，吞吐不再上升。</figcaption>
 </figure>
 
@@ -1770,7 +1770,7 @@ $S$ 是实例内（也就是一个超节点内）的卡数。$288.8+203.1=491.9$
 **把权重固定进 ROM。** 图 6-54 画出权重与 KV 的三种放置方式。GPU 把两者都放在 HBM，每一步都要重新读一遍权重；第 4.7.3 节的架构把部署期间不再变化的权重写进掩模 ROM，HBM 只保存 KV；KV 还可以进一步放进片上 SRAM。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-weight-placement.svg" alt="三列并排：GPU 超节点的计算单元旁是 HBM，权重与 KV 同放；ROM 晶圆加 HBM 的方案把权重放 ROM、KV 放 HBM；ROM 晶圆加 SRAM 的方案把权重放 ROM、KV 放片上 SRAM，SRAM 方框明显更小" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-weight-placement.svg" alt="三列并排：GPU 超节点的计算单元旁是 HBM，权重与 KV 同放；ROM 晶圆加 HBM 的方案把权重放 ROM、KV 放 HBM；ROM 晶圆加 SRAM 的方案把权重放 ROM、KV 放片上 SRAM，SRAM 方框明显更小" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>只有第一种方式每步都要读权重。</strong> 箭头指向每一步都要读取的数据，方框高度表示容量；第三种方式容量最小，适合只装一个会话。</figcaption>
 </figure>
 
@@ -1799,7 +1799,7 @@ $$
 三行推出来的速度与这里都很接近，差异来自固定延迟与四舍五入，说明公式与表值是自洽的。通信占比那一列尤其值得看：H100 只有 3%，ROM 晶圆有 65%，把权重从 HBM 里搬走之后，集合通信从可以忽略变成主项。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-token-time.svg" alt="三根横向堆叠条对应 8 张 H100、58 张 B200 和两片 ROM 晶圆；存储与计算段分别为 2689、165、77 μs，集合通信段分别为 76、562、159 μs；条右端速度分别为 362、1357、4070 token/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-token-time.svg" alt="三根横向堆叠条对应 8 张 H100、58 张 B200 和两片 ROM 晶圆；存储与计算段分别为 2689、165、77 μs，集合通信段分别为 76、562、159 μs；条右端速度分别为 362、1357、4070 token/s" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>存储与计算、集合通信两段可直接对照。</strong> H100 的条几乎全是存储与计算；B200 与 ROM 晶圆的条中，集合通信变成显眼的一段，权重不再是最长的一项。</figcaption>
 </figure>
 
@@ -1818,7 +1818,7 @@ $$
 | 掩模 ROM | 21,651 mm²，约半片晶圆 | 片内读取 |
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch06-engram-placement.svg" alt="三栏对比：主机内存方案用 DDR 存放两张表共 203 GB，经 PCIe 或 RDMA 往返取回；超节点各卡 HBM 方案把表分片到每卡，经一轮 NVLink 交换取回；掩模 ROM 方案把表放在约半片晶圆上，片内读取" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch06-engram-placement.svg" alt="三栏对比：主机内存方案用 DDR 存放两张表共 203 GB，经 PCIe 或 RDMA 往返取回；超节点各卡 HBM 方案把表分片到每卡，经一轮 NVLink 交换取回；掩模 ROM 方案把表放在约半片晶圆上，片内读取" width="800" height="352" loading="lazy" decoding="async">
   <figcaption><strong>地址在第一个 Transformer 块之前就已确定。</strong> 三种放法的差别只在于取回这 48 行要走什么路径，以及表占用哪一种存储；取回窗口随机器变快而收窄。</figcaption>
 </figure>
 
@@ -1850,7 +1850,7 @@ $$
   - KV 放 HBM：会话数约 $9{,}637/5\approx1{,}927$ 个；
   - KV 放 SRAM：原来只够存 1 个 200K 会话，1M 上下文后连一个会话都放不下（0 个，需要 903.5 MB 而剩余 SRAM 不足）。
 
-  这道题的要点是：上下文变长时，可写状态的需求线性增长，而片上 SRAM 的容量是定值，所以放 SRAM 的方案最先崩掉。（按本章数据线性外推。）
+  这道题的：上下文变长时，可写状态的需求线性增长，而片上 SRAM 的容量是定值，所以放 SRAM 的方案最先崩掉。（按本章数据线性外推。）
 - **（f）** 查表开始占用步时间的判据是「主机往返时间 > 第一个 Transformer 块的计算时间」。给出的是：H100 上第一个块约 69 μs、ROM 晶圆上约 6.1 μs。
   - **H100**：窗口 69 μs，往返从 1.05 μs 改成 2 μs 后，$2<69$，仍然掩盖得住；要让它开始占用步时间，单用户速度必须快到第一个块小于 2 μs，按首块占步时间比例约 $69/T_{\text{step}}$ 推算，大约需要步时间降到 2 μs 量级（即单用户速度达到每 token 几微秒，远超本例的 2.76 ms）。在 H100 上这条约束基本不会触发。
   - **ROM 晶圆**：原窗口 6.1 μs、往返 1.05 μs，已经把六分之一占掉了；往返改成 2 μs 后，$2/6.1=33\%$，掩盖能力进一步恶化。这里的临界「步时间短于 42 μs 便无法掩盖」是按 $1.05$ μs 往返算的；往返变成 2 μs 后，这个临界点按比例上移到约 $42\times(2/1.05)\approx80$ μs。ROM 晶圆上的单用户步时间一旦短于约 80 μs，主机内存里的 Engram 表就来不及预取，查表开始占用步时间（按线性比例推算）。

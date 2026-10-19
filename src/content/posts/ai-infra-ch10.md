@@ -74,13 +74,13 @@ $B_{\text{noise}}$ 随模型与训练阶段变化。本例取二百万个 token�
 
 这一节有三笔账，后面全章都在用它们。
 
-先说总工作量。100B 有效 token 是任务的分子，3,145,728 是每一步的分子，两者相除并向上取整得到 31,790 步。这里强调最后一次迭代只处理剩余数据、时间预算仍按完整一步安排，工程上算工期就该按整数步算，不会因为最后一步只用到 3% 的数据就把它记成 0.03 步。
+先说总工作量。100B 有效 token 是任务的分子，3,145,728 是每一步的分子，两者相除并向上取整得到 31,790 步。最后一次迭代只处理剩余数据、时间预算仍按完整一步安排，工程上算工期就该按整数步算，不会因为最后一步只用到 3% 的数据就把它记成 0.03 步。
 
 时间预算这一笔，这里做过复算：$25 \times 86400 = 2{,}160{,}000$ s，除以 31,790 得 67.94 s，与这里的 67.9 s 一致。30 天全用上是 $30 \times 86400 = 2{,}592{,}000$ s，对应吞吐 $100\text{e}9/2{,}592{,}000 \approx 38{,}580$ token/s，这里写「约 38,600」；按 25 天算则是 $100\text{e}9/2{,}160{,}000 \approx 46{,}296$ token/s，这里写「约 46,300」。这两个数字就是 10.1.3 里「至少六张 H100」与「31 张 RTX 4090」两处结论的判据来源。
 
 第三笔账是为什么要谈信噪比。卡多就 batch 大、batch 大就快，这个直觉只对一半。梯度是带噪估计，batch 小时噪声大，增大 batch 确实能改进梯度方向；当 batch 越过临界值以后，方向已经足够准，再多采样只是把同一条路走得更稳，收敛所需的样本数却继续线性增长，于是墙钟时间不再下降。这里的形式化就是那条经验关系式 $(S/S_{\min}-1)(E/E_{\min}-1)=1$，把它展开后两端的含义就清楚了：若 $S = S_{\min}$，等式左边第二项必须无穷大（$E \to \infty$，只能靠堆样本、不减少步数）；若 $S = 2S_{\min}$，则 $E = 2E_{\min}$，这正是「按临界 batch size 训练时步数与样本数都是最小值两倍」这句话的来历。
 
-代入这里数字再做一遍复算。本步 batch 是 $384 \times 8192 = 3{,}145{,}728$ token，除以 $B_{\text{noise}} = 2\times10^{6}$ 得 1.5729，即这里说的约 1.57 倍。再验证 $S_{\min}$ 与 $E_{\min}$：$B_{\text{crit}} = E_{\min}/S_{\min} = 38.9\times10^{9}/19\,434 \approx 2.00\times10^{6}$，正好等于所取的 $B_{\text{noise}}$，说明 19,434 与 38.9B 这组数是由 $B_{\text{noise}} = 2\times10^{6}$ 反推出来的。用 $S = 31\,790$、$E = 100\times10^{9}$ 检验关系式，$(31\,790/19\,434-1)(100/38.9-1) = 0.6358 \times 1.5707 = 0.999 \approx 1$，等式成立。所谓弱扩展上限 1.64 倍，就是 $31\,790/19\,434 = 1.6358$，也就是步数最多只能降到 19,434 的直接结果。
+代入这里数字再做一遍复算。本步 batch 是 $384 \times 8192 = 3{,}145{,}728$ token，除以 $B_{\text{noise}} = 2\times10^{6}$ 得 1.5729，即的约 1.57 倍。再验证 $S_{\min}$ 与 $E_{\min}$：$B_{\text{crit}} = E_{\min}/S_{\min} = 38.9\times10^{9}/19\,434 \approx 2.00\times10^{6}$，正好等于所取的 $B_{\text{noise}}$，说明 19,434 与 38.9B 这组数是由 $B_{\text{noise}} = 2\times10^{6}$ 反推出来的。用 $S = 31\,790$、$E = 100\times10^{9}$ 检验关系式，$(31\,790/19\,434-1)(100/38.9-1) = 0.6358 \times 1.5707 = 0.999 \approx 1$，等式成立。所谓弱扩展上限 1.64 倍，就是 $31\,790/19\,434 = 1.6358$，也就是步数最多只能降到 19,434 的直接结果。
 
 弱扩展与强扩展的区别可以一句话分清：弱扩展是卡多了、每卡干的事不变、全局 batch 变大；强扩展是卡多了、总量不变、每卡分到的活变少。所以弱扩展的天花板由 $B_{\text{noise}}$ 决定，强扩展的天花板由那部分无法随卡数摊薄的固定等待决定，也就是每步 0.58 s 的通信与输入等待。
 
@@ -103,7 +103,7 @@ $B_{\text{noise}}$ 随模型与训练阶段变化。本例取二百万个 token�
 67.9 s 给出了每步允许花费的时间，但计算开始前还要满足显存要求。设参数数量为 $N$。一次迭代中，前向由输入算出预测和损失，反向沿计算依赖求出损失对各个中间值和参数的梯度，并读取前向留下的激活，优化器再用参数梯度计算下一步权重。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/training-states.svg" alt="训练步的前向、反向与 Adam 更新数据流，以及每参数 16 字节的训练状态" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/training-states.svg" alt="训练步的前向、反向与 Adam 更新数据流，以及每参数 16 字节的训练状态" width="800" height="382" loading="lazy" decoding="async">
   <figcaption><strong>一次训练步的状态与数据流。</strong> 前向保留激活供反向使用，Adam 更新读取 FP32 主权重与两份矩状态；每参数常驻训练状态约 16 字节。</figcaption>
 </figure>
 
@@ -129,7 +129,7 @@ $$
 MoE 每次由路由器选择部分专家子网络执行；各专家同样拥有待更新参数和优化器历史，所以状态容量由全部可训练参数决定。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-state-capacity.svg" alt="堆叠柱状图：左侧推理权重为 16.4 GB；右侧训练状态自下而上为 BF16 权重 16.4 GB、BF16 梯度 16.4 GB、FP32 主权重 32.8 GB、一阶矩 32.8 GB、二阶矩 32.8 GB，合计约 131 GB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-state-capacity.svg" alt="堆叠柱状图：左侧推理权重为 16.4 GB；右侧训练状态自下而上为 BF16 权重 16.4 GB、BF16 梯度 16.4 GB、FP32 主权重 32.8 GB、一阶矩 32.8 GB、二阶矩 32.8 GB，合计约 131 GB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>训练状态逐项累加。</strong> 右侧五段从下往上堆叠，最终高度约为左侧推理权重的八倍；纵轴为容量，单位 GB。</figcaption>
 </figure>
 
@@ -168,7 +168,7 @@ FP8 也改变容量账，改的只是送入矩阵单元的那份权重副本：D
 
 代入这里数字再复算一遍：$16N = 16 \times 8\,190\,735\,360 = 131{,}051{,}765{,}760$ B ≈ 131.05 GB（十进制），与这里 131.1 GB 一致；换成二进制 $131{,}051{,}765{,}760 / 1024^3 = 122.06$ GiB，与这里 122.1 GiB 一致。单看 BF16 权重是 $2N = 16.38$ GB ≈ 16.4 GB；每一项 FP32 状态是 $4N = 32.76$ GB ≈ 32.8 GB。把梯度换成 FP32 就是 $16 + 2 = 18$ bytes/参数，总量 $18N = 147.4$ GB。
 
-训练比推理贵这么多，原因在于推理只需要一份 BF16 权重 16.4 GB，训练却要同时握住当前权重、权重梯度、高精度主权重和两份矩状态。这是优化器算法的内在需求：Adam 需要一阶矩和二阶矩来平滑梯度方向和尺度，这两个统计量必须跨迭代保留，就得一直躺在显存或主机内存里。这里强调「主权重更新后再转换为 BF16 供矩阵运算使用」，说明 BF16 权重其实是主权重的一个派生副本，存在的唯一理由是矩阵单元跑得快。
+训练比推理贵这么多，原因在于推理只需要一份 BF16 权重 16.4 GB，训练却要同时握住当前权重、权重梯度、高精度主权重和两份矩状态。这是优化器算法的内在需求：Adam 需要一阶矩和二阶矩来平滑梯度方向和尺度，这两个统计量必须跨迭代保留，就得一直躺在显存或主机内存里。「主权重更新后再转换为 BF16 供矩阵运算使用」，说明 BF16 权重其实是主权重的一个派生副本，存在的唯一理由是矩阵单元跑得快。
 
 $M_{\text{peak},i}$ 这条公式要读懂它的「取最大值」：它是按时间取上确界，不能把三类简单相加后固定下来。理解它最好的办法就是这里那个 8 GiB 加 4 GiB 的例子，两者的生命周期重叠时峰值多 12 GiB，先释放激活、腾出空间再收集参数则几乎不额外增加。显存不够的时候，多半是同一时刻撞了车，总量其实还够。这直接导出后续两种优化手段：分片把同一份数据切小，减小 $M_{\text{persistent}}$；重计算和卸载改变生命周期，减小同时驻留量。
 
@@ -213,17 +213,17 @@ $$
 另外六成峰值算力去了哪里，本章各节分别作答：无法与计算重叠的通信（第 10.3.3 节）、流水线气泡（第 10.3.2 节）、受内存带宽限制的参数更新与状态转换（第 10.2.3 节）、重计算（第 10.2.2 节）、掉队者（第 10.4.5 节）和 checkpoint 保存（第 10.4.3 节）。按第 1.3.4 节的判据，前四项是模型必须计入的工作，漏掉任何一项，估出的完成时间都会偏短；后两项和通信中没有重叠的部分则含有可以减少的开销，那才是系统设计的优化空间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-efficiency-30.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 41、22、7、4 张；橙色菱形表示显存约束的卡数下限" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-efficiency-30.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 41、22、7、4 张；橙色菱形表示显存约束的卡数下限" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>计算需求的卡数下界。</strong> 四组按 4090、A100、H100、B200 排列，蓝柱为 30% 效率下跑完任务所需的加速器数量。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-efficiency-40.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 31、17、6、3 张；橙色菱形仍表示显存约束的卡数下限" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-efficiency-40.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 31、17、6、3 张；橙色菱形仍表示显存约束的卡数下限" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>同一任务在 40% 效率下的计算下界。</strong> 与 30% 档相比，四组蓝柱都降低，型号顺序与纵轴范围保持不变。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-efficiency-50.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 25、14、5、2 张；橙色菱形表示显存约束的卡数下限" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-efficiency-50.svg" alt="柱状图：4090、A100、H100、B200 的计算需求分别为 25、14、5、2 张；橙色菱形表示显存约束的卡数下限" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>50% 效率下的计算下界。</strong> 型号顺序、纵轴范围、任务与 30 天期限都与前两档一致，便于直接比较柱高。</figcaption>
 </figure>
 
@@ -233,7 +233,7 @@ $$
 
 > 补充：6／7：训练期限与设备下界及日历时间变体。精度、稀疏性与硬件来源在 JSON 中逐项记录。38%—43% 的 BF16 MFU 见 Llama 3 报告 §3.3.2 与表 4；RTX 4090 的 PCIe 4.0、无 NVLink 见 RTX 4090 规格页。
 
-52.7 GFLOPs/token 是本节所有计算的基准。这里说它「由模型矩阵形状和前后向运算累计得到」，也就是把每一层矩阵乘的乘加次数加总（一次乘加记 2 FLOPs）。作为量级检查，稠密 Transformer 训练常见的粗略口径是每 token 约 $6N$ FLOPs（前向 $2N$ 加反向 $4N$）：$6 \times 8.19\times10^9 = 4.91\times10^{10} = 49.1$ GFLOPs，与这里的 52.7 GFLOPs 同一量级，多出来的部分来自注意力、归一化和词表投影等非「参数乘输入」的运算。这里提醒一句：$6N$ 只是量级对照，给出的是逐矩阵累计的确切值，复算一律以 52.7 GFLOPs 为准。
+52.7 GFLOPs/token 是本节所有计算的基准。它「由模型矩阵形状和前后向运算累计得到」，也就是把每一层矩阵乘的乘加次数加总（一次乘加记 2 FLOPs）。作为量级检查，稠密 Transformer 训练常见的粗略口径是每 token 约 $6N$ FLOPs（前向 $2N$ 加反向 $4N$）：$6 \times 8.19\times10^9 = 4.91\times10^{10} = 49.1$ GFLOPs，与这里的 52.7 GFLOPs 同一量级，多出来的部分来自注意力、归一化和词表投影等非「参数乘输入」的运算。要提醒一句：$6N$ 只是量级对照，给出的是逐矩阵累计的确切值，复算一律以 52.7 GFLOPs 为准。
 
 代入这里数字复算：
 
@@ -282,7 +282,7 @@ MFU 与单卡计算效率的分母相同（都是峰值），差别在统计时�
 这里用一张对照图把四个阶段的差别并排摆出来，框架都一样：三行是跟踪的状态（权重、梯度、主权重＋矩），四列是数据并行组里的四张卡，每一格写"完整"还是写分片编号，就区分出了阶段。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/zero-sharding.svg" alt="普通 DP 完整复制三行状态；ZeRO-1 分片优化器状态，ZeRO-2 再分片梯度，ZeRO-3 连权重也分片" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/zero-sharding.svg" alt="普通 DP 完整复制三行状态；ZeRO-1 分片优化器状态，ZeRO-2 再分片梯度，ZeRO-3 连权重也分片" width="800" height="385" loading="lazy" decoding="async">
   <figcaption><strong>ZeRO 的状态归属。</strong> 四列是数据并行组里的四张卡，三行是权重、梯度与优化器状态；蓝色为完整副本，黄色为本卡分片。</figcaption>
 </figure>
 
@@ -316,7 +316,7 @@ $$
 分片以后，每个模块按这样的顺序执行：先通过 **AllGather** 取得所需参数，执行前向或反向，再通过 **ReduceScatter** 汇总梯度并分配梯度分片，让负责该分片的卡得到全部梯度贡献，最后各自更新所负责的参数。FSDP 的全分片执行也围绕这条路径组织。前向算完就释放完整参数，反向前就得再收集一次；保留完整参数，反向可以直接用，代价是这份完整权重会和后续激活同时占用显存。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-fsdp-gather.svg" alt="四张卡分别保存片 0 到片 3；执行时通过 AllGather 把四份分片拼成完整权重放进 GPU 0 的执行缓冲，模块用完后释放缓冲，原始分片继续保留" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-fsdp-gather.svg" alt="四张卡分别保存片 0 到片 3；执行时通过 AllGather 把四份分片拼成完整权重放进 GPU 0 的执行缓冲，模块用完后释放缓冲，原始分片继续保留" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>按模块收集与释放。</strong> 平时每张卡只保留自己的分片；执行到该模块时临时收集完整权重，用完释放完整缓冲。</figcaption>
 </figure>
 
@@ -327,13 +327,13 @@ $$
 > 补充：8：华为半导体首席科学家廖恒博士，Nested Parallel von Neumann Architecture and Nested BSP，arXiv:2609.16787，2026-09-15。§2 与图 1 将 FSDP 放在 DP、PP、EP、CP、TP 的嵌套并行层级中；本节据此说明状态分片与激活分片的区别。
 > 补充：9：CPU FSDP2 四配置记录。CPU 小模型四种配置得到的参数与未分片参考结果一致；训练期间分配的内存峰值为 39.16／30.14 MiB。
 
-那个 23% 值得自己算一遍：$(39.16 - 30.14)/39.16 = 23.0\%$，剩下那份不随卡数缩小的量是 $30.14 - 9 = 21.14$ MiB，跟这里说的"约 21 MiB 的其他张量和缓冲区"对得上（这个差是我从这里两个数相减得到的）。$M_{\text{peak}}$ 的含义也就清楚了：分片只能压缩可均分的那部分，压不动每个模块执行时本来就要存在的那部分。
+那个 23% 值得自己算一遍：$(39.16 - 30.14)/39.16 = 23.0\%$，剩下那份不随卡数缩小的量是 $30.14 - 9 = 21.14$ MiB，跟的"约 21 MiB 的其他张量和缓冲区"对得上（这个差是我从这里两个数相减得到的）。$M_{\text{peak}}$ 的含义也就清楚了：分片只能压缩可均分的那部分，压不动每个模块执行时本来就要存在的那部分。
 
 再回头看两条容易被混在一起的并行轴。一条切训练状态，管的是谁拥有哪份参数、梯度、优化器状态；另一条切执行激活，管的是某个中间张量此刻由谁负责算、放在哪张卡上。FSDP 属于前者，SP 属于后者。这里引用论文图 1，把 FSDP 列为与 DP、PP、EP、CP、TP 并列的独立层级，说的就是状态分片有自己的一条轴，同一条轴也可以被 TP／PP 的组合复用。
 
 数据并行是每卡处理不同样本，分片是同一份状态由多卡分别保存一部分，FSDP 相当于数据并行加状态分片，这两件事要分开看。常驻容量随 $1/d$ 收缩，执行峰值还要叠加执行时必然存在的完整参数缓冲区、激活和临时空间，所以下降幅度小得多。AllGather 是每卡出一份、人人得全份，用来取回参数；ReduceScatter 是人人都出全份、每人得一份归约结果，用来把梯度求和后切开。
 
-ZeRO 与 FSDP 的关系也顺带清楚了。这里说 FSDP 按同样的分片思路组织执行，并把参数、梯度、优化器状态都分片，可以理解为 ZeRO-3 思想的工程实现。两者的差别主要在实现层面：ZeRO 常作为优化器或通信库的分片策略，FSDP 由框架在执行图中按模块组织收集与释放，这里此处未展开这一区别。至于 SP 与 TP，SP 切的是序列位置，作用于逐 token 算子，通常复用 TP 组；TP 切的是层内矩阵。这里说 SP 管理中间激活的工作位置，强调的是给激活换个摆放方式，它并不减少参数。
+ZeRO 与 FSDP 的关系也顺带清楚了。 FSDP 按同样的分片思路组织执行，并把参数、梯度、优化器状态都分片，可以理解为 ZeRO-3 思想的工程实现。两者的差别主要在实现层面：ZeRO 常作为优化器或通信库的分片策略，FSDP 由框架在执行图中按模块组织收集与释放，这里此处未展开这一区别。至于 SP 与 TP，SP 切的是序列位置，作用于逐 token 算子，通常复用 TP 组；TP 切的是层内矩阵。 SP 管理中间激活的工作位置，强调的是给激活换个摆放方式，它并不减少参数。
 
 通信发生在取参数和散梯度这两处，而这两处恰好都可以尝试与计算重叠，10.3.3 会用这一点算通信等待。工程上先上哪个阶段也有现成答案：ZeRO-1 通信最少，只多了一次参数更新相关的通信，通常作为先省显存又不改执行路径的第一选择；ZeRO-2 增加梯度 ReduceScatter 带来的粒度变化；ZeRO-3 通信最重，却能把常驻状态压到最低。本章的 32/48 卡方案最终选了全组 ZeRO-3（见 10.2.4），原因是 4090 只有 22 GiB 可用显存，需要把常驻状态压到 3.8／2.5 GiB，才留得出给激活与缓冲区的 10 GiB 余量。
 
@@ -350,7 +350,7 @@ dX = dY\,W^{\mathsf T}, \qquad dW = X^{\mathsf T} dY
 $$
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-backward-gradients.svg" alt="上游梯度 dY 居中，分别指向 dX 与 dW 两路：dX 读取权重 W 后传给前一层，dW 读取前向输入 X 后进入本层归约和参数更新" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-backward-gradients.svg" alt="上游梯度 dY 居中，分别指向 dX 与 dW 两路：dX 读取权重 W 后传给前一层，dW 读取前向输入 X 后进入本层归约和参数更新" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>一次反向，两条输出路径。</strong> dX 沿计算图继续向前一层传播，dW 留在本层参与梯度归约与参数更新；两路都从 dY 开始。</figcaption>
 </figure>
 
@@ -361,12 +361,12 @@ $$
 重建后只需在下投影反向即将开始时生成 $h$，并保留到这一步计算结束。这块缓冲区的大小如下：取 128 个 token 的 micro-batch 和 FP32 激活，$h$ 的形状为 $[128, 12288]$，占 $128 \times 12288 \times 4 = 6$ MiB；重建需要约 157 万次乘法。同一层的两个归一化加权输出形状均为 $[128, 4096]$，每个占 2 MiB，也可由已保存的归一化结果和权重重建。于是每层省去 $6 + 2 + 2 = 10$ MiB，每个 micro-batch 在九层组成的流水阶段中可省去 90 MiB，约 94 MB。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-h-lifetime.svg" alt="两条泳道：a、u 从前向相乘一直保留到下投影反向；h 同样贯穿等待反向阶段，占 6 MiB，形状为 128 × 12288 的 FP32 张量" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-h-lifetime.svg" alt="两条泳道：a、u 从前向相乘一直保留到下投影反向；h 同样贯穿等待反向阶段，占 6 MiB，形状为 128 × 12288 的 FP32 张量" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>长期保留乘积 h 的代价。</strong> 横轴按前向相乘、等待反向、下投影反向三个操作阶段排列；橙色条贯穿全程，表示 6 MiB 缓冲一直驻留。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-h-recompute.svg" alt="两条泳道：a、u 仍然全程保留；h 只在下投影反向附近短暂出现，占 6 MiB，由 a 与 u 重新相乘得到" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-h-recompute.svg" alt="两条泳道：a、u 仍然全程保留；h 只在下投影反向附近短暂出现，占 6 MiB，由 a 与 u 重新相乘得到" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>把长期驻留改成短期工作区。</strong> 与保留 h 相比，蓝色 a、u 仍贯穿全程，橙色 h 只在最后一个阶段出现一小段。</figcaption>
 </figure>
 
@@ -413,12 +413,12 @@ T_c = \frac{G}{B} + \frac{3G}{C_c}, \qquad T_g = \frac{3G}{C_g} + \frac{2G}{B}
 $$
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-cpu-convert.svg" alt="GPU 上的 BF16 梯度 96 MiB 经链路传到 CPU，仍是 96 MiB；CPU 将其转换为 FP32，输出 192 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-cpu-convert.svg" alt="GPU 上的 BF16 梯度 96 MiB 经链路传到 CPU，仍是 96 MiB；CPU 将其转换为 FP32，输出 192 MiB" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>CPU 转换路径。</strong> 数据先下传到主机内存，再由 CPU 做 BF16 到 FP32 的格式转换；链路只承担 96 MiB。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-gpu-convert.svg" alt="GPU 上 BF16 96 MiB 与 FP32 192 MiB 同时存在，峰值为 288 MiB；随后 FP32 192 MiB 经链路传到 CPU" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-gpu-convert.svg" alt="GPU 上 BF16 96 MiB 与 FP32 192 MiB 同时存在，峰值为 288 MiB；随后 FP32 192 MiB 经链路传到 CPU" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>GPU 转换路径。</strong> 格式转换在显存内完成，输入与输出短暂共存；跨链路传的是转换后的 192 MiB。</figcaption>
 </figure>
 
@@ -466,7 +466,7 @@ $$
 
 表格里最关键的是最后一列。三种手段其实是在三个不同的资源账户之间做兑换：分片把显存换成通信（收集参数、归约梯度），重计算把显存换成算力（重建前向值），卸载把显存换成传输（主机与加速器之间）。少占的显存如果不能换来时间收益，通信没藏在计算里、重建落在关键路径上、数据没在使用前传回，那这个手段只解决能不能跑，不解决跑得快不快。
 
-"先确定每份参数由谁更新，再安排收集、交换、归约"这句话是组合并行的方法论。TP、PP、DP、EP 各自规定了不同的切分维度，叠起来以后，每张卡上存哪些参数分片、每个通信组里谁跟谁通信，需要沿计算图重新推一遍。这里说这样能同时得到每卡容量和各接口流量，容量分析和通信量分析因此是同一个依赖图的两种读法。
+"先确定每份参数由谁更新，再安排收集、交换、归约"这句话是组合并行的方法论。TP、PP、DP、EP 各自规定了不同的切分维度，叠起来以后，每张卡上存哪些参数分片、每个通信组里谁跟谁通信，需要沿计算图重新推一遍。这样能同时得到每卡容量和各接口流量，容量分析和通信量分析因此是同一个依赖图的两种读法。
 
 六个缩写一句话分工：TP 切层内矩阵（同一层内拆列或行），PP 切层（不同卡负责不同层），DP 切样本（每卡一批不同数据），EP 切专家（MoE 的专家分布到不同卡），SP 切序列位置（逐 token 算子的激活沿序列分片），CP 切上下文（同一条长序列的注意力上下文分到多卡，保留跨位置依赖）。前四个在本节直接用到，SP／CP 这里只作定位，细节在第 6 章。
 
@@ -475,13 +475,13 @@ $$
 这个例子的算术很干净，复算一遍（下面的数是我按 $M_3 = 16N/d$ 算的）：$d = 8$ 时 $16 \times 8.1907\times10^9/8 = 16.38\times10^9$ B $= 15.26$ GiB ≈ 15.3；$d = 16$ 时 $8.19\times10^9$ B $= 7.63$ GiB ≈ 7.6。$15.3 + 10 = 25.3$，$25.3 - 22 = 3.3$；$7.6 + 10 = 17.6$。3.3 GiB 这个量级和 10.2.2 里每层省 10 MiB、九层省 90 MiB 不在一个层级上，走重计算这条路要动的是更多层的中间结果。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-shard-capacity.svg" alt="折线图：分片参与者数从 8 到 40 时，每卡显存需求从约 25.3 GiB 降到约 13.1 GiB；22 GiB 的水平线标出可用显存预算" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-shard-capacity.svg" alt="折线图：分片参与者数从 8 到 40 时，每卡显存需求从约 25.3 GiB 降到约 13.1 GiB；22 GiB 的水平线标出可用显存预算" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量约束随分片数下降。</strong> 曲线为常驻状态加 10 GiB 附加需求；与 22 GiB 水平线的交点给出满足容量要求的最少分片数。</figcaption>
 </figure>
 
 两种选择对应不同的代价：八卡方案增加重建计算，十六卡方案增加卡数并改变通信组。可以先从图中找出满足显存要求的方案，再比较这些方案的每步耗时。
 
-图 10-16 的读法：曲线的方程 $16N/d + 10$ GiB 显示的是常驻状态随分片数下降，再加上固定的 10 GiB 附加需求。$d$ 增大时曲线单调下降并趋近于 10 GiB 的渐近线（因为 $16N/d \to 0$），22 GiB 的水平线是预算，交点就是最少需要多少张卡才能装下。这里说纵向距离给出容量余量，余量越大，越能容忍更大的 micro-batch 或更长序列。
+图 10-16 的读法：曲线的方程 $16N/d + 10$ GiB 显示的是常驻状态随分片数下降，再加上固定的 10 GiB 附加需求。$d$ 增大时曲线单调下降并趋近于 10 GiB 的渐近线（因为 $16N/d \to 0$），22 GiB 的水平线是预算，交点就是最少需要多少张卡才能装下。纵向距离给出容量余量，余量越大，越能容忍更大的 micro-batch 或更长序列。
 
 针对本章的训练任务，32 卡与 48 卡方案均采用**全组 ZeRO-3**，TP=PP=1，每卡 micro-batch 为一条序列。与上例相同，每卡按 22 GiB 可用显存计，并为同时保留的激活、完整模块参数和工作区安排 10 GiB 上限。两套方案常驻训练状态分别约为 3.8、2.5 GiB，总量约为 13.8、12.5 GiB，容量余量约为 8.2、9.5 GiB。复算：32 卡 $16N/32 = 4.095\times10^9$ B $= 3.81$ GiB，$3.8 + 10 = 13.8$，$22 - 13.8 = 8.2$；48 卡 $16N/48 = 2.730\times10^9$ B $= 2.54$ GiB，$2.5 + 10 = 12.5$，$22 - 12.5 = 9.5$。两套方案的显存都足够，接下来主要比较完成时间，这也是全章先定容量、再比时间这条主线的落点。
 
@@ -562,22 +562,22 @@ $$
 图 10-19 那个 2 ms 空隙来自输入未到，也就是说数据加载或预处理没跟上。它和等通信属于同一类问题：反向提前之后前向要接着跑，但前向的输入（数据）或参数（AllGather）可能还没就绪，新的等待就产生了。这就是本小节结尾那句「何时得到下一份输入」为何会进关键路径。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-fill-drain.svg" alt="四个阶段的时间线：前向块从阶段 0 逐级下移到阶段 3，随后反向块逐级铺回阶段 0，末尾是参数更新；总时长 337 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-fill-drain.svg" alt="四个阶段的时间线：前向块从阶段 0 逐级下移到阶段 3，随后反向块逐级铺回阶段 0，末尾是参数更新；总时长 337 ms" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>填满排空的阶梯形状。</strong> 四个阶段共用时间刻度，前向先填满流水线，反向再沿相反方向排空，最后执行一次参数更新。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-1f1b.svg" alt="四个阶段的时间线：前向块与反向块交错出现，阶段 0 在前四个前向之后于 106 ms 开始第一个反向，末尾参数更新使总时长达到 347 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-1f1b.svg" alt="四个阶段的时间线：前向块与反向块交错出现，阶段 0 在前四个前向之后于 106 ms 开始第一个反向，末尾参数更新使总时长达到 347 ms" width="800" height="382" loading="lazy" decoding="async">
   <figcaption><strong>前向与反向交错。</strong> 与填满排空相比，1F1B 不再把前向和反向分成两大段；阶段 0 的第五个前向在第一个反向之后才开始。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-1f1b-wait.svg" alt="阶段 3 在 65—105 ms 的放大时间线：第二个 micro-batch 的反向在 93 ms 结束，随后等待 2 ms，第三份前向输入在 95 ms 到达并开始执行" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-1f1b-wait.svg" alt="阶段 3 在 65—105 ms 的放大时间线：第二个 micro-batch 的反向在 93 ms 结束，随后等待 2 ms，第三份前向输入在 95 ms 到达并开始执行" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>交错调度中的输入等待。</strong> 反向提前后，前向要等输入就绪；这段 2 ms 空隙落在关键路径上，会延长整步。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-activation-peak.svg" alt="分组柱状图：阶段 0 的峰值在填满排空下为 1,840 MiB、1F1B 下为 921 MiB；阶段 3 分别为 2,448 MiB 与 308 MiB；整体最大值从约 2.57 GB 降到 0.97 GB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-activation-peak.svg" alt="分组柱状图：阶段 0 的峰值在填满排空下为 1,840 MiB、1F1B 下为 921 MiB；阶段 3 分别为 2,448 MiB 与 308 MiB；整体最大值从约 2.57 GB 降到 0.97 GB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>提前反向释放激活。</strong> 每阶段两根柱分别对应填满排空与 1F1B；阶段 3 的下降最明显，整体最大值降到约三分之一。</figcaption>
 </figure>
 
@@ -620,24 +620,24 @@ $$
 把表中的数字画到各阶段的时间线上，就能看出气泡是在哪里被填掉的。下面三幅图与图 10-17、图 10-18 使用相同的时间刻度和颜色。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-interleaved.svg" alt="四个阶段的时间线：每卡有两个层块，前向和反向块约为 1F1B 的一半长；阶段 3 的第一个前向从 33 ms 提前到约 20 ms，预热与排空的空隙被另一个层块填上" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-interleaved.svg" alt="四个阶段的时间线：每卡有两个层块，前向和反向块约为 1F1B 的一半长；阶段 3 的第一个前向从 33 ms 提前到约 20 ms，预热与排空的空隙被另一个层块填上" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>用层块交错填气泡。</strong> 每个 micro-batch 要穿过更多边界；前向与反向的块变短并交替出现，预热和排空阶段的空闲被另一段计算填上。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-zero-bubble.svg" alt="四个阶段的时间线：稳态中每个阶段按前向、dX、dW 轮转；阶段 3 的 dW 比 dX 晚三个 micro-batch，四个阶段几乎同时结束，总时长 283 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-zero-bubble.svg" alt="四个阶段的时间线：稳态中每个阶段按前向、dX、dW 轮转；阶段 3 的 dW 比 dX 晚三个 micro-batch，四个阶段几乎同时结束，总时长 283 ms" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>把不占关键路径的 dW 推迟。</strong> 反向拆成 dX 与 dW 两段，dW 被填进反向之间的依赖空隙和末尾的排空空隙，四个阶段几乎同时收尾。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-dualpipe.svg" alt="四个阶段的时间线：每个阶段同时承载正向与反向两个方向的块，一个方向的预热和排空空隙由另一个方向的块填上；总时长 306 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-dualpipe.svg" alt="四个阶段的时间线：每个阶段同时承载正向与反向两个方向的块，一个方向的预热和排空空隙由另一个方向的块填上；总时长 306 ms" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>从两端相向注入 micro-batch。</strong> 每个阶段同时处理两个方向，正向的预热与排空被反向块填上，代价是每卡保存两份参数。</figcaption>
 </figure>
 
 micro-batch 翻倍到 16 个时，1F1B、交错式、零气泡与 DualPipe 的完成时间分别为 599、538、523、558 ms，排序不变。压缩气泡是否值得，取决于省下的气泡时间与新增代价的相对大小。$m$ 增大时气泡比例 $(p-1)/m$ 本身就在下降，16 个 micro-batch 时 1F1B 的气泡占比已从 37.5% 降到 18.8%，拆细带来的相对收益随之缩小；而交错式增加的通信次数、零气泡增加的激活驻留、DualPipe增加的参数量都不随 $m$ 缩小。这一条是本小节最重要的工程结论：补丁式的代价是常数级的，气泡的收益却按 $1/m$ 衰减，所以 micro-batch 越多（长序列切成更多份、或者全局 batch 更大），越该退回简单的 1F1B，只有 $m$ 较小、气泡占比很高时扩展调度才明显划算。第 10.3.3 节的链路争用给出另一条边界：交错式每个 micro-batch 多出的四次跨界传输，在链路已被梯度归约占满时会直接延长关键路径。容量紧张时选择的顺序反过来：先按第 10.2.4 节排除峰值不可行的调度，再比较完成时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-schedule-comparison.svg" alt="分组柱状图：8 个 micro-batch 时 1F1B、交错 v=2、零气泡、DualPipe 的完成时间分别为 347、298、283、306 ms；16 个 micro-batch 时分别为 599、538、523、558 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-schedule-comparison.svg" alt="分组柱状图：8 个 micro-batch 时 1F1B、交错 v=2、零气泡、DualPipe 的完成时间分别为 347、298、283、306 ms；16 个 micro-batch 时分别为 599、538、523、558 ms" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>时间轴的横向比较。</strong> 两种 micro-batch 数量下零气泡都最短，DualPipe 次之；增加 micro-batch 后各调度完成时间都上升，但相对排序不变。</figcaption>
 </figure>
 
@@ -658,12 +658,12 @@ micro-batch 翻倍到 16 个时，1F1B、交错式、零气泡与 DualPipe 的�
 图 10-25 和图 10-26 暂时把梯度产生的时刻固定住了。实际训练还可以改变计算顺序，让某些梯度更早产生，把归约在时间轴上提前。矩阵反向里，输入梯度 $dX$ 交给前一层继续反向，参数梯度 $dW$ 交给本层的归约。先算 $dX$ 可以让前一层更早开始反向传播，先算 $dW$ 则可以更早启动本层的梯度通信。两者争用同一份计算资源，改变顺序等于重新分配通信窗口，这也是训练调度必须同时看前后向依赖的原因。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-comm-overlap.svg" alt="两条泳道：独立计算从 0 到 5 ms；链路从 2 到 5 ms 执行 3 ms 归约，归约在计算结束前完成，没有额外等待" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-comm-overlap.svg" alt="两条泳道：独立计算从 0 到 5 ms；链路从 2 到 5 ms 执行 3 ms 归约，归约在计算结束前完成，没有额外等待" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>通信被计算完全覆盖。</strong> 归约只占用链路 2—5 ms，计算在 5 ms 结束，归约没有延伸到计算之后，因此不延长训练步。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-comm-contention.svg" alt="两条泳道：独立计算 0—5 ms；链路上先有 0—4 ms 的其他通信，随后 4—7 ms 执行归约；归约超出计算结束 2 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-comm-contention.svg" alt="两条泳道：独立计算 0—5 ms；链路上先有 0—4 ms 的其他通信，随后 4—7 ms 执行归约；归约超出计算结束 2 ms" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>资源争用把归约推后。</strong> 计算仍在 5 ms 结束，但归约到 7 ms 才完成，超出部分成为无法重叠的通信等待。</figcaption>
 </figure>
 
@@ -741,7 +741,7 @@ MoE 与本章其他部分的接口也值得点一句。路由不均衡会同时�
 | 2.0 | 1,024 | 0 | 50% |
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-capacity-factor.svg" alt="折线图：容量因子为 1.0、1.25、1.5、2.0 时，丢弃的 dispatch 占比从 25% 降到 12.5% 再降到 0；补零行占执行量从 25% 升到 30%、33%、50%" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-capacity-factor.svg" alt="折线图：容量因子为 1.0、1.25、1.5、2.0 时，丢弃的 dispatch 占比从 25% 降到 12.5% 再降到 0；补零行占执行量从 25% 升到 30%、33%、50%" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>丢弃与补零此消彼长。</strong> 两条折线共用百分比纵轴；容量因子增大时丢弃减少，但更多执行行是补零。</figcaption>
 </figure>
 
@@ -758,12 +758,12 @@ MoE 与本章其他部分的接口也值得点一句。路由不均衡会同时�
 专家负载取决于每张卡上的专家接到了多少次 token dispatch。长上下文还多一层差别：即使 token 总数相同，需要计算的注意力配对数也可能不同。对长度 $s$ 的因果序列，第一个 token 查看一个 token，第二个查看两个，依次相加得到 $s(s+1)/2$ 个有效注意力配对。两条长度 4096、4096 的序列合计约 1680 万对；改成 7168、1024，总 token 数仍是 8192，配对数却增至约 2620 万，增加约 56%。注意力配对数随序列长度近似按平方增长，所以较长的序列抬高了总计算量。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-attention-4096.svg" alt="矩阵示意：查询与键的索引都分 0—4095 和 4096—8191 两段；只有对角上的两个 4,096 序列内部下三角块有配对，每块 8,390,656 对，合计 16,781,312 对" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-attention-4096.svg" alt="矩阵示意：查询与键的索引都分 0—4095 和 4096—8191 两段；只有对角上的两个 4,096 序列内部下三角块有配对，每块 8,390,656 对，合计 16,781,312 对" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>两条序列各自计算注意力。</strong> 每个查询 token 只读取本序列中不晚于自己的位置，因此矩阵中只有两个对角块有效。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-attention-7168.svg" alt="矩阵示意：查询与键的索引分 0—7167 和 7168—8191 两段；大块有 25,693,696 对，小块有 524,800 对，合计 26,218,496 对" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-attention-7168.svg" alt="矩阵示意：查询与键的索引分 0—7167 和 7168—8191 两段；大块有 25,693,696 对，小块有 524,800 对，合计 26,218,496 对" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>长度更不均衡，配对更多。</strong> 总 token 数不变，但长序列的三角形面积增加超过短序列减少的面积，总因果配对随之上升。</figcaption>
 </figure>
 
@@ -794,7 +794,7 @@ GPU 最终收到的数据量小，不意味着此前的准备过程同样快。2
 预取队列让数据准备与 GPU 计算以不同进度运行。正常训练时，提前准备的数据可以缓解输入速度波动造成的等待；保存 checkpoint 时，则必须分清哪些数据已经用于训练。这里举的错位例子是：数据加载器已经为前 108 个 batch 分配了准备任务，而训练只完成第 100 个，第 101—108 个仍在处理或排队。恢复时若直接从第 109 个 batch 开始，就会跳过八个 batch。已分配给数据准备进程的位置反映预取进度，已用于训练的位置反映训练进度，两者之间的缓冲保存了尚未训练的数据。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-prefetch-queue.svg" alt="矩阵示意：训练进度一行为 batch 100 及以前已训练、101—108 未训练、109 起未安排；预取进度一行显示 101—108 已准备或正在处理，109 起未准备" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-prefetch-queue.svg" alt="矩阵示意：训练进度一行为 batch 100 及以前已训练、101—108 未训练、109 起未安排；预取进度一行显示 101—108 已准备或正在处理，109 起未准备" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>两个进度位置之间的缓冲。</strong> 恢复时要从 batch 101 继续；只记训练进度会丢掉已准备的数据，只记预取进度又会跳过尚未训练的部分。</figcaption>
 </figure>
 
@@ -819,7 +819,7 @@ GPU 最终收到的数据量小，不意味着此前的准备过程同样快。2
 恢复时还可能需要改变并行布局，同一份状态要重新分片。这里的例子是 checkpoint 如何从四路张量并行重分片为八路。门控投影的权重形状为 $[12288, 4096]$，BF16 大小 96 MiB。沿输出维四分，每片 3072 行、24 MiB；八分后，每片 1536 行、12 MiB。rank 为 $r$ 的目标卡读取旧分片 $\lfloor r/2 \rfloor$，偶数 rank 取前半，奇数 rank 取后半。全局行坐标把旧布局和新布局联系起来。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-resharding.svg" alt="矩阵示意：旧分片 0 的前半给新 0、后半给新 1，旧分片 1 的前半给新 2、后半给新 3，依此类推到旧分片 3" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-resharding.svg" alt="矩阵示意：旧分片 0 的前半给新 0、后半给新 1，旧分片 1 的前半给新 2、后半给新 3，依此类推到旧分片 3" width="800" height="270" loading="lazy" decoding="async">
   <figcaption><strong>按行号重新切分。</strong> 旧分片一分为二，前后两半分别进入相邻的新分片；权重内容和顺序不变，改变的是各卡负责的行范围。</figcaption>
 </figure>
 
@@ -842,7 +842,7 @@ GPU 最终收到的数据量小，不意味着此前的准备过程同样快。2
 同步保存先生成内容固定的快照，写入完成后继续训练。异步保存把快照复制到独立的内存缓冲区，再由后台写入，让训练较早恢复执行。训练恢复执行时，快照可能还没写完；只有写入并提交完成后，这份快照才能用于故障恢复。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-checkpoint-pipeline.svg" alt="流程：捕获一致状态，复制到独立缓冲，随后训练继续；后台写入数据，最后提交完整快照，提交后恢复程序才会使用这份 checkpoint" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-checkpoint-pipeline.svg" alt="流程：捕获一致状态，复制到独立缓冲，随后训练继续；后台写入数据，最后提交完整快照，提交后恢复程序才会使用这份 checkpoint" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>保存与训练解耦。</strong> 捕获和复制是前台停顿，写入在后台进行；提交是快照可用的最后一步。</figcaption>
 </figure>
 
@@ -855,12 +855,12 @@ GPU 最终收到的数据量小，不意味着此前的准备过程同样快。2
 在第 20、40 s 捕获两份快照，各花 0.5 s 复制到缓冲区后上传，完成时刻为 36.5、56.5 s。若第 50 s 故障，第二份仍在上传，只能恢复到第 20 s，重做 30 s。换用 Better 档的 20 GB/s 合计写入，每份只需 5.6 s，两份分别在 26.1、46.1 s 完成；同一故障可恢复到第 40 s，只重做 10 s。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-snapshot-7gbs.svg" alt="两条泳道：快照 1 在 20 s 捕获、20.5 s 开始上传并在 36.5 s 提交；快照 2 在 40 s 捕获、40.5 s 开始上传，原定 56.5 s 提交，50 s 故障时尚未完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-snapshot-7gbs.svg" alt="两条泳道：快照 1 在 20 s 捕获、20.5 s 开始上传并在 36.5 s 提交；快照 2 在 40 s 捕获、40.5 s 开始上传，原定 56.5 s 提交，50 s 故障时尚未完成" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>写入速度决定可恢复位置。</strong> 每份快照先花 0.5 s 复制，再以 7 GB/s 上传 16 s；50 s 故障时只能恢复到快照 1 对应的 20 s 状态。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-snapshot-20gbs.svg" alt="两条泳道：快照 1 在 20 s 捕获、26.1 s 提交；快照 2 在 40 s 捕获、46.1 s 提交；50 s 故障时可以恢复到 40 s，只需重做 10 s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-snapshot-20gbs.svg" alt="两条泳道：快照 1 在 20 s 捕获、26.1 s 提交；快照 2 在 40 s 捕获、46.1 s 提交；50 s 故障时可以恢复到 40 s，只需重做 10 s" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>带宽提高后提交提前。</strong> 同样的 0.5 s 复制之后，上传只需 5.6 s；第二份在 50 s 故障前已完成提交，重做量从 30 s 降到 10 s。</figcaption>
 </figure>
 
@@ -899,7 +899,7 @@ $$
 复算这几个数：1024 卡平均 7.9 h 中断一次，$\lambda = 1/(7.9\times3600) = 3.52\times10^{-5}\ \text{s}^{-1}$；$c = 16.381$ s；$\tau^{*} = \sqrt{2\times16.381/(3.52\times10^{-5})} = \sqrt{9.31\times10^{5}} \approx 965$ s $\approx$ 16.1 分钟，与这里一致。每卡 MTBF：$1024\times7.9\ \text{h} = 8089.6\ \text{h} \approx 337$ 天，也与这里一致。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-save-interval.svg" alt="折线图：保存间隔从 5 到 40 分钟时，保存耗时占比从约 5.5% 降到约 0.7%，故障重做占比从约 0.5% 升到约 4.2%，两者加恢复耗时的合计在 15 分钟附近最低" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-save-interval.svg" alt="折线图：保存间隔从 5 到 40 分钟时，保存耗时占比从约 5.5% 降到约 0.7%，故障重做占比从约 0.5% 升到约 4.2%，两者加恢复耗时的合计在 15 分钟附近最低" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>两项代价方向相反。</strong> 蓝色保存项随间隔下降，橙色重做项随间隔上升；绿色合计线的最低点靠近两条线的交叉处。</figcaption>
 </figure>
 
@@ -911,7 +911,7 @@ $$
 | 900 s | 1.8% | 1.6% | 0.4% | 3.8% |
 | 1800 s | 0.9% | 3.2% | 0.4% | 4.5% |
 
-表里三行自己算一遍：$\tau=300$ s 时保存项 $16.381/300 = 5.46\%$、重做项 $3.52\times10^{-5}\times150 = 0.53\%$、恢复项 $3.52\times10^{-5}\times120 = 0.42\%$，合计 6.41%，与表中 6.4% 相符；$\tau=900$ s 得 1.82% + 1.58% + 0.42% = 3.82%（表中 3.8%）；$\tau=1800$ s 得 0.91% + 3.16% + 0.42% = 4.49%（表中 4.5%）。表中合计由未经四舍五入的数值计算，所以三项相加可能与合计有小差，这是这里说明过的。
+表里三行自己算一遍：$\tau=300$ s 时保存项 $16.381/300 = 5.46\%$、重做项 $3.52\times10^{-5}\times150 = 0.53\%$、恢复项 $3.52\times10^{-5}\times120 = 0.42\%$，合计 6.41%，与表中 6.4% 相符；$\tau=900$ s 得 1.82% + 1.58% + 0.42% = 3.82%（表中 3.8%）；$\tau=1800$ s 得 0.91% + 3.16% + 0.42% = 4.49%（表中 4.5%）。表中合计由未经四舍五入的数值计算，所以三项相加可能与合计有小差，这是这说明过的。
 
 将保存间隔从五分钟延长到十五分钟，节省的保存时间多于新增的重做时间；继续延长到三十分钟，新增的重做时间就超过了节省的保存时间。卡数翻倍会使故障率翻倍，最优间隔缩短为原来的 $1/\sqrt{2}$；保存速度翻倍也使最优间隔按同样比例缩短，因为每次保存耗时更短。$\tau^{*}\propto 1/\sqrt{\lambda}$，卡数翻倍则 $\lambda$ 翻倍，最优间隔变成 $1/\sqrt{2}\approx0.707$ 倍；$\tau^{*}\propto\sqrt{c}$，而 $c$ 与 checkpoint 大小成正比、与保存带宽成反比，保存速度快一倍则 $c$ 减半，最优间隔同样缩到 $1/\sqrt2$。这里把这两条并列，是因为它们对公式的作用方式相同，工程含义却不同：前者是卡多了就存勤点，后者是存得快了也可以存勤点。
 
@@ -924,7 +924,7 @@ $$
 图 10-36 按日志画出两次运行。Pro 共重启 14 次，中断区间累计约 30.1 h（占总运行时间的 23.6%），折合约 61.9 万美元。Pro 第五次重启前，自上一步完成起已过去 2.76 h，对应约 5.67 万美元；第六次和第八次分别为 2.63 h 与 2.95 h，对应约 5.41 万与 6.07 万美元。这些运行的重启主要涉及三方面：显存双比特错误等硬件故障；容器崩溃、评分服务网络不通等服务故障；以及内存不足，例如推理时 KV 缓存耗尽、训练时专家负载不均导致显存溢出，或序列打包时主机内存不足。此外，一次 infra 错误没有及时被检出，直到完成第 17 步后才从第 15 步重新训练。此前第 16、17 步花掉的约 4 h 随之作废。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-mimo-cost.svg" alt="两栏对照：Pro 重启 14 次，总运行 127.5 小时，浪费约 30.1 小时，占 23.6%，费用约 61.9 万美元；Flash 重启 5 次，总运行 83.1 小时，浪费约 13.7 小时，占 16.5%，费用约 14.1 万美元" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-mimo-cost.svg" alt="两栏对照：Pro 重启 14 次，总运行 127.5 小时，浪费约 30.1 小时，占 23.6%，费用约 61.9 万美元；Flash 重启 5 次，总运行 83.1 小时，浪费约 13.7 小时，占 16.5%，费用约 14.1 万美元" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>把中断时间换算成费用。</strong> 蓝色区间为完成步骤，红色区间为上一个事件到重启，三角标记重启；浪费时间按红色与斜线区间合计估算。</figcaption>
 </figure>
 
@@ -1051,7 +1051,7 @@ $$
 「保留 75%」为什么会出现？异步或滞后执行时，一部分样本是用过旧策略生成的，按策略版本筛选后被丢弃；$q$ 就是 10.5.3 节里那个保留比例在资源分配公式里的位置。它在两处出现，含义一致：有效产出的瓶颈既可能是速度，也可能是版本合格率。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-rl-pipeline.svg" alt="三个方框从左到右为生成 12 条/s、验证 6 条/s、学习 8 条/s；生成到验证的箭头标注保留 75% 后为 4.5 条/s；学习到生成有一条返回箭头表示新权重" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-rl-pipeline.svg" alt="三个方框从左到右为生成 12 条/s、验证 6 条/s、学习 8 条/s；生成到验证的箭头标注保留 75% 后为 4.5 条/s；学习到生成有一条返回箭头表示新权重" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>三道工序串行，产出由最慢一段决定。</strong> 验证处理 6 条/s，保留 75% 后只有 4.5 条/s 进入学习；学习产生的权重再回到生成端。</figcaption>
 </figure>
 
@@ -1064,12 +1064,12 @@ $$
 改变次序就没事了。先加载生成所需的权重，暂不分配 KV，峰值为 $40 + 15.3 + 4 \approx 59.3$ GiB。随后释放 40 GiB 训练状态，显存占用降为约 19.3 GiB，再分配 KV，进入约 43.3 GiB 的生成状态。两条路径最终状态相同，峰值差 24 GiB，恰好是一份 KV 池。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-memory-path-a.svg" alt="折线图：按训练结束、加载权重、分配 KV、释放训练状态、开始生成的顺序，显存占用从约 44 GiB 升到 59.3 GiB，再升到峰值 83.3 GiB，随后降到 43.3 GiB；74.5 GiB 为 H100 SXM 容量线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-memory-path-a.svg" alt="折线图：按训练结束、加载权重、分配 KV、释放训练状态、开始生成的顺序，显存占用从约 44 GiB 升到 59.3 GiB，再升到峰值 83.3 GiB，随后降到 43.3 GiB；74.5 GiB 为 H100 SXM 容量线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>操作顺序决定切换峰值。</strong> 在释放训练状态之前分配 KV，两套数据同时占用显存，峰值超过一张 H100 的可用容量。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-memory-path-b.svg" alt="折线图：按训练结束、只加载权重、释放训练状态、开始生成的顺序，显存占用从约 44 GiB 升到 59.3 GiB，降到 19.3 GiB，再升到 43.3 GiB；74.5 GiB 为 H100 SXM 容量线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-memory-path-b.svg" alt="折线图：按训练结束、只加载权重、释放训练状态、开始生成的顺序，显存占用从约 44 GiB 升到 59.3 GiB，降到 19.3 GiB，再升到 43.3 GiB；74.5 GiB 为 H100 SXM 容量线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>推迟 KV 分配即可避开峰值。</strong> 先加载权重、再释放训练状态，最后分配 KV；终态仍是 43.3 GiB 的生成状态，中间峰值只有 59.3 GiB。</figcaption>
 </figure>
 
@@ -1105,12 +1105,12 @@ $$
 三个版本的关系可以用一句话说清：$\mu$ 是谁生的样本，$\pi_{\text{old}}$ 是本轮优化的起点，$\pi_\theta$ 是当前正在优化的策略。理想情况下（同步、同引擎、无采样变换）三者相同，概率比为 1；一旦异步执行，$\mu$ 就滞后于 $\pi_{\text{old}}$ 与 $\pi_\theta$。参考模型与 $\pi_{\text{old}}$ 要分开：参考模型在整个训练中固定，$\pi_{\text{old}}$ 每轮更新。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-weight-versions.svg" alt="两栏对照：固定版本服务在 ROM 中存权重 v0 供生成读取，可写 KV 另走一路；持续更新策略由训练更新参数，可写权重从 v0 变为 v1 并发布给生成端" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-weight-versions.svg" alt="两栏对照：固定版本服务在 ROM 中存权重 v0 供生成读取，可写 KV 另走一路；持续更新策略由训练更新参数，可写权重从 v0 变为 v1 并发布给生成端" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>两种权重生命周期。</strong> 只读存储反复提供同一版本；可写存储承载新版本，并在更新后发布给生成端。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-policy-versions.svg" alt="三个策略依次排列：μ 为实际生成样本的策略，π_old 为本轮优化开始时的策略，π_θ 为本轮更新中的当前策略；虚线表示版本演进顺序" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-policy-versions.svg" alt="三个策略依次排列：μ 为实际生成样本的策略，π_old 为本轮优化开始时的策略，π_θ 为本轮更新中的当前策略；虚线表示版本演进顺序" width="800" height="201" loading="lazy" decoding="async">
   <figcaption><strong>同一条轨迹上的三个概率。</strong> μ 产生训练样本，π_old 标记本轮优化的起点，π_θ 随本轮更新变化；三者必须针对同一前缀与同一 token 计算。</figcaption>
 </figure>
 
@@ -1129,12 +1129,12 @@ $$
 例：异步流水能承受多高的过期样本丢弃率？每批生成 40 s、学习 16 s、阻塞两侧的权重同步 4 s，同步周期为 60 s。设生成和学习使用独立资源，权重同步仍独占 4 s，则异步稳态周期为 $\max(40,16) + 4 = 44$ s。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-rl-sync.svg" alt="三条泳道：生成占用 0—40 s，学习占用 40—56 s，权重同步占用 56—60 s，三段依次串行，总周期 60 s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-rl-sync.svg" alt="三条泳道：生成占用 0—40 s，学习占用 40—56 s，权重同步占用 56—60 s，三段依次串行，总周期 60 s" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>三段串行执行。</strong> 同步循环先等待本批样本生成，再完成学习，最后同步权重；每一步都要等前一步结束。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-rl-async.svg" alt="三条泳道：生成从 0 到 40 s，学习从 0 到 16 s 后等待；权重同步在 40—44 s 阻塞两侧，周期为 44 s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-rl-async.svg" alt="三条泳道：生成从 0 到 40 s，学习从 0 到 16 s 后等待；权重同步在 40—44 s 阻塞两侧，周期为 44 s" width="800" height="273" loading="lazy" decoding="async">
   <figcaption><strong>用重叠缩短周期。</strong> 生成下一批与学习上一批在独立资源上并行，周期由 60 s 降到 44 s；橙色同步阶段仍然独占。</figcaption>
 </figure>
 
@@ -1148,7 +1148,7 @@ $$
 
 这个门槛可以这样理解：同步周期 60 s 出一批，异步周期 44 s 出一批，异步的吞吐倍率是 $60/44 \approx 1.364$；但要扣掉 $1-q$ 的样本，只有当 $q\times1.364 > 1$ 时才真的更快，即 $q > 44/60$，边界 73.3% 就是这个交叉点。
 
-当 $q=0.8$ 时，有效样本吞吐量提高约 9%；当 $q=0.7$ 时，虽然每批更早结束，有效样本吞吐量反而减少约 5%。复算：$q=0.8$ 时 $qB/44 = 0.8B/44 = 0.01818B$，同步 $B/60 = 0.01667B$，比值 1.0909，即提高约 9%；$q=0.7$ 时 $0.7/44 = 0.01591$，比值 $0.9545$，即减少约 4.5%，这里说约 5%。所以异步更快不是无条件的，它是在拿样本新鲜度换周期长度。计算异步执行的收益时，还要减去因策略版本过旧而被丢弃的样本。
+当 $q=0.8$ 时，有效样本吞吐量提高约 9%；当 $q=0.7$ 时，虽然每批更早结束，有效样本吞吐量反而减少约 5%。复算：$q=0.8$ 时 $qB/44 = 0.8B/44 = 0.01818B$，同步 $B/60 = 0.01667B$，比值 1.0909，即提高约 9%；$q=0.7$ 时 $0.7/44 = 0.01591$，比值 $0.9545$，即减少约 4.5%，约 5%。所以异步更快不是无条件的，它是在拿样本新鲜度换周期长度。计算异步执行的收益时，还要减去因策略版本过旧而被丢弃的样本。
 
 图中的生成阶段画成了一段连续的工作。轨迹越长，这一段越容易跨过参数更新或遇到中断，于是除了筛选完成的样本，还要考虑尚未完成的轨迹如何继续。长轨迹也会延长生成样本与使用样本训练之间的时间差。KV 是给定权重对前缀执行的结果：使用相同权重恢复时，可继续使用已保存的 KV，换权重后则需重新执行前缀来生成对应 KV。Qwen3-8B 的 8K BF16 KV 占 1.125 GiB，保存和取回 KV 缓存需要存储空间与传输时间，重建 KV 缓存则需要重新执行 prefill 计算。恢复方案据此比较取回时间与重建时间。
 
@@ -1167,7 +1167,7 @@ MoE 把 10.5.3 的数值差异变成了更硬的问题：即使权重完全相�
 路由重放（Routing Replay）的思路接近录制加回放。录下来的只是生成时选中的**逻辑专家 ID**，没有权重，也没有分数；训练时按这些 ID 去挑专家，而路由分数、专家输出和梯度仍旧用当前权重算。样本、token 位置和层号共同定位这一份记录，于是生成与训练经过相同的离散专家路径，数值计算又始终反映当前参数。这样保住了两件事：概率比建立在同一条路径上才有意义；训练用的还是当前参数的梯度，不至于退化成拿旧模型的输出来训练。ID 重放和输出重放要分清，前者只固定离散选择，后者等于直接搬用旧计算的结果，梯度会被破坏。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-routing-replay.svg" alt="生成端记录样本 A、token 17、层 3 的专家 ID [2, 7]；训练端按同一组 ID 选择专家，并用当前权重计算路由分数、输出与梯度" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-routing-replay.svg" alt="生成端记录样本 A、token 17、层 3 的专家 ID [2, 7]；训练端按同一组 ID 选择专家，并用当前权重计算路由分数、输出与梯度" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>离散选择重放，数值计算照常。</strong> 虚线表示 ID 重放，实线表示当前计算数据流；记录把生成端与训练端连起来。</figcaption>
 </figure>
 
@@ -1204,7 +1204,7 @@ $$
 式中每一项都来自本章不同层次的分析：分析张量的生命周期，可以确认显存是否足够；分析关键路径，可以求得 $t_s$；checkpoint 模型给出 $L$；计划性停顿取 $T_0 = 5$ 天。汇总起来就能比较两套方案的完成时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-completion-time.svg" alt="堆叠横条：32 卡方案由基础训练 29.0 天、保存恢复约 0.3 天、计划停顿 5 天组成，共 34.3 天；48 卡方案由 19.4 天、约 0.2 天、5 天组成，共 24.6 天" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-completion-time.svg" alt="堆叠横条：32 卡方案由基础训练 29.0 天、保存恢复约 0.3 天、计划停顿 5 天组成，共 34.3 天；48 卡方案由 19.4 天、约 0.2 天、5 天组成，共 24.6 天" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>完成时间的累积构成。</strong> 两套方案的计划停顿相同，差别主要在基础训练；32 卡超过 30 天期限，48 卡约 24.6 天完成。</figcaption>
 </figure>
 
@@ -1218,7 +1218,7 @@ $$
 
 「每卡单序列累积次数 12 / 8」这一行容易被跳过去，它说的是梯度累积次数。卡少时每张卡要攒更多 micro-batch 才凑够全局 batch，单卡计算时间因此更长；48 卡把同样 384 条的全局 batch 摊到更多卡上，累积次数从 12 降到 8，单步时间从 78.3 s 降到 52.2 s。这就是这里那句「增加卡数的主要价值」落到实处的地方。
 
-决策顺序很清楚：先把违反硬约束的方案排除掉，再在剩下的方案里比总成本。32 卡 34.3 天超过 30 天期限，出局；48 卡 24.6 天，还留 5.4 天余量。这里特别强调「额外故障成本只抵消很小一部分收益」，因为附加比例只有 1.08%，比 32 卡的 1.02% 高不了多少，而多买卡省下的单卡工作量要大得多。容量够的前提下，把每卡的工作量摊薄是划算的。
+决策顺序很清楚：先把违反硬约束的方案排除掉，再在剩下的方案里比总成本。32 卡 34.3 天超过 30 天期限，出局；48 卡 24.6 天，还留 5.4 天余量。要强调「额外故障成本只抵消很小一部分收益」，因为附加比例只有 1.08%，比 32 卡的 1.02% 高不了多少，而多买卡省下的单卡工作量要大得多。容量够的前提下，把每卡的工作量摊薄是划算的。
 
 几个容易混的量摆在一起看：$t_s$ 里的通信等待是实际落在关键路径上的部分（0.08 s），链路时间是通信完全暴露时会花的时长（12.0 s），两者差两个数量级。从基础训练时间走到「加入保存恢复和 5 天预留」，中间要过 $\times(1+L)+T_0$ 这一道，直接相加会算少。计划性停顿 $T_0 = 5$ 天是主动预留，故障恢复时间 $r$ 已经计进 $L$，两笔不能重复算。容量满足与按期完成也是两回事：两套方案的显存都放得下（13.8 与 12.5 GiB 都小于 22 GiB），差别只在时间上。
 
@@ -1261,7 +1261,7 @@ $$
 式子的读法是：把原耗时分成受影响的部分（占比 $f$）和不受影响的部分（占比 $1-f$），受影响的那部分按能力倍数 $r$ 缩放，不受影响的照旧。$r=0.5$（能力减半）时 $f/r = 2f$，受影响部分耗时翻倍。这是 Amdahl 定律的反向用法，平常拿它算加速上限，这里拿它算退化的代价。这里两个例子正好展示 $f$ 的杠杆效应：$f=0.05$、$r=0.5$ 时 $T'/T = 0.95+0.1 = 1.05$（+5%）；$f=0.5$、$r=0.5$ 时 $T'/T = 0.5+1.0 = 1.5$（+50%）。同样把带宽砍半，一个几乎无感，一个灾难性，区别只在原来有多少时间在等这件事。所以评估硬件升级或降级时，第一个该问的是「瓶颈环节在原耗时里占多少」，新卡快多少反而排在后面。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-amdahl.svg" alt="折线图：新带宽与原带宽之比从 0.25 到 1.4 时，原通信占比 5%、20%、50% 的三条曲线分别从约 1.15、1.6、2.5 下降到 1 以下；占比越大曲线越陡" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-amdahl.svg" alt="折线图：新带宽与原带宽之比从 0.25 到 1.4 时，原通信占比 5%、20%、50% 的三条曲线分别从约 1.15、1.6、2.5 下降到 1 以下；占比越大曲线越陡" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>按 Amdahl 定律反向计算退化代价。</strong> 三条曲线按 T′/T = 1 − f + f/r 绘制；带宽减半时，原通信占比 50% 的耗时约翻倍。</figcaption>
 </figure>
 
@@ -1286,7 +1286,7 @@ $$
 $F = 6ND$ 的口诀是「每参数每 token 6 次浮点运算」：前向 2 次（一次乘加算 2 FLOPs）乘以参数量，再乘 token 数，反向约为前向的两倍，合计 $2+4=6$，所以训练总计算量对模型规模和数据量都是线性的。卡数公式里 $N$ 是参数量、$D$ 是 token 数、$P$ 是单卡峰值算力、$\eta$ 是 MFU（模型算力利用率）、$T$ 是可用执行时间。它回答的是「给定模型、数据、硬件、效率和期限，至少要多少卡」；$T$ 在分母上，期限越紧，卡就要越多。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch10-scaling-boundary.svg" alt="边界图的结构：横轴为稠密模型参数量 0—10 万亿，纵轴为 90 天所需加速器数量，采用对数刻度；A100、H100、B200 各有 40% MFU 实线与 50% MFU 虚线，另有一条 16,384 张卡的水平线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch10-scaling-boundary.svg" alt="边界图的结构：横轴为稠密模型参数量 0—10 万亿，纵轴为 90 天所需加速器数量，采用对数刻度；A100、H100、B200 各有 40% MFU 实线与 50% MFU 虚线，另有一条 16,384 张卡的水平线" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>模型越大，边界越高。</strong> 边界上方的资源能在该效率下完成训练，边界下方则需要提高效率或延长期限；50% MFU 的虚线整体低于 40% 实线。</figcaption>
 </figure>
 

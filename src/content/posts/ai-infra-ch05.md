@@ -42,7 +42,7 @@ cover: /covers/series-ai-infra.svg
 
 关于 $M$ 有个常见混淆：它跟 batch size、序列长度都不是一回事。这里写得很清楚，$M$ 是一次调用处理的 token 数。prefill 时它可以是整段 prompt 的长度，连续批处理时它可以是同一批多个请求拼起来的 token 总数，decode 时它是 1。这个数字贯穿本章所有结论：$M=1$ 时 $M$ 方向没有并行度，切 $M$ 就没有意义（这正是 5.2.4 节 RMSNorm 讨论的伏笔），而 $N$ 方向（12288）和 $K$ 方向（4096）仍然很大。
 
-BF16 存储配 FP32 累加这件事值得单独提一句。这里说 $X$、$W$、$C$ 用 BF16（每元素 2 bytes），累加用 FP32，看着只是精度口径，影响却不小：5.2.4 节会展示，同样是「求和」，加法次序不同就能差出上百个 ULP。这也是当代加速器上推理与训练的默认组合，本章后面所有 `2mk`、`4mn` 这类系数都从它来。
+BF16 存储配 FP32 累加这件事值得单独提一句。 $X$、$W$、$C$ 用 BF16（每元素 2 bytes），累加用 FP32，看着只是精度口径，影响却不小：5.2.4 节会展示，同样是「求和」，加法次序不同就能差出上百个 ULP。这也是当代加速器上推理与训练的默认组合，本章后面所有 `2mk`、`4mn` 这类系数都从它来。
 
 本章围绕三个问题展开：哪些工作在重复执行，哪些数据能够复用，哪些计算或等待决定了总时间。回答这些问题时，程序在加速器上的执行单位是 kernel。分析读写量、缓冲容量和 kernel 数，可以知道程序做了多少工作；再结合这些工作的执行顺序，才能算出程序需要多长时间。按这个视角看，CPU 与加速器的分工也不同：CPU 通常依靠硬件缓存自动发现局部性，加速器 kernel 则经常显式选择 tile、缓冲槽和循环顺序。二者解决的是同一类问题，责任边界却不重合，缓存由硬件动态决定保留内容，片上缓冲由程序决定放什么、放多久、由谁使用。责任下放给程序，换来的是确定性：一次搬移要多少字节、占多少轮，都能精确算出来，本章几乎所有的量级估算都建立在这份确定性上。
 
@@ -121,7 +121,7 @@ $$
 主机内存的类型也影响复制过程。普通内存的页面由操作系统管理，可以被换出到磁盘，所以 GPU 的复制引擎不能直接按物理地址搬它，运行时得先把数据复制到一块不会被换出的锁页缓冲（pinned memory，使用期间保持驻留，便于加速器直接搬移）。传输路径于是变成「普通内存 →（CPU 拷贝）→ 锁页缓冲 →（DMA）→ 显存」，在 H2D 之前多做了一遍 64 MiB 的主机内存拷贝。收益是 DMA 可以直接搬；代价是这一遍多余的拷贝，以及反复分配锁页内存的开销。工程上的正确做法是预先分配一块可复用的锁页缓冲，让 CPU 直接往里写输入，把它当成输入的生产区。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-host-device-path.svg" alt="主机侧普通内存经主机内复制进入锁页缓冲，再经 H2D 进入显存输入缓冲；权重与输入缓冲送入 GPU kernel，输出经 D2H 回到主机结果缓冲" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-host-device-path.svg" alt="主机侧普通内存经主机内复制进入锁页缓冲，再经 H2D 进入显存输入缓冲；权重与输入缓冲送入 GPU kernel，输出经 D2H 回到主机结果缓冲" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>搬移路径。</strong> 普通内存不能直接参与 DMA，必须先落到锁页缓冲；显存中的权重只加载一次，输入与输出按批次往返。</figcaption>
 </figure>
 
@@ -142,7 +142,7 @@ $$
 CUDA 的 stream（流）是一串按顺序执行的加速器任务。把 H2D 和读取该输入的 kernel 放在同一 stream 中，计算就排在复制之后，CPU 可以连续提交两项工作。若复制和计算放在不同 stream 中，就用 event（事件）指定跨流的执行顺序：复制流在 H2D 后记录事件，计算流等待事件，再使用这份输入。等待发生在计算流的加速器任务序列中，CPU 仍可继续提交其他工作。图 5-2 把两条流和两个事件画在同一条时间线上。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-stream-event.svg" alt="复制流依次把批 0 写入槽 A、批 1 写入槽 B、批 2 重新写入槽 A；计算流等待批 0 传完事件后计算批 0，再计算批 1；批 2 写入前等待批 0 用完事件" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-stream-event.svg" alt="复制流依次把批 0 写入槽 A、批 1 写入槽 B、批 2 重新写入槽 A；计算流等待批 0 传完事件后计算批 0，再计算批 1；批 2 写入前等待批 0 用完事件" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>复制流与计算流的对齐。</strong> 计算批 0 等「批 0 已传完」；批 2 覆盖槽 A 前等「批 0 已用完」。等待只建立顺序，不搬移数据。</figcaption>
 </figure>
 
@@ -182,7 +182,7 @@ CUDA 的 stream（流）是一串按顺序执行的加速器任务。把 H2D 和
 把复制、计算和缓冲使用的顺序连起来，才能确定结果何时可用。图 5-3 将这一顺序画成时间线。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-kernel-time.svg" alt="原 kernel 在 0–3 μs 提交，随后 H2D、20 μs kernel、D2H 依次排布，结果在第 35 μs 可用；kernel 加快后，同样的提交与 H2D，5 μs kernel 与 D2H 之后结果在第 20 μs 可用" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-kernel-time.svg" alt="原 kernel 在 0–3 μs 提交，随后 H2D、20 μs kernel、D2H 依次排布，结果在第 35 μs 可用；kernel 加快后，同样的提交与 H2D，5 μs kernel 与 D2H 之后结果在第 20 μs 可用" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>计算段缩短带来的收益。</strong> 两组的提交与传输相同，kernel 从 20 μs 缩短到 5 μs，结果可用时间从第 35 μs 提前到第 20 μs。</figcaption>
 </figure>
 
@@ -216,7 +216,7 @@ profiler 的价值在于把三者放在同一条时间轴上对齐。这样你�
 
 还有一个工程上的提醒。本节把「提交 3 μs」当作固定常数，实际中提交开销会随算子数、参数个数、框架层数增长。当模型有几百个小算子时，累积的提交开销可能远超 kernel 本身，这是图重放和算子融合的用武之地，也是 5.3.1 节融合的另一个收益来源，尽管那一节主要算的是访存量。
 
-容易混的是这样几组。提交耗时在 CPU 侧、加速器耗时在 GPU 侧、端到端耗时两头都算，三个数对应三种计时位置，不能混用，这里明确说「测量结果取决于在什么位置开始和结束计时」。加速比不等于 kernel 加速倍数，kernel 快了 4 倍，端到端只快 1.75 倍，因为提交与复制这一段不参与优化。一次性的准备工作（编译、分配工作区）不在图 5-3 的时间线里，但在真实程序里确实存在，要按摊销来看，不能算进单次执行时间。
+容易混的是这样几组。提交耗时在 CPU 侧、加速器耗时在 GPU 侧、端到端耗时两头都算，三个数对应三种计时位置，不能混用，「测量结果取决于在什么位置开始和结束计时」。加速比不等于 kernel 加速倍数，kernel 快了 4 倍，端到端只快 1.75 倍，因为提交与复制这一段不参与优化。一次性的准备工作（编译、分配工作区）不在图 5-3 的时间线里，但在真实程序里确实存在，要按摊销来看，不能算进单次执行时间。
 
 端到端时间 = 提交 + H2D + kernel + D2H；只优化其中一段，收益上限由这一段占比决定（例 5-2 中 kernel 快 4 倍，端到端只快约 1.8 倍）。
 
@@ -246,7 +246,7 @@ warp 的定义要交代一下：一起发射的 32 个线程。SM 不逐个线�
 寄存器与共享内存都只允许 2 块，因此 SM 上驻留 2 个线程块，即 16 个 warp。占用率（occupancy）指驻留 warp 数占 SM 最大驻留 warp 数的比例，这里为 $16/64 = 25\%$。图 5-4 把三类资源画成三根横条：两个线程块把寄存器恰好填满，把共享内存填到只剩 34 KiB，线程槽却只用了四分之一。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-sm-occupancy.svg" alt="柱状图比较 SM 三类资源能容纳的块数：寄存器 2 块、共享内存 2 块、线程槽 8 块；实际驻留 2 块，共 16 个 warp，占用率 25%" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-sm-occupancy.svg" alt="柱状图比较 SM 三类资源能容纳的块数：寄存器 2 块、共享内存 2 块、线程槽 8 块；实际驻留 2 块，共 16 个 warp，占用率 25%" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>三类资源的驻留上限。</strong> 每块 256 线程、128 个寄存器、96 KiB 共享内存并预留 1 KiB；寄存器与共享内存都只能放 2 块，线程槽可放 8 块。</figcaption>
 </figure>
 
@@ -264,7 +264,7 @@ $$
 B_{\text{have}} = 16 \times 4 \times 512\ \text{字节} = 32\ \text{KiB}.
 $$
 
-可用在途字节是需求的 2.15 倍，只驻留 8 个 warp（一个线程块）也已足够。第 5.2.2 节会遇到「大块少读数据却可能变慢」的现象，这里给出它的定量形式：工作集越大，驻留块越少，可用的在途字节越少；一旦低于需求，有效带宽就降为可用在途字节除以延迟，接口带宽再高也用不上。
+可用在途字节是需求的 2.15 倍，只驻留 8 个 warp（一个线程块）也已足够。第 5.2.2 节会遇到「大块少读数据却可能变慢」的现象，给出它的定量形式：工作集越大，驻留块越少，可用的在途字节越少；一旦低于需求，有效带宽就降为可用在途字节除以延迟，接口带宽再高也用不上。
 
 **④ 矩阵指令的粒度**
 
@@ -281,7 +281,7 @@ MMA 有两种发出方式。warp 级指令由一个 warp 单独发出，操作�
 复制与计算各自的耗时可以这样估：把 H100 的显存带宽 3.35 TB/s 与 BF16 稠密矩阵峰值 989.4 TFLOP/s 平分到 132 个 SM，每个 SM 约得 25.4 GB/s 和 7.50 TFLOP/s，下面按该线程块独占该 SM 的份额计算。一个 $K$ 块的 A、W 共 32 KiB，复制约需 1.29 μs；块乘为 2,097,152 FLOPs，计算约需 0.28 μs。复制比计算慢约 4.6 倍，原因是该块每搬 1 byte 只做 64 次浮点运算，而 H100 的矩阵峰值与显存带宽之比约为 295 FLOP/byte。图 5-5 按这两个时间画出两个槽上的四个 $K$ 块。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-async-pipeline.svg" alt="两条时间线：复制依次在 0–1.29、1.29–2.58、2.58–3.87、3.87–5.16 μs 搬入四块，槽 A 与槽 B 交替；计算在每次复制完成后执行 0.28 μs，最后一次结束于 5.44 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-async-pipeline.svg" alt="两条时间线：复制依次在 0–1.29、1.29–2.58、2.58–3.87、3.87–5.16 μs 搬入四块，槽 A 与槽 B 交替；计算在每次复制完成后执行 0.28 μs，最后一次结束于 5.44 μs" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>生产者与消费者的重叠。</strong> 实线「满」栅栏要求复制完成后才能计算；虚线「空」栅栏允许块 2 在块 0 于 1.57 μs 用完后重写槽 A。</figcaption>
 </figure>
 
@@ -375,7 +375,7 @@ warpgroup 级指令与异步执行是 Hopper 的关键进步。warp 级指令要
 计算 $C[i,j]$ 时，取 $A$ 的第 $i$ 行和 $W$ 的第 $j$ 列，对应元素相乘，再沿 $K$ 维求和。接着算右边的 $C[i,j+1]$，$W$ 换成相邻的一列，$A$ 还是同一行，两次计算里蓝色的部分完全重合。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-row-reuse.svg" alt="A 的同一行分别与 W 的第 1 列、第 2 列相乘，得到 C[i,j] 与 C[i,j+1]；两次计算共用 A 行" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-row-reuse.svg" alt="A 的同一行分别与 W 的第 1 列、第 2 列相乘，得到 C[i,j] 与 C[i,j+1]；两次计算共用 A 行" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>输出块内的复用。</strong> 蓝色 A 行被两次乘法共用，橙色 W 列每次更换；把两个输出放在同一次分块计算里，就能少读一次 A。</figcaption>
 </figure>
 
@@ -442,7 +442,7 @@ $$
 块由软件为复用数据而组织，内部还可以分解成多次硬件矩阵指令。分块并不要求先把原矩阵复制成许多独立的小矩阵，具体搬移由执行程序安排。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/tiling-reuse.svg" alt="三对输入块沿 K 维依次换入，每对的 A 块与 W 块都加到同一份 FP32 累加器上；累加器不写回下一级存储，K 走完后才舍入成 BF16 输出块" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/tiling-reuse.svg" alt="三对输入块沿 K 维依次换入，每对的 A 块与 W 块都加到同一份 FP32 累加器上；累加器不写回下一级存储，K 走完后才舍入成 BF16 输出块" width="800" height="363" loading="lazy" decoding="async">
   <figcaption><strong>分块矩阵乘的累加顺序。</strong> 每对输入块的乘加结果都写进同一份累加器，K 走完后才转成 BF16 写出。</figcaption>
 </figure>
 
@@ -467,7 +467,7 @@ $64\times64$ 输出块把输出划成 16 个行块、192 个列块。192 个列�
 换成 $128\times128$，行块数从 16 减到 8，列块数从 192 减到 96，两份输入的读取都减半，输出大小不变，总量降到 $768 + 768 + 24 = $ 1560 MiB。图 5-8 把这项收益与所占的局部存储放在一起比较。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-output-tile-tradeoff.svg" alt="三个输出块 32×32、64×64、128×128 沿局部存储需求增大的方向排列，接口读写量随之下降；虚线标出各读写一次时的 128 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-output-tile-tradeoff.svg" alt="三个输出块 32×32、64×64、128×128 沿局部存储需求增大的方向排列，接口读写量随之下降；虚线标出各读写一次时的 128 MiB" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>输出块的权衡。</strong> 横轴是局部存储需求，纵轴是接口读写量；块越大，跨接口的重复读取越少，但局部存储占用越高。</figcaption>
 </figure>
 
@@ -484,7 +484,7 @@ $64\times64$ 输出块把输出划成 16 个行块、192 个列块。192 个列�
 访问量接近减半，时间是否随之减半，还要看加速器能同时安排多少工作。GPU 上输入缓冲放在共享内存中，累加器可以放共享内存，也可以放寄存器。这里沿用第 5.1.5 节的做法：每个线程块负责一个输出块，输入缓冲与累加器都放在共享内存。硬件取 RTX PRO 6000 的一个 SM，该卡属于计算能力 12.x，每个 SM 的共享内存上限为 100 KB（即 102,400 bytes），每个线程块另占 1 KiB 预留。补充：RTX PRO 6000 Blackwell 为 SM120 架构（见实验 5-2 的运行环境），即计算能力 12.0；CUDA 编程指南的计算能力表给出该列每个 SM 的共享内存上限 100 KB、每个线程块上限 99 KB，两者之差即每块的 1 KiB 预留。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-shared-memory-fitting.svg" alt="堆叠条形：四份 64×64 工作集占 96 KiB，加 4 KiB 预留后填满 100 KB；一份 128×128 工作集占 80 KiB，加 1 KiB 预留后余约 19 KiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-shared-memory-fitting.svg" alt="堆叠条形：四份 64×64 工作集占 96 KiB，加 4 KiB 预留后填满 100 KB；一份 128×128 工作集占 80 KiB，加 1 KiB 预留后余约 19 KiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>两种工作集的占用。</strong> 每份 64×64 工作集 24 KiB，每块另留 1 KiB 预留；四份刚好填满，128×128 的一份只占大部分。</figcaption>
 </figure>
 
@@ -512,7 +512,7 @@ $V$ 公式的推导思路值得单独说一遍。这是一个「悲观」模型�
 
 图 5-9 揭示的容量断崖是这一节的精髓。$64\times64$ 的工作集是 24 KiB，$128\times128$ 的是 80 KiB，看起来只差 3.3 倍；但在 100 KiB 共享内存下，能放 4 份和能放 1 份是 4 倍的并行度差距。变化并不线性，更像是容量约束带来的台阶效应，分块方案必须考虑自己会不会掉到下一个台阶。
 
-最后那个时间比公式要会读：第一项是流量比（约 0.504，大块少搬一半），第二项是带宽反比（大块如果拿不到同样的带宽，这一项就大于 1）。这里给了两个端点。带宽相同时 $B_{64}/B_{128} = 1$，时间比 0.504，时间接近减半，扩大分块是净赚的；大块只得四成带宽时 $B_{128} = 0.4B_{64}$，时间比 $0.504/0.4 = 1.26$，耗时增加约 26%，扩大分块反而亏了。这说明存在一个带宽下降的临界点：令时间比为 1，可得临界条件 $B_{128}/B_{64} = 0.504$，块扩大后只要还能保住原来约 50.4% 的带宽，扩大就是划算的。这个「50% 临界点」是很实用的经验判据。
+最后那个时间比公式要会读：第一项是流量比（约 0.504，大块少搬一半），第二项是带宽反比（大块如果拿不到同样的带宽，这一项就大于 1）。给了两个端点。带宽相同时 $B_{64}/B_{128} = 1$，时间比 0.504，时间接近减半，扩大分块是净赚的；大块只得四成带宽时 $B_{128} = 0.4B_{64}$，时间比 $0.504/0.4 = 1.26$，耗时增加约 26%，扩大分块反而亏了。这说明存在一个带宽下降的临界点：令时间比为 1，可得临界条件 $B_{128}/B_{64} = 0.504$，块扩大后只要还能保住原来约 50.4% 的带宽，扩大就是划算的。这个「50% 临界点」是很实用的经验判据。
 
 这里的三步法顺序不能颠倒：先按容量排除容纳不下的方案，再按访问量缩小比较范围，最后测量实际执行效率。容量是硬约束，不行就是不行；访问量是软估计，能用来排出候选；实测才是最终裁判，因为带宽、L2 命中、bank 冲突都不在模型里。
 
@@ -533,7 +533,7 @@ $V$ 公式的推导思路值得单独说一遍。这是一个「悲观」模型�
 在每行末尾补一个字，行跨度变成 33。同一列相邻行的 bank 号便依次加一，32 次请求分散到 32 个 bank，一轮就能完成。所占空间从 4096 bytes 增至 4224 bytes，只多约 3.1%。有效数据和读取次数都没有变化，原本要分 32 轮完成的列读取，现在一轮就完成了。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-bank-conflict.svg" alt="上半部分行跨度为 32 个字，四个 lane 的字地址 0、32、64、96 都对 32 取模为 0，全部落在 bank 0；下半部分行跨度为 33，四个地址 0、33、66、99 分散到 bank 0 至 bank 3" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-bank-conflict.svg" alt="上半部分行跨度为 32 个字，四个 lane 的字地址 0、32、64、96 都对 32 取模为 0，全部落在 bank 0；下半部分行跨度为 33，四个地址 0、33、66、99 分散到 bank 0 至 bank 3" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>bank 冲突的来源。</strong> 同一列的 32 个字由 32 个 lane 同时请求；跨度与 bank 数成整数倍时，地址会集中到少数 bank。</figcaption>
 </figure>
 
@@ -572,7 +572,7 @@ padding 解决的是请求能否同时得到服务。如果程序本来就只安
 一组一行的程序把输入留在局部，读入 8 MiB 输入，每行再读一份 BF16 gamma，累计 8 MiB，最后写出 8 MiB 结果，总访问量 $8+8+8 = 24$ MiB。拆分之后，最后的归一化阶段重读 8 MiB 输入，局部和与缩放因子的写出和读取再增加约 0.1 MiB，总量 32.1 MiB，kernel launch 次数从一次增至三次。补充：RMSNorm 三阶段拆分计算。输入和 gamma 为 BF16，gamma 每行读取；一组一行保留输入，三阶段方案在应用阶段重读输入。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-row-split.svg" alt="上行处理整行 4096 个 BF16 元素，保留输入直到归一化结束；下行把一行拆成 0–7 共八段，每段 512 项求局部平方和，合并后重读输入并归一化" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-row-split.svg" alt="上行处理整行 4096 个 BF16 元素，保留输入直到归一化结束；下行把一行拆成 0–7 共八段，每段 512 项求局部平方和，合并后重读输入并归一化" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>两种行内归约方式。</strong> 整行方案只读一次输入；八段方案让每段并行求局部平方和，但合并后必须重读原输入。</figcaption>
 </figure>
 
@@ -581,7 +581,7 @@ padding 解决的是请求能否同时得到服务。如果程序本来就只安
 RMSNorm 的拆分沿的是归约维，一行的平方和分成八个局部和，必须再合并一次。矩阵乘也有同样的选择。对 $C_{M\times N}=A_{M\times K}W_{K\times N}$，可以沿三个维度中的任何一个把工作分给不同的执行者，图 5-12 画出三种切法各自需要什么输入、得到什么结果。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-matmul-split.svg" alt="三种切法并排：切 M 时输入按行分片、权重复制、输出按行分片；切 N 时输入复制、权重按列分片、输出按列分片；切 K 时输入按列分片、权重按行分片，各执行者得到同一输出的部分和" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-matmul-split.svg" alt="三种切法并排：切 M 时输入按行分片、权重复制、输出按行分片；切 N 时输入复制、权重按列分片、输出按列分片；切 K 时输入按列分片、权重按行分片，各执行者得到同一输出的部分和" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>切分维度决定数据归属。</strong> 输出分片按需收集；归约分片必须求和。方框表示数据归属，不按矩阵元素数绘制。</figcaption>
 </figure>
 
@@ -598,7 +598,7 @@ RMSNorm 的拆分沿的是归约维，一行的平方和分成八个局部和，
 下半部分固定这八个局部和，只改合并的次序。40,320 种次序只得到三个不同的 FP32 结果，彼此相差一个 ULP。用原子加把局部和累加到同一个地址时，到达的先后由调度决定，同一份输入、同一个程序，两次运行得到的结果就可能不同。改成先把八个局部和写入缓冲，等它们全部写完，再由一个执行者按固定顺序相加，每次都得到同一个结果。代价有两项：多一次写出与读回；合并要等最慢的那一段算完才能开始。原子加按到达顺序累加，不必等待全部就绪。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-sum-error.svg" alt="柱状图对比 1 段与 8 段：1 段与精确值的距离为 175.2 ULP，8 段为 9.2 ULP，两者相差 166 ULP；另标注 40,320 种合并次序只得到 3 个结果" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-sum-error.svg" alt="柱状图对比 1 段与 8 段：1 段与精确值的距离为 175.2 ULP，8 段为 9.2 ULP，两者相差 166 ULP；另标注 40,320 种合并次序只得到 3 个结果" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>分段与合并次序的误差。</strong> 左图比较 1 段与 8 段；右图把同样八段的 40,320 种合并次序归到 −10.2、−9.2、−8.2 三个相距 1 ULP 的结果。</figcaption>
 </figure>
 
@@ -626,7 +626,7 @@ RMSNorm 三阶段拆分的账要算清三个数。并行任务数从 1024 增到
 | 切 $N$（输出列） | 权重的列 | 输入 | 不同输出列的完整结果 | 否 |
 | 切 $K$（归约维） | 输入的列、权重的行 | 无需复制 | 同一输出的部分和 | 是（必须求和） |
 
-判据很简单：切了归约维就必须归约，切非归约维就不用。这也是这里说第三种「省下了输入的复制，却多出一次汇合」的原因。5.2.2 节的输出块同时切 $M$ 和 $N$，每个线程块手里是一块完整的输出，不需要汇合，然后沿 $K$ 在块内部逐段累加，累加器一直留在同一个线程块内，所以这个沿 $K$ 的归约不需要跨边界。「在块内累加」和「跨块求和」是两件不同的事，前者免费，后者要付通信代价。
+判据很简单：切了归约维就必须归约，切非归约维就不用。这也是第三种「省下了输入的复制，却多出一次汇合」的原因。5.2.2 节的输出块同时切 $M$ 和 $N$，每个线程块手里是一块完整的输出，不需要汇合，然后沿 $K$ 在块内部逐段累加，累加器一直留在同一个线程块内，所以这个沿 $K$ 的归约不需要跨边界。「在块内累加」和「跨块求和」是两件不同的事，前者免费，后者要付通信代价。
 
 这一分类在后面几章会反复用到：多卡张量并行（tensor parallelism）切的就是 $M$、$N$ 或 $K$，其中切 $K$ 需要 all-reduce，切 $M$／$N$ 通常只需要 all-gather（或什么都不用）。这里埋了「第 6.1.4 节将把这些分工方向与这里的三种切法对应起来」的伏笔。
 
@@ -636,7 +636,7 @@ RMSNorm 三阶段拆分的账要算清三个数。并行任务数从 1024 增到
 
 「40,320 种次序只有 3 个结果」这个数字怎么理解？$8! = 40{,}320$ 是八个局部和的全部排列，而结果只落在三个相距 1 ULP 的值上（图中标出 $-10.2$、$-9.2$、$-8.2$）。求和次序的影响是离散的、很小的，不会随便就差很远；但它确实存在，并且在原子加（atomic add）下不可复现，因为原子加的到达顺序由运行时调度决定，两次运行可能落到不同的结果上。
 
-确定性的代价要算清楚。这里给了「写缓冲加固定顺序相加」这个替代方案的两项代价：多一次写出与读回，局部和要先写进缓冲再由合并者读回，也就是前面那约 0.1 MiB 里的一部分；合并要等最慢的那一段算完才能开始，这引入了一个同步点（所有段就绪的栅栏）。原子加的好处正是按到达顺序累加、不必等待全部就绪，等于用确定性换了一点延迟。这个取舍在推理服务里很常见，「同输入同输出」通常是硬要求，否则 batch 变化会导致同一 prompt 的 logprob 变化，影响评测和缓存，所以实际系统往往选择付出第二项代价。
+确定性的代价要算清楚。给了「写缓冲加固定顺序相加」这个替代方案的两项代价：多一次写出与读回，局部和要先写进缓冲再由合并者读回，也就是前面那约 0.1 MiB 里的一部分；合并要等最慢的那一段算完才能开始，这引入了一个同步点（所有段就绪的栅栏）。原子加的好处正是按到达顺序累加、不必等待全部就绪，等于用确定性换了一点延迟。这个取舍在推理服务里很常见，「同输入同输出」通常是硬要求，否则 batch 变化会导致同一 prompt 的 logprob 变化，影响评测和缓存，所以实际系统往往选择付出第二项代价。
 
 「切分随 batch 变化」这个结论的严重性怎么强调都不过分。它把性能优化和数值可复现性绑在了一起：为了在小 batch 下不那么空闲，工程师让段数随 batch 变化（$M=1024$ 时一段一行，$M=1$ 时拆八段），结果同一行输入在不同 batch 下算出不同输出。「要让输出只由输入决定，段数和合并次序就都不能随 batch 变化，代价是小 batch 下并行度退回到拆分之前」，也就是要么牺牲性能保证确定性，要么牺牲确定性换性能。第 10.5.3 节要用这一点解释「生成端和训练端加载同一份权重，同一前缀算出的 logprob 却仍可能不同」。关键在于同一份权重也会因为归约方式不同而给出不同结果，所以 RL 训练里训推不一致（training-inference mismatch）有一部分根源就在这一层。
 
@@ -671,7 +671,7 @@ SiLU 和 $\odot$（逐元素乘）都是逐元素运算。$Z[i,j]$ 只依赖 $G[
 沿用上一节的带宽模型，取两种程序的有效带宽相同，时间比为 $72/120 = 0.6$，即时间变成原来的 60%，加速约 1.7 倍。实测的激活链从约 14.2 μs 降到 7.7 μs，$14.2/7.7=1.84$，加速比约为 1.8。理论 1.7 与实测 1.8 很接近，说明这个激活子链确实基本是纯带宽受限的。补充：实验 5-2 的原始条件、数据与分析；RTX PRO 6000、共享 GPU、热缓存与图重放；原始中位数为 14.20／7.68 μs，仅测激活子链。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/kernel-fusion.svg" alt="分开执行时 SiLU 的完整结果写回再读回；融合执行时局部结果直接进入乘法，读写量从 120 MiB 降到 72 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/kernel-fusion.svg" alt="分开执行时 SiLU 的完整结果写回再读回；融合执行时局部结果直接进入乘法，读写量从 120 MiB 降到 72 MiB" width="800" height="388" loading="lazy" decoding="async">
   <figcaption><strong>中间张量落地与融合。</strong> 分开执行多出一次 24 MiB 的写回和一次 24 MiB 的读回；融合后局部结果留在片上，中间张量不落地。</figcaption>
 </figure>
 
@@ -690,7 +690,7 @@ SiLU 和 $\odot$（逐元素乘）都是逐元素运算。$Z[i,j]$ 只依赖 $G[
 这三步的账也值得自己走一遍。量化那一步读 $Z$ 24 MiB、写量化结果 12 MiB（1 byte/元素，$1024\times12288\times1$ byte 合 12 MiB），共 36 MiB；三步分开是 $48+72+36=156$ MiB；融合前两步是 $72+36=108$ MiB；三步全融合是 $24+24+12=60$ MiB。每一步融合都恰好省掉一个 24 MiB 中间量的写加读，也就是 48 MiB：$156-48=108$，$108-48=60$。每消除一个中间张量，读写量就减 2 倍它的大小，这是本节最漂亮的一条规律。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-fusion-readwrite.svg" alt="三根堆叠柱：全部分开为 156 MiB，融合前两步为 108 MiB，三步融合为 60 MiB；每根柱的底部是 60 MiB 必要读写，中间 T 与顶部 Z 各 48 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-fusion-readwrite.svg" alt="三根堆叠柱：全部分开为 156 MiB，融合前两步为 108 MiB，三步融合为 60 MiB；每根柱的底部是 60 MiB 必要读写，中间 T 与顶部 Z 各 48 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>融合如何降低读写量。</strong> 必要读写固定为 60 MiB；少保存一个 24 MiB 中间量，就少一次写出和一次读入，合计 48 MiB。</figcaption>
 </figure>
 
@@ -713,7 +713,7 @@ SiLU 和 $\odot$（逐元素乘）都是逐元素运算。$Z[i,j]$ 只依赖 $G[
 注意，槽 A 的「数据已经搬完」与「数据已经用完」是两个时刻。搬移结束后，计算才开始读取；只有最后一次读取结束，才能将下一块数据写入槽 A，覆盖原有内容。这两个时刻混淆，结果就是读到脏数据或者死等。沿用第 5.1.5 节 H100 一个 SM 上的数值：每块搬移 1.29 μs、计算 0.28 μs，搬移器和计算单元独立工作。图 5-16 展示三个时段中各槽位的状态，图 5-17 据此画出完整的搬移与计算时间线。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-slot-state.svg" alt="表格列出三个时段：0–1.29 μs 槽 A 写入块 0、槽 B 空闲；1.29–1.57 μs 槽 A 读取块 0、槽 B 写入块 1；2.58–2.86 μs 槽 A 写入块 2、槽 B 读取块 1" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-slot-state.svg" alt="表格列出三个时段：0–1.29 μs 槽 A 写入块 0、槽 B 空闲；1.29–1.57 μs 槽 A 读取块 0、槽 B 写入块 1；2.58–2.86 μs 槽 A 写入块 2、槽 B 读取块 1" width="800" height="248" loading="lazy" decoding="async">
   <figcaption><strong>槽位在时间上的归属。</strong> 槽 A 先写后读，槽 B 随后写入并在下一段被读取；写与读不能在同一时刻发生在同一个槽。</figcaption>
 </figure>
 
@@ -736,7 +736,7 @@ $$
 其中 $t_m$ 为每块搬移时间，$t_c$ 为每块计算时间。在刚才的例子中 $t_m > t_c$，搬移器从 0 连续忙到 5.16 μs，总时间为 $4\times1.29 + 0.28 \approx 5.44$ μs，计算单元只有约两成时间在工作。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-serial-vs-double-buffer.svg" alt="四条时间线：串行时每块搬移 1.29 μs 后紧接计算 0.28 μs，四块共 6.28 μs；双缓冲时搬移连续进行，计算穿插在 1.29–1.57、2.58–2.86、3.87–4.15、5.16–5.44 μs，总时长 5.44 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-serial-vs-double-buffer.svg" alt="四条时间线：串行时每块搬移 1.29 μs 后紧接计算 0.28 μs，四块共 6.28 μs；双缓冲时搬移连续进行，计算穿插在 1.29–1.57、2.58–2.86、3.87–4.15、5.16–5.44 μs，总时长 5.44 μs" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>两个输入槽带来的重叠。</strong> 搬移连续进行，计算填在搬移的空隙里；同一颜色表示同一个槽，槽 A 放块 0、2，槽 B 放块 1、3。</figcaption>
 </figure>
 
@@ -748,7 +748,7 @@ $T_{\text{pipe}}$ 公式的三个部分各对应一段时间。$t_m$ 是首块�
 
 增加第三个槽无济于事，因为两个槽已经让搬移器没有空闲了，更多的槽不能加快搬移，加快计算同样无济于事。两个槽是能重叠起来的最小配置；把槽数加到 $n$、让搬移提前 $n-1$ 块开始，在 CUTLASS 中称为 $n$ 个 stage，stage 说的就是缓冲槽的数量。本例中搬移器已经连续工作，增加的 stage 只会多占容量。这里还能顺带分清流水与并行：流水是不同阶段同时处理不同数据块，并行是同一阶段同时处理多块，双缓冲属于前者，一个 SM 上驻留多个线程块属于后者。
 
-那 stage 什么时候有用？这里给了两个条件：每块的搬移时间不稳定，比如有时 1.29 μs、有时 2.5 μs，多几个缓冲可以抹平抖动；一次搬移的延迟长于一块的计算时间，这里的延迟指从发出请求到数据可用，它比计算时间长时就需要更多在途缓冲才能维持流水。代价是容量随 stage 数成比例增长，这又回到 5.2.2 节的容量账。
+那 stage 什么时候有用？给了两个条件：每块的搬移时间不稳定，比如有时 1.29 μs、有时 2.5 μs，多几个缓冲可以抹平抖动；一次搬移的延迟长于一块的计算时间，这里的延迟指从发出请求到数据可用，它比计算时间长时就需要更多在途缓冲才能维持流水。代价是容量随 stage 数成比例增长，这又回到 5.2.2 节的容量账。
 
 判断能不能加速，先看瓶颈资源有没有空闲，这就是「加第三个槽没用」的推理方式。本例中搬移器从 0 到 5.16 μs 一直在忙，利用率 100%，而计算单元只用 $0.28/1.29\approx22\%$ 的时间，空闲得很。要加速只有两条路，让搬移变少（减少字节），或者让搬移变快（更高带宽）。要继续缩短时间，给出的也正是这两条：减少每块要搬的字节，例如按第 5.2.2 节扩大输出块，让每个输入字节参与更多乘加，或让同时执行的线程块在 L2 中共用输入块；再就是换用显存带宽更高的卡。
 
@@ -756,7 +756,7 @@ $T_{\text{pipe}}$ 公式的三个部分各对应一段时间。$t_m$ 是首块�
 
 回到本小节开头的重排情形，两个阶段的访问顺序不同时，缓冲要保存更多尚未使用的数据。三个排队的 16 KiB 块占 48 KiB，再加 32 KiB 重排空间，共需 80 KiB。RTX PRO 6000 一个线程块最多可用 99 KB 共享内存，单独驻留时可以容纳；若一个 SM 要同时驻留两个这样的线程块，每块最多只能分到 49 KiB（100 KB 扣除两块各 1 KiB 预留后平分）。扣掉 32 KiB 重排空间，只剩一个 16 KiB 的排队槽，于是写入第二块之前，搬移器必须等计算单元用完并释放该槽。这种下游来不及处理、使上游暂停的机制称为背压（backpressure）。补充：流式顺序与缓冲预算；主机搬移与缓冲区占用时间。
 
-背压算不上错误，它是资源的自然结果，但它会让流水线出现空档，搬移器只能等着，性能就损失掉了。它和死锁要分开看：背压是「慢了」，死锁是「永远不动」，5.1.3 节的「程序停住」属于后者，这里的背压属于前者。这里给了两种应对，选择共同布局，干脆不做重排，省掉那 32 KiB，从根上减少排队；或者扩大缓冲，容纳更多已经写入但尚未使用的数据。这两条与 5.2.2 节的「容量 vs 复用」是同一个权衡的不同侧面。打个比方，背压像水管下游被堵住，水压反向顶到上游，流量不会凭空消失，只是被憋住了。诊断流水线性能时，「上游经常在等下游」就是背压的典型症状。
+背压算不上错误，它是资源的自然结果，但它会让流水线出现空档，搬移器只能等着，性能就损失掉了。它和死锁要分开看：背压是「慢了」，死锁是「永远不动」，5.1.3 节的「程序停住」属于后者，这里的背压属于前者。给了两种应对，选择共同布局，干脆不做重排，省掉那 32 KiB，从根上减少排队；或者扩大缓冲，容纳更多已经写入但尚未使用的数据。这两条与 5.2.2 节的「容量 vs 复用」是同一个权衡的不同侧面。打个比方，背压像水管下游被堵住，水压反向顶到上游，流量不会凭空消失，只是被憋住了。诊断流水线性能时，「上游经常在等下游」就是背压的典型症状。
 
 第 5.1 节的主机输入也可以按这个模式组织。复制流传入下一批，计算流处理当前批；计算流等待「复制完成」事件后读取新输入，复制流等待「计算完成」事件后覆盖旧缓冲。这两种事件分别保证输入已准备好和旧数据已用完，时间收益来自两种资源同时工作。片内是搬移器（生产者）写槽、计算单元（消费者）读槽，主机侧是复制流（生产者）传下一批、计算流（消费者）处理当前批，两处用的是同一对信号，「输入已准备好」（满）和「旧数据已用完」（空）。区别只在实现机制：片内用栅栏，也就是共享内存计数器，几十个周期；主机侧用 CUDA event，跨流、经 L2 或主机，贵一到两个数量级。所以双缓冲这个模式只需要学一次，然后在不同尺度上反复看到它：主机与显存之间、显存与共享内存之间、共享内存与寄存器之间，每一级都是一对槽加两个信号。
 
@@ -772,7 +772,7 @@ FlashAttention 围绕这一逐块计算过程安排存储，减少长序列注�
 
 这里插了一段亲身经历：读到 FlashAttention 时，笔者想起了自己在 2019 年做 AKG 的那段经历。当时为了融合 Softmax 算子，笔者四处寻找合适的在线算法，后来找到 NVIDIA 在 2018 年发表的研究，才得以结合 AKG 的分块与融合能力，把前面的矩阵乘法和后面的 Softmax 接在一起计算。笔者那时甚至还不了解注意力机制，后来才意识到，自己偶然摸到了 FlashAttention 的一条核心思路。从这一步走到完整的 FlashAttention，还需要把后续与 $V$ 的加权求和也纳入在线更新，并围绕完整注意力安排片内存储和数据搬移。
 
-> 来源确认：这里所说「NVIDIA 在 2018 年发表的研究」应为 Maxim Milakov 与 Natalia Gimelshein（NVIDIA）的 *Online normalizer calculation for softmax*（arXiv:1805.02867, 2018），该文给出了流式（在线）计算 Softmax 归一化量的方法。（来源：[Online normalizer calculation for softmax](https://ar5iv.labs.arxiv.org/html/1805.02867)）
+> 来源确认：所说的「NVIDIA 在 2018 年发表的研究」应为 Maxim Milakov 与 Natalia Gimelshein（NVIDIA）的 *Online normalizer calculation for softmax*（arXiv:1805.02867, 2018），该文给出了流式（在线）计算 Softmax 归一化量的方法。（来源：[Online normalizer calculation for softmax](https://ar5iv.labs.arxiv.org/html/1805.02867)）
 
 回到注意力计算本身。标准注意力先计算 $S=QK^{\mathsf T}/\sqrt{d}$，再计算 $P=\text{softmax}(S)$，最后计算 $O=PV$。把这三个运算分别交给通用算子，可以直接按公式组合程序，算子之间通过中间张量交换结果。掌握完整注意力计算的数据依赖后，便可以采用另一种编译与执行方式：利用 Softmax 的归约关系，跨过独立算子的边界，在小块数据上连续计算。下面先算出原来完整保存中间张量的开销，再推导逐块计算所需保存的状态。
 
@@ -781,7 +781,7 @@ FlashAttention 围绕这一逐块计算过程安排存储，减少长序列注�
 这笔账可以自己算清楚。一个头的 $Q$、$K$、$V$、$O$ 各有 $8192\times128$ 个元素，BF16 每元素 2 bytes，$8192\times128\times2 = 2{,}097{,}152$ bytes 即 2 MiB，四份共 8 MiB。完整的 $S$ 与 $P$ 各有 $8192\times8192$ 个元素，FP32 每元素 4 bytes，$8192\times8192\times4 = 268{,}435{,}456$ bytes 即 256 MiB，两份共 512 MiB，各写一次读一次就是 $4\times256=1024$ MiB，也就是 1 GiB。对比很刺眼：真正有用的输入输出只有 8 MiB，中间矩阵却要搬 1 GiB，是它的 128 倍。这个比例还随 $L$ 线性增长，$S$、$P$ 正比于 $L^2$，$Q$、$K$、$V$、$O$ 正比于 $L$，比值就正比于 $L$。序列越长，朴素实现越亏，这正是长上下文场景必须做 IO 感知优化的原因。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-softmax-materialize.svg" alt="上半图 Q、K 计算分数得到 S，再做整行 Softmax 得到 P，P、V 计算输出 O，S 与 P 各 256 MiB 并写出再读回；下半图处理当前分数块后更新 m、ℓ、u 并传给下一块" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-softmax-materialize.svg" alt="上半图 Q、K 计算分数得到 S，再做整行 Softmax 得到 P，P、V 计算输出 O，S 与 P 各 256 MiB 并写出再读回；下半图处理当前分数块后更新 m、ℓ、u 并传给下一块" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>两种 Softmax 路径。</strong> 完整矩阵方案把 S、P 各 256 MiB 写出再读回，合计 1 GiB；分块方案只传递已处理部分的最大值、指数和与加权值。</figcaption>
 </figure>
 
@@ -792,7 +792,7 @@ FlashAttention 围绕这一逐块计算过程安排存储，减少长序列注�
 **例 5-6：在线 Softmax 如何合并分块结果并保持归一化？** 分数为 $[0, \ln 2]$，对应值为 $[1, 3]$，每块只含一个元素。第一块得到 $m=0$、$\ell=1$、$u=1$。处理第二块后，最大值增至 $\ln 2$，将原来的 $\ell$ 和 $u$ 都乘以 $r=1/2$；新元素的指数为 1，于是 $\ell' = 1/2+1 = 1.5$，$u' = 1/2+3 = 3.5$，结果为 $7/3$。一次处理整行时，两个权重正比于 1 和 2，结果同样为 $(1+2\times3)/3 = 7/3$。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-online-softmax.svg" alt="三步流程：第一块得到 m=0、ℓ=1、u=1；第二块 s=ln 2、V=3，得到 m'=ln 2、r=1/2，旧统计量同乘 1/2；合并后 ℓ'=1.5、u'=3.5，最终 u'/ℓ'=7/3" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-online-softmax.svg" alt="三步流程：第一块得到 m=0、ℓ=1、u=1；第二块 s=ln 2、V=3，得到 m'=ln 2、r=1/2，旧统计量同乘 1/2；合并后 ℓ'=1.5、u'=3.5，最终 u'/ℓ'=7/3" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>统计量的增量更新。</strong> 箭头传递的是统计量，旧分数无需保留；更换最大值基准时，用 r 缩放旧的 ℓ 与 u。</figcaption>
 </figure>
 
@@ -859,7 +859,7 @@ K/V 块越小，其自身和分数块占用越少，就能容纳更多 $Q$ 行�
 更新次数也有来源：每次「$Q$ 块与 K/V 块」相遇就要更新一次在线状态，所以更新次数等于扫描次数乘每次扫描的 K/V 块数，也就是扫描次数乘 $\lceil 8192/b \rceil$。$b=1$ 时 $64\times8192 = 524{,}288$；$b=64$ 时 $100\times128 = 12{,}800$；$b=128$ 时 $155\times64 = 9{,}920$。比值 $524{,}288/12{,}800 = 40.96 \approx 41$ 倍，与这里一致。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-kv-block-size.svg" alt="三个点沿接口读写量与块对更新次数两个方向排列：b=1 读取最少但更新最多，b=128 读取最多但更新最少，b=64 位于两者之间；从 b=64 移到 b=1，更新次数约增至 41 倍" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-kv-block-size.svg" alt="三个点沿接口读写量与块对更新次数两个方向排列：b=1 读取最少但更新最多，b=128 读取最多但更新最少，b=64 位于两者之间；从 b=64 移到 b=1，更新次数约增至 41 倍" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>块大小的两端。</strong> 横轴越靠左表示少读数据，纵轴越靠下表示少做更新；块越大，重复读取越多，但块对更新次数下降。</figcaption>
 </figure>
 
@@ -873,7 +873,7 @@ FlashAttention-3 的异步执行，就是 5.1.5 节讲的 warp specialization �
 
 > 来源确认：CUDA 编程指南的计算能力表为计算能力 12.x 列出每个 SM 的共享内存上限与每个线程块的上限，与这里 5.2.2 节及本节引用的 100 KB / 99 KB 相符。（来源：[CUDA Programming Guide — 5.1 Compute Capabilities](https://docs.nvidia.com/cuda/archive/13.2.2/cuda-programming-guide/05-appendices/compute-capabilities.html)）
 
-这里还有一个容易忽略的等价性。这里说 FlashAttention「在相同注意力范围内，查询与键的匹配、值的加权仍然都要算」，也就是说它不减少 FLOPs，甚至因为在线缩放，浮点运算次数还略多；它减少的是显存读写，把 1 GiB 的中间矩阵读写降到几乎为零。它也不改变数学结果，$u/\ell$ 与原始 softmax 的加权平均在数学上等价，但浮点结果会有舍入差异，因为计算顺序变了，这正好呼应 5.2.4 节的结论：改了归约次序，结果就会不同。所以 FlashAttention 是典型的带宽优化，收益大小完全取决于中间矩阵读写原本占多大比重，序列越长收益越大。$L=8192$ 时中间矩阵读写是 1 GiB，是输入输出 8 MiB 的 128 倍，收益巨大。「不改变数学结果」与「浮点结果相同」是两件事，前者成立，算法等价；后者不成立，计算顺序变了，舍入不同。
+这里还有一个容易忽略的等价性。 FlashAttention「在相同注意力范围内，查询与键的匹配、值的加权仍然都要算」，也就是说它不减少 FLOPs，甚至因为在线缩放，浮点运算次数还略多；它减少的是显存读写，把 1 GiB 的中间矩阵读写降到几乎为零。它也不改变数学结果，$u/\ell$ 与原始 softmax 的加权平均在数学上等价，但浮点结果会有舍入差异，因为计算顺序变了，这正好呼应 5.2.4 节的结论：改了归约次序，结果就会不同。所以 FlashAttention 是典型的带宽优化，收益大小完全取决于中间矩阵读写原本占多大比重，序列越长收益越大。$L=8192$ 时中间矩阵读写是 1 GiB，是输入输出 8 MiB 的 128 倍，收益巨大。「不改变数学结果」与「浮点结果相同」是两件事，前者成立，算法等价；后者不成立，计算顺序变了，舍入不同。
 
 和 5.3.1 的关系要理清。5.3.1 讲的是逐元素算子可以直接融合，5.3.3 讲的是带归约的算子怎么也能融合，两者的桥梁就是用固定大小的状态代替全部历史数据：对逐元素算子是「算一片丢一片」，因为不需要历史；对 Softmax 是「用 $(m,\ell,u)$ 概括全部历史」，因为需要历史，但历史可以被压缩成一个定长元组。这个「加法定点（associative accumulation）」的思路可以用在一切「可结合归约」上，求和、求最大值都行，所以它是一个可以迁移的方法论，不限于注意力。
 
@@ -982,7 +982,7 @@ for io in range(ceil_div(M, BM)):
 循环中的 fuse 还可以把多个迭代维合成一个维度：例如把 $16 \times 192$ 个输出块的二维坐标转换为 0 到 3071 的一维编号，再分配给加速器工作组。这改变了遍历输出块和分配任务的方式；将 SiLU 紧接在矩阵乘的 tile 后面，则省去了中间矩阵的写回和重读。两者可以在同一份调度中组合使用。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-loop-lifetime.svg" alt="三层循环结构：最外层遍历输出块并创建 16 KiB FP32 累加器；中间层 ko 循环 128 次，每轮读取 A、W 块并更新累加器；归约结束后做 BF16 舍入与 SiLU" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-loop-lifetime.svg" alt="三层循环结构：最外层遍历输出块并创建 16 KiB FP32 累加器；中间层 ko 循环 128 次，每轮读取 A、W 块并更新累加器；归约结束后做 BF16 舍入与 SiLU" width="800" height="242" loading="lazy" decoding="async">
   <figcaption><strong>临时数据的存活范围。</strong> 累加器跨整个 ko 循环存活，A、W 的当前块只活一轮；循环层次越浅，数据保留越久。</figcaption>
 </figure>
 
@@ -1011,7 +1011,7 @@ for io in range(ceil_div(M, BM)):
 浮点舍入是另一道限制。原程序把 FP32 的累加结果舍入成 BF16 再做激活，融合后的程序也要在激活之前执行 `round_to_bf16`。中间值可以直接从寄存器传给激活，省掉了写回显存这一步，可这次舍入躲不掉。数据存放在哪里，和数值用什么格式，是两件独立的选择。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-activation-order.svg" alt="左侧先求 1 + (−1) = 0，再算 SiLU(0) = 0；右侧先分别算 SiLU(1) 与 SiLU(−1)，再相加得到约 0.4621" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-activation-order.svg" alt="左侧先求 1 + (−1) = 0，再算 SiLU(0) = 0；右侧先分别算 SiLU(1) 与 SiLU(−1)，再相加得到约 0.4621" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>不可交换的算子。</strong> 两组运算使用了相同的输入，只交换激活与求和的顺序，结果从 0 变为约 0.4621。</figcaption>
 </figure>
 
@@ -1030,7 +1030,7 @@ $\mathrm{SiLU}(1) + \mathrm{SiLU}(-1) \approx 0.4621$ 这个数值得自己动�
 结论是按整行最大值确定 scale 时，应先读完一行求出最大值，再量化（脚注 22：融合合法性、FP8 舍入和量化投影；RedFuser 后端阅读。444／620 MiB 计数包括 A、W 与输出；行 scale 的辅助读写另见配套计算）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-row-quantization.svg" alt="流程：先读完整行，块 0 最大值 1、块 1 最大值 10，整行最大值 10；第一项 1 按 scale 映射为 44.8，舍入为 44，再反量化为 44×10/448 = 55/56" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-row-quantization.svg" alt="流程：先读完整行，块 0 最大值 1、块 1 最大值 10，整行最大值 10；第一项 1 按 scale 映射为 44.8，舍入为 44，再反量化为 44×10/448 = 55/56" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>整行 scale 的确定。</strong> 必须读完整行才能取得最大值；量化后的第一项经过映射、舍入与反量化，得到 55/56。</figcaption>
 </figure>
 
@@ -1170,7 +1170,7 @@ compute_at(C_L0, jo)
 
 这里那句「它不是一张性能表」，值得多说一句。isl schedule 可以理解成给每次计算发一个号码牌：号码牌的顺序就是执行顺序，而分块不过是一种特定的发牌规则。真正的性能好坏要靠后面的代价模型与实测来判断（5.4.6），schedule 只负责在合法集合里把顺序说清楚。
 
-坐标为什么用「商 + 余数」这种形式？因为硬件的现实就是两级的：块级循环对应「一次搬一大块」，块内循环对应「片上向量/矩阵单元怎么遍历」。`Band {io, jo, ko}` 与 `Band {ii, jj, kk}` 恰好对应这两级，这也是这里说调度树是「循环嵌套和语句先后的结构化表示」的原因。
+坐标为什么用「商 + 余数」这种形式？因为硬件的现实就是两级的：块级循环对应「一次搬一大块」，块内循环对应「片上向量/矩阵单元怎么遍历」。`Band {io, jo, ko}` 与 `Band {ii, jj, kk}` 恰好对应这两级，这也是调度树是「循环嵌套和语句先后的结构化表示」的原因。
 
 数据搬移映射那一组公式，实际上把「哪块数据搬到哪里」也变成了映射：左侧是片上 tile 的逻辑坐标（注意 $A_{L1}$ 的四个维度是 $i_o, k_o, i_i, k_k$，说明它按归约块分槽存储），右侧是全局地址。一旦有了这组式子，编译器就能做两件很实际的事：算出容量够不够（$4 + 4 + 16 = 24\ \text{KiB}$，双缓冲再加 8 KiB），把搬移插进正确的循环层并安排复用点。
 
@@ -1285,7 +1285,7 @@ $$
 因此，调优可以按形状分别选择实现，也可以按实际调用频数选择一种综合成本较低的方案。搜索本身消耗的编译与测量时间，则属于准备成本。配套的 Agent 实验保留了代码生成、重复提交和测量记录；下一节将结合调用次数，计算节省的执行时间需要多久才能抵消搜索开销（脚注 28：实验 5-6 的搜索与测量记录；评测与部署计算。已记录两轮共 12 次 Agent 调用，未产生新的更快实现）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-average-time.svg" alt="折线图：原实现的平均执行时间恒为 10 μs；新实现从 A 占比 0 时的 20 μs 降到 1 时的 5 μs，两线在 p=2/3 处相交，交点执行时间为 10 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-average-time.svg" alt="折线图：原实现的平均执行时间恒为 10 μs；新实现从 A 占比 0 时的 20 μs 降到 1 时的 5 μs，两线在 p=2/3 处相交，交点执行时间为 10 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>按调用比例比较。</strong> A、B 原耗时均为 10 μs；新实现分别为 5 μs 与 20 μs。交点由两种实现的平均时间相等确定，位于 p=2/3。</figcaption>
 </figure>
 
@@ -1342,7 +1342,7 @@ vLLM 在 2024 年 9 月发布的 v0.6.0 就是主机开销占据步间隔的实�
 除了同一请求的相邻两轮，不同调用之间也有可以复用的准备工作。两次调用可以分别要求模型解释代码和检查测试，输入内容不同，却仍经过同一组模型层。长度与 batch 落在已有执行计划支持的范围内时，运行时可以复用程序，只更新 token、位置索引和状态地址；遇到新的形状或控制路径，就选另一份执行计划。应用通过上下文表达变化，运行时利用稳定的执行结构减少重复准备。下面分别计算图重放与形状特化这两种复用的收益。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-pipeline-stages.svg" alt="三段时间线：串行时准备 20 μs 与计算 20 μs 交替，四段共 160 μs；流水时准备下一段与计算当前段并行，约 100 μs；加速器计算缩短到 5 μs 后，总时长约 85 μs，大部分时间加速器空闲" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-pipeline-stages.svg" alt="三段时间线：串行时准备 20 μs 与计算 20 μs 交替，四段共 160 μs；流水时准备下一段与计算当前段并行，约 100 μs；加速器计算缩短到 5 μs 后，总时长约 85 μs，大部分时间加速器空闲" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>主机准备与加速器计算的节拍。</strong> 前两段展示重叠如何缩短总时间；第三段说明只提速加速器不能突破主机每 20 μs 准备一段的限制。</figcaption>
 </figure>
 
@@ -1367,32 +1367,32 @@ vLLM 这个案例有三个点值得学。瓶颈位置的诊断：一步拆成 AP
 图重放之前还有一步：得把新输入放到图所记录的地址。典型实现为图预留固定缓冲区，上游每次把新数据写到这，图按已记录的地址读取。上游输出若位于另一份张量中，就要在图执行前增加一次复制；上游直接写固定缓冲，这次复制便可省去。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-submit-vs-replay.svg" alt="上方普通提交：主机发出六次 kernel launch，加速器执行六个一一对应的 kernel；下方图重放：主机只发出一次 graph launch，加速器仍执行六个 kernel" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-submit-vs-replay.svg" alt="上方普通提交：主机发出六次 kernel launch，加速器执行六个一一对应的 kernel；下方图重放：主机只发出一次 graph launch，加速器仍执行六个 kernel" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>提交方式的对照。</strong> 图重放压缩的是主机提交次数；要减少加速器 kernel 数，需要算子融合。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-normal-trace.svg" alt="普通提交的 3 次 FFN 实测轨迹中，主机 launch 事件 18 次，加速器 kernel 事件 18 个，两类事件在 0–800 μs 内交替出现" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-normal-trace.svg" alt="普通提交的 3 次 FFN 实测轨迹中，主机 launch 事件 18 次，加速器 kernel 事件 18 个，两类事件在 0–800 μs 内交替出现" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>普通提交的事件计数。</strong> 主机逐个提交，加速器逐个执行；两类事件的密集程度反映提交与执行的节奏。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-fused-trace.svg" alt="融合激活链后的 3 次 FFN 实测中，主机 kernel launch 15 次，加速器执行 15 个 kernel" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-fused-trace.svg" alt="融合激活链后的 3 次 FFN 实测中，主机 kernel launch 15 次，加速器执行 15 个 kernel" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>融合后的计数。</strong> 激活链被合并后，主机提交与加速器 kernel 都从 18 降到 15。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-graph-trace.svg" alt="3 次 graph launch 对应 18 个加速器 kernel；主机提交次数降到 3，加速器仍执行原图的 18 个节点" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-graph-trace.svg" alt="3 次 graph launch 对应 18 个加速器 kernel；主机提交次数降到 3，加速器仍执行原图的 18 个节点" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>图重放减少了什么。</strong> 主机提交从 18 次降到 3 次，加速器 kernel 数保持 18。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-fused-graph-trace.svg" alt="先融合再重放时，主机发起 3 次图执行，加速器执行 15 个 kernel；融合减少 kernel 数，图重放减少主机提交次数" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-fused-graph-trace.svg" alt="先融合再重放时，主机发起 3 次图执行，加速器执行 15 个 kernel；融合减少 kernel 数，图重放减少主机提交次数" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>两种优化的叠加。</strong> 融合把加速器 kernel 从 18 降到 15，图重放把主机提交降到 3 次。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-graph-address.svg" alt="左侧本次新输入位于地址 X，右侧固定图缓冲位于地址 G；X 与 G 不同时先把数据复制到 G，再重放 CUDA Graph 并读取 G；若上游直接写 G，则省去复制" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-graph-address.svg" alt="左侧本次新输入位于地址 X，右侧固定图缓冲位于地址 G；X 与 G 不同时先把数据复制到 G，再重放 CUDA Graph 并读取 G；若上游直接写 G，则省去复制" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>固定地址的代价。</strong> 图按记录的地址 G 读取；输入在 X 时先复制到 G，上游直接写 G 时这次复制可以省去。</figcaption>
 </figure>
 
@@ -1417,7 +1417,7 @@ $$
 2 MiB 低于这一临界值，16 MiB 则超过。减少复制开销的两条办法：让前一个算子直接将结果写入图缓冲，或者从输入张量较小的位置开始捕获。因此，选择哪些操作组成一张图时，需要同时比较节省的主机提交时间与增加的输入复制时间（脚注 33：图重放的小输入复制、大输入复制与图执行取舍。复制带宽按源读加目标写的接口流量定义）。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-replay-copy-cost.svg" alt="堆叠条形比较三种方式：普通方式准备 20 μs、计算 20 μs，合计 40 μs；2 MiB 输入的图执行准备 5 μs、复制 2.3 μs、计算 20 μs，合计约 27 μs；16 MiB 输入复制 18.7 μs，合计约 44 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-replay-copy-cost.svg" alt="堆叠条形比较三种方式：普通方式准备 20 μs、计算 20 μs，合计 40 μs；2 MiB 输入的图执行准备 5 μs、复制 2.3 μs、计算 20 μs，合计约 27 μs；16 MiB 输入复制 18.7 μs，合计约 44 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>固定准备时间与可变复制时间。</strong> 图重放节省的准备时间固定，复制时间却随输入增大；输入到 16 MiB 时，复制成本超过节省。</figcaption>
 </figure>
 
@@ -1468,12 +1468,12 @@ FlashInfer 的例子把「复用准备」从提交序列推广到了计划（pla
 第 8 章会结合请求到达情况和动态批处理，进一步讨论如何选择和缓存程序。如果某种形状在短时间内反复出现，保留对应的编译结果可以减少重复准备；如果长期不再使用，就可以删除该缓存，为其他形状腾出空间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-bucket-padding.svg" alt="三组堆叠柱：256 行调用 8 次，实际 2048 行、补齐 2048 行；1536 行调用 1 次，实际 1536 行、补齐 512 行；2048 行调用 1 次，实际 2048 行、无需补齐" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-bucket-padding.svg" alt="三组堆叠柱：256 行调用 8 次，实际 2048 行、补齐 2048 行；1536 行调用 1 次，实际 1536 行、补齐 512 行；2048 行调用 1 次，实际 2048 行、无需补齐" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>补齐带来的额外行数。</strong> 深色是实际行数，浅灰是补齐到桶边界的行；10 次调用合计实际 5632 行，执行 8192 行。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-strategy-lines.svg" alt="三条直线：通用从 100 ms 起，每组增加 17.0 ms；分桶从 400 ms 起，每组增加 12.4 ms；特化从 900 ms 起，每组增加 6.8 ms。三线两两相交，把横轴分成三段" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-strategy-lines.svg" alt="三条直线：通用从 100 ms 起，每组增加 17.0 ms；分桶从 400 ms 起，每组增加 12.4 ms；特化从 900 ms 起，每组增加 6.8 ms。三线两两相交，把横轴分成三段" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>按重复组数选择策略。</strong> 截距是固定准备成本，斜率是每组增量；交点划分了三种策略各自更便宜的范围。</figcaption>
 </figure>
 
@@ -1526,12 +1526,12 @@ decode 时这一点更为突出。batch 为 1 时，每个矩阵—向量乘都�
 > 脚注 37：笔者在 RTX PRO 6000 Blackwell Workstation 上的测量，测量说明中「Under a real weight stream」一节及数值摘录。16 个 $4096\times4096$ 矩阵轮换使用，共 512 MiB，为 L2 容量的 4 倍；每个边界多出的时间为依赖链每个乘法的中位耗时减去同结构无依赖 kernel 的耗时。CUDA Graph 与 PDL 的边界用空 kernel 测得，实际 kernel 还要加上收尾与准备时间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-coarse-grain.svg" alt="时间线：投影连续执行八块，每块约 12.8 μs，共 102.4 μs；随后激活执行八块，每块约 1.76 μs，共 14.08 μs，总时间约 116.5 μs，激活开始前存在明显串行间隙" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-coarse-grain.svg" alt="时间线：投影连续执行八块，每块约 12.8 μs，共 102.4 μs；随后激活执行八块，每块约 1.76 μs，共 14.08 μs，总时间约 116.5 μs，激活开始前存在明显串行间隙" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>粗粒度执行的等待。</strong> 激活必须等全部投影结束，中间没有重叠；竖线标出激活开始的位置。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-persistent-kernel.svg" alt="时间线：八块投影从 0 连续排到 102.4 μs，每块 12.8 μs；首块投影完成后激活立即开始，每块激活 1.76 μs，八块流水约 114 μs 结束" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-persistent-kernel.svg" alt="时间线：八块投影从 0 连续排到 102.4 μs，每块 12.8 μs；首块投影完成后激活立即开始，每块激活 1.76 μs，八块流水约 114 μs 结束" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>持久化 kernel 的重叠。</strong> 投影之间没有空隙，激活只在每块投影之后短暂工作；任务领取与通知另计。</figcaption>
 </figure>
 
@@ -1545,7 +1545,7 @@ decode 时这一点更为突出。batch 为 1 时，每个矩阵—向量乘都�
 
 「两个阶段的耗时越接近，收益越多」是流水线的普适规律。本例中投影 12.8 μs、激活 1.76 μs，差了 7 倍多，所以按块重叠能省的上限就是这 1.76 μs/块；若两阶段都是 7 μs 左右，重叠几乎能把较快阶段完全藏掉。收益上限由较快阶段的总时长决定，跟「优化了多少」关系不大。
 
-末尾两段把视角从主机拉到了加速器内部。即使有了 persistent kernel，依赖仍然要求前一块的结果到达后才能开始，这个交接在 RTX PRO 6000 上约 370–430 ns（空 kernel 测得）到约 1 μs（全 SM 交接）。batch = 1 的 decode 特别吃亏，因为每个矩阵—向量乘都要用到全部 SM 的结果，边界必然是全局同步点。这里给出的改进办法很有意思：把「固定分工」改成「动态领取」，快者多做、慢者少做，从而把「等最慢的 SM」这一项从 1.2–2.3 μs 降到 0.74–1.06 μs，这是负载均衡思想在 SM 层面的应用。
+末尾两段把视角从主机拉到了加速器内部。即使有了 persistent kernel，依赖仍然要求前一块的结果到达后才能开始，这个交接在 RTX PRO 6000 上约 370–430 ns（空 kernel 测得）到约 1 μs（全 SM 交接）。batch = 1 的 decode 特别吃亏，因为每个矩阵—向量乘都要用到全部 SM 的结果，边界必然是全局同步点。给出的改进办法很有意思：把「固定分工」改成「动态领取」，快者多做、慢者少做，从而把「等最慢的 SM」这一项从 1.2–2.3 μs 降到 0.74–1.06 μs，这是负载均衡思想在 SM 层面的应用。
 
 易混的地方还有两处。persistent kernel 省掉的是启动开销与重复提交，数据依赖一分也省不掉，依赖所需的 L2 往返与跨 SM 交接依然要付。kernel launch 的 5 μs 与 kernel 边界的 430 ns 也得分清：前者是主机提交的代价，可以通过 persistent kernel 或图重放消除；后者是加速器上两个 kernel 之间的间隔，本来就很小。把两者混为一谈，就会以为 persistent kernel 能省下 5 μs 乘 N。至于「重叠」与「加速」，按块重叠能让活跃阶段填补空闲阶段，却不会让较慢阶段变快，节拍永远由较慢阶段决定，这和双缓冲的结论是同一条。
 
@@ -1575,7 +1575,7 @@ $$
 | 20% | 10 | 0.82 | 1.22 |
 | 20% | $\infty$ | 0.8 | 1.25（上限） |
 
-三行分别是这里给出的两个数字与一个上限，第三行 $1/0.8 = 1.25$ 与这里一致。
+三行分别是给出的两个数字与一个上限，第三行 $1/0.8 = 1.25$ 与这里一致。
 
 这个公式最实用的用法是反推。手上有一个打算优化的热点，先估计它的时间占比 $f$，就能立刻知道这次优化的天花板是 $1/(1-f)$。占 20% 的热点，无论怎么优化，最多只能带来 1.25 倍；占 60% 的热点，天花板是 2.5 倍。先算天花板，再决定投不投入。
 
@@ -1610,12 +1610,12 @@ $$
 改变开销的不只是数据从哪里取得，程序是否真正省去了计算也有影响。候选池把后续索引的搜索范围缩小，工作量随之减少。公开参考实现先对完整索引缓存执行点积，再屏蔽候选池之外的位置；论文中的生产实现直接减少后续索引扫描的条目。前者已经完成了池外点积，后者在发起计算时就省去这部分工作。同一选择规则由此对应两种执行成本。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-dependency-critical-path.svg" alt="上方 A=60 μs：准备 10 μs 后并行执行 A 60 μs 与 B 40 μs，收尾 10 μs，总请求 80 μs；下方 A=15 μs：同样准备 10 μs，A 15 μs、B 40 μs，收尾 10 μs，总请求 60 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-dependency-critical-path.svg" alt="上方 A=60 μs：准备 10 μs 后并行执行 A 60 μs 与 B 40 μs，收尾 10 μs，总请求 80 μs；下方 A=15 μs：同样准备 10 μs，A 15 μs、B 40 μs，收尾 10 μs，总请求 60 μs" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>并行分支的关键路径。</strong> 收尾等待 A、B 两条分支；A 从 60 μs 缩短到 15 μs 后，较慢分支变成 B。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-kv-residency.svg" alt="两栏柱状对比：8K 全局 KV 驻留中 V4-Flash 为 27.455 MiB，V4.1 Flash 为 6.953 MiB；8K 注意力 KV 与索引读取中 V4-Flash 为 12.556 MiB，V4.1 Flash 为 11.375 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-kv-residency.svg" alt="两栏柱状对比：8K 全局 KV 驻留中 V4-Flash 为 27.455 MiB，V4.1 Flash 为 6.953 MiB；8K 注意力 KV 与索引读取中 V4-Flash 为 12.556 MiB，V4.1 Flash 为 11.375 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量节省与读取节省不成比例。</strong> 全局驻留降到约四分之一，但包含全局条目、局部窗口和索引的逐层读取只减少约 9%。</figcaption>
 </figure>
 
@@ -1661,7 +1661,7 @@ decode 的改进发生在首输出之后，因此当前长输入请求的首 tok
 > 脚注 40：实验 5-9 的 kernel 实现、执行记录与 11 对请求。vLLM 0.23，替换后的 kernel 采用 block256／4-warps 调度，11 对输出 token 一致。客户端中位数为 816.640／815.406 ms，配对时间差的中位数 1.343 ms，首 token 中位数 435.674／436.353 ms。单独采集的性能分析记录中，prefill 为 11.218659／11.244366 ms，decode 为 2.369803／0.920376 ms。原 kernel 耗时 13.588462 ms，替换后 12.164742 ms，采集区间 850.848989 ms；各热点与其他观测 GPU 工作的时间交集为零。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch05-paired-timing.svg" alt="11 组配对柱状图，纵轴为原请求减新请求的耗时，范围 −3 到 5 ms；虚线标出中位数约 1.3 ms，0 线以上表示替换后更快" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch05-paired-timing.svg" alt="11 组配对柱状图，纵轴为原请求减新请求的耗时，范围 −3 到 5 ms；虚线标出中位数约 1.3 ms，0 线以上表示替换后更快" width="800" height="386" loading="lazy" decoding="async">
   <figcaption><strong>配对计时的读法。</strong> 每轮随机顺序、交错执行，用同一时段的差值抵消环境波动；中位数落在 1.3 ms 附近。</figcaption>
 </figure>
 
@@ -1740,7 +1740,7 @@ $$
 
 也就是至少约 92 行，这是这里补的推算。
 
-第二个问题里那个比例的错位，才是这个实验真正想让人看到的东西。配套实验只测激活子链，原始中位数 14.20／7.68 μs，省了 $6.52\ \mu s$，耗时缩短约 45.9%；访问量从 156 降到 60 MiB，减少约 61.5%。两个比例不相等。访存只是激活链耗时的一部分，kernel 启动、同步、并行度和指令开销都还在账上，融合在减少访存的同时也可能改变占用与并行度。这里给出的口径说得很清楚：「原始中位数为 14.20／7.68 μs，仅测激活子链」，这一对数字只能解释激活子链本身，外推到整层或者整个请求就不成立了。
+第二个问题里那个比例的错位，才是这个实验真正想让人看到的东西。配套实验只测激活子链，原始中位数 14.20／7.68 μs，省了 $6.52\ \mu s$，耗时缩短约 45.9%；访问量从 156 降到 60 MiB，减少约 61.5%。两个比例不相等。访存只是激活链耗时的一部分，kernel 启动、同步、并行度和指令开销都还在账上，融合在减少访存的同时也可能改变占用与并行度。给出的口径说得很清楚：「原始中位数为 14.20／7.68 μs，仅测激活子链」，这一对数字只能解释激活子链本身，外推到整层或者整个请求就不成立了。
 
 ### 实验5-3・延伸：分块归约与预取如何改变注意力计算和访存
 
@@ -1936,7 +1936,7 @@ Korch 给的是方向相反的一个例子。它的一则历史案例里，同�
 11. 为什么 5.4.6 的可行性检查里，共享内存与寄存器要分别算？
 12. 例 5-9 中，当形状 A 的调用占比为 $1/2$、$2/3$、$9/10$ 时，新实现分别更快还是更慢？临界点为什么是 $2/3$？
 13. 主机准备 20 μs、加速器计算 20 μs，100 段工作；把加速器提速到 5 μs 后总时间只降了多少？为什么？（请给出四个数字）
-14. vLLM v0.6.0 的三项改动分别解决了什么？为什么这里强调「2.7 倍是三项改动的合计收益」？
+14. vLLM v0.6.0 的三项改动分别解决了什么？为什么「2.7 倍是三项改动的合计收益」？
 15. 「图重放减少主机提交、融合减少加速器 kernel 数」——请把四种组合的（主机提交次数，加速器 kernel 数）都写出来。
 16. 图重放为什么可能变慢？写出图重放更快的条件式，并在 1792 GB/s 与 1008 GB/s 两种带宽下各算一次临界输入。
 17. 通用程序、分桶、特化三者在「多算了多少行」与「需要多少程序」上各自的代价是什么？为什么「程序已缓存」会改变最优区间？
@@ -1949,7 +1949,7 @@ Korch 给的是方向相反的一个例子。它的一则历史案例里，同�
 
 ## 这里练习与思考题索引
 
-> 这里在本章结尾设「习题与配套实验」一栏，本章收录的实验如下。这里说明：「先完成纸面推导，再用配套代码或执行记录解释差异；实验入口保留原编号。」本章范围内**没有单独的「思考题」小节**，习题即实验 5-1 至实验 5-9。
+> 这里在本章结尾设「习题与配套实验」一栏，本章收录的实验如下。说明：「先完成纸面推导，再用配套代码或执行记录解释差异；实验入口保留原编号。」本章范围内**没有单独的「思考题」小节**，习题即实验 5-1 至实验 5-9。
 
 - 实验 5-1・延伸：矩阵块大小如何改变局部存储与读取量。改为 $64\times128$ 输出块，求局部存储、A/W 读取次数与总访问量，并求有效带宽门槛。
 - 实验 5-2・核心：激活算子融合能减少多少访存与显存占用。推导 156／60 MiB 与显存峰值，并求盈亏平衡的行数。

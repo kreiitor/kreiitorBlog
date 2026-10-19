@@ -85,12 +85,12 @@ $$
 请求完成之后，调度器不再为它安排计算，状态管理器则决定如何处理留下的 KV。该请求独有的 KV 随请求结束而释放，公共前缀的 KV 可以保留下来供后续请求复用，由缓存策略继续管理。8.3 节会进一步说明这些缓存何时共享、何时释放。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-batch-identity.svg" alt="两个迭代对照：迭代 0 中请求 A、B 各占一行；迭代 1 中 A 继续执行，C 接替 B 留下的执行位置" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-batch-identity.svg" alt="两个迭代对照：迭代 0 中请求 A、B 各占一行；迭代 1 中 A 继续执行，C 接替 B 留下的执行位置" width="800" height="352" loading="lazy" decoding="async">
   <figcaption><strong>执行位置按轮分配，请求状态不随轮次搬迁。</strong> 每一轮只为活跃请求预留一行计算；请求结束后空出的行由新请求接替，但 KV 与块表仍属于原请求。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-request-timeline.svg" alt="时间线从 0 到 7 秒：排队 0.1 秒，prefill 0.096 秒，随后 255 个输出间隔各 26.5 毫秒，请求约在 6.95 秒完成，距 7 秒时限只剩约 0.05 秒" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-request-timeline.svg" alt="时间线从 0 到 7 秒：排队 0.1 秒，prefill 0.096 秒，随后 255 个输出间隔各 26.5 毫秒，请求约在 6.95 秒完成，距 7 秒时限只剩约 0.05 秒" width="800" height="231" loading="lazy" decoding="async">
   <figcaption><strong>首个 token 把时间线分成两段。</strong> 此前是排队与输入处理，决定用户何时看到响应；此后是 255 个输出间隔，决定完整答案何时返回。</figcaption>
 </figure>
 
@@ -242,7 +242,7 @@ $$
 补充：3、4、5另附了出处：脚注 3 是 MLSys 2024 调研与多 LoRA 计算；脚注 4 是固定模型在 RTX PRO 6000 上的批处理计算及 8K 对照（同脚注 2 的字节数）；脚注 5 是 batch 扫描原始记录，条件为 RTX PRO 6000、vLLM 0.23.0、BF16，三轮，正文报告中位数，吞吐覆盖剩余 prefill 和生成，排除加载与预热，8K 条件先建立共享前缀。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-batch-read.svg" alt="双对数折线图：batch 从 1 增到 64 时，2K 上下文每输出 token 读取量从 14.38 GiB 降到 0.50 GiB，8K 从 15.22 GiB 降到 1.35 GiB；两条水平线分别标出 0.28125 GiB 与 1.125 GiB 的 KV 读取量" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-batch-read.svg" alt="双对数折线图：batch 从 1 增到 64 时，2K 上下文每输出 token 读取量从 14.38 GiB 降到 0.50 GiB，8K 从 15.22 GiB 降到 1.35 GiB；两条水平线分别标出 0.28125 GiB 与 1.125 GiB 的 KV 读取量" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>整批读取量除以本轮输出 token 数。</strong> 横轴每走一小格 batch 加倍，权重项呈等距下降；两条实线逐渐贴向各自的 KV 水平线，说明总读取量最终由 KV 主导。</figcaption>
 </figure>
 
@@ -268,7 +268,7 @@ $$
 - 不过，batch 仍会影响矩阵计算对计算单元的利用率，以及 batch 内的 KV 读取量。将新的读取量代入上述时间模型，就能求出计算与 KV 读取的交点，再按首 token 延迟和输出间隔选择 batch。（脚注 6：本章条件比较的逐项复算与计算程序）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-hbm-read.svg" alt="固定 8K 上下文的折线图：传统 HBM 路径在 B=1 时约 16.34 GB、B=16 时约 2.15 GB，随 batch 增大继续下降；独立快速 ROM 路径是一条约 1.21 GB 的水平线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-hbm-read.svg" alt="固定 8K 上下文的折线图：传统 HBM 路径在 B=1 时约 16.34 GB、B=16 时约 2.15 GB，随 batch 增大继续下降；独立快速 ROM 路径是一条约 1.21 GB 的水平线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>两条路径的差距随 batch 缩小。</strong> 传统路径按整批权重除以 B 再加单请求 KV；权重若由足够快的独立存储提供，HBM 每输出 token 只需读取 KV。</figcaption>
 </figure>
 
@@ -287,18 +287,18 @@ $$
 **算例：连续批处理为何缩短总时间，却延长输出间隔？**
 
 - **题干**：最多同时运行两条请求。r0、r1 在零时刻到达，各输入 2048 个 token，分别输出 8、2 个 token；r2 在 20 ms 到达，输入 8192 个 token、输出 2 个 token；r3 在 30 ms 到达，输入 2048 个 token、输出 4 个 token。每轮耗时由实验 8-1 的 batch 1 实测拟合：**固定 26.22 ms，每个新 token 加 30.4 μs，每对满足因果关系的查询与键加 3 ns**。这组参数复现了 2K 请求单独运行时一轮 decode 的 26.26 ms 和 prefill 的 94.8 ms。固定部分是一轮中与 token 数无关的时间，包括读取整份权重（按 1792 GB/s 的峰值带宽约需 8.4 ms）和逐个提交 kernel 等开销。
-- **这里给出的结果**：固定 batch 让 r2、r3 等待 r0、r1 整组结束，**总时间约 870 ms**。连续批处理在 r1 结束后接纳 r2，**总时间降到约 766 ms**；但 r0 的下一次输出要等 r2 的 8K prefill，**最大输出间隔从约 26 ms 增至 376 ms**。总时间节省约 12%，一次输出停顿却增长到原来的 14 倍。
+- **给出的结果**：固定 batch 让 r2、r3 等待 r0、r1 整组结束，**总时间约 870 ms**。连续批处理在 r1 结束后接纳 r2，**总时间降到约 766 ms**；但 r0 的下一次输出要等 r2 的 8K prefill，**最大输出间隔从约 26 ms 增至 376 ms**。总时间节省约 12%，一次输出停顿却增长到原来的 14 倍。
 - 进一步把 r2 的 prefill 分成每块 2048 个 token，每轮最多处理 4096 个 token（与实验 8-1 的设置相同），每次先让已有请求继续 decode，再执行一段输入。最大输出间隔降到约 **133 ms**，所有请求的总完成时间约为 **844 ms**。分块后，调度器能更频繁地安排已有请求继续生成，使输出间隔更均匀。
 - 固定 batch、连续批处理、分块策略。每轮耗时参数由实验 8-1 的逐轮记录拟合：batch 1 的 2K decode 一轮 26.26 ms、prefill 94.8 ms；**最后一个输出 token 在请求结束时尚未写入 KV**。
 
 这个时间模型值得自己复算一遍。单条 2K 请求的 prefill：固定 26.22 ms 加 $2048 \times 30.4\ \mu s = 62.26$ ms，再加因果配对数 $2048 \times 2049 / 2 = 2\,098\,176$ 对 $\times 3\ \text{ns} = 6.29$ ms，合计 **94.77 ms**，与这里的 94.8 ms 一致。单条 2K 请求的一步 decode：26.22 ms 加 $1 \times 30.4\ \mu s = 0.0304$ ms，加 $2048 \times 3\ \text{ns} = 0.0061$ ms，合计 **26.26 ms**，与这里一致。而 r2 的 8K prefill 独占一轮时：26.22 加 $8192 \times 30.4\ \mu s = 249.04$，加 $8192 \times 8193/2 = 33\,558\,528$ 对 $\times 3\ \text{ns} = 100.68$，合计 **375.94 ms ≈ 376 ms**，这正是最大输出间隔 376 ms 的来源：r0 本来 26 ms 就该吐下一个 token，结果要等这一整轮 8K prefill。
 
-所以这个算例的精髓在于：连续批处理优化的是座位利用率（吞吐与总时间），代价是新来的大活儿会插队到已有请求的输出之间，表现为延迟抖动。总时间省了 12%（$870 \to 766$，$(870-766)/870 = 11.95\%$），但最长间隔涨了 14 倍（$376/26 \approx 14.5$，这里说约 14 倍）。分块（chunked prefill）就是把那个 376 ms 的大活儿切碎，夹在 decode 之间做。这里的做法是每轮先让已有请求 decode，再执行一段 prefill，于是 r0 最多只需要等一块 prefill 的时间，最长间隔从 376 ms 降到 133 ms。代价是总时间从 766 ms 涨回 844 ms，因为轮数变多、每轮的固定开销 26.22 ms 被多付了几次。这是一个非常典型的「延迟换一点点吞吐」的取舍，而且换得划算：133 ms 的抖动可以接受，376 ms 的抖动不行。
+所以这个算例的精髓在于：连续批处理优化的是座位利用率（吞吐与总时间），代价是新来的大活儿会插队到已有请求的输出之间，表现为延迟抖动。总时间省了 12%（$870 \to 766$，$(870-766)/870 = 11.95\%$），但最长间隔涨了 14 倍（$376/26 \approx 14.5$，约 14 倍）。分块（chunked prefill）就是把那个 376 ms 的大活儿切碎，夹在 decode 之间做。这里的做法是每轮先让已有请求 decode，再执行一段 prefill，于是 r0 最多只需要等一块 prefill 的时间，最长间隔从 376 ms 降到 133 ms。代价是总时间从 766 ms 涨回 844 ms，因为轮数变多、每轮的固定开销 26.22 ms 被多付了几次。这是一个非常典型的「延迟换一点点吞吐」的取舍，而且换得划算：133 ms 的抖动可以接受，376 ms 的抖动不行。
 
 补充：8 那句「最后一个输出 token 在请求结束时尚未写入 KV」还要再提一次，它就是 8.1.2 里 2303 而不是 2304 的原因，也解释了为什么容量按 `⌈(L+G−1)/p⌉` 而不是按 `L+G` 算。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/continuous-batching.svg" alt="固定批处理与连续批处理的时间线对比，连续批处理接纳新请求但长 prefill 会拉长输出间隔" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/continuous-batching.svg" alt="固定批处理与连续批处理的时间线对比，连续批处理接纳新请求但长 prefill 会拉长输出间隔" width="800" height="400" loading="lazy" decoding="async">
   <figcaption><strong>固定批处理与连续批处理。</strong> 固定批处理整组进整组出，短请求结束后位置闲置；连续批处理在迭代边界接纳新请求，但长 prefill 会拉长已有请求的输出间隔。</figcaption>
 </figure>
 
@@ -339,12 +339,12 @@ $$
 所以块长的选择是一个双侧约束。块太大，已有请求的输出间隔被拉长（图 8-6 的 376 ms）；块太小，权重读取被重复付（288 → 576 MiB），加上每轮的固定开销 26.22 ms 被多付。正确做法就是这里那句「选择能满足输出间隔要求的较大块」：先满足延迟约束，再在这一约束下尽量放大块长。这也是「prefill 优先还是 decode 优先」的答案，先 decode、再 prefill。因为 decode 是已经承诺、正在途中的输出，让它等会直接伤害用户已感知的体验；而新请求的输入晚一点开始，只影响它自己的 TTFT。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-attention-first.svg" alt="4×4 注意力矩阵：第 1 行 1 个有效格，第 2 行 2 个，第 3 行 3 个，第 4 行 4 个，共 10 个绿色格；右上三角为未来 token，不参与当前查询" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-attention-first.svg" alt="4×4 注意力矩阵：第 1 行 1 个有效格，第 2 行 2 个，第 3 行 3 个，第 4 行 4 个，共 10 个绿色格；右上三角为未来 token，不参与当前查询" width="800" height="234" loading="lazy" decoding="async">
   <figcaption><strong>没有旧上下文时的配对形状。</strong> 有效格构成下三角，总数 1+2+3+4=10；右上三角是未来 token，不参与当前查询。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-attention-context.svg" alt="4×12 注意力矩阵：左侧 32 个蓝色格表示新 token 对 8 个旧 token 的访问；右侧下三角 10 个绿色格表示块内因果配对；总配对从 10 增至 42" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-attention-context.svg" alt="4×12 注意力矩阵：左侧 32 个蓝色格表示新 token 对 8 个旧 token 的访问；右侧下三角 10 个绿色格表示块内因果配对；总配对从 10 增至 42" width="800" height="234" loading="lazy" decoding="async">
   <figcaption><strong>块长一样，末块为什么更慢。</strong> 右侧三角形只由块长决定，保持不变；左侧矩形随已有上下文变宽，旧上下文配对从 0 增到 32，总配对数变为 42。</figcaption>
 </figure>
 
@@ -423,22 +423,22 @@ $$
 若 A、B 的前八个 token 相同，还可以让它们共用两个完整块，使总分配量进一步降至 44 个 token。分页减少了尚未使用的预留空间，共享消除了重复保存的上下文，两者节省的是不同部分的内存。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-page-map.svg" alt="映射表：逻辑块 0 指向物理块 2，逻辑块 1 指向物理块 0，逻辑块 2 指向物理块 3；物理块 1 空闲" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-page-map.svg" alt="映射表：逻辑块 0 指向物理块 2，逻辑块 1 指向物理块 0，逻辑块 2 指向物理块 3；物理块 1 空闲" width="800" height="254" loading="lazy" decoding="async">
   <figcaption><strong>块表恢复逻辑顺序。</strong> 注意力按块表找到每个逻辑块对应的物理块；物理块编号与逻辑顺序无关，这正是分页的自由度。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-reserve-waste.svg" alt="堆叠柱状图：A、B、C、D 四条请求各预留 16 个 token；已用分别为 9、13、5、15，预留未用分别为 7、3、11、1；总计预留 64、实际使用 42、未用 22" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-reserve-waste.svg" alt="堆叠柱状图：A、B、C、D 四条请求各预留 16 个 token；已用分别为 9、13、5、15，预留未用分别为 7、3、11、1；总计预留 64、实际使用 42、未用 22" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>整段预留把浪费留在每请求尾部。</strong> 灰块连成大片且无法借给其他请求；请求提前结束时，未用容量只能随请求一起释放。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-paged-waste.svg" alt="堆叠柱状图：A、B、C、D 四条请求按每块 4 个 token 分配，容量分别为 12、16、8、16；已用仍为 9、13、5、15，块尾未用分别为 3、3、3、1，合计未用 10" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-paged-waste.svg" alt="堆叠柱状图：A、B、C、D 四条请求按每块 4 个 token 分配，容量分别为 12、16、8、16；已用仍为 9、13、5、15，块尾未用分别为 3、3、3、1，合计未用 10" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>分页把浪费压到块尾。</strong> 每条请求只在最后一块留下不足一块的槽位，灰色碎片从 22 个 token 降到 10 个 token。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-prefix-share.svg" alt="共享前缀的两块同时被 A、B 的块表指向；A 另有一块私有尾部，B 另有两块私有尾部；C 两块、D 四块独立分配，物理块合计 11 块，即 44 个 token" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-prefix-share.svg" alt="共享前缀的两块同时被 A、B 的块表指向；A 另有一块私有尾部，B 另有两块私有尾部；C 两块、D 四块独立分配，物理块合计 11 块，即 44 个 token" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>共享消除重复保存的内容。</strong> 前缀块只有一份，A、B 的块表分别指向它；私有尾块仍随各自分支增长，物理块总数 11 块。</figcaption>
 </figure>
 
@@ -454,7 +454,7 @@ PagedAttention 与 FlashAttention 的分工，这里有一句话值得抄下来�
 
 几个容易归错的概念放在一起看。逻辑块是「序列里第几个 token 段」，物理块是「显存里第几号块」，块表就是二者的映射表。分页消除的是外部碎片（大块空地无法利用），代价是引入内部碎片（每块尾部最多浪费 $p-1$ 个 token 的槽位）；在 LLM 场景里，后者远小于前者。分页分配与前缀共享的关系也没那么对称：分页是地址映射，共享是多张块表指向同一个物理块，没有分页就没有共享的物理基础，因为连续的段没法只共享一半。
 
-> 来源确认：这里说"2023 年，伯克利等机构的研究者在 vLLM 中提出 PagedAttention"。外部资料显示，该工作即 *Efficient Memory Management for Large Language Model Serving with PagedAttention*（Woosuk Kwon 等，UC Berkeley），发表于 2023 年 SOSP，正是 vLLM 系统的论文。（来源：[Efficient Memory Management for Large Language Model Serving with PagedAttention | Proceedings of the 29th Symposium on Operating Systems Principles](https://dl.acm.org/doi/abs/10.1145/3600006.3613165)）
+> 来源确认："2023 年，伯克利等机构的研究者在 vLLM 中提出 PagedAttention"。外部资料显示，该工作即 *Efficient Memory Management for Large Language Model Serving with PagedAttention*（Woosuk Kwon 等，UC Berkeley），发表于 2023 年 SOSP，正是 vLLM 系统的论文。（来源：[Efficient Memory Management for Large Language Model Serving with PagedAttention | Proceedings of the 29th Symposium on Operating Systems Principles](https://dl.acm.org/doi/abs/10.1145/3600006.3613165)）
 
 分页把 KV 从「一整段连续预留」改造成「按块寻址」，尾部浪费就从最多一整段降到每块最多 $p-1$ 个 token，前缀共享也顺带成了可能。
 
@@ -477,18 +477,18 @@ $$
 记的是分页、取消与抢占、四分支共享、冷分支对照：共享分支的输出相同；冷、热分支具有相同的块峰值，但 prefill 量不同。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-refcount.svg" alt="流程：A、B 共用时引用计数为 2；A 结束后降为 1，B 继续使用；B 结束且加速器不再访问后降为 0，块回到空闲池" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-refcount.svg" alt="流程：A、B 共用时引用计数为 2；A 结束后降为 1，B 继续使用；B 结束且加速器不再访问后降为 0，块回到空闲池" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>引用计数回答还有几个使用者。</strong> 计数不为 0 时不能回收共享块；计数归零后，还要确认已提交的加速器操作不再读取该块。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-cow.svg" alt="共享尾块为 a、b、c 和一个空位；分支 A 写入前取得副本并追加 x，得到 a、b、c、x；分支 B 取得另一份副本并追加 y，得到 a、b、c、y；此前已填满的块保持只读共享" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-cow.svg" alt="共享尾块为 a、b、c 和一个空位；分支 A 写入前取得副本并追加 x，得到 a、b、c、x；分支 B 取得另一份副本并追加 y，得到 a、b、c、y；此前已填满的块保持只读共享" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>只在真正写入时复制。</strong> 两个分支不再争用同一个空位；复制粒度是块，块中只要有一个 token 要分叉，整个块都要复制。</figcaption>
 </figure>
 
 数据流走一遍，这是本节最要紧的机制。先建分支：B 复用 A 的前缀时，B 的块表里指向 A 已有的那两个物理块，于是这两个块的引用计数从 1 变 2。共享期间它们是只读的，A、B 各自 decode 时都会读公共前缀块，但不会写，因为这些 token 的 KV 早就算好了，不会再变。等到追加阶段，A、B 开始生成不同的 token，各自需要往当前尾块写；如果尾块还有空位且被共享，就必须先复制一份（写时复制，Copy-on-Write），A 拿到一份私有副本写 x，B 拿到另一份写 y，而已经写满的块（那三个 token 所在的块）保持只读、继续共享。等到结束：A 结束，释放它持有的所有引用，公共块引用数 2→1 不回收，A 的私有块引用数 1→0 回收，B 继续；B 结束时公共块引用数 1→0，回收。
 
-引用为 0 还不够，这里强调还要确认「加速器操作不再访问它」。因为调度是异步的：主机端已经把这一轮 kernel 提交给 GPU，而 GPU 可能还在读这块显存。这时立刻把块分给别人，新请求写入的数据就会覆盖旧请求正在读的数据，结果是「答案错得莫名其妙」。后面取消实验里那 1.6 ms 与 31 ms 的差别，就是这件事的实测证据。
+引用为 0 还不够，还要确认「加速器操作不再访问它」。因为调度是异步的：主机端已经把这一轮 kernel 提交给 GPU，而 GPU 可能还在读这块显存。这时立刻把块分给别人，新请求写入的数据就会覆盖旧请求正在读的数据，结果是「答案错得莫名其妙」。后面取消实验里那 1.6 ms 与 31 ms 的差别，就是这件事的实测证据。
 
 四分支那笔账再复算一次：$4 \times (95+9) = 416$ 条引用；物理块 $95 + 4 \times 9 = 95 + 36 = 131$ 个；省下 $416 - 131 = 285$ 块，比例 $285/416 = 68.5\% \approx 69\%$。36 个私有尾块仍随分支数增长这件事要留意，共享只能去掉公共部分，每个分支自己的后缀省不掉。这与 8.3.1 算例里「分页省预留、共享省重复」是同一个道理。
 
@@ -515,7 +515,7 @@ $$
 注明取消观察来自状态实验，记录值约 1.55 ms 与 31.41 ms，计时包含观察器开销；脚注 14 与脚注 12 是同一组对照。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-cancel-flow.svg" alt="流程：收到取消，停止安排后续迭代，等待已提交的加速器操作完成，释放私有块，更新共享引用；接口约 1.6 毫秒返回，块到约 31 毫秒才真正释放" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-cancel-flow.svg" alt="流程：收到取消，停止安排后续迭代，等待已提交的加速器操作完成，释放私有块，更新共享引用；接口约 1.6 毫秒返回，块到约 31 毫秒才真正释放" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>取消接口返回不等于空间已释放。</strong> 已提交的 kernel 可能仍在读取显存，必须等它完成；准入控制不能把“已取消”当成“已释放”。</figcaption>
 </figure>
 
@@ -572,22 +572,22 @@ $$
 注明混合状态恢复与 checkpoint 计算、MLSys 2025 调研，Kimi K3 的容量按指定存储格式和并行配置计算；脚注 17 是 DeepSeek V4.1 官方技术报告的第 1、2、3 节与第 6 节，以及跨章会话的固定条件与复算。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-prefix-reuse.svg" alt="输入按轮次分成两段：与上一轮逐 token 相同的共同前缀，以及本轮新增的其余输入；轮次为 1 到 12，token 规模到 3000" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-prefix-reuse.svg" alt="输入按轮次分成两段：与上一轮逐 token 相同的共同前缀，以及本轮新增的其余输入；轮次为 1 到 12，token 规模到 3000" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>可复用比例只是内容层面的上限。</strong> 蓝色部分表示逐 token 相同的共同前缀，橙色部分必须重新处理；实际能否命中缓存，还取决于旧状态是否仍然保留。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-snapshot-restore.svg" alt="从序列起点累计的 token 轴：4096 处有快照，8192 处是最近快照，10752 处是文本匹配末端；系统从 8192 恢复，再重算 2560 个 token 到达匹配末端" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-snapshot-restore.svg" alt="从序列起点累计的 token 轴：4096 处有快照，8192 处是最近快照，10752 处是文本匹配末端；系统从 8192 恢复，再重算 2560 个 token 到达匹配末端" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>快照越密，恢复时重算越少。</strong> 系统不能直接从 10752 继续，只能从最近的 8192 恢复递推状态，再补算中间 2560 个 token。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-context-update.svg" alt="三种更新方式对照：追加复用原 8K 并新增 1K；改写开头使 9K 全部重新处理；总结历史把历史压成 2K 摘要再加 1K 新增，并另计总结工作" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-context-update.svg" alt="三种更新方式对照：追加复用原 8K 并新增 1K；改写开头使 9K 全部重新处理；总结历史把历史压成 2K 摘要再加 1K 新增，并另计总结工作" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>复用长度决定重算量。</strong> 追加最省算力但上下文继续变长；总结最省内存但每次都要重做摘要；改写开头让整段前缀失去复用机会。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-prefix-recovery.svg" alt="三条编码器恢复路径：全局 KV 与编码器 SWA 都命中时直接处理新输入；仅全局 KV 命中时重放前缀末尾窗口；全局 KV 未命中时重算缺失前缀。三条路径随后都执行解码器末尾窗口重放、构建 SWA、开始生成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-prefix-recovery.svg" alt="三条编码器恢复路径：全局 KV 与编码器 SWA 都命中时直接处理新输入；仅全局 KV 命中时重放前缀末尾窗口；全局 KV 未命中时重算缺失前缀。三条路径随后都执行解码器末尾窗口重放、构建 SWA、开始生成" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>缓存命中状态中的 SWA 专指编码器。</strong> 无论编码器走哪条路径，prefill 都要为第一步 decode 构建解码器 SWA；箭头只表示执行先后，框的大小不代表耗时。</figcaption>
 </figure>
 
@@ -644,7 +644,7 @@ $$
 给出链路规格：RTX PRO 6000 Blackwell 工作站版的系统接口为 PCIe 5.0 x16，带宽为 PCIe Gen4 的两倍；A100 80GB 的 PCIe 4.0 为 64 GB/s（收发合计），即 x16 每方向 32 GB/s，由此 PCIe Gen5 x16 每方向 64 GB/s。正文按标称值计算，得到的是传输时间的下界，前缀的重算时间按实验 8-1 的效率表计算。脚注 19 是 12 轮实际输入的缓存回放，回放采用原任务的输入序列，串行执行请求，每轮生成一个 token。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-cache-ab.svg" alt="左右对照：一个 A 前缀占 864 MiB，命中概率 50% 时期望净节省 132.7 ms；三个 B 前缀各占 288 MiB，各节省 40.3 ms，合计 120.9 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-cache-ab.svg" alt="左右对照：一个 A 前缀占 864 MiB，命中概率 50% 时期望净节省 132.7 ms；三个 B 前缀各占 288 MiB，各节省 40.3 ms，合计 120.9 ms" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>宽度表示容量，数字表示时间收益。</strong> 两者占用同样的 864 MiB；保留一个 A 的期望节省比保留三个 B 多 11.8 ms，原因是长前缀的重算时间超线性增长。</figcaption>
 </figure>
 
@@ -738,7 +738,7 @@ $$
 图 8-23 把这一步还原成字节布局。每行都保存相同的 32 个值：编码部分缩短了，scale 仍要留下。所以 q8_0 和 q4_0 的总长度分别是 34 和 18 bytes，而不是只看编码位宽得到的 32 和 16 bytes。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-kv-layout.svg" alt="三条横向堆叠条：BF16 为 64 字节；q8_0 为 32 字节码值加 2 字节 scale，共 34 字节；q4_0 为 16 字节码值加 2 字节 scale，共 18 字节" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-kv-layout.svg" alt="三条横向堆叠条：BF16 为 64 字节；q8_0 为 32 字节码值加 2 字节 scale，共 34 字节；q4_0 为 16 字节码值加 2 字节 scale，共 18 字节" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>scale 是每组省不掉的固定开销。</strong> q8_0 和 q4_0 的总长度分别是 34 与 18 字节，而不是只看编码位宽得到的 32 与 16 字节；把每组总长度乘以组数，就得到整条上下文的 KV 容量。</figcaption>
 </figure>
 
@@ -778,7 +778,7 @@ $\Delta T = \Delta D / \beta - T_c$ 是本节的核心判据，而且是通用�
 - $T_c = 0.2$ ms 时净省 $0.487 - 0.2 = \mathbf{0.287}$ ms；
 - $T_c = 0.8$ ms 时净亏 $0.487 - 0.8 = \mathbf{-0.313}$ ms，这个说法是「反而增加约 0.313 ms」。
 
-有效带宽为什么取 1.16 TB/s，这里说它是峰值 1792 GB/s 的 65%，也就是 8.6.3 节效率表里 batch 64 的 decode 带宽效率。$1792 \times 0.65 = 1164.8$ GB/s，四舍五入就是约 1.16 TB/s。
+有效带宽为什么取 1.16 TB/s，它是峰值 1792 GB/s 的 65%，也就是 8.6.3 节效率表里 batch 64 的 decode 带宽效率。$1792 \times 0.65 = 1164.8$ GB/s，四舍五入就是约 1.16 TB/s。
 
 上下文越长压缩越划算，这件事用那两条线性拟合式能说得很干净。BF16 是 $6.44 + 4.37 \times 10^{-5} L$，FP8 是 $6.58 + 2.37 \times 10^{-5} L$。两条直线，FP8 起点高 0.14 ms，斜率小 $2 \times 10^{-5}$ ms/token，交点就在 $0.14 / (2 \times 10^{-5}) = 7000$ 个 token。两端各复算一次：
 
@@ -826,12 +826,12 @@ $$
 对应权重卸载与预取计算，PCIe Gen5 与 NVLink-C2C 两档链路的复制与预取调度都在里面，每层计算时间取 batch 1 一轮 decode 的 26.26 ms 除以 36 层；GH200 架构说明写的是 NVLink-C2C 合计 900 GB/s，每方向 450 GB/s。脚注 25 对应张量压缩与传输，资料包含 LLM.265 的视频引擎实现、专用硬件设计与性能估计。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-offload-buffer.svg" alt="堆叠柱状图：卸载九份 FFN 共腾出 2592 MiB；使用一组 288 MiB 预取缓冲时净省 2304 MiB；使用两组 576 MiB 缓冲时净省 2016 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-offload-buffer.svg" alt="堆叠柱状图：卸载九份 FFN 共腾出 2592 MiB；使用一组 288 MiB 预取缓冲时净省 2304 MiB；使用两组 576 MiB 缓冲时净省 2016 MiB" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>净空间等于腾出量减去预取缓冲。</strong> 两组缓冲支持复制与计算重叠，但多占一份 288 MiB，净收益随之下降。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-copy-latency.svg" alt="两根柱：每轮复制 2592 MiB 经 PCIe Gen5 x16 每方向 64 GB/s 至少约 42.5 ms；经 GH200 NVLink-C2C 每方向 450 GB/s 至少约 6.0 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-copy-latency.svg" alt="两根柱：每轮复制 2592 MiB 经 PCIe Gen5 x16 每方向 64 GB/s 至少约 42.5 ms；经 GH200 NVLink-C2C 每方向 450 GB/s 至少约 6.0 ms" width="800" height="370" loading="lazy" decoding="async">
   <figcaption><strong>链路带宽决定复制能否被计算掩盖。</strong> PCIe 的 42.5 ms 已超过一轮 decode 的 26.26 ms；NVLink-C2C 的 6.0 ms 可以藏进计算。</figcaption>
 </figure>
 
@@ -890,12 +890,12 @@ $$
 对应 KV 与 Q 精度对照、固定 FP8 权重下的 Q 控制以及并发容量记录。正文采用的是 BF16 权重组；另一组固定 FP8 权重时，BF16 Q 与默认路径分别为 32/32 和 28/32。脚注 27 对应自然输出与重试成本，实验用已知答案校验，重试成本包含错误首答的生成成本。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-kv-baseline.svg" alt="8 行 4 列结果矩阵：任务 1 至 4 与任务 6 至 8 的四次生成全部正确；任务 5 的四次生成全部错误；总正确数 28/32" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-kv-baseline.svg" alt="8 行 4 列结果矩阵：任务 1 至 4 与任务 6 至 8 的四次生成全部正确；任务 5 的四次生成全部错误；总正确数 28/32" width="800" height="340" loading="lazy" decoding="async">
   <figcaption><strong>总正确数之外还要看错在哪。</strong> 4 个错误全部落在任务 5 这一行；同样的 28/32 也可能对应完全不同的错题集合。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-kv-fp8q.svg" alt="8 行 4 列结果矩阵：任务 5 的四次生成全部正确，任务 6 的四次生成全部错误，其余任务全部正确；总正确数仍为 28/32" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-kv-fp8q.svg" alt="8 行 4 列结果矩阵：任务 5 的四次生成全部正确，任务 6 的四次生成全部错误，其余任务全部正确；总正确数仍为 28/32" width="800" height="340" loading="lazy" decoding="async">
   <figcaption><strong>正确数相同，答对的题不同。</strong> 任务 5 从全错变为全对，任务 6 恰好相反；只看总数会得出“两种格式质量一样”的错误结论。</figcaption>
 </figure>
 
@@ -943,7 +943,7 @@ $$
 图 8-29 展示的就是第三个 token 发生分歧时的处理顺序。目标模型虽然已经算出了后续 token 的验证结果，但第四个 token 依赖错误的第三个草稿 token，不能继续采用。一次验证最终留下两个匹配的草稿 token 和一个修正 token，共三个输出。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/speculative-decoding.svg" alt="草稿 a、b、c、d 经目标模型验证，前两位匹配，第三位改为 x，第四个草稿作废，本轮输出 a、b、x" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/speculative-decoding.svg" alt="草稿 a、b、c、d 经目标模型验证，前两位匹配，第三位改为 x，第四个草稿作废，本轮输出 a、b、x" width="800" height="373" loading="lazy" decoding="async">
   <figcaption><strong>推测解码的验证与回退。</strong> 目标模型一次验证多个草稿位置；分歧点之后全部丢弃，KV 有效长度回退到已确认的位置。</figcaption>
 </figure>
 
@@ -964,12 +964,12 @@ $$
 对应推测采样这里、推测解码这里、框架计数与预算这里以及调研中的框架覆盖，基础概率算法、草稿路线和具体实现分别引用。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-draft-a.svg" alt="草稿恒为 A：以 0.25 的概率接受并输出 A；以 0.75 的概率拒绝 A，并从差额分布输出 B；最终 P(A)=1/4，P(B)=3/4" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-draft-a.svg" alt="草稿恒为 A：以 0.25 的概率接受并输出 A；以 0.75 的概率拒绝 A，并从差额分布输出 B；最终 P(A)=1/4，P(B)=3/4" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>拒绝后的重采样补齐目标分布。</strong> 草稿总给 A 时，只有 1/4 的情况能直接接受；其余 3/4 必须改为 B，最终分布才与目标一致。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-draft-b.svg" alt="草稿恒为 B：以 0.75 的概率接受并输出 B；以 0.25 的概率拒绝 B，并从差额分布输出 A；最终 P(A)=1/4，P(B)=3/4" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-draft-b.svg" alt="草稿恒为 B：以 0.75 的概率接受并输出 B；以 0.25 的概率拒绝 B，并从差额分布输出 A；最终 P(A)=1/4，P(B)=3/4" width="800" height="327" loading="lazy" decoding="async">
   <figcaption><strong>同样的目标分布，更高的接受概率。</strong> 草稿分布越接近目标分布，直接接受的比例越高，每轮平均输出数也越多。</figcaption>
 </figure>
 
@@ -1026,7 +1026,7 @@ $$
 对应上下文草稿的分布与成本计算及有理数穷举结果。算例采用二符号目标分布；RTX PRO 6000 上的每轮时间见 AAAA、BBBB 与含 2 秒索引的 256 token 请求；普通 decode 一轮 26.26 ms 取自实验 8-1 的逐轮记录，DFlash 的每轮耗时取自实验 8-5 的逐步记录。脚注 30 对应推测采样这里、推测解码这里、框架计数与预算这里以及调研中的框架覆盖。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-draft-query.svg" alt="折线图：横轴为每轮草稿查询时间 0 到 60 ms，纵轴为每输出 token 耗时 0 到 70 ms；普通 decode 是 26.26 ms 的水平线；AAAA 从约 19.7 ms 升到约 64.8 ms，BBBB 从约 8.6 ms 升到约 28.3 ms；两条曲线分别在约 8.7 与 53.9 ms 处与水平线相交" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-draft-query.svg" alt="折线图：横轴为每轮草稿查询时间 0 到 60 ms，纵轴为每输出 token 耗时 0 到 70 ms；普通 decode 是 26.26 ms 的水平线；AAAA 从约 19.7 ms 升到约 64.8 ms，BBBB 从约 8.6 ms 升到约 28.3 ms；两条曲线分别在约 8.7 与 53.9 ms 处与水平线相交" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>查询越便宜，推测解码越容易成立。</strong> 每轮验证固定 26.26 ms，每输出 token 的耗时等于一轮耗时除以平均输出数；AAAA、BBBB 的查询预算分别为 8.7 与 53.9 ms。</figcaption>
 </figure>
 
@@ -1196,7 +1196,7 @@ $\lambda$ 是平均到达率，$\bar{T}$ 是请求在系统里的平均停留时
 
 这里那条短请求就是时间线的极端情形。0.196 秒首输出加 6.76 秒生成，已经用掉 6.95 秒，余量只剩 0.05 秒，再多排 0.1 秒就会超时。对这种请求，"接收"本身就是一个需要算的决策。提前识别出来，可以拒绝、转交其他实例，或者换更快的执行配置。
 
-取消是反方向的动作。请求失去使用价值时，停止给它安排后续迭代，等已经提交的加速器操作做完，再释放空间。8.3.2 讲过机制，这里讲的是策略，顺序不能颠倒，因为已提交的 kernel 还在读显存。取消在服务层面还多一层含义，也就是判断"失去使用价值"：客户端断连算，已经超时也算。已经超时的请求继续跑只会白白消耗算力和能耗，8.6.3 会把这笔能耗算进成本。
+取消是反方向的动作。请求失去使用价值时，停止给它安排后续迭代，等已经提交的加速器操作做完，再释放空间。8.3.2 讲过机制，讲的是策略，顺序不能颠倒，因为已提交的 kernel 还在读显存。取消在服务层面还多一层含义，也就是判断"失去使用价值"：客户端断连算，已经超时也算。已经超时的请求继续跑只会白白消耗算力和能耗，8.6.3 会把这笔能耗算进成本。
 
 本节最后一句原话是"这些优化会相互影响"，它其实是全章的收束。KV 压缩让实例能同时接收更多请求，较大的 batch 又让普通 decode 更有效地共享权重，两件事一叠加，闲置算力变少，推测解码的相对收益也就跟着下降。所以任何一个优化都不能孤立地评价，必须在同一组条件、同一套指标下比较。接下来的 8.6.3 就把这些变化放到同一组请求上，算一算组合之后的执行时间和内存占用。
 
@@ -1227,12 +1227,12 @@ $$
 交代了这组数据的来路：服务与能量原始记录，同一设备、八道题、七条件各三个 16 请求窗口；同题跨条件输出一致，42 个错误来自同一道题。吞吐表取各窗口指标的中位数。每个窗口包含 16 条请求，p95 按排序后向上取整的位置计算，得到的就是最大值。NVML 与 RAPL 组件计数窗口略宽于请求窗口，其他服务仍在运行。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-completion-throughput.svg" alt="七组条件的完成吞吐表：逐个 4 约 1.22 req/s，连续 4 约 2.33 req/s，连续 16 约 2.38 req/s；其余条件未给出具体中位数" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-completion-throughput.svg" alt="七组条件的完成吞吐表：逐个 4 约 1.22 req/s，连续 4 约 2.33 req/s，连续 16 约 2.38 req/s；其余条件未给出具体中位数" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>完成吞吐只数跑完了多少请求。</strong> 相同到达率下，连续批处理能把完成吞吐抬高；到达率从 4 增到 16 时，完成吞吐几乎不再增长。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-good-throughput.svg" alt="七组条件的有效吞吐表：逐个 1 与连续 1 均约 0.90 req/s，逐个 4 约 0.31 req/s，连续 4 约 1.02 req/s，连续 16 约 0.60 req/s；其余条件未给出具体中位数" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-good-throughput.svg" alt="七组条件的有效吞吐表：逐个 1 与连续 1 均约 0.90 req/s，逐个 4 约 0.31 req/s，连续 4 约 1.02 req/s，连续 16 约 0.60 req/s；其余条件未给出具体中位数" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>有效吞吐把错误和迟到都记为零。</strong> 逐个 4 与连续 4 的差距说明，相同到达率下接纳策略决定“及格率”；连续 16 相比连续 4 反而下降。</figcaption>
 </figure>
 
@@ -1314,7 +1314,7 @@ $$
 图 8-31 把这两项检查画在同一张平面图上。横向越过虚线，表示 KV 和辅助缓冲区超过 12 GiB；纵向越过虚线，表示完成时间超过 7 秒。只有 D 同时落在两个限制以内。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-config-compare.svg" alt="四方案对照表：A 需 18.56 GiB、完成约 14.90 秒，内存不足；B 需 5.91 GiB、9.01 秒，超时；C 需 9.86 GiB、14.55 秒，超时；D 需 9.02 GiB、4.56 秒，按期" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-config-compare.svg" alt="四方案对照表：A 需 18.56 GiB、完成约 14.90 秒，内存不足；B 需 5.91 GiB、9.01 秒，超时；C 需 9.86 GiB、14.55 秒，超时；D 需 9.02 GiB、4.56 秒，按期" width="800" height="291" loading="lazy" decoding="async">
   <figcaption><strong>横向看内存，纵向看时限。</strong> A 的所需时间只是参考，它在本实例上无法执行；B、C 能装入内存但超过 7 秒；只有 D 同时落在两个约束内。</figcaption>
 </figure>
 
@@ -1331,7 +1331,7 @@ $$
 图 8-32 里，decode 占比越低，曲线越早变平：即使生成阶段继续加速，工具调用和其他等待仍占着原来的时间。比较加速器占用和能耗时也要覆盖这些阶段，并按最终得到的合格请求数计算。设观察期间占用加速器的总时间为 $T_{\text{GPU}}$，总能耗为 $E_{\text{obs}}$，合格结果数为 $N_g$，则每个合格结果平均占用 $T_{\text{GPU}}/N_g$ 的 GPU 时间，消耗 $E_{\text{obs}}/N_g$ 的能量。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch08-amdahl.svg" alt="Amdahl 曲线：decode 加速比从 1 增到 8；decode 占基线 20% 时完整任务加速比从 1 升到约 1.21，占 50% 时升到约 1.78，占 80% 时升到约 3.33" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch08-amdahl.svg" alt="Amdahl 曲线：decode 加速比从 1 增到 8；decode 占基线 20% 时完整任务加速比从 1 升到约 1.21，占 50% 时升到约 1.78，占 80% 时升到约 3.33" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>整体收益由非 decode 部分决定。</strong> 三条曲线都假设其他阶段时间固定、没有新增准备工作；该阶段占比越高，局部加速越有效。</figcaption>
 </figure>
 

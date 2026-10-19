@@ -83,7 +83,7 @@ $$
 随着 $M$ 增长，每行分摊的权重项 $2KN/M$ 不断缩小，输入输出项保持不变。对本例，$I(M)$ 最终趋近 2048 FLOPs/byte。继续增大 batch 的收益因此会逐渐减小：每行分摊的权重读取量虽然越来越少，但新增 token 的输入和输出仍然需要读写。上面这套计算还假定权重只读一次；要在硬件上做到这一点，就需要在使用期间保存操作数和中间结果。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-weight-amortization.svg" alt="左侧一行输入独自承担整块 32 MiB 权重，每行分摊 32 MiB；右侧同一块权重被 256 行共用，每行分摊 128 KiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-weight-amortization.svg" alt="左侧一行输入独自承担整块 32 MiB 权重，每行分摊 32 MiB；右侧同一块权重被 256 行共用，每行分摊 128 KiB" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>权重总读取量不变，每行分摊随行数下降。</strong> 行数增加时计算量同步增加，权重读取却被更多行摊薄，算术强度因此上升。</figcaption>
 </figure>
 
@@ -117,7 +117,7 @@ CPU 一侧运行框架、准备输入并提交任务，通常称为主机（host
 图 4-2 描述的一次矩阵乘法的硬件路径是：片外内存保存输入和权重，共享缓存保留近期访问的数据，局部缓冲暂存当前计算块的操作数。矩阵单元沿 $K$ 维反复乘加，累加存储保存部分和，计算结束后再交给向量单元处理或写回内存。这张图值得逐层对照 4.3 的存储层次：片外显存约等于 DRAM/HBM，共享缓存约等于 L2，局部缓冲约等于共享内存/SMEM，累加存储约等于寄存器/TMEM，矩阵单元约等于 Tensor Core。读 4.3 时可以把这张图当成地图，每讲一级就回来标一次。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-mma-path.svg" alt="三层结构从上到下依次为主机 CPU 提交任务、片外显存保存输入和权重、加速器芯片内部依次包含共享缓存与数据搬移、局部缓冲、矩阵单元和累加存储" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-mma-path.svg" alt="三层结构从上到下依次为主机 CPU 提交任务、片外显存保存输入和权重、加速器芯片内部依次包含共享缓存与数据搬移、局部缓冲、矩阵单元和累加存储" width="800" height="278" loading="lazy" decoding="async">
   <figcaption><strong>数据逐层靠近计算单元。</strong> 权重和输入从片外进入片上缓冲，在矩阵单元做乘加，部分和留在累加存储中，减少反复写回。</figcaption>
 </figure>
 
@@ -136,12 +136,12 @@ GPU 与 DaVinci 分配搬移和同步工作的方式不同。GPU 的普通加载
 
 （上表按这里语义还原；这里以六行 × 三列排布，此处逐行照录。）
 
-两类架构的核心差别可以概括成一句话：GPU 让硬件缓存「顺手帮忙」，DaVinci 让软件「事先安排」。GPU 的普通 load 会自然命中 L1/L2，程序员不写任何东西也能跑；DaVinci 把 L1/UB/L0 的用途在架构上分开，矩阵输入放哪、部分和放哪、向量工作放哪各有一套，所以算子/编译器必须按用途规划数据。这不代表 GPU 更简单，这里明确说「高性能 CUDA 同样要管理共享内存和异步依赖」，只是 GPU 给了你偷懒的选项，DaVinci 让你更早面对这些决定。
+两类架构的核心差别可以概括成一句话：GPU 让硬件缓存「顺手帮忙」，DaVinci 让软件「事先安排」。GPU 的普通 load 会自然命中 L1/L2，程序员不写任何东西也能跑；DaVinci 把 L1/UB/L0 的用途在架构上分开，矩阵输入放哪、部分和放哪、向量工作放哪各有一套，所以算子/编译器必须按用途规划数据。这不代表 GPU 更简单，「高性能 CUDA 同样要管理共享内存和异步依赖」，只是 GPU 给了你偷懒的选项，DaVinci 让你更早面对这些决定。
 
 在 DaVinci 上执行注意力时，一组完整查询行依次经过 Cube 的 QK、Vector 的 Softmax 和 Cube 的 PV。Cube 使用 L0A/L0B 中的操作数，在 L0C 中累加；Vector 使用 UB（统一缓冲，Unified Buffer）中的数据。MTE 在各级存储之间搬移，Scalar 发起指令并处理依赖。图 4-3 将计算顺序与这些存储位置对应起来。（补充：4 列出 DaVinci 架构论文 §3.1—3.4、Ascend C 指南第 4 章耦合与分离架构、CloudMatrix384 v2 §3.3.1、§4.2.2。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-davinci-attention.svg" alt="全局内存保存权重与 Q、K、V，经 MTE 或 NDDMA 进入 L1 或 UB；L0A、L0B 供 Cube 或 AIC 做 QK、PV 并写入 L0C；Vector 或 AIV 做 Softmax 与归约；两者之间可走 CV 直通或经 UB、L1 交接" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-davinci-attention.svg" alt="全局内存保存权重与 Q、K、V，经 MTE 或 NDDMA 进入 L1 或 UB；L0A、L0B 供 Cube 或 AIC 做 QK、PV 并写入 L0C；Vector 或 AIV 做 Softmax 与归约；两者之间可走 CV 直通或经 UB、L1 交接" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>三个计算阶段，两类单元。</strong> QK 与 PV 在 Cube 上执行，Softmax 在 Vector 上执行；中间结果要么经 UB 或 L1 绕行，要么走 CV 直通。</figcaption>
 </figure>
 
@@ -181,7 +181,7 @@ TPU v1 这个例子值得记牢，它是本章里「缓冲占面积大于计算�
 
 这里思考题：继续增加矩阵算力，还是加速其余工作？在上述 60 μs 加 40 μs 的任务中，以原始矩阵运算速度为基准，把加速比从两倍提高到四倍，和把其余工作从 40 μs 降到 25 μs，哪种改动节省的时间更多？如果两者面积代价不同，应怎样选择？
 
-> 思考题的思路提示：先把两种改动各自算成总时间，再折算成加速比。以 60 μs 矩阵 + 40 μs 其余、总时间 100 μs 为基准：矩阵从 2 倍提到 4 倍，总时间从 $60/2+40=70\ \mu s$ 降到 $60/4+40=55\ \mu s$，**节省 15 μs**（相对基准共省 45 μs）；其余工作从 40 μs 降到 25 μs，总时间变成 $30+25=55\ \mu s$（若矩阵仍按 2 倍计），**同样节省 15 μs**——两者**在这一组参数下恰好相等**，所以"哪种更省时间"要看具体数值落在哪一侧。第二问的要点是：不能只比时间，还要比**面积代价**（即"每单位面积换来多少时间节省"），面积更便宜的那一项应当优先。这里没有给标准答案，这里只是提供计算路径。
+> 思考题的思路提示：先把两种改动各自算成总时间，再折算成加速比。以 60 μs 矩阵 + 40 μs 其余、总时间 100 μs 为基准：矩阵从 2 倍提到 4 倍，总时间从 $60/2+40=70\ \mu s$ 降到 $60/4+40=55\ \mu s$，**节省 15 μs**（相对基准共省 45 μs）；其余工作从 40 μs 降到 25 μs，总时间变成 $30+25=55\ \mu s$（若矩阵仍按 2 倍计），**同样节省 15 μs**——两者**在这一组参数下恰好相等**，所以"哪种更省时间"要看具体数值落在哪一侧。第二问的：不能只比时间，还要比**面积代价**（即"每单位面积换来多少时间节省"），面积更便宜的那一项应当优先。这里没有给标准答案，这里只是提供计算路径。
 
 面积之外，功耗是另一项预算；芯片越大、卡越多，功耗越容易成为决定性的约束。下面用四个推导把功耗变成可以计算的量，这四个推导也是本节剩下部分的骨架，读的时候可以当目录用：
 
@@ -237,7 +237,7 @@ $$
 DSP 例子的教益是功耗和功率密度属于两件事：功耗降了 25%，面积降了 40%，结果单位面积的热负荷反而涨了 25%。散热能力正比于面积，芯片表面把热传给散热器，所以总功耗下降绝不等于散热压力减小。这是数据中心选芯片时容易被忽略的一点，纸面 TDP 更低，但如果 die 更小，热点温度可能更高。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-folding-power.svg" alt="五根柱依次为基线 1.00、降压后动态功耗 0.42、折叠后功耗 0.75、折叠后投影面积 0.60、折叠后功率密度 1.25" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-folding-power.svg" alt="五根柱依次为基线 1.00、降压后动态功耗 0.42、折叠后功耗 0.75、折叠后投影面积 0.60、折叠后功率密度 1.25" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>总功耗下降，功率密度反而上升。</strong> 电压从 0.85 V 降到 0.55 V 使动态功耗降到 0.42；折叠后功耗降到 0.75、面积降到 0.60，单位面积热负荷升到 1.25。</figcaption>
 </figure>
 
@@ -320,7 +320,7 @@ batch 的效果：batch 为 $B$ 时，权重读一次服务 $B$ 个 token，每 
 静态功耗与动态功耗要分清：静态是漏电，与翻转无关；动态来自 0↔1 翻转。本节所有推导都只算动态部分，这里引 LogicFolding 说明「智能手机典型负载中动态功耗约占九成」，也就是其余约一成是静态。「每 32 位字」与「每 bit」见上面的换算清单，差 32 倍或 8 倍，混用会得到荒唐的结论。功耗比 $r_P$、面积比 $r_A$、功率密度比 $= r_P/r_A$，三者不能互相替代。「带宽提高一倍省时间」成立，「省能量」不成立。片上 SRAM 的 1.25 pJ 与 12.5 pJ 都是 SRAM，差 10 倍，区别在容量量级（KB 级 vs MB 级），引用时要说清是哪一级。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-energy-ledger.svg" alt="表格列出五级存储的每字节能耗：KB 级 SRAM 1.25 pJ、NVLink-C2C 10.4 pJ、MB 级 SRAM 12.5 pJ、HBM2 31.76 pJ、LPDDR 160 pJ；一步 8K decode 若全部取自对应层次，能量从 0.020 J 升到 0.519 J，实际分账为 0.534 J" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-energy-ledger.svg" alt="表格列出五级存储的每字节能耗：KB 级 SRAM 1.25 pJ、NVLink-C2C 10.4 pJ、MB 级 SRAM 12.5 pJ、HBM2 31.76 pJ、LPDDR 160 pJ；一步 8K decode 若全部取自对应层次，能量从 0.020 J 升到 0.519 J，实际分账为 0.534 J" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>同一份 16.345 GB 数据，取自哪一级存储，能量可差百倍以上。</strong> 实际 decode 的 0.534 J 中，权重读取约 0.481 J，占九成。</figcaption>
 </figure>
 
@@ -375,10 +375,10 @@ $R_{\text{stack}} = 1024r/8$ 里的除以 8 是 bit→byte 的换算，逐符号
 
 产品代际的设计自由度在这里体现得很清楚：容量和带宽不是同一个旋钮。想提容量，加层数或加堆数；想提带宽，提引脚速率或加堆数。加堆数同时提两项，但受光罩上限和 die 边缘长度约束，所以 B200 才不得不用两颗 die。
 
-几个易混点。光罩上限是单颗 die 的上限（约 800 mm²），不是封装的总面积，两颗 die 拼起来的封装可以远超这个数。HBM 的「堆数」是几摞，受 die 边缘限制；「层数」是每摞几片，受 TSV 工艺和散热限制。B200 是 8 堆 × 8 层 × 3 GB；若换 12 层 36 GB，6 堆就够了。H100 的 3,350 GB/s 与 3.35 TB/s 完全等价，这里说明「本章正文统一采用数据手册取整的 3.35 TB/s」，但注意数据手册精确值是 3352 GB/s（也有地方写 3,350），做精确计算时要用 3.35e12。表中引脚速率一列，H100 是白皮书给出（2619 MHz DDR），H200 与 B200 是推算，引用时不应把推算值说成官方规格。
+几个易混点。光罩上限是单颗 die 的上限（约 800 mm²），不是封装的总面积，两颗 die 拼起来的封装可以远超这个数。HBM 的「堆数」是几摞，受 die 边缘限制；「层数」是每摞几片，受 TSV 工艺和散热限制。B200 是 8 堆 × 8 层 × 3 GB；若换 12 层 36 GB，6 堆就够了。H100 的 3,350 GB/s 与 3.35 TB/s 完全等价，这说明「本章正文统一采用数据手册取整的 3.35 TB/s」，但注意数据手册精确值是 3352 GB/s（也有地方写 3,350），做精确计算时要用 3.35e12。表中引脚速率一列，H100 是白皮书给出（2619 MHz DDR），H200 与 B200 是推算，引用时不应把推算值说成官方规格。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-b200-package.svg" alt="封装内两颗 die 并排，之间由 die 间链路连接；两颗 die 左右两侧各排列四堆 HBM，共八堆；整个结构放在中介层上；下方给出每堆带宽与每堆容量的公式" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-b200-package.svg" alt="封装内两颗 die 并排，之间由 die 间链路连接；两颗 die 左右两侧各排列四堆 HBM，共八堆；整个结构放在中介层上；下方给出每堆带宽与每堆容量的公式" width="800" height="278" loading="lazy" decoding="async">
   <figcaption><strong>B200 接八堆 HBM 的前提是两颗 die。</strong> 每颗 die 的面积不超过光罩一次曝光的范围，HBM 只能沿两颗 die 的外侧边缘排开。</figcaption>
 </figure>
 
@@ -400,7 +400,7 @@ $b = (\text{TDP} - P_{\text{mem}})/F_{\text{peak}}$ 这个式子的构造逻辑�
 
 0.60 pJ/FLOP 的预算只有靠矩阵指令与工艺进步才能满足，45 nm 的参考值说明了原因：一条标量半精度乘加指令（HFMA）做 2 FLOPs 耗 1.5 pJ，即 0.75 pJ/FLOP，本身已超过预算；取指、译码与取操作数另有约 30 pJ 的开销，是运算能量的 20 倍。一条 HMMA 矩阵乘加指令耗 110 pJ，完成的 FLOPs 远多于 2，同样的指令开销摊下来只占 22%。H100 采用 TSMC 4N 工艺；从 45 nm 到 4N，每次翻转的电容与电压一代代降低。
 
-45 nm 这几个参考值为什么能说明问题：HFMA 单独一次乘加就要 0.75 pJ/FLOP，已经超过 0.60 的预算；再加上取指、译码、取操作数约 30 pJ 的固定开销，这是每条指令的，不是每个 FLOP 的。这里说它「是运算能量的 20 倍」（$30/1.5 = 20$），也就是指令开销占比 2000%（脚注 9 的措辞）。HMMA 为什么能行：一条 HMMA 指令耗 110 pJ，但完成的 FLOPs 远多于 2（一次矩阵乘加是整块 tile 的运算），把 30 pJ 的指令开销摊到大量 FLOPs 上，只占 22%。这就是专用矩阵指令在能耗上的根本理由：矩阵运算本身并不更省，它摊薄了每条指令的固定开销。这个洞见和 4.2.1 讲的「一条指令描述整块工作，控制成本也由大量运算共同分摊」是同一件事的能耗版本。
+45 nm 这几个参考值为什么能说明问题：HFMA 单独一次乘加就要 0.75 pJ/FLOP，已经超过 0.60 的预算；再加上取指、译码、取操作数约 30 pJ 的固定开销，这是每条指令的，不是每个 FLOP 的。它「是运算能量的 20 倍」（$30/1.5 = 20$），也就是指令开销占比 2000%（脚注 9 的措辞）。HMMA 为什么能行：一条 HMMA 指令耗 110 pJ，但完成的 FLOPs 远多于 2（一次矩阵乘加是整块 tile 的运算），把 30 pJ 的指令开销摊到大量 FLOPs 上，只占 22%。这就是专用矩阵指令在能耗上的根本理由：矩阵运算本身并不更省，它摊薄了每条指令的固定开销。这个洞见和 4.2.1 讲的「一条指令描述整块工作，控制成本也由大量运算共同分摊」是同一件事的能耗版本。
 
 降频机制：设实际每 FLOP 能耗为 $e$。$e \le b$ 时，峰值频率可以持续；$e > b$ 时，功率控制器会降低频率，降到多少由 $P \propto fV^2$ 决定。电压不变时，功率随频率线性下降，持续频率为峰值的 $b/e$；电压随频率同步下降时，$P \propto f^3$，持续频率为峰值的 $(b/e)^{1/3}$。
 
@@ -419,7 +419,7 @@ $b = (\text{TDP} - P_{\text{mem}})/F_{\text{peak}}$ 这个式子的构造逻辑�
 几个易混点。TDP 是「允许的最大持续功率」，一个上限或设计点，不是实测值，也不是峰值瞬时功率。峰值是物理极限，持续是功率封顶后实际能维持的算力，用峰值预测时间会偏短，偏乐观。$b$ 是阈值 0.60 pJ/FLOP，$e$ 是实际每 FLOP 能耗，$e \le b$ 才不降频。$b/e$ 是电压不变时的频率比，$(b/e)^{1/3}$ 是电压同步下降时的频率比，看到指数 1/3 就知道是 DVFS 情形。「指令开销是运算能量的 20 倍」说的是 HFMA（标量）情形（30 pJ 对 1.5 pJ），「占比 22%」说的是 HMMA（矩阵）情形（摊薄后），两句都对，但对应不同的指令。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-dvfs-curves.svg" alt="两条下降曲线：电压不变时持续频率比为 b/e，在 e/b = 1.5 处降到 0.67；电压随频率同步下降时为 (b/e) 的三分之一次方，只降到 0.87" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-dvfs-curves.svg" alt="两条下降曲线：电压不变时持续频率比为 b/e，在 e/b = 1.5 处降到 0.67；电压随频率同步下降时为 (b/e) 的三分之一次方，只降到 0.87" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>电压能不能跟着降，决定频率损失多大。</strong> 同样把功率压到预算内，固定电压需要损失 33% 的频率，DVFS 只损失 13%。</figcaption>
 </figure>
 
@@ -467,17 +467,17 @@ MoE 把这个行数问题放大了。设 64 个 token 各选择八个专家，�
 图 4-9 与图 4-10 里浅灰的部分就是这些补零带来的计算。它们同样消耗矩阵单元的周期，增加乘加器也会一并加快它们。要减少浅灰部分，只能改变每个专家的输入行数，或者换用更小的计算块。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-systolic-array.svg" alt="三行输入 A0、A1、A2 沿行方向传递，三列权重 W0、W1、W2 沿列方向传递；3 × 3 个乘加单元各自保留部分和并继续累加" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-systolic-array.svg" alt="三行输入 A0、A1、A2 沿行方向传递，三列权重 W0、W1、W2 沿列方向传递；3 × 3 个乘加单元各自保留部分和并继续累加" width="800" height="278" loading="lazy" decoding="async">
   <figcaption><strong>同一份输入沿行被多个输出共享，同一份权重沿列被多个输出共享。</strong> 部分和不需要离开本地，这就是块内复用。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-expert-block.svg" alt="左侧每专家只有 2 行时，16 行块中 2 行有效、14 行补零；右侧每专家 64 行时可组成四个完整的 16 行块，图中只展示其中一块，全部有效" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-expert-block.svg" alt="左侧每专家只有 2 行时，16 行块中 2 行有效、14 行补零；右侧每专家 64 行时可组成四个完整的 16 行块，图中只展示其中一块，全部有效" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>最小计算块固定，行数不足就补零。</strong> 灰色补零行同样参与执行，照样消耗矩阵单元的周期。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-expert-padding.svg" alt="两根堆叠柱：256 个专家时总执行约 4096 行，其中约 512 行有效、约 3584 行补零；8 个专家时总执行 512 行，全部有效" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-expert-padding.svg" alt="两根堆叠柱：256 个专家时总执行约 4096 行，其中约 512 行有效、约 3584 行补零；8 个专家时总执行 512 行，全部有效" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>有效行相同，补齐后的执行量不同。</strong> 分散到 256 个专家时每个专家只有 2 行，补齐到 16 行后放大 8 倍。</figcaption>
 </figure>
 
@@ -517,7 +517,7 @@ Qwen3-8B 一层的 32 个 Q 头和 8 个 K 头，每头旋转 128 维，共有 $
 
 预计算省去了重复的三角函数求值，运行时仍要读取系数并完成旋转。所以向量单元的需求包含计算吞吐、归约速度和操作数供给这三件事。矩阵单元越快，这些工作在总时间里的比重越大，资源配比也就越需要重新调整。
 
-Softmax 那三步的并行性各不相同，这是本小节真正要看的东西。$a = \max_j z_j$ 是归约，读完一整行才能出结果，$n=128$ 时要合并 128 个输入。$e_j = \exp(z_j - a)$ 是逐元素，128 个元素互不依赖，可以完全并行，代价是要调用特殊函数单元，exp 比加减乘贵得多。$p_j = e_j / \sum_k e_k$ 先归约再逐元素，求和同样要读完一整行。于是一行 Softmax 里有**两次「必须读完一整行」的屏障**，一次是 max，一次是 sum。这里说的「有些操作需要一整行」，讲的是依赖关系，跟数据量无关。
+Softmax 那三步的并行性各不相同，这是本小节真正要看的东西。$a = \max_j z_j$ 是归约，读完一整行才能出结果，$n=128$ 时要合并 128 个输入。$e_j = \exp(z_j - a)$ 是逐元素，128 个元素互不依赖，可以完全并行，代价是要调用特殊函数单元，exp 比加减乘贵得多。$p_j = e_j / \sum_k e_k$ 先归约再逐元素，求和同样要读完一整行。于是一行 Softmax 里有**两次「必须读完一整行」的屏障**，一次是 max，一次是 sum。的「有些操作需要一整行」，讲的是依赖关系，跟数据量无关。
 
 先减最大值是为了数值稳定。如果 $z_j$ 很大，比如 100，$\exp(100)$ 会溢出；减去最大值后 $\exp(z_j - a) \le 1$，不会溢出。数学上 $\text{Softmax}(z) = \text{Softmax}(z - a)$，平移不变性保证结果不变，这一步做的只是防溢出。它很容易漏。
 
@@ -531,7 +531,7 @@ RoPE 的 15,360 FLOPs 可以自己验一遍。每头 128 维分成 64 对，总�
 
 「矩阵单元越快，向量工作的比重越大」是这一节最该记住的趋势判断。它和 4.2.3 里「矩阵翻倍后瓶颈转移到指数与共享内存」是同一个现象的两个视角：硬件升级矩阵单元，收益会被向量侧吃掉。工程上这叫 roofline 迁移，是设计加速器时最容易踩的坑之一。
 
-剩下几组区分也顺手理一下。逐元素和归约的差别在于有没有跨元素依赖，逐元素可以完全并行，归约必须合并多个元素，带 $\log_2 n$ 轮依赖，同一行 Softmax 里两者交替出现。SIMD 与 SIMT 别混：SIMD 是一条指令对一组数据执行同样操作，数据并行，所有 lane 共用一个控制流；SIMT 是把同一指令分派给一组各有执行状态的线程，每个线程有自己的 PC 和寄存器状态，可以出现分歧。这里说昇腾 950 的向量部分以 SIMD 为主、SIMT 为辅。「需要一整行」和「数据量大」也是两件事，前者是依赖关系，必须等整行到齐，后者是容量问题，两者常同时出现，成因不同。还有一组区分决定了谁能把开销挪到离线阶段：RoPE 的 $\cos/\sin$ 只依赖位置，与输入无关，可以事先算好存表；Softmax 的 $\exp(z_j - a)$ 依赖输入，每次都要重算。
+剩下几组区分也顺手理一下。逐元素和归约的差别在于有没有跨元素依赖，逐元素可以完全并行，归约必须合并多个元素，带 $\log_2 n$ 轮依赖，同一行 Softmax 里两者交替出现。SIMD 与 SIMT 别混：SIMD 是一条指令对一组数据执行同样操作，数据并行，所有 lane 共用一个控制流；SIMT 是把同一指令分派给一组各有执行状态的线程，每个线程有自己的 PC 和寄存器状态，可以出现分歧。昇腾 950 的向量部分以 SIMD 为主、SIMT 为辅。「需要一整行」和「数据量大」也是两件事，前者是依赖关系，必须等整行到齐，后者是容量问题，两者常同时出现，成因不同。还有一组区分决定了谁能把开销挪到离线阶段：RoPE 的 $\cos/\sin$ 只依赖位置，与输入无关，可以事先算好存表；Softmax 的 $\exp(z_j - a)$ 依赖输入，每次都要重算。
 
 矩阵之间的工作是逐元素、归约、特殊函数三类：逐元素可并行，归约要 $\log_2 n$ 轮且轮间有依赖，特殊函数（exp）很贵——它们是流水线里「必须等一整行」的屏障；矩阵单元越快，这部分在总时间里的比重越大。
 
@@ -580,7 +580,7 @@ $$
 题干是把矩形块改为 $128 \times 256$ 和 $256 \times 128$，分别计算矩阵运算、指数运算和共享内存读取所需的时间。再逐项提高矩阵运算吞吐率、指数运算吞吐率和共享内存带宽，说明采用的提升幅度，并找出每次改动后耗时最长的一项。解释块形状怎样改变数据复用。最后选一种硬件，将三类工作与存储位置标在执行图上。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-attention-pipeline.svg" alt="四组配置中每组的矩阵、共享内存、指数耗时：原配置为 1024、768、1024；矩阵翻倍为 512、768、1024；矩阵与指数均翻倍为 512、768、512；三项翻倍为 512、384、512 周期" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-attention-pipeline.svg" alt="四组配置中每组的矩阵、共享内存、指数耗时：原配置为 1024、768、1024；矩阵翻倍为 512、768、1024；矩阵与指数均翻倍为 512、768、512；三项翻倍为 512、384、512 周期" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>流水节奏由最慢资源决定。</strong> 只把矩阵翻倍，最慢的仍是指数；把指数也翻倍，共享内存成为瓶颈；三项都翻倍才降到 512 周期。</figcaption>
 </figure>
 
@@ -652,7 +652,7 @@ $$
 题干从上述分组点积式出发，比较先展开权重再计算与直接分组计算两种方法，分别列出需要保存的数据，包括权重、scale、展开后的权重副本、部分和与输出。再计算加载时展开一次、每次调用展开、直接分组计算三种策略在重复使用 $R$ 次后的总时间，并用实际输入的实验记录比较误差与显存占用峰值，解释何时值得多占用内存来保存展开后的权重，以减少重复展开的开销。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-quant-paths.svg" alt="两条路径都从压缩 8.5 MiB 出发：左路先展开为 32 MiB 的 BF16 副本再计算；右路直接做低精度计算，再完成缩放与合并" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-quant-paths.svg" alt="两条路径都从压缩 8.5 MiB 出发：左路先展开为 32 MiB 的 BF16 副本再计算；右路直接做低精度计算，再完成缩放与合并" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>左路省计算但吃显存，右路省显存但多一次缩放合并。</strong> 展开后的副本占 32 MiB；低精度路径保留压缩权重与 scale 共 8.5 MiB。</figcaption>
 </figure>
 
@@ -673,7 +673,7 @@ $R$ 足够大时 $t_{\text{conv}} + R t_{\text{bf16}}$ 必然胜出，因为转�
 ## 4.3 存储层次
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/memory-hierarchy.svg" alt="GPU 存储层次：HBM、L2 缓存、共享内存和寄存器，越靠近计算单元容量越小、带宽越高" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/memory-hierarchy.svg" alt="GPU 存储层次：HBM、L2 缓存、共享内存和寄存器，越靠近计算单元容量越小、带宽越高" width="800" height="406" loading="lazy" decoding="async">
   <figcaption><strong>GPU 存储层次。</strong> 越靠近计算单元，容量越小、带宽越高、每字节能耗越低。</figcaption>
 </figure>
 
@@ -708,7 +708,7 @@ $$
 图 4-13 要横着看：权重和工作区的宽度保持不变，变化都发生在右侧的 KV 区。长上下文让每个 KV 块变宽，增加并发则增加块数，两者争的是同一份剩余空间。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-4090-capacity.svg" alt="三根堆叠柱：8K 四请求与 16K 两请求均为权重 16.4 GB、工作区约 2.15 GB、KV 约 4.83 GB，总计约 23.38 GB；8K 五请求的 KV 约 6.04 GB，总计约 24.59 GB，超过 24 GB 容量线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-4090-capacity.svg" alt="三根堆叠柱：8K 四请求与 16K 两请求均为权重 16.4 GB、工作区约 2.15 GB、KV 约 4.83 GB，总计约 23.38 GB；8K 五请求的 KV 约 6.04 GB，总计约 24.59 GB，超过 24 GB 容量线" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>权重与工作区固定，KV 段随请求数和上下文增长。</strong> 8K 四请求与 16K 两请求的 token 位置数相同，KV 段等高；8K 五请求顶穿容量上限。</figcaption>
 </figure>
 
@@ -761,7 +761,7 @@ L2 的位置还决定了它的另一项作用。GPU 的 SM 按图形处理簇（
 「L2 是簇以外 SM 交换数据的唯一途径」这条约束很强，它直接引出 4.4.4 的问题。decode 时 batch 很小，矩阵—向量乘必须分给全部 SM 才能用满显存带宽，每个 SM 只算出输出向量的一段，而下一个算子需要完整的向量，这时就必须跨 SM 交换，只能走 L2，一次写、一次读，延迟叠加。线程块簇解决的则是 GPC 内部的交换，簇内 SM 直接读写彼此的共享内存（分布式共享内存，DSM），绕过了 L2 往返；但它的适用范围只有同一 GPC 内，跨 GPC 还是要走 L2。这是 2022 年以后 GPU 架构的一个重要变化。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-gpu-topology.svg" alt="两组 GPC 各含三个 SM 与共享内存；GPC 0 内三个 SM 组成线程块簇，可直接访问彼此的共享内存；所有 SM 经片上交叉互连连接到多个 L2 分片，再连接到显存控制器与显存；跨 SM 路径是一次写入 L2、一次从 L2 读回" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-gpu-topology.svg" alt="两组 GPC 各含三个 SM 与共享内存；GPC 0 内三个 SM 组成线程块簇，可直接访问彼此的共享内存；所有 SM 经片上交叉互连连接到多个 L2 分片，再连接到显存控制器与显存；跨 SM 路径是一次写入 L2、一次从 L2 读回" width="800" height="384" loading="lazy" decoding="async">
   <figcaption><strong>L2 是簇以外 SM 交换数据的唯一途径。</strong> 线程块簇内的 SM 可以直接读写彼此的共享内存，跨簇或跨 GPC 则必须经过 L2 分片。</figcaption>
 </figure>
 
@@ -825,12 +825,12 @@ $$
 分析存储性能的顺序也就清楚了：先根据容量判断数据能否驻留，再根据复用情况计算各级接口的流量，最后结合并发量和延迟判断接口能否持续传输。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-request-slots.svg" alt="四个请求槽各有一条时间条，四个请求错开发出，时间条相互交叠；每个请求带回 128 bytes，发出后 500 ns 返回" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-request-slots.svg" alt="四个请求槽各有一条时间条，四个请求错开发出，时间条相互交叠；每个请求带回 128 bytes，发出后 500 ns 返回" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>请求槽在请求返回前一直被占用。</strong> 要让接口保持满带宽，必须让足够多的请求同时在路上；槽位数量是硬件给的上限。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-bandwidth-latency.svg" alt="两条曲线在少量未完成请求时重合上升，斜率为每事务 128 bytes、延迟 500 ns；之后 RTX 4090 在约 1.008 TB/s 趋平，RTX 5090 在约 1.792 TB/s 趋平" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-bandwidth-latency.svg" alt="两条曲线在少量未完成请求时重合上升，斜率为每事务 128 bytes、延迟 500 ns；之后 RTX 4090 在约 1.008 TB/s 趋平，RTX 5090 在约 1.792 TB/s 趋平" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>带宽上界取接口速率与并发能力中的较小值。</strong> 在途请求不足时，两张卡受同一个并发上限约束；并发足够后，瓶颈才回到接口速率。</figcaption>
 </figure>
 
@@ -865,7 +865,7 @@ $$
 行步长的作用在这幅图里看得最清楚：蓝色区域每行只有 256 bytes，下一行的蓝色区域却要到 8,192 bytes 之后才开始。读取整个地址跨度会把灰色空隙也搬走，逐行读取则只取得蓝色部分。行步长告诉搬移单元下一段有效数据从哪里开始。32 KiB 的有效数据散落在 1,040,640 bytes 的地址跨度里，跨度与有效数据之比约 $1{,}040{,}640 / 32{,}768 \approx 31.8$，整段搬的话要多搬 31.8 倍的数据。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-stride-access.svg" alt="128 行每行只读取前 256 bytes，相邻行起点相差 8192 bytes；有效数据合计 32 KiB，地址跨度 1,040,640 bytes，跨度约为有效数据的 31.8 倍" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-stride-access.svg" alt="128 行每行只读取前 256 bytes，相邻行起点相差 8192 bytes；有效数据合计 32 KiB，地址跨度 1,040,640 bytes，跨度约为有效数据的 31.8 倍" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>读取量与地址跨度是两回事。</strong> 灰色空隙由步长跳过，逐行读取只传输每行的有效区间。</figcaption>
 </figure>
 
@@ -935,22 +935,22 @@ $$
 异步搬移的机制让这套安排跑得起来：有了异步搬移，计算线程发起加载后可以继续做其他工作，到要用数据时再等待完成事件。搬移单元向空槽写入数据，完成事件标记数据就绪，计算结束后再释放槽位。NVIDIA 的异步拷贝、昇腾 MTE／NDDMA 与 Metal 的任务依赖机制都用于安排这类交接。（补充：36：Hopper Tuning Guide、昇腾 950 白皮书、Rubin 官方架构说明。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-slot-lifecycle.svg" alt="输入槽从 0 到 64 tick 传输，64 到 192 tick 等待返回，192 到 320 tick 计算；数据在 192 tick 就绪，320 tick 用完后槽才能再次写入" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-slot-lifecycle.svg" alt="输入槽从 0 到 64 tick 传输，64 到 192 tick 等待返回，192 到 320 tick 计算；数据在 192 tick 就绪，320 tick 用完后槽才能再次写入" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>一个槽被占用 320 tick。</strong> 其中只有 64 tick 在传输、128 tick 在计算，另有 128 tick 在等数据返回。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-slot1-blocks.svg" alt="四条泳道对应块 0 至块 3；每块占用 320 tick，依次为传输、等待返回、计算，四块首尾相接，最后在 1280 tick 完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-slot1-blocks.svg" alt="四条泳道对应块 0 至块 3；每块占用 320 tick，依次为传输、等待返回、计算，四块首尾相接，最后在 1280 tick 完成" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>只有一个槽时，下一块必须等上一块彻底用完。</strong> 每块占用 320 tick，四块依次排开。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-slot2-blocks.svg" alt="四条泳道对应块 0 至块 3；块 0 与块 1 在 0 和 64 tick 启动传输，块 0 在 192 到 320 tick 计算，块 1 在 320 到 448 tick 计算；448 到 512 tick 之间留下 64 tick 空闲，块 3 在 768 tick 完成" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-slot2-blocks.svg" alt="四条泳道对应块 0 至块 3；块 0 与块 1 在 0 和 64 tick 启动传输，块 0 在 192 到 320 tick 计算，块 1 在 320 到 448 tick 计算；448 到 512 tick 之间留下 64 tick 空闲，块 3 在 768 tick 完成" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>双缓冲让部分加载与计算重叠。</strong> 槽数不够时，矩阵单元仍在两块计算之间空转 64 tick。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-slot3-blocks.svg" alt="四条泳道对应块 0 至块 3；前三块在 0、64、128 tick 发起传输，分别在 192、256、320 tick 就绪并连续计算；块 3 在 320 tick 发起，512 tick 就绪，576 到 704 tick 计算，中途没有空闲" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-slot3-blocks.svg" alt="四条泳道对应块 0 至块 3；前三块在 0、64、128 tick 发起传输，分别在 192、256、320 tick 就绪并连续计算；块 3 在 320 tick 发起，512 tick 就绪，576 到 704 tick 计算，中途没有空闲" width="800" height="315" loading="lazy" decoding="async">
   <figcaption><strong>三个槽刚好够用。</strong> 第四块在 512 tick 就绪，早于计划开始的 576 tick；再加一个槽只会让数据更早到达，完成时间不变。</figcaption>
 </figure>
 
@@ -998,12 +998,12 @@ $$
 这三项改动分别作用在依赖、并发、字节数三个不同的维度上，收益大小差了一个数量级。只做分组，也就是最直觉的那一项，看起来让向量单元早点开始，收益却是零，因为真正卡住它的是只有一个槽，相邻组无法重叠。所以判断顺序要和 4.2.3 的 $\max$ 逻辑一致：先找瓶颈，再动手。本例中 $\max$ 由矩阵单元的 QK 128 加 PV 128 共 256 tick 与向量单元的 Softmax 640 tick 之间决定，640 明显大于 256，向量单元是真正的瓶颈，加槽位没办法让 Softmax 变快，总时间自然不再下降。这正是 4.2.2 那句「矩阵单元越快，向量工作比重越大」的实例。反过来说，「继续增加槽位没有改变耗时最长单元的工作节奏」这句话的落点也在这里：当每个单元都在满负荷工作、没有空闲时，加槽位不再有收益。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-mv-handoff.svg" alt="矩阵单元算完 QK 把分数写入槽 A；向量单元从槽 A 读分数、算 Softmax、把概率写回；矩阵单元再用概率算 PV 并释放槽。槽 B 容纳相邻行组，使两组可以重叠推进" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-mv-handoff.svg" alt="矩阵单元算完 QK 把分数写入槽 A；向量单元从槽 A 读分数、算 Softmax、把概率写回；矩阵单元再用概率算 PV 并释放槽。槽 B 容纳相邻行组，使两组可以重叠推进" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>传递完整行，两组交替使用缓冲区。</strong> 两个槽让一组在算 Softmax 时，另一组可以同时算 QK。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-two-slot-timeline.svg" alt="表格列出五种交接配置的向量计算开始时刻与完成时间：128 行单槽为 1536 和 5118 tick；32 行单槽为 384 和 5120；32 行两槽为 384 和 3200；直接传递两槽为 256 和 3008；直接传递四槽仍为 256 和 3008" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-two-slot-timeline.svg" alt="表格列出五种交接配置的向量计算开始时刻与完成时间：128 行单槽为 1536 和 5118 tick；32 行单槽为 384 和 5120；32 行两槽为 384 和 3200；直接传递两槽为 256 和 3008；直接传递四槽仍为 256 和 3008" width="800" height="332" loading="lazy" decoding="async">
   <figcaption><strong>分组改善依赖，加槽改善并发，直接交接减少字节数。</strong> 三种改动分别把完成时间从 5118 降到 5120、3200 和 3008 tick。</figcaption>
 </figure>
 
@@ -1058,12 +1058,12 @@ fence 到底在防什么？很多人以为「写数据、写标志」这两条�
 脚注 39 给出测量条件：笔者的测量在 RTX PRO 6000 Blackwell Workstation（GB202，188 个 SM，128 MiB L2，SM 频率实测 2.88 GHz）上完成；测量程序为 OpenTallas 仓库的 tools/gpu_microbench/，CUDA 12.8；测量期间 GPU 由另一负载共用，正文取多次运行的最小值，中位数高 10%–40%。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-fence-handoff.svg" alt="生产者依次写数据、等待确认、执行 fence、写标志；L2 分片中转数据与标志；消费者先读旧标志，轮询到新值后再读数据" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-fence-handoff.svg" alt="生产者依次写数据、等待确认、执行 fence、写标志；L2 分片中转数据与标志；消费者先读旧标志，轮询到新值后再读数据" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>标志必须先于数据被看到，交接才可靠。</strong> 生产者用释放语义等待写入完成，消费者用获取语义拒绝提前读取。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-sync-levels.svg" alt="五根条形依次为 SM 内栅栏 7 ns、线程块簇内同步 131 ns、跨 SM 一对一交接 366 ns、全部 SM 汇合 663 ns、全部 SM 汇合并送达激活向量 1,004 ns" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-sync-levels.svg" alt="五根条形依次为 SM 内栅栏 7 ns、线程块簇内同步 131 ns、跨 SM 一对一交接 366 ns、全部 SM 汇合 663 ns、全部 SM 汇合并送达激活向量 1,004 ns" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>依赖跨得越远，经过的存储越多，代价越高。</strong> 从 SM 内跨到线程块簇内就涨了近 20 倍，之后每级再涨约 1.5 到 3 倍。</figcaption>
 </figure>
 
@@ -1102,12 +1102,12 @@ B200 的结果有点出人意料：NV-HBI 比每颗 die 的 HBM 还快。技术�
 脚注 40/41 给出的出处是：Blackwell 技术简报（10 TB/s NV-HBI）；CloudMatrix384 v2 §3.3.1（910C 每 die 64 GB、1.6 TB/s，die 间每方向 270 GB/s）、§4.2 开头（decode 中每颗 die 放一个专家）与 §4.2.2；两款产品的 die 局部性计算见教学推导脚本的 `die_locality` 项；Vera Rubin 平台、UB 与昇腾核对。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-die0-compute.svg" alt="两组对照都画出 die 0 与 die 1 各含 32 GiB 权重，计算单元只在 die 0；箭头从 die 1 指向 die 0，标注跨 die 读 32 GiB；HGX B200 阶段约 8.6 ms，受 die 1 的 HBM 限制；昇腾 910C 阶段约 127.3 ms，受 die 间链路限制" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-die0-compute.svg" alt="两组对照都画出 die 0 与 die 1 各含 32 GiB 权重，计算单元只在 die 0；箭头从 die 1 指向 die 0，标注跨 die 读 32 GiB；HGX B200 阶段约 8.6 ms，受 die 1 的 HBM 限制；昇腾 910C 阶段约 127.3 ms，受 die 间链路限制" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>跨 die 读取的有效速率取 HBM 与链路中的较小值。</strong> B200 的链路比本地 HBM 快，910C 的链路只有本地带宽的约 17%。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-die-local-compute.svg" alt="die 0 与 die 1 各有一份计算单元，两侧各读本地权重；die 之间传递输入与结果 64 MiB；HGX B200 链路 6.7 μs、阶段约 8.6 ms；昇腾 910C 链路 0.25 ms、阶段约 21.5 ms" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-die-local-compute.svg" alt="die 0 与 die 1 各有一份计算单元，两侧各读本地权重；die 之间传递输入与结果 64 MiB；HGX B200 链路 6.7 μs、阶段约 8.6 ms；昇腾 910C 链路 0.25 ms、阶段约 21.5 ms" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>把计算搬到权重旁，链路负担从 32 GiB 降到 64 MiB。</strong> 910C 的阶段时间从约 127 ms 降到约 21.5 ms；B200 本来不受链路限制，阶段仍约 8.6 ms。</figcaption>
 </figure>
 
@@ -1216,18 +1216,18 @@ AllReduce 把多次传输与归约连在一起，第 6 章会分别算轮数、�
 脚注 47 与脚注 40/41 同源，出处仍是 Blackwell 技术简报、CloudMatrix384 v2 等。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-8k-transfer.svg" alt="两根堆叠条形：A100 NVLink 300 GB/s 总计 2.027 μs，H100 NVLink 450 GB/s 总计 2.018 μs；两者启动开销都是 2 μs，H100 的传输项略薄" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-8k-transfer.svg" alt="两根堆叠条形：A100 NVLink 300 GB/s 总计 2.027 μs，H100 NVLink 450 GB/s 总计 2.018 μs；两者启动开销都是 2 μs，H100 的传输项略薄" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>小包由启动开销主导。</strong> 带宽从 300 提高到 450 GB/s，8 KiB 传输的总时间几乎不变。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-2m-transfer.svg" alt="两根堆叠条形：A100 NVLink 300 GB/s 总计 8.991 μs，其中传输约 6.991 μs；H100 NVLink 450 GB/s 总计 6.660 μs，其中传输约 4.660 μs；启动开销均为 2 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-2m-transfer.svg" alt="两根堆叠条形：A100 NVLink 300 GB/s 总计 8.991 μs，其中传输约 6.991 μs；H100 NVLink 450 GB/s 总计 6.660 μs，其中传输约 4.660 μs；启动开销均为 2 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>大包才让链路带宽显出收益。</strong> 同一份 2 MiB 数据，换到 450 GB/s 的链路后总时间缩短约 26%。</figcaption>
 </figure>
 
 这个公式 $T = \alpha + V/R$ 几乎就是本小节的全部。它的形状是一条水平线加一条过原点的斜线，交点就是 $V^{*}$。记住这个形状，就永远知道该优化什么：$V < V^{*}$ 的小包该优化 $\alpha$，办法是合并发送、减少轮数、降低启动开销，这时候提高带宽几乎没用；$V > V^{*}$ 的大包该优化 $R$ 或 $V$，换更快的链路、减少字节或降精度、切分更少，降低 $\alpha$ 的收益已经递减。
 
-小包换链路的收益低到什么程度，下面几个数是我按给出的带宽口径自己算的。8 KiB = 8,192 bytes，除以 300 GB/s 得 27.3 ns ≈ 0.03 μs，加 2 μs 得 2.03 μs；除以 450 GB/s 得 18.2 ns ≈ 0.02 μs，加 2 μs 得 2.02 μs。带宽涨了 50%，总时间只动了 0.5%。2 MiB 才是链路的主场：2,097,152 bytes ÷ 300 GB/s = 6.99 μs，加 2 得 8.99 μs；÷ 450 GB/s = 4.66 μs，加 2 得 6.66 μs，降幅 (8.99−6.66)/8.99 ≈ 25.9%，这里说"约 26%"。把 $\alpha$ 减半的效果也能算：2 MiB 时 1 + 4.66 = 5.66 μs，相对 6.66 μs 省约 15%；8 KiB 时 1 + 0.02 = 1.02 μs，相对 2.02 μs 省约一半。这正是这里那句"两种优化针对的是公式中不同的主导项"。
+小包换链路的收益低到什么程度，下面几个数是我按给出的带宽口径自己算的。8 KiB = 8,192 bytes，除以 300 GB/s 得 27.3 ns ≈ 0.03 μs，加 2 μs 得 2.03 μs；除以 450 GB/s 得 18.2 ns ≈ 0.02 μs，加 2 μs 得 2.02 μs。带宽涨了 50%，总时间只动了 0.5%。2 MiB 才是链路的主场：2,097,152 bytes ÷ 300 GB/s = 6.99 μs，加 2 得 8.99 μs；÷ 450 GB/s = 4.66 μs，加 2 得 6.66 μs，降幅 (8.99−6.66)/8.99 ≈ 25.9%，"约 26%"。把 $\alpha$ 减半的效果也能算：2 MiB 时 1 + 4.66 = 5.66 μs，相对 6.66 μs 省约 15%；8 KiB 时 1 + 0.02 = 1.02 μs，相对 2.02 μs 省约一半。这正是这里那句"两种优化针对的是公式中不同的主导项"。
 
 $M \approx 109.9$ 的来源是：数据量等于 $8192M$ bytes，令它等于 $V^{*}=900\,000$ bytes，得 $M = 900\,000/8192 \approx 109.86$，取整就是"从 110 行起"。说白了，只有当激活矩阵的行数超过约 110 行，传数据的钱才超过启动的钱。
 
@@ -1245,7 +1245,7 @@ $M \approx 109.9$ 的来源是：数据量等于 $8192M$ bytes，令它等于 $V
 
 （以上思考题思路不是这里答案。）
 
-几个易混点收一下。$\alpha$ 是"每次传输"的开销，也就是每次点对点交换，这里说它"与第 7 章机内 NVLink 每轮启动的取值相同"，强调的正是按轮/次计。公式里的 $R$ 必须是每方向的值，"双向合计 900 GB/s"和"每方向 450 GB/s"不能混用，用 900 会把传输时间算小一半，这与 4.5.2 的 PCIe 64/32 GB/s 是同一个坑。8 KiB 的"0.02 μs"和"2.02 μs"也要分开，前者是纯传输时间，后者是含启动的总时间，这里反复区分这两个量。$V^{*}$ 是数据量的转折点，是两种开销谁占主导的分界，不是数据量的上限，也不是最优包大小。还有 A100 与 H100 的"1.5 倍"：300 到 450 GB/s 是 1.5 倍带宽，但只有大包才能拿到接近 1.5 倍的收益，2 MiB 是 8.99 到 6.66，即 1.35 倍，永远达不到 1.5，因为 $\alpha$ 不动。
+几个易混点收一下。$\alpha$ 是"每次传输"的开销，也就是每次点对点交换，它"与第 7 章机内 NVLink 每轮启动的取值相同"，强调的正是按轮/次计。公式里的 $R$ 必须是每方向的值，"双向合计 900 GB/s"和"每方向 450 GB/s"不能混用，用 900 会把传输时间算小一半，这与 4.5.2 的 PCIe 64/32 GB/s 是同一个坑。8 KiB 的"0.02 μs"和"2.02 μs"也要分开，前者是纯传输时间，后者是含启动的总时间，这里反复区分这两个量。$V^{*}$ 是数据量的转折点，是两种开销谁占主导的分界，不是数据量的上限，也不是最优包大小。还有 A100 与 H100 的"1.5 倍"：300 到 450 GB/s 是 1.5 倍带宽，但只有大包才能拿到接近 1.5 倍的收益，2 MiB 是 8.99 到 6.66，即 1.35 倍，永远达不到 1.5，因为 $\alpha$ 不动。
 
 ## 4.6 模型需求如何推动架构演进
 
@@ -1304,23 +1304,23 @@ SM120 与 SM100 是两种不同的 SM 指令架构，这件事在部署时会咬
 最后回到"计算 vs 带宽"这项比较。H100 相对 A100，BF16 矩阵速率提高到约 3.17 倍，带宽提高到约 1.64 倍，同时增加 FP8、TMA 和新的协作机制。H200 相对 H100 则主要增加容量与带宽，表中的 BF16 矩阵速率基本相同。这两组变化分别对应"计算与执行组织一起改"和"保持计算能力、增强存储"，第 4.8.2 节代入模型工作之后，就能判断哪一组增量更有用。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-v100-projection.svg" alt="表格对比同一 V100 上的 Q 投影：4,096 行时普通 FP32 8.75 ms、Tensor Core 1.10 ms、数据传输 0.112 ms；1 行时普通 FP32 2.14 μs、Tensor Core 0.268 μs、数据传输 37.3 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-v100-projection.svg" alt="表格对比同一 V100 上的 Q 投影：4,096 行时普通 FP32 8.75 ms、Tensor Core 1.10 ms、数据传输 0.112 ms；1 行时普通 FP32 2.14 μs、Tensor Core 0.268 μs、数据传输 37.3 μs" width="800" height="206" loading="lazy" decoding="async">
   <figcaption><strong>同一项 Tensor Core 改进，在不同行数下收益完全不同。</strong> 4,096 行时矩阵时间大幅缩短；1 行时两条计算路径都短于 37.3 μs 的权重传输。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-weight-format.svg" alt="三组权重格式在两张卡上的读取时间：RTX 4090 为 BF16 33.29 μs、MXFP8 17.16 μs、MXFP4 8.84 μs；RTX 5090 为 18.72、9.65、4.97 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-weight-format.svg" alt="三组权重格式在两张卡上的读取时间：RTX 4090 为 BF16 33.29 μs、MXFP8 17.16 μs、MXFP4 8.84 μs；RTX 5090 为 18.72、9.65、4.97 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>带宽与位宽共同压缩读取预算。</strong> 每 32 个低精度值共享一个一字节 scale；位宽从 BF16 降到 MXFP4 后，权重与 scale 合计从 32 MiB 减至 8.5 MiB。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-data-path-evolution.svg" alt="三栏从左到右为 Ampere 异步拷贝、Hopper TMA 搬移、Blackwell SM100 TMA 搬移；前两代画共享内存到矩阵单元再到寄存器，Blackwell 画共享内存到矩阵单元再到 TMEM" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-data-path-evolution.svg" alt="三栏从左到右为 Ampere 异步拷贝、Hopper TMA 搬移、Blackwell SM100 TMA 搬移；前两代画共享内存到矩阵单元再到寄存器，Blackwell 画共享内存到矩阵单元再到 TMEM" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>矩阵越快，越不能让喂它和接它的杂活占着通用资源。</strong> 异步拷贝省去寄存器中转，TMA 接手地址生成，TMEM 独立保存累加结果。</figcaption>
 </figure>
 
 8.75 / 1.10 / 0.112 ms 这三个数要一起看。下面几个数是我按这里参数复算的：$2\times4096^3 = 1.374\times10^{11}$ FLOPs = 137.4 GFLOPs，137.4/15.7 ≈ 8.75 ms，137.4/125 ≈ 1.10 ms，96 MiB = 100,663,296 bytes ÷ 900 GB/s ≈ 0.112 ms。结论不是"Tensor Core 快 8 倍"，而是矩阵时间降了 8 倍之后，数据搬运那 0.112 ms 从可以忽略变成不能忽略。这正是后面"数据通路演进"的动机。
 
-单行那一半的分析才是精华。一行输入只有 $2\times4096^2 = 33.55$ MFLOPs，$33.55\text{ M}/15.7\text{ T} \approx 2.14\ \mu\mathrm{s}$，$33.55\text{ M}/125\text{ T} \approx 0.268\ \mu\mathrm{s}$；而数据约 32 MiB 加输入输出约 33.6 MB，÷900 GB/s ≈ 37.3 μs。两条计算路径相差 8 倍，2.14 对 0.268，但都远小于 37.3 μs 的搬运时间。所以这里说"要加快的仍是权重读取"。
+单行那一半的分析才是精华。一行输入只有 $2\times4096^2 = 33.55$ MFLOPs，$33.55\text{ M}/15.7\text{ T} \approx 2.14\ \mu\mathrm{s}$，$33.55\text{ M}/125\text{ T} \approx 0.268\ \mu\mathrm{s}$；而数据约 32 MiB 加输入输出约 33.6 MB，÷900 GB/s ≈ 37.3 μs。两条计算路径相差 8 倍，2.14 对 0.268，但都远小于 37.3 μs 的搬运时间。所以"要加快的仍是权重读取"。
 
 矩阵加速器越强、瓶颈越往搬运走，这是本节的中心论点。同一块芯片上，batch 从 1 行变到 4,096 行，瓶颈就从内存翻转到矩阵。这与 4.8.1 的 Roofline 转折点是同一件事的两种说法，那里给出的阈值是 179 行，用的是 4090 的参数。
 
@@ -1336,7 +1336,7 @@ MX 格式的账也要会算。32 MiB 的 BF16 权重一共是 $32\ \mathrm{MiB}/
 
 160 KiB 与 64 KiB 这笔账是这样：三组输入（3 × 32 KiB = 96 KiB）加一组结果（64 KiB）等于 160 KiB，其中 64 KiB 被 TMEM 独立承担，于是通用寄存器只需用来放别的线程状态。专用存储的价值不在于更快，而在于不占别人的地方，它直接决定能同时驻留多少个工作块，也就是 4.3.2 讲的占用率问题。
 
-Rubin 的两处改动都指向被暴露出来的瓶颈。指数吞吐翻倍或四倍，是因为矩阵变快以后 Softmax 的 exp 成了新瓶颈，这里明确说这是"回应了例 4-1 中矩阵加速后暴露的指数瓶颈"，属于阿姆达尔定律在代际演进上的体现。TMA 可更新专家地址与步长则是为 MoE 做的：MoE 每步换专家，如果每次都要重新生成整套地址描述符，开销就落在控制路径上，让描述符只改位置不改形状，切换成本就压下去了。这条值得和 4.7.2 的专家路由一起记。
+Rubin 的两处改动都指向被暴露出来的瓶颈。指数吞吐翻倍或四倍，是因为矩阵变快以后 Softmax 的 exp 成了新瓶颈，这是"回应了例 4-1 中矩阵加速后暴露的指数瓶颈"，属于阿姆达尔定律在代际演进上的体现。TMA 可更新专家地址与步长则是为 MoE 做的：MoE 每步换专家，如果每次都要重新生成整套地址描述符，开销就落在控制路径上，让描述符只改位置不改形状，切换成本就压下去了。这条值得和 4.7.2 的专家路由一起记。
 
 表格可以按三组关键对比来读。3090 到 4090，算力 2.33×、带宽 1.077×，受益的是大矩阵也就是 prefill，几乎不受益的是单行权重读取也就是 decode。4090 到 5090，算力 1.27×、带宽 1.78×、容量 24 到 32 GB，受益的是带宽受限的 decode 和原本装不下的模型，这里"这三代产品分别改变了矩阵处理、权重读取和模型驻留的资源预算"说的就是这三项。A100 到 H100，算力 3.17×、带宽 1.64×，还加了 FP8/TMA/协作机制；H100 到 H200，算力几乎不变（989.4 到 989.5），带宽 1.43×，容量 80 到 141 GB。H100 那一代是计算与执行组织一起改，H200 那一代是保持计算能力、增强存储。
 
@@ -1346,7 +1346,7 @@ SM120 和 SM100 是实打实的部署坑。同一个"Blackwell"品牌下有两�
 
 NVLink 的数字也有个用法要说明。64 MiB = 67,108,864 bytes，÷300 GB/s ≈ 223.7 μs，÷450 GB/s ≈ 149.1 μs，与这里"约 224、149 μs"一致。这里把这一步叫"链路序列化时间"，意思是假设只有一条链路、数据从头排到尾的时间下界，真实的多卡通信会分片、并行，第 6 章再算。顺带说一句 RTX 消费卡没有 NVLink 的现实含义：多卡张量并行如果只能走 PCIe，链路带宽会掉一个量级，集合通信时间会吃掉并行收益。所以"多卡"和"多卡能用"是两回事。
 
-最后收几个容易混的点。BF16 与 FP16 同样是 2 字节，BF16 指数宽（8 位）尾数窄（7 位），FP16 指数窄（5 位）尾数宽（10 位），一句话是"BF16 范围大、FP16 精度高"，别把两者当成新老版本。TF32 和它们不是一类东西：TF32"保留 FP32 的指数范围、缩短尾数"，是给矩阵乘法用的 19 位左右格式，在 Tensor Core 内部使用，存储上仍是 FP32；BF16/FP16 是存储格式。TF32 省的是算力和内部带宽，不省显存。2:4 结构化稀疏是跳过零，不是压缩存储，这里说它"按每四个元素中两个非零值组织计算"，改变的是计算组织方式。"带宽提高 1.78 倍"和"MXFP4 缩小 3.76 倍"一个是硬件换代，一个是表示方式，两者可乘不可加。容量和带宽要分开看，表中 3090 与 4090 容量相同、带宽几乎相同，但算力差 2.33 倍，说明容量带宽相同的卡可以差在算力上。NVLink 的"双向 600/900 GB/s"与"单向 300/450 GB/s"，算传输时间用单向，这是本第三次提醒同一个坑。
+最后收几个容易混的点。BF16 与 FP16 同样是 2 字节，BF16 指数宽（8 位）尾数窄（7 位），FP16 指数窄（5 位）尾数宽（10 位），一句话是"BF16 范围大、FP16 精度高"，别把两者当成新老版本。TF32 和它们不是一类东西：TF32"保留 FP32 的指数范围、缩短尾数"，是给矩阵乘法用的 19 位左右格式，在 Tensor Core 内部使用，存储上仍是 FP32；BF16/FP16 是存储格式。TF32 省的是算力和内部带宽，不省显存。2:4 结构化稀疏是跳过零，不是压缩存储，它"按每四个元素中两个非零值组织计算"，改变的是计算组织方式。"带宽提高 1.78 倍"和"MXFP4 缩小 3.76 倍"一个是硬件换代，一个是表示方式，两者可乘不可加。容量和带宽要分开看，表中 3090 与 4090 容量相同、带宽几乎相同，但算力差 2.33 倍，说明容量带宽相同的卡可以差在算力上。NVLink 的"双向 600/900 GB/s"与"单向 300/450 GB/s"，算传输时间用单向，这是本第三次提醒同一个坑。
 
 ### 4.6.2 昇腾：从 CNN 的卷积展开，到 Transformer 的矩阵与向量交接
 
@@ -1398,17 +1398,17 @@ wait(all_output_ready)
 DaVinci 的架构取舍，这里归纳成一句话：规则乘加交给 Cube，逐元素和归约交给 Vector，搬移交给 MTE，三者通过有明确用途的片上存储协作。独立控制提供重叠机会，CV 直通减少交接流量。要取得这些收益，编译器和算子库需要共同确定分块、布局、槽位和同步顺序；新形状到来时软件重新选择或生成调度，常用形状则复用已有实现。硬件效率与软件适配工作就由这套分工联系起来。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-conv-img2col.svg" alt="输入为 0.383 MiB 的 56×56×64 张量；显式展开先写出 3.445 MiB 的 HBM 展开矩阵，放大 9 倍，再读入做矩阵乘，写读共 6.891 MiB，约 6.02 μs；MTE 在片上用 img2col 直接送入 Cube" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-conv-img2col.svg" alt="输入为 0.383 MiB 的 56×56×64 张量；显式展开先写出 3.445 MiB 的 HBM 展开矩阵，放大 9 倍，再读入做矩阵乘，写读共 6.891 MiB，约 6.02 μs；MTE 在片上用 img2col 直接送入 Cube" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>显式展开为了硬件好用多付一次写和读。</strong> MTE 把窗口组织搬到片上，省去 HBM 中间矩阵的写入和读取。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-ascend-evolution.svg" alt="左栏 910A 在同核内画出 Cube、局部缓冲与 Vector，MTE 支持 img2col；中栏 910B/910C 把 AIC 与 AIV 独立控制，两者经全局地址与缓存层次交换；右栏 950 在 Cube Core 的 L1 Buffer 与 Vector Core 的 UB、寄存器之间增加 CV 直连" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-ascend-evolution.svg" alt="左栏 910A 在同核内画出 Cube、局部缓冲与 Vector，MTE 支持 img2col；中栏 910B/910C 把 AIC 与 AIV 独立控制，两者经全局地址与缓存层次交换；右栏 950 在 Cube Core 的 L1 Buffer 与 Vector Core 的 UB、寄存器之间增加 CV 直连" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>先分开调度，再把交接拉近。</strong> 910B/910C 让矩阵与向量独立推进，950 的 CV 直通减少两者之间的搬运路径。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-cv-traffic.svg" alt="经外层接口的路径为 Cube 传 64 KiB 分数到 Vector，再传 64 KiB 概率回 Cube，写加读共 256 KiB，94 GB/s 时约 2.79 μs；CV 直连路径在 Cube L1 与 Vector UB 之间传 64 KiB 加 64 KiB，共 128 KiB，要在 1.024 μs 内完成需要 128 GB/s" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-cv-traffic.svg" alt="经外层接口的路径为 Cube 传 64 KiB 分数到 Vector，再传 64 KiB 概率回 Cube，写加读共 256 KiB，94 GB/s 时约 2.79 μs；CV 直连路径在 Cube L1 与 Vector UB 之间传 64 KiB 加 64 KiB，共 128 KiB，要在 1.024 μs 内完成需要 128 GB/s" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>同样的两个张量，路径不同，接口负担差一倍。</strong> 直接通路把外层接口的 256 KiB 写读移出，只承担 128 KiB 的片上传递。</figcaption>
 </figure>
 
@@ -1430,11 +1430,11 @@ CV 直通就是把账做平的办法。把两次交接从"经外层接口"改成
 
 那段调度代码要读懂四件事。`submit(..., after=[...])` 是登记加声明依赖，不是立刻执行，这是数据流/任务图的写法，硬件或运行时按依赖就绪以后调度。`slot = g % 2` 是双缓冲，G0 用槽 0、G1 用槽 1、G2 回到槽 0，所以 G0 和 G1 能交错推进，而 G2 必须等 G0 的 PV 完成，否则会覆盖 G0 还在用的槽，这正是 4.4.3 的两槽流水在程序里的写法。`score_transfer` 和 `probability_transfer` 是"可变实现"的抽象，有 CV 直通时编译成片上直传，没有时编译成写出到外层存储再读回，同一份程序在硬件不同时生成的搬移也不同，这是"硬件效率与软件适配工作联系起来"的具体体现。`slot_free[slot] = pv` 则是槽位释放的依赖链，把"这个槽什么时候能再用"也变成一个可依赖的事件。
 
-有个细节容易读漏。这里说两个槽各预留 24 KiB，但前面算的分数和概率张量是各 64 KiB。这两个数字属于不同层次的例子，4.4.3 的槽是那个小算例的片上调度的容量，这里的 64 KiB 是 128×128×FP32 的真实张量大小，这里没有把它们对齐，这里照录，不强行统一。
+有个细节容易读漏。两个槽各预留 24 KiB，但前面算的分数和概率张量是各 64 KiB。这两个数字属于不同层次的例子，4.4.3 的槽是那个小算例的片上调度的容量，这里的 64 KiB 是 128×128×FP32 的真实张量大小，这里没有把它们对齐，这里照录，不强行统一。
 
 MTE、Cube、Vector 的分工值得背下来。MTE 管搬移与形状变换，img2col、转置、解压，负责准备操作数；Cube 管规则矩阵乘加，是主力算力；Vector 管逐元素与归约，Softmax、ReLU、GELU、缩放，负责后处理与非线性。三者靠有明确用途的片上存储协作，L1、L0、UB、局部缓冲，而不是靠一个大而通用的缓存。专用小缓冲加明确分工是这类架构的共同设计哲学，与 4.6.1 的 TMEM 是同一条思路。
 
-几个易混点。910A 是同核分工，Cube 与 Vector 在一个核内靠局部缓冲交接；910B（Atlas A2）和 910C 把 AIC 与 AIV 分开控制，可以并行但要走全局地址或缓存层次交换；950 增加 CV 直连，把交接搬到更近的通路。演进方向是越分越开，再把交接越拉越近。AIC 就是 AI Cube（矩阵核），AIV 就是 AI Vector（向量核），AIC/AIV 是核的划分，Cube/Vector 是单元的称呼，这里混用，指同一条分工。这里说的"外层接口/外层存储"指经过片上的缓存层次，算例里对应每核 94 GB/s 的 LLC 接口，不要理解成 HBM；"片上直接通路"指 L1 与 UB 的直连。交接流量 256 KiB 与 128 KiB 的差别在路径而不在数据本身：256 KiB 是写和读各两次，共 4 个 64 KiB；128 KiB 是只传两次，共 2 个 64 KiB，同样的两个张量，路径不同，接口负担差一倍。代码里的 `%2` 是槽位轮转，与 batch size、与专家路由都无关。还有"Cube 每周期 8,192 FLOPs"与"每周期 128 bytes 交接"这两个参数，来自 4.4.3 的算例（矩阵速率 8,192 FLOPs/tick、交接接口 128 bytes/tick），矩阵吞吐与交接带宽是两个独立参数，必须分别看。
+几个易混点。910A 是同核分工，Cube 与 Vector 在一个核内靠局部缓冲交接；910B（Atlas A2）和 910C 把 AIC 与 AIV 分开控制，可以并行但要走全局地址或缓存层次交换；950 增加 CV 直连，把交接搬到更近的通路。演进方向是越分越开，再把交接越拉越近。AIC 就是 AI Cube（矩阵核），AIV 就是 AI Vector（向量核），AIC/AIV 是核的划分，Cube/Vector 是单元的称呼，这里混用，指同一条分工。的"外层接口/外层存储"指经过片上的缓存层次，算例里对应每核 94 GB/s 的 LLC 接口，不要理解成 HBM；"片上直接通路"指 L1 与 UB 的直连。交接流量 256 KiB 与 128 KiB 的差别在路径而不在数据本身：256 KiB 是写和读各两次，共 4 个 64 KiB；128 KiB 是只传两次，共 2 个 64 KiB，同样的两个张量，路径不同，接口负担差一倍。代码里的 `%2` 是槽位轮转，与 batch size、与专家路由都无关。还有"Cube 每周期 8,192 FLOPs"与"每周期 128 bytes 交接"这两个参数，来自 4.4.3 的算例（矩阵速率 8,192 FLOPs/tick、交接接口 128 bytes/tick），矩阵吞吐与交接带宽是两个独立参数，必须分别看。
 
 ### 4.6.3 Apple：大容量统一内存，如何换算为模型运行能力
 
@@ -1469,7 +1469,7 @@ MoE 的特点是每步只读一小部分，因为每步只访问选中的专家�
 脚注 63 还有一条补充：M3 Ultra 512 GB 由官方发布稿及 80 核 GPU 整机测试配置记录交叉确认；M5 Ultra 512 GB / 1,200 GB/s 为 2026 年 8 月公布的规格，512 GB 配置计划于 2026 年 10 月下旬交付。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-apple-memory.svg" alt="左上为统一内存，保存权重、KV 与中间数据，由 CPU、GPU 与独立 Neural Engine 共享；右下为 GPU 内部演进：M3/M4 为通用计算加 Dynamic Caching，M5 为通用计算加 Neural Accelerator，并带第二代 Dynamic Caching" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-apple-memory.svg" alt="左上为统一内存，保存权重、KV 与中间数据，由 CPU、GPU 与独立 Neural Engine 共享；右下为 GPU 内部演进：M3/M4 为通用计算加 Dynamic Caching，M5 为通用计算加 Neural Accelerator，并带第二代 Dynamic Caching" width="800" height="278" loading="lazy" decoding="async">
   <figcaption><strong>三层各管一件事。</strong> 统一内存负责整机数据容量，Dynamic Caching 管理 GPU 局部资源，M5 的 Neural Accelerator 增加 GPU 内专用计算能力。</figcaption>
 </figure>
 
@@ -1515,7 +1515,7 @@ TPU v1 的推理计算是围着规则矩阵乘法搭起来的。256 × 256 个�
 
 负载一变，硬件各部分的配比也得跟着调。训练增加可写状态、梯度与加速器间交换；长上下文生成增加 KV 占用，还要求每个生成步骤等待前一步结果。Google 的 TPU 8t／8i 把训练与采样服务分开组织，正是这两种阶段对矩阵、向量、存储和互联需求不同的体现。（脚注 70：*Inside the Eighth-Generation TPU: An Architecture Deep Dive*）TPU 的共同思路是围绕已知工作安排资源，具体配比随主要负载变化，这既是它的哲学也是它的风险：负载换了，配比就不合适了。看专用架构时，该问的是「它假设的负载是什么」，别停在「它好不好」。TPU 8t／8i 的重点也在「按阶段分工」这个设计取向上，并不只是两个型号代号。
 
-有两组数字容易看混。TPU v1 的 256×256 阵列是硬件单元规模，4.6.1 的 4096×4096 是模型里的矩阵形状，一块 256×256 的权重只是整个 4096×4096 权重的一个小块。Unified Buffer 送输入，累加存储存结果的部分和，这里明确说累加存储是独立的；FIFO 装权重、UB 装输入，两条不同的数据通路。至于「一条指令描述较大规模的矩阵运算」，那是 CISC 风格的思路，与 GPU 的 SIMT（大量线程各做一点）相反，专用阵列靠「指令少而大」省控制开销，代价就是灵活性。
+有两组数字容易看混。TPU v1 的 256×256 阵列是硬件单元规模，4.6.1 的 4096×4096 是模型里的矩阵形状，一块 256×256 的权重只是整个 4096×4096 权重的一个小块。Unified Buffer 送输入，累加存储存结果的部分和，累加存储是独立的；FIFO 装权重、UB 装输入，两条不同的数据通路。至于「一条指令描述较大规模的矩阵运算」，那是 CISC 风格的思路，与 GPU 的 SIMT（大量线程各做一点）相反，专用阵列靠「指令少而大」省控制开销，代价就是灵活性。
 
 > TPU v1 用 256×256 个乘加单元的阵列做规则矩阵乘法：256×256 的 8-bit 权重只有 64 KiB，一行输入时每字节权重只摊到 2 次操作，256 行时有 512 次，这就是 4.1 节「操作数复用」的硬件实现。代价是流水线填充／排空的固定成本（小任务吃亏）与按主要负载定死的配比（所以 TPU 8t／8i 把训练与采样服务分开组织）。
 
@@ -1531,7 +1531,7 @@ Groq 走的是静态调度。它的张量流处理器（Tensor Streaming Process
 
 从 6 到 42 再到 168，涨上去的是可写状态，模型权重一点没变。权重是静态的、可复制的；KV 是动态的，随请求和上下文增长。片上保存权重减少了一类读取，但持续服务还得为增长的状态提供容量。对长上下文、多并发的服务来说，真正的容量压力来自 KV 而不是权重，这也正是 4.7.3 里固定权重设计的动机：如果权重能挪到只读存储上，HBM 就可以全部留给 KV。更狠的一点是，容量扩展与通信需求由同一工作负载同时产生：你为了装下 KV 而增加芯片，芯片一多，分布在各芯片上的 KV 又要跨芯片汇集。容量问题的解法直接制造了通信问题，这个困境在 4.5.1 的多 die 放置里已经出现过一次，这里以 KV 的形式再来一次。
 
-晶圆尺度的取舍也在这里。它缩短了部分原本跨封装的连接，但数据仍沿网络经过多个计算单元，网络开销并没有消失。把使用同一状态的计算安排在附近，能减少经过的链路和同步；把任务均匀摊开，则有利于用上更多计算位置。这两件事常常冲突：按数据亲和性分配（同一个状态的消费者放一起）复用高、通信少，但可能负载不均；均匀摊开并行度高、不忙闲不均，却通信多、复用低。这里说这「与多 die 放置的原理一致」，本质上就是局部性对均衡，这个取舍在并行计算里无处不在，第 6 章的张量并行与专家并行还会再遇到。
+晶圆尺度的取舍也在这里。它缩短了部分原本跨封装的连接，但数据仍沿网络经过多个计算单元，网络开销并没有消失。把使用同一状态的计算安排在附近，能减少经过的链路和同步；把任务均匀摊开，则有利于用上更多计算位置。这两件事常常冲突：按数据亲和性分配（同一个状态的消费者放一起）复用高、通信少，但可能负载不均；均匀摊开并行度高、不忙闲不均，却通信多、复用低。这「与多 die 放置的原理一致」，本质上就是局部性对均衡，这个取舍在并行计算里无处不在，第 6 章的张量并行与专家并行还会再遇到。
 
 小节的几组数字别串了。SRAM 快、贵、面积大、容量小；HBM 慢一些、按 bit 算便宜、容量大。Cerebras 用 44 GB SRAM 是用面积买延迟，不是买容量。220 MiB 是每颗芯片的 SRAM，既不是每次请求的量，也不是每 tile 的量。1.125 GiB 与 1.208 GB 是同一件事的两种单位，4.8.2 里 Qwen3-8B 的 KV 写作 1.208 GB，因为 GB 按十进制、GiB 按二进制，别以为是两个不同的量。72 颗芯片说的是权重，6／42／168 颗说的是 KV，两组芯片数讨论的是不同的数据，不能相加也不能混淆。
 
@@ -1543,7 +1543,7 @@ Groq 走的是静态调度。它的张量流处理器（Tensor Streaming Process
 
 这份代价落在三项编程工作上。存储安排管的是张量放在哪里、局部容量能容纳几个块、哪一次读取结束后才能覆盖，对应 4.3.2 的占用率与 4.4.2 的双缓冲。执行安排管的是矩阵、向量和搬移如何重叠、阶段之间如何同步，对应 4.2.3 的流水与 4.4.4 的同步层级。形状适配管的是尾块如何处理、变长序列和专家路由如何形成均衡任务、哪些形状需要单独编译，这一项最容易被忽略，却是算子库里代码量最大的部分，变长序列、专家路由的不均衡 batch、各种非 2 的幂的形状，都堆在这里。应用开发者通常通过框架调用已有算子，编译器和算子库维护者负责这些底层工作。这句话划定的是责任边界。应用开发者当然还是要管，只是如果常用形状没有被高效实现，你的性能就取决于别人的实现质量。
 
-这里给出一张收益与代价的对照表：
+给出一张收益与代价的对照表：
 
 | 专用化方式 | 硬件节省的工作 | 软件需要安排的工作 |
 | --- | --- | --- |
@@ -1567,7 +1567,7 @@ $$
 
 其中 $W$ 是本步需要读取的权重总量（GB），$K$ 是每条请求的 KV 读取量（GB），$B$ 是批内请求数（batch）；$BK$ 即整批 KV 的读取总量。$S_{\mathrm{HBM}}$ 是「共用接口时的 HBM 读取量」相对「独立 ROM 后 HBM 读取量」的倍数（无量纲）。
 
-代入看看。$B = 1$ 时 $W + BK = 15.1 + 1.21 = 16.31$，约 16.3 GB，HBM 读取量从约 16.3 GB 降至 1.21 GB，$S = 16.31/1.21 \approx 13.47$，读取时间降为原来的约 1/13.5，这里说的「约 1/13.5」正是这个倍数的倒数。$B = 16$ 时 $BK = 16 \times 1.21 = 19.36$，约 19.3 GB，$W + BK = 15.1 + 19.36 = 34.46$，约 34.5 GB，$S = 34.46/19.36 \approx 1.78$，读取时间约为原来的 1/1.8。趋势很清楚：$B$ 越大，$W/(BK)$ 越小，$S$ 越接近 1，独立 ROM 的相对收益越小，因为权重的开销已经被更多请求摊薄了。
+代入看看。$B = 1$ 时 $W + BK = 15.1 + 1.21 = 16.31$，约 16.3 GB，HBM 读取量从约 16.3 GB 降至 1.21 GB，$S = 16.31/1.21 \approx 13.47$，读取时间降为原来的约 1/13.5，的「约 1/13.5」正是这个倍数的倒数。$B = 16$ 时 $BK = 16 \times 1.21 = 19.36$，约 19.3 GB，$W + BK = 15.1 + 19.36 = 34.46$，约 34.5 GB，$S = 34.46/19.36 \approx 1.78$，读取时间约为原来的 1/1.8。趋势很清楚：$B$ 越大，$W/(BK)$ 越小，$S$ 越接近 1，独立 ROM 的相对收益越小，因为权重的开销已经被更多请求摊薄了。
 
 令 $BK = W$，可求得 KV 读取量与权重读取量相等的转折点约为 $B = 12.5$（$W/K = 15.1/1.21 \approx 12.48$）。它的含义是，batch 到约 12.5 时「读一遍 KV」和「读一遍权重」一样贵；从整数 batch 13 起，KV 读取量超过权重读取量，KV 成为 HBM 的主要负担。这正是「独立 ROM 把 HBM 让给 KV」这个设计的价值所在。
 
@@ -1594,12 +1594,12 @@ $$
 预算再紧一些，需求就跳了。256 条运算通道完成这些操作需约 29.6 ms（$15\,134\,641\,792 / (256 \times 2\times10^{9}) \approx 0.02956$ s）。若分给矩阵计算的时间只有 40 μs，且有效利用率为 60%，需求先变成 $15\,134\,641\,792 / 0.6 = 2.5224\times10^{10}$ 次操作，再在 40 μs 内完成，需要 $2.5224\times10^{10} / (2\times10^{9} \times 40\times10^{-6}) \approx 315\,306$ 条运算通道，约为最初所需通道数的 4.2 倍（$315\,306/75\,674 \approx 4.17$）。时间预算越紧，留给等待的余量越小，必须配置的算力与存储带宽就越高。这是「延迟目标 → 硬件规模」的一次直接换算。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-weight-kv-read.svg" alt="一条水平线表示每批权重读取 15.1 GB；一条从原点上升的线表示各请求 KV，按每请求 1.21 GB 增长；在批内请求数约 12.5 处两条线相交，从 13 条起 KV 读取超过权重读取" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-weight-kv-read.svg" alt="一条水平线表示每批权重读取 15.1 GB；一条从原点上升的线表示各请求 KV，按每请求 1.21 GB 增长；在批内请求数约 12.5 处两条线相交，从 13 条起 KV 读取超过权重读取" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>固定权重被更多请求摊薄，KV 却随请求数线性增长。</strong> 交点之后，HBM 的主要负担从权重转向各请求的 KV。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-rom-split.svg" alt="上栏权重与 KV 都放在 HBM，读取量为 W + BK，通向计算；下栏 ROM 只读权重 W，HBM 存放并读写 KV 状态 BK，两条通路分别通向计算" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-rom-split.svg" alt="上栏权重与 KV 都放在 HBM，读取量为 W + BK，通向计算；下栏 ROM 只读权重 W，HBM 存放并读写 KV 状态 BK，两条通路分别通向计算" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>分开通路后，权重与 KV 可以同时读取。</strong> 共用时两者争用同一接口；独立后总时间由 ROM 与 HBM 两条通路中较慢的一条决定。</figcaption>
 </figure>
 
@@ -1652,7 +1652,7 @@ $$
 这里 $I$ 是算术强度（arithmetic intensity），单位是 FLOPs/byte，也就是每字节做多少次浮点运算；$RI$ 表示带宽能够支撑起多少运算。斜线 $RI$ 与水平线 $P$ 在 $I^{*} = P/R$ 相交：算术强度低于交点时数据供应较慢，高于交点时每字节已经对应足够多运算，计算速度成为新的瓶颈。这条折线是硬件允许的上限，任何实测点都落在折线之下，实测吞吐到折线的距离就是第 1.2.2 节定义的利用率。高于交点时用 MFU 衡量，低于交点时用 MBU。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/roofline.svg" alt="Roofline 模型：算术强度低于转折点时受带宽限制，高于转折点时受算力限制" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/roofline.svg" alt="Roofline 模型：算术强度低于转折点时受带宽限制，高于转折点时受算力限制" width="800" height="408" loading="lazy" decoding="async">
   <figcaption><strong>Roofline 模型。</strong> 斜线的斜率是带宽，平顶的高度是峰值算力；两者的交点是硬件的转折点。</figcaption>
 </figure>
 
@@ -1676,7 +1676,7 @@ $$
 第 4.8.2 节就用这里从单个投影扩展到整个模型，分别计算 decode 的主要读取与 prefill 的矩阵工作，并检查哪些设备能够容纳所需状态。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-roofline-qt.svg" alt="两条折线随 token 数 M 变化：矩阵计算从接近 0 上升到 M = 256 时约 52 μs；片外读取从约 33 μs 缓慢升到约 37 μs；两条线在约 179 行处交叉" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-roofline-qt.svg" alt="两条折线随 token 数 M 变化：矩阵计算从接近 0 上升到 M = 256 时约 52 μs；片外读取从约 33 μs 缓慢升到约 37 μs；两条线在约 179 行处交叉" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>计算量按行数增长，读取量只缓慢上升。</strong> 片外读取的大部分是固定的权重读取；从 179 行起，矩阵计算成为较慢的一项。</figcaption>
 </figure>
 
@@ -1719,7 +1719,7 @@ $$
 Qwen3-8B 与 Qwen3-235B-A22B 怎么选，先比单请求生成。8B 用 BF16、8K 上下文，在 RTX 4090、5090、M3 Ultra 上都能驻留；把表中的每步读取时间换成每秒 token 数，分别得到 $1000/16.22 \approx 61.7$、$1000/9.12 \approx 109.6$ 和 $1000/19.96 \approx 50.1$ token/s 的读取上限。这个 8B 稠密模型用不到 Ultra 的额外容量，5090 的高带宽于是直接体现为更高的生成预算。换成 Qwen3-235B-A22B（第 4.6.3 节的模型，4-bit 权重、单请求、8K 上下文），它需要约 126.867 GB 的模型、KV 与工作区空间，3090、4090、5090 都无法单卡驻留，M3 Ultra 256 GB 和 H200 141 GB 可以。每步读取约 13.697 GB，M3 Ultra 用约 16.72 ms，H200 用约 2.85 ms，对应约 59.8 与 350.4 token/s 的读取上限。Ultra 的大内存让这个 235B 的 MoE 能在一台本地整机上运行，H200 的高带宽则把同一步读取缩短到约六分之一。多卡运行的张量切分与专家 dispatch 留到第 6 章展开。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-two-stage-budget.svg" alt="表格列出六种设备的 8K 单请求 decode 读取下界和 4K 输入 prefill 矩阵下界：RTX 3090 为 17.5 与 871.1 ms，RTX 4090 为 16.2 与 374.4，RTX 5090 为 9.1 与 295.2，A100 SXM 为 8.0 与 198.2，H100 SXM 为 4.9 与 62.5，M3 Ultra 为 20.0 ms 与未列出的矩阵预算" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-two-stage-budget.svg" alt="表格列出六种设备的 8K 单请求 decode 读取下界和 4K 输入 prefill 矩阵下界：RTX 3090 为 17.5 与 871.1 ms，RTX 4090 为 16.2 与 374.4，RTX 5090 为 9.1 与 295.2，A100 SXM 为 8.0 与 198.2，H100 SXM 为 4.9 与 62.5，M3 Ultra 为 20.0 ms 与未列出的矩阵预算" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>同一模型的两种阶段预算。</strong> decode 更直接反映读取带宽，prefill 的矩阵预算更直接反映匹配精度的矩阵速率。</figcaption>
 </figure>
 
@@ -1778,17 +1778,17 @@ $$
 \frac{S_r}{T} = \frac{S_r}{A_r} \times \frac{A_r}{T}.
 $$
 
-$S_r$ 是理想计算时间，也就是工作量除以理想速率；$A_r$ 是单元真正处于工作状态的时间；$T$ 是任务总时间。第一个因子 $S_r/A_r$ 表示工作时达到的实际速率相对理想速率的比例，也就是执行效率；第二个因子 $A_r/T$ 表示工作时间占总时间的比例，也就是忙碌比例。这里给了两个同样 40% 的情形：两个任务都耗时 100 μs，理想计算时间也都是 40 μs。执行第一个任务时，单元只工作了 40 μs，工作时达到理想速率，其余 60 μs 都在等待；执行第二个任务时，单元工作了 80 μs，速率只有理想值的一半，等待时间只有 20 μs。两者整体比值都是 40%，对应的优化方向却完全不同。第一个任务更需要提前准备数据、安排更多相互独立的计算，或减少等待前一步结果的时间，类似第 4.4 节两槽到三槽的改动；第二个任务更需要改善执行粒度、指令与局部访问，类似第 4.2 节补齐浪费和分组调用的分析（脚注 83、84）。
+$S_r$ 是理想计算时间，也就是工作量除以理想速率；$A_r$ 是单元真正处于工作状态的时间；$T$ 是任务总时间。第一个因子 $S_r/A_r$ 表示工作时达到的实际速率相对理想速率的比例，也就是执行效率；第二个因子 $A_r/T$ 表示工作时间占总时间的比例，也就是忙碌比例。给了两个同样 40% 的情形：两个任务都耗时 100 μs，理想计算时间也都是 40 μs。执行第一个任务时，单元只工作了 40 μs，工作时达到理想速率，其余 60 μs 都在等待；执行第二个任务时，单元工作了 80 μs，速率只有理想值的一半，等待时间只有 20 μs。两者整体比值都是 40%，对应的优化方向却完全不同。第一个任务更需要提前准备数据、安排更多相互独立的计算，或减少等待前一步结果的时间，类似第 4.4 节两槽到三槽的改动；第二个任务更需要改善执行粒度、指令与局部访问，类似第 4.2 节补齐浪费和分组调用的分析（脚注 83、84）。
 
 **实验 4-6 ・延伸：用 Mac 与 RTX 实测检验执行时间预测**。这里题干要求根据投影在两种平台上的实测总耗时，提出两个能够解释耗时差异的原因，再读取 DRAM、L2 与 kernel 记录，为每个解释列出预期现象和实际现象；随后画出 256 行调用的矩阵、部分结果与归约路径，指出需要哪些阶段时间才能区分计算单元工作时的执行效率与等待时间；再把这组结果与「假设输入和权重均从片外读取」的模型对照。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-projection-latency.svg" alt="四根柱分别为 1 行复用 42.9 μs、1 行轮换 51.9 μs、256 行复用 32.6 μs、256 行轮换 33.5 μs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-projection-latency.svg" alt="四根柱分别为 1 行复用 42.9 μs、1 行轮换 51.9 μs、256 行复用 32.6 μs、256 行轮换 33.5 μs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>复用与轮换的差别只在单行时明显。</strong> 256 行时两种权重地址方式的耗时接近，说明时间不只花在 DRAM 读取上。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch04-dram-counter.svg" alt="表格列出四个条件的 DRAM 读取：1 行复用 32.0 MiB、1 行轮换 32.0 MiB、256 行复用 256 bytes、256 行轮换约 32.1 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch04-dram-counter.svg" alt="表格列出四个条件的 DRAM 读取：1 行复用 32.0 MiB、1 行轮换 32.0 MiB、256 行复用 256 bytes、256 行轮换约 32.1 MiB" width="800" height="290" loading="lazy" decoding="async">
   <figcaption><strong>缓存命中改变的是片外流量。</strong> 256 行复用把 DRAM 读取降到 256 bytes，但调用耗时并未同步下降，时间花在 L2 请求、计算与归约上。</figcaption>
 </figure>
 
@@ -1798,7 +1798,7 @@ $S_r$ 是理想计算时间，也就是工作量除以理想速率；$A_r$ 是�
 
 两类差距要分清，第 1.3.4 节已经给出框架，本节提供的是实例。模型口径的差距来自「逻辑读取请求」不等于「DRAM 流量」：程序请求读 32 MiB，缓存命中之后 DRAM 只读了很少（256 行复用只读 256 bytes），用「模型算出的字节数除以带宽」来预测就会系统性偏高，修正办法是把模型口径改成实际片外流量。实现开销的差距来自 kernel 逐个启动、主机提交与同步留下的间隙，这是纯粹的实现浪费，可以靠 kernel 融合、图重放、persistent kernel 去掉。这里那句「先修正口径，再去掉开销，两步都不能少」说的就是这两类差距得用不同手段对付，混在一起就分析不清。
 
-单行那两组都是 32.0 MiB 的 DRAM 读取，把「缓存解释」证伪了。如果复用比轮换快是因为权重留在缓存里，复用组的 DRAM 读取应该明显更少，实测两组一样，所以单行那 21% 的差距不出在 DRAM 流量上。那它出在哪里？这里说需要沿「提交、执行与等待」进一步定位。实验准备的是 16 份内容相同、地址不同的权重，内容相同这一点很关键，差别只能落在地址、页、TLB、预取这些与地址有关的行为上，这里没有再往下断言，这里也不推测。
+单行那两组都是 32.0 MiB 的 DRAM 读取，把「缓存解释」证伪了。如果复用比轮换快是因为权重留在缓存里，复用组的 DRAM 读取应该明显更少，实测两组一样，所以单行那 21% 的差距不出在 DRAM 流量上。那它出在哪里？需要沿「提交、执行与等待」进一步定位。实验准备的是 16 份内容相同、地址不同的权重，内容相同这一点很关键，差别只能落在地址、页、TLB、预取这些与地址有关的行为上，这里没有再往下断言，这里也不推测。
 
 256 行那一组更有意思：复用只读 256 bytes，轮换读 32.1 MiB，DRAM 流量差出 13 万倍，总耗时却都在 33 μs 左右。缓存确实把 DRAM 流量消掉了，可时间没有跟着变，因为时间根本不花在 DRAM 上，而花在别处：147 MiB 的 L2 请求、GEMM 加 split-K 归约、提交与同步。这是个很好的教学例子，把流量降下来不等于把时间降下来，瓶颈已经搬到下一层了。147 MiB 的 L2 请求与 256 bytes 的 DRAM 读取放在一起，说明同一份 32 MiB 权重被多个计算块反复请求，缓存命中省的是 DRAM 带宽，不省片上带宽，L2 到 SM 的流量照样要付，这正是 4.3 节「存储层次每一级都有带宽上限」的具体体现。
 
@@ -1856,7 +1856,7 @@ $F_0$ 是相对通用方案增加的固定成本（元），$\Delta c$ 是每个
 
 **实验 4-8 ・延伸：从能耗分账到功率封顶**。题干沿用第 4.1.3 节的能耗表与 Qwen3-8B 单请求 8K decode 一步的读取字节数。（a）把 batch 分别取 8、32、128，分别计算每 token 的权重、KV 与计算能耗，求权重项低于计算项的最小 batch。（b）把上下文改为 32K，求 KV 项等于权重项的 batch，并解释此后继续增大 batch 为什么不再明显降低每 token 能耗。（c）选择一张卡的 TDP、峰值算力与 HBM 带宽，求峰值速率下每 FLOP 的能量预算 $b$；设实际每 FLOP 能耗为 $1.5b$，按 $P \propto fV^{2}$ 分别求电压不变与电压随频率下降两种情况下的持续频率比；再把（a）中 batch 为 32 时一步的能量（32 乘以每 token 能耗）除以持续频率下这一步的时间，得到平均功率，比较它与 TDP 的差距。
 
-这个判据的直觉是：慢的机器必须便宜得足够多才划算。A 比 B 快 2 倍（$t_B/t_A = 2$），那么 A 每小时只要比 B 便宜不到 2 倍，A 就更省钱，价格与速度可以互换，汇率就是速度比。用之前注意「每任务成本与 $ct$ 成正比」这个前提，它假设按时间计费，云上按机时或者电费按时间摊都算。如果买断硬件、只按电费算，那就把 $c$ 换成平均功率 $P$，同一个不等式变成每任务能耗的比较，这里明确说了这一点。
+这个判据的直觉是：慢的机器必须便宜得足够多才划算。A 比 B 快 2 倍（$t_B/t_A = 2$），那么 A 每小时只要比 B 便宜不到 2 倍，A 就更省钱，价格与速度可以互换，汇率就是速度比。用之前注意「每任务成本与 $ct$ 成正比」这个前提，它假设按时间计费，云上按机时或者电费按时间摊都算。如果买断硬件、只按电费算，那就把 $c$ 换成平均功率 $P$，同一个不等式变成每任务能耗的比较，了这一点。
 
 25.8 与 19.6 mJ 的算法是 $600\ \mathrm{W}\times42.9\ \mu\mathrm{s} = 25.74$ mJ 与 $600\ \mathrm{W}\times32.6\ \mu\mathrm{s} = 19.56$ mJ。注意这是「最多」耗能，因为它假设整卡满载 600 W，而实际投影调用未必跑满整个 GPU，「最多」正是这个原因。155 W 与 10.7 W 也是反推出来的：单行时 Mac 用 166 μs，要能耗不超过 25.8 mJ，则 $P \le 25.8\ \mathrm{mJ}/166\ \mu\mathrm{s} = 155.4$ W；256 行时 Mac 用 1.835 ms，要不超过 19.6 mJ，则 $P \le 19.6\ \mathrm{mJ}/1.835\ \mathrm{ms} = 10.68$ W。这组数字把「哪台机器更省电」这个看似需要实测整机功耗的问题，转成了可以算出来的功率门槛。结论也很尖锐：同一个 Mac，在大矩阵上必须比小矩阵省得多（10.7 W 对 155 W）才能保持能耗优势，因为 256 行时 Mac 慢 56 倍，时间上的劣势要把功率压得极低才补得回来。
 
@@ -1864,7 +1864,7 @@ $F_0$ 是相对通用方案增加的固定成本（元），$\Delta c$ 是每个
 
 $E = \int_0^T P(t)\mathrm{d}t$ 提醒的是，能耗是面积而不是点值。功率随时间变化（有预热、有空闲、有突发）时必须积分，不能拿峰值乘时间。这里接下来那句「统计一段时间内的总耗电量，再除以这段时间的有效产出」就是把积分变成一次实际测量：用功耗计测总电量，用 token 计数测产出。
 
-0.534 J 这笔分账的结构来自 4.1.3：权重读取 0.481 J，占九成；KV 读取 0.038 J；计算 0.015 J，合计 0.534 J。单请求 decode 一步的能量几乎全花在把权重搬进来上。这也解释了 batch 增大为什么能大幅改善能效：权重读一次可以服务 $B$ 个 token，每 token 的权重能耗是 $0.481/B$；$B=32$ 时 $0.481/32 + 0.038 + 0.015 \approx 0.068$ J，是单请求的约八分之一。这里还给了能耗侧的转折点：$0.481/B < 0.015$，即 batch 超过 32 后，每 token 的权重搬移能耗才低于计算能耗（$B > 32.07$）。这个转折点由每字节能耗与每 FLOP 能耗的比值决定，与 4.8.1 里由带宽除以算力决定的时间转折点不是同一个数，这里在 4.1.3 里特意点出了这个区别。还要记住 0.534 J 不含控制、时钟、静态漏电与空闲期间的功耗，它是下界、是量级估计，实测的每 token 能耗会更高，这里强调这一点是防止拿它当精确预算去写成本报表。
+0.534 J 这笔分账的结构来自 4.1.3：权重读取 0.481 J，占九成；KV 读取 0.038 J；计算 0.015 J，合计 0.534 J。单请求 decode 一步的能量几乎全花在把权重搬进来上。这也解释了 batch 增大为什么能大幅改善能效：权重读一次可以服务 $B$ 个 token，每 token 的权重能耗是 $0.481/B$；$B=32$ 时 $0.481/32 + 0.038 + 0.015 \approx 0.068$ J，是单请求的约八分之一。这里还给了能耗侧的转折点：$0.481/B < 0.015$，即 batch 超过 32 后，每 token 的权重搬移能耗才低于计算能耗（$B > 32.07$）。这个转折点由每字节能耗与每 FLOP 能耗的比值决定，与 4.8.1 里由带宽除以算力决定的时间转折点不是同一个数，这里在 4.1.3 里特意点出了这个区别。还要记住 0.534 J 不含控制、时钟、静态漏电与空闲期间的功耗，它是下界、是量级估计，实测的每 token 能耗会更高，这一点是防止拿它当精确预算去写成本报表。
 
 例 4-3 的推导可以自己走一遍。每百万 token 省 0.50 美元，折成每 token 省 $0.50/10^{6} = 5\times10^{-7}$ 美元，$F_0 = 2\times10^{7}$ 美元，于是回本量 $V^{*} = 2\times10^{7}/(5\times10^{-7}) = 4\times10^{13}$ token。一年产出 $DuqL = 100\times0.5\times10\,000\times31\,536\,000$，即 $1.5768\times10^{13}$ token，约 15.8 万亿。覆盖率 $1.5768\times10^{13}/(4\times10^{13}) = 39.4\%$，与这里的「约 39%」一致。要凑够回本量需要 $100/0.394 = 253.8$，也就是 254 台。寿命减半时产出减半，机器数翻倍成 508；利用率减半到 25% 时产出同样减半，也是 508 台。每年节省 $1.5768\times10^{13}\times5\times10^{-7} = 7.884\times10^{6}$ 美元，约 788 万美元，回本年限 $2\times10^{7}/7.884\times10^{6} = 2.54$ 年，而题设的模型经济寿命只有一年，所以在题设条件下不能回本。
 

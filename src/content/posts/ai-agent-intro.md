@@ -57,7 +57,7 @@ Harness 可以归纳为五项职责：
 模型选型、编排模式和护栏同样重要，但它们不是 Harness 的独立组件，而是贯穿这五项职责的设计决策。
 
 <figure class="diagram">
-  <img src="../../figures/ai-agent/model-harness.svg" alt="Agent 边界内的 Model 与 Harness；Harness 负责上下文管理、工具接口、约束、验证和纠正" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-agent/model-harness.svg" alt="Agent 边界内的 Model 与 Harness；Harness 负责上下文管理、工具接口、约束、验证和纠正" width="800" height="410" loading="lazy" decoding="async">
   <figcaption><strong>Model 与 Harness。</strong> Harness 负责运行与治理，Model 负责决策，工具与动作接口连接外部环境。</figcaption>
 </figure>
 

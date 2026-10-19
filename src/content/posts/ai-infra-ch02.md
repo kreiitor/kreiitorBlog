@@ -63,12 +63,12 @@ Transformer 用注意力机制让一个token读取其他位置的信息，「因
 沿图中的箭头追踪，便能区分两种等待：RNN 在同层等待前一token位置，因果Transformer 在下一层等待所需的上一层结果。已知输入能否并行，取决于这些依赖本身，跟数据是否叫「序列」无关。生成新的token又增加了另一条依赖：下一次调用的输入由本次输出确定。处理已知输入与逐步生成因此是两类不同的工作。编码器把已知输入转换为表示，解码器根据允许访问的信息逐步产生输出；现代因果语言模型常用 decoder-only 结构，本章先用这一结构建立基础，再讨论 V4.1 Flash 如何通过 CED 架构重新划分输入处理与生成的工作。处理已知输入时，同层token位置可以并行；生成时，第一个输出确定后才能成为下一次输入。所以输入处理沿网络深度推进，生成还额外多出一条跨调用的串行依赖。（脚注1：序列依赖计算记录。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-rnn-dependency.svg" alt="网格横轴是 token 1 到 token 4，纵轴是输入、第 1 层、第 2 层；每个交点有一个圆点，同一 token 位置的点颜色相同，同层沿横向依次推进" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-rnn-dependency.svg" alt="网格横轴是 token 1 到 token 4，纵轴是输入、第 1 层、第 2 层；每个交点有一个圆点，同一 token 位置的点颜色相同，同层沿横向依次推进" width="800" height="230" loading="lazy" decoding="async">
   <figcaption><strong>同层内逐 token 推进。</strong> 相同颜色的圆点属于同一个 token 位置的计算流；箭头指向需要前一结果的节点，所以 token 1 算完本层后 token 2 才能算本层。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-transformer-causal.svg" alt="上下两排各有四个 token 位置；每个本层位置接收来自上一层同位置及更早位置的全部箭头，不再沿同一层横向传递" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-transformer-causal.svg" alt="上下两排各有四个 token 位置；每个本层位置接收来自上一层同位置及更早位置的全部箭头，不再沿同一层横向传递" width="800" height="356" loading="lazy" decoding="async">
   <figcaption><strong>依赖改到层间。</strong> 每个查询读取上一层中允许访问的位置；上一层完成后，本层各 token 可以并行计算。</figcaption>
 </figure>
 
@@ -80,7 +80,7 @@ Transformer 用注意力机制让一个token读取其他位置的信息，「因
 
 生成阶段为什么会多出跨调用的串行依赖？因为这一步的输出要变成下一步的输入。这条链来自「自回归」这件事本身，跟模型结构无关。工程上的投机解码、并行验证、推测执行，都是在想办法绕过这条链，没人能把它消除。至于工程含义，prefill 是计算密集的（大矩阵乘、算力吃满），decode 是访存密集的（每步只有一两行输入，但要把权重和整段上下文读一遍）。第2.2节就是在量化这个转变。
 
-还有两条容易混的地方。因果Transformer 与 RNN 式的序列依赖不是一回事：前者序列方向可以并行、深度方向必须串行，后者序列方向和深度方向都串行。而「序列」这个名称也不该被当成结论，这里特别强调，已知输入能否并行取决于依赖关系本身。
+还有两条容易混的地方。因果Transformer 与 RNN 式的序列依赖不是一回事：前者序列方向可以并行、深度方向必须串行，后者序列方向和深度方向都串行。而「序列」这个名称也不该被当成结论，要强调，已知输入能否并行取决于依赖关系本身。
 
 #### 练习 2-1〔延伸〕：RNN 与 Transformer 的依赖如何限制并行计算
 
@@ -116,7 +116,7 @@ $$
 
 其中 $N_W$ 是权重参数的数量，$b_W$ 是每个参数占用的字节数。三个量的单位按这里口径整理一下：$m$ 是本次参与计算的token数，$k$ 是输入特征维度，$n$ 是输出宽度，三者都以「个数」为单位；$N_W$ 的单位是「个参数」；$b_W$ 的单位是「字节／参数」（BF16 时 $b_W = 2$）；$M_W$ 的单位是字节；$F$ 的单位是 FLOPs，系数 2 表示一次乘加记为 2 FLOPs。
 
-两条缩放规律要背下来。行数 $m$ 翻倍，运算量翻倍，权重大小保持不变；输出宽度 $n$ 翻倍，权重数量与运算量都翻倍。这两个变化分别对应「同一模型处理更多输入」与「模型的一层变得更宽」。这里指出，后面的模型表都可以用这条规则逐行计算。
+两条缩放规律要背下来。行数 $m$ 翻倍，运算量翻倍，权重大小保持不变；输出宽度 $n$ 翻倍，权重数量与运算量都翻倍。这两个变化分别对应「同一模型处理更多输入」与「模型的一层变得更宽」。后面的模型表都可以用这条规则逐行计算。
 
 先只看 Qwen3-8B 的一条数据路径。一次**前向执行**是使用当前权重从输入算到输出的过程；**隐藏向量**是网络内部传递的特征表示，其维度即每个token的向量含多少个数。前馈网络（feed-forward network，FFN）对每个token分别做特征变换；注意力则在token之间选择并汇总信息。这两类运算交替组成网络的一层。
 
@@ -226,12 +226,12 @@ $$
 所以保持 $BP$ 不变只能保持投影行数不变，保不住上下文交互。把一条长输入拆成两条彼此独立的短输入，原来跨越分界的那些查询—键配对就消失了。反过来，仅在同一请求前面增加上下文，会增加每个新token的点积数，输入投影的行数却保持不变。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-qkv-projection.svg" alt="当前 token 的隐藏向量分出三条投影，分别得到查询 Q、键 K、值 V；Q 与各位置的 K 匹配得到系数，再按系数汇总各位置的 V 形成输出" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-qkv-projection.svg" alt="当前 token 的隐藏向量分出三条投影，分别得到查询 Q、键 K、值 V；Q 与各位置的 K 匹配得到系数，再按系数汇总各位置的 V 形成输出" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>一个 token 自己产生 Q、K、V。</strong> Q 与所有位置的 K 匹配，按匹配结果汇总这些位置的 V。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-attention-shape.svg" alt="三行新 token 查询、五列被读取位置；左侧两列旧上下文全部有配对，构成 3×2 长方形；右侧三列新输入只有下三角有配对；空白格是被屏蔽的未来位置" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-attention-shape.svg" alt="三行新 token 查询、五列被读取位置；左侧两列旧上下文全部有配对，构成 3×2 长方形；右侧三列新输入只有下三角有配对；空白格是被屏蔽的未来位置" width="800" height="230" loading="lazy" decoding="async">
   <figcaption><strong>旧上下文配对加块内因果配对。</strong> 左两列三行都填满，右三列形成下三角；每个有色格表示一次查询—键配对。</figcaption>
 </figure>
 
@@ -275,11 +275,11 @@ Qwen3-8B 取 $d = 4096,\ f = 12288$，FFN 约有1.51亿个参数，BF16 权重�
 除矩阵变换外，一层之内还有子层之间的连接。**残差连接**把子层的输入保留下来，在该子层完成变换后，与输出逐元素相加。这样，一条路径执行新变换，另一条路径直接传递已有表示。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-swiglu-branches.svg" alt="输入 X 为 4096 维，向下分成 gate 投影经 SiLU 与 up 投影两条并行分支，两者都输出 12288 维；对应元素相乘后经 down 投影降回 4096 维" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-swiglu-branches.svg" alt="输入 X 为 4096 维，向下分成 gate 投影经 SiLU 与 up 投影两条并行分支，两者都输出 12288 维；对应元素相乘后经 down 投影降回 4096 维" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>门控与升维。</strong> gate 分支经 SiLU 后与 up 分支逐元素相乘，再由 down 投影回到主干维度。</figcaption>
 </figure>
 
-表2-1 是 Qwen3-8B 的单层模块与输出接口。这里说明：注意力和前馈各行按36个主干层累计；词嵌入根据token编号读取词表中对应的行，不再按一次词表矩阵乘法（GEMM，通用矩阵乘法）计算。注意力的 $K$、$V$ 只各有1024维，而查询仍有4096维。下表按这里的四段结构还原／权重矩阵（输入宽×输出宽）／矩阵FLOPs／层／调用数」）：
+表2-1 是 Qwen3-8B 的单层模块与输出接口。说明：注意力和前馈各行按36个主干层累计；词嵌入根据token编号读取词表中对应的行，不再按一次词表矩阵乘法（GEMM，通用矩阵乘法）计算。注意力的 $K$、$V$ 只各有1024维，而查询仍有4096维。下表按这里的四段结构还原／权重矩阵（输入宽×输出宽）／矩阵FLOPs／层／调用数」）：
 
 表2-1 之一：模型入口
 
@@ -317,12 +317,12 @@ $$
 F_{\text{matrix}} = 36\left(385{,}875{,}968\,m + 16{,}384\,N_{\text{pair}}\right) + 2\,m_{\text{out}} \times 4096 \times 151936.
 $$
 
-式中第一项随输入行数增长，第二项随查询—键配对数增长，最后一项随实际执行词表投影的token数增长。这里给出两个结果：对包含8192个token的输入，按有效因果查询—键配对计算注意力，词表头只处理最后一个token，共需 133.6 TFLOPs；已有8192个上下文token、再补入一个token时，共需 20.0 GFLOPs。（脚注3：逐层记录。）
+式中第一项随输入行数增长，第二项随查询—键配对数增长，最后一项随实际执行词表投影的token数增长。给出两个结果：对包含8192个token的输入，按有效因果查询—键配对计算注意力，词表头只处理最后一个token，共需 133.6 TFLOPs；已有8192个上下文token、再补入一个token时，共需 20.0 GFLOPs。（脚注3：逐层记录。）
 
 prefill 同时处理8192个输入token，每个token都要经过投影和 FFN。decode 只对新token执行这些运算，旧token的 $K$、$V$ 则从缓存读取。所以缓存省去了旧token的投影和 FFN 重算，当前查询与上下文的注意力计算仍要执行。下一节计算这份缓存的容量和访问量。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-qwen-layer.svg" alt="输入为每 token 4096 个数，先经归一化、注意力与输出投影，再与子层输入相加；随后经归一化与前馈网络，再次与子层输入相加；两条旁路分别绕过两个子层" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-qwen-layer.svg" alt="输入为每 token 4096 个数，先经归一化、注意力与输出投影，再与子层输入相加；随后经归一化与前馈网络，再次与子层输入相加；两条旁路分别绕过两个子层" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>先注意力，再前馈。</strong> 每个子层的输入都经旁路直接送到相加节点，保留残差连接。</figcaption>
 </figure>
 
@@ -414,7 +414,7 @@ $c_{\text{KV}}$ 的公式建议按维度拆着记：一层里，$K$ 有 $n_{\tex
 缓存把重算旧token换成存 K、V 并反复读，所以只有键和值被长期保存；Qwen3-8B 每个上下文token 144 KiB，8192 个token 就是 1.125 GiB。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/prefill-decode.svg" alt="Prefill 并行处理多个输入 token，Decode 每步处理一个 token 并重读权重与历史 KV" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/prefill-decode.svg" alt="Prefill 并行处理多个输入 token，Decode 每步处理一个 token 并重读权重与历史 KV" width="800" height="394" loading="lazy" decoding="async">
   <figcaption><strong>Prefill 与 Decode 的资源画像。</strong> Prefill 一次并行处理多个输入 token，权重读取被复用；Decode 每步只处理一个 token，却要重读权重与全部历史 KV。</figcaption>
 </figure>
 
@@ -453,7 +453,7 @@ $$
 复算：$c_{\text{KV}}H = 147{,}456 \times 8192 = 1{,}207{,}959{,}552$ 字节，$15{,}136{,}811{,}008 / 1{,}207{,}959{,}552 = 12.53$，向上取整得 13；$H = 2048$ 时 $c_{\text{KV}}H = 301{,}989{,}888$，$15{,}136{,}811{,}008 / 301{,}989{,}888 = 50.12$，向上取整得 51。这里注意到，上下文缩短到四分之一，交点 batch 约增到四倍，因为 $B^{*}$ 与 $H$ 成反比。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-batch-read-lines.svg" alt="横轴为批内请求数（约 0 到 60），纵轴为逻辑读取量（GiB，0 到 70）；权重读取是水平线，8K token KV 从原点随请求数线性上升，两线在请求数约 13 处相交" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-batch-read-lines.svg" alt="横轴为批内请求数（约 0 到 60），纵轴为逻辑读取量（GiB，0 到 70）；权重读取是水平线，8K token KV 从原点随请求数线性上升，两线在请求数约 13 处相交" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>共享读取与独立上下文。</strong> 权重组按整个 decode batch 读取一次，不随请求数变化；KV 组按每请求 8K 上下文累计，随请求数线性上升。</figcaption>
 </figure>
 
@@ -461,7 +461,7 @@ $$
 
 权重那一行的关键洞察是「读取一次、服务多行」。矩阵乘的输入有 $m$ 行，但权重只有一份，所以只要把权重块放进片上存储并在它还在的时候把多行都算掉，这份权重的带宽就摊薄了 $m$ 倍。大 batch 的 decode 因此更划算：算力利用率提高，权重读取被摊薄。反过来，$m=1$ 时（batch 1 的 decode）读一遍权重只服务一行输入，带宽全浪费，这就是小 batch decode 慢的根本原因，也是**连续批处理**（continuous batching）要解决的问题。
 
-15.14 GB 与 16.38 GB 这两个数的差别值得注意：16.38 GB 是全部 BF16 权重的总量（$8{,}190{,}735{,}360 \times 2$ 字节），而例题里的 $R_W = 15{,}136{,}811{,}008$ 字节（约 15.14 GB）是每批实际被读到的共享权重。这里说明嵌入按请求查行另计，词嵌入是查表不是整表读，所以它不进入这个共享权重读取量。这类「算进去还是不算进去」的口径在资源核算里必须写清楚，否则数字之间会对不上。
+15.14 GB 与 16.38 GB 这两个数的差别值得注意：16.38 GB 是全部 BF16 权重的总量（$8{,}190{,}735{,}360 \times 2$ 字节），而例题里的 $R_W = 15{,}136{,}811{,}008$ 字节（约 15.14 GB）是每批实际被读到的共享权重。这说明嵌入按请求查行另计，词嵌入是查表不是整表读，所以它不进入这个共享权重读取量。这类「算进去还是不算进去」的口径在资源核算里必须写清楚，否则数字之间会对不上。
 
 $B^{*}$ 这个交点的工程意义：batch 小于它时，这一步的带宽主要花在权重上；batch 大于它时，主要花在 KV 上。所以「提高 batch 就能更划算」只在一定范围内成立，超过交点，新增请求带来的收益（摊薄权重）已经小于成本（多读一份 KV）。这里的进一步推论更重要：上下文越长，$B^{*}$ 越小，批处理的红利越早耗尽。8K 上下文的交点是 13，2K 上下文是 51，这就是长上下文服务为什么难做高吞吐。
 
@@ -496,7 +496,7 @@ $$
 图2-7 沿生成步数累加读取，图2-8 沿请求数累加读取。多条独立请求的状态容量与上下文访问分别相加，批内权重则共同使用。长度不同时，逐请求代入各自的 $H$ 与 $n_d$：输出越长，已有上下文被读取的次数就越多；输入越长，第一次 decode 要访问的上下文就越多。对实际对话，可先根据每轮输入长度、缓存命中情况和返回的token数，还原这条调用链；「已保存的 Chat 长度核算给出了具体代入过程」。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-context-readwrite.svg" alt="四行对应第 1 步到第 4 步，列为 1 到 8 号位置；每行读取此前已有的位置，并在末尾追加一个新位置；到第 4 步共保留 8 个 token" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-context-readwrite.svg" alt="四行对应第 1 步到第 4 步，列为 1 到 8 号位置；每行读取此前已有的位置，并在末尾追加一个新位置；到第 4 步共保留 8 个 token" width="800" height="270" loading="lazy" decoding="async">
   <figcaption><strong>每步追加一个 token，重读已有上下文。</strong> 蓝色格是本步读取的位置，橙色格是本步追加的新 token；上一行追加的位置在下一行成为上下文。</figcaption>
 </figure>
 
@@ -523,7 +523,7 @@ $F_{\text{decode,total}}$ 的公式结构同理：$n_d F_0$ 是每步固定的�
 
 工程含义：既然读取是瓶颈，优化方向就分成两类，减少读的量（KV 量化、GQA/MLA 压缩、滑动窗口、稀疏选择，都是第2.3节的内容）和提高读的效率（更大的 batch 摊薄权重、paged attention 提高带宽利用率、把 KV 放在更快的层级上）。反过来，如果只盯容量做优化（省显存），吞吐不一定会提升。
 
-做资源核算最容易错的地方是口径：一次请求的 KV 有三个不同的数字。新增量是 prefill 的 $c_{\text{KV}}P$ 加上 decode 的 $c_{\text{KV}}n_d$；最终驻留量是 $c_{\text{KV}}(H + n_d)$，它包含了已恢复前缀 $S$ 的部分；累计读取量是 $c_{\text{KV}}[n_dH + n_d(n_d-1)/2]$。这里特别说明「已有前缀的恢复与传输单独核算」，如果这段前缀是从别的请求复制来的（prefix cache 命中），它的写入量不能重复计算。
+做资源核算最容易错的地方是口径：一次请求的 KV 有三个不同的数字。新增量是 prefill 的 $c_{\text{KV}}P$ 加上 decode 的 $c_{\text{KV}}n_d$；最终驻留量是 $c_{\text{KV}}(H + n_d)$，它包含了已恢复前缀 $S$ 的部分；累计读取量是 $c_{\text{KV}}[n_dH + n_d(n_d-1)/2]$。还要说明「已有前缀的恢复与传输单独核算」，如果这段前缀是从别的请求复制来的（prefix cache 命中），它的写入量不能重复计算。
 
 #### 练习 2-3〔延伸〕：输出变长后，KV 容量与累计读取量如何增长
 
@@ -549,7 +549,7 @@ KV 位宽减半（例如 BF16 → 8 位）：$c_{\text{KV}}$ 出现在三项的�
 
 落到模型上，一类机制为每个 token 位置保存键和值，另一类用有限状态递推把历史的贡献汇入一块固定大小的状态，两种做法存下来的都是数值向量或矩阵。模型处理完上下文、留给后续计算复用的这些表示，叫**上下文状态**。这里有两个口径是分开的：上下文长度按 token 数计量，状态容量按实际保存的字节数计量。
 
-比较这些机制时，这里给了一条很实用的思路：先看历史里留下了什么，再看新一步怎么把需要的信息取回来。取的方式可以是把每个 token 表示得更窄，也可以只直接访问近期位置、把多个位置汇总成较少的条目，或者先筛选再读取。另一类机制则持续改写一块固定大小的状态，查询从中取结果。这些安排分别动的是表示宽度、条目数量和访问方式。这里还有一句提醒值得抄下来：省下来的存储与读取，要跟新增的选择、压缩和更新工作放在一起算。
+比较这些机制时，给了一条很实用的思路：先看历史里留下了什么，再看新一步怎么把需要的信息取回来。取的方式可以是把每个 token 表示得更窄，也可以只直接访问近期位置、把多个位置汇总成较少的条目，或者先筛选再读取。另一类机制则持续改写一块固定大小的状态，查询从中取结果。这些安排分别动的是表示宽度、条目数量和访问方式。这里还有一句提醒值得抄下来：省下来的存储与读取，要跟新增的选择、压缩和更新工作放在一起算。
 
 把地图摊开，2.3.1 和 2.3.2 在压「每一页写多宽」，少存几份 K/V，或者改存低维潜变量；2.3.3 在压「保留多少页、怎么找页」，用的是局部窗口、压缩条目和稀疏索引；2.3.4 干脆把「页」这个概念换掉，改用一张不断被改写的定长矩阵。三条路线的取舍都能用「留下了什么、怎么取回来」这两问回答。
 
@@ -576,14 +576,14 @@ Qwen3-8B 用的正是这种共享方式，每四个查询头共用一组 KV，�
 由此可以直接由组数预测资源变化：把 $n_{\text{KV}}$ 减半，键值投影参数和上下文状态容量都减半；查询头数 $n_Q$ 不变，查询与上下文交互的运算量照旧按原来的头数累计。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/attention-kv-sharing.svg" alt="四个查询头在 MHA、GQA、MQA 下分别连接四组、两组和一组 KV" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/attention-kv-sharing.svg" alt="四个查询头在 MHA、GQA、MQA 下分别连接四组、两组和一组 KV" width="800" height="396" loading="lazy" decoding="async">
   <figcaption><strong>三种 KV 共享方式。</strong> 查询头没有被合并，每个头仍然独立打分；减少的是每个上下文 token 需要保存和读取的 KV 份数。</figcaption>
 </figure>
 
 共享发生在同一层的查询头之间。Qwen3-8B 使用 32 个查询头、8 组 KV，每四个查询共用一个组；容量与读取量按组数下降，注意力的交互运算量仍按查询头数计算。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-kv-groups.svg" alt="三根柱：MHA 32 组为 4,608.00 MiB，GQA 8 组为 1,152.00 MiB，MQA 1 组为 144.00 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-kv-groups.svg" alt="三根柱：MHA 32 组为 4,608.00 MiB，GQA 8 组为 1,152.00 MiB，MQA 1 组为 144.00 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量正比于 KV 组数。</strong> 层数、头宽、上下文长度和精度固定时，三组容量之比正好是 32 : 8 : 1。</figcaption>
 </figure>
 
@@ -626,12 +626,12 @@ $$
 这一变换压窄了每个上下文 token 的表示宽度，但每个 token 仍需保存一个潜变量向量，所以存储量和点积运算量还是随上下文长度增长。上下文越长，紧凑表示省下的读取量越可观；上下文越短，查询变换本身的开销占比越高。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-mla-two-paths.svg" alt="上边路径先展开每个上下文 token：潜变量 c 计算键 K，再展开键并做点积；下边路径先变换当前查询：q 计算变换后查询，再与潜变量 c 做点积" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-mla-two-paths.svg" alt="上边路径先展开每个上下文 token：潜变量 c 计算键 K，再展开键并做点积；下边路径先变换当前查询：q 计算变换后查询，再与潜变量 c 做点积" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>两种等价的计算次序。</strong> 展开路径先恢复上下文键，紧凑路径先变换当前查询、再直接读取潜变量；结合律保证两种次序得到相同点积。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-kimi-mla-storage.svg" alt="两根柱：紧凑潜变量 216.00 MiB，展开各头 KV 11,520.00 MiB；后者约为前者的 53 倍" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-kimi-mla-storage.svg" alt="两根柱：紧凑潜变量 216.00 MiB，展开各头 KV 11,520.00 MiB；后者约为前者的 53 倍" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>保存潜变量还是展开各头。</strong> 紧凑方案保存上投影前的表示，展开方案保存各头的键和值，两者相差约 53 倍。</figcaption>
 </figure>
 
@@ -643,7 +643,7 @@ $$
 
 NoPE 这个细节很能说明「架构是配合设计的」。位置信息通常由 RoPE 施加在 $Q$、$K$ 上，Kimi K3 的 MLA 层却不施加任何位置编码，改由 KDA 层（线性注意力递推）的门控与衰减提供位置感。MLA 层和 KDA 层因此是互相依赖的一个整体，拆开来单独评价没有意义。这里还特别说明「参考实现仍投影并缓存这 64 维分支，只是不对它做旋转」，这 64 维是给 $QK^{\mathsf T}$ 点积额外保留的通道，在 NoPE 下不需要旋转，所以每个 token 的账要按 $512 + 64$ 而不是 512 来算。参考实现与理论最优不一致的地方在资源核算时最容易漏，这里的处理方式是明确写出「参考实现仍……」，让读者知道这 64 维是工程实现带来的成本。
 
-MLA 什么时候最划算，这里给了判据：上下文越长，紧凑表示节省的读取量越可观；上下文越短，查询变换本身的开销占比越高。直觉是，紧凑缓存的额外成本是每步一次查询变换（常数），收益是每步少读 $H$ 个 token 的表示（随 $H$ 增长）。它天然适合长上下文场景，DeepSeek 和 Kimi 这些长上下文模型采用它，理由就在这里。
+MLA 什么时候最划算，给了判据：上下文越长，紧凑表示节省的读取量越可观；上下文越短，查询变换本身的开销占比越高。直觉是，紧凑缓存的额外成本是每步一次查询变换（常数），收益是每步少读 $H$ 个 token 的表示（随 $H$ 增长）。它天然适合长上下文场景，DeepSeek 和 Kimi 这些长上下文模型采用它，理由就在这里。
 
 有个边界要记住：MLA 并不改变「仍要为每个 token 保存一个潜变量」这个事实，容量增速还是 $O(H)$，只是斜率小得多。它没有跳出逐 token 记录这个范式。真正让容量与上下文长度解耦的是下一节的有限状态递推，把这两类机制的区别记住，才能读懂 2.3.5 节的混合结构与图 2-18 里几条曲线形状的差异。
 
@@ -667,17 +667,17 @@ DeepSeek V4-Flash 把这套机制组合在同一个模型里：43 个主干层�
 
 资源量级可以按 BF16 参考格式、$S = 8192$ 走一遍。一次 CSA 查询的主注意力最多读取窗口加 512 个压缩条目，但索引打分仍要扫描已保存的压缩索引条目。这时一个 CSA 层保留 2048 个压缩条目：主注意力状态约 2 MiB、索引约 0.5 MiB、窗口约 0.125 MiB；主注意力选中的压缩条目合计最多约 0.5 MiB，索引扫描却仍要处理那 2048 个索引条目。HCA 则有 64 个已生成的条目，主注意力状态约 0.0625 MiB，另外访问窗口状态和这组粗粒度压缩条目。
 
-把 43 层加起来，同样按 BF16 参考格式、8192 个 token 的上下文，窗口、压缩上下文和索引一共 59.125 MiB，另有约 11.641 MiB 的 FP32 压缩器缓冲，合计约 70.8 MiB。最后一次查询的主注意力（含窗口）与索引读取量合计 27.625 MiB。这里说状态分解把各项逐条列了出来，所以能看出「选中的条目数、保存的状态大小和每步读取量」各自代表什么。
+把 43 层加起来，同样按 BF16 参考格式、8192 个 token 的上下文，窗口、压缩上下文和索引一共 59.125 MiB，另有约 11.641 MiB 的 FP32 压缩器缓冲，合计约 70.8 MiB。最后一次查询的主注意力（含窗口）与索引读取量合计 27.625 MiB。状态分解把各项逐条列了出来，所以能看出「选中的条目数、保存的状态大小和每步读取量」各自代表什么。
 
 压缩还带来一种跟查询不同步的更新节奏。新 token 到达时，先更新当前压缩块；累计处理的 token 数达到压缩比要求后，再生成一个长期条目。CSA 每四个 token 完成一块，HCA 每 128 个 token 完成一块。所以处理同一个输入 token 时，「主注意力访问多少条目、索引扫描多少条目、压缩器是否完成一块」要分别计算。这里最后提到，处理到第 128 个 token 时，两种压缩块可能同时完成。（脚注 8：缓存后缀续算记录。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-compression-index.svg" alt="上半部分把编号 1 到 8 的 token 每 4 个合成一条记录，得到压缩条目 1 与 2；下半部分当前查询先扫描索引，再读取选中的条目" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-compression-index.svg" alt="上半部分把编号 1 到 8 的 token 每 4 个合成一条记录，得到压缩条目 1 与 2；下半部分当前查询先扫描索引，再读取选中的条目" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>先压缩，后选择。</strong> 上半部分形成压缩条目，下半部分的一次查询先扫描索引，再读取主注意力状态中的选中条目。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-v4flash-states.svg" alt="四根柱：窗口状态 5.38 MiB，压缩表示 43.25 MiB，索引条目 10.50 MiB，压缩缓冲 11.64 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-v4flash-states.svg" alt="四根柱：窗口状态 5.38 MiB，压缩表示 43.25 MiB，索引条目 10.50 MiB，压缩缓冲 11.64 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>四项状态分别计入容量。</strong> 窗口、压缩上下文和索引保存已处理的上下文信息；压缩缓冲保存尚在汇总或更新中的数据。</figcaption>
 </figure>
 
@@ -738,12 +738,12 @@ Kimi K3 每个 KDA 层有 96 个头，每头递推矩阵为 $128 \times 128$。�
 prefill 与 decode 的实现方式也不同。decode 使用单步递推；一段已知输入可以用块式算法并行计算，再在块之间传递状态。块内中间量和块间状态会占用临时空间，所以仅凭最终递推状态的大小，还无法预测 prefill 期间的内存占用峰值。第 5 章会从缓冲区分配到释放的过程分析这个问题。（脚注 9：块式状态与缓冲记录。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-compression-block.svg" alt="五个阶段横向排列：到达 1/4、2/4、3/4、4/4，最后发布压缩条目；前四个阶段都更新同一缓冲，第四个到达后完成一块" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-compression-block.svg" alt="五个阶段横向排列：到达 1/4、2/4、3/4、4/4，最后发布压缩条目；前四个阶段都更新同一缓冲，第四个到达后完成一块" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>一个压缩块的生成。</strong> 前三个 token 到达时都更新同一缓冲；第四个 token 到来后完成这一块，形成可供后续查询使用的压缩条目。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-recurrence-update.svg" alt="旧状态与新键值外积相加得到新状态，矩阵形状不变；当前查询再乘以新状态得到输出" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-recurrence-update.svg" alt="旧状态与新键值外积相加得到新状态，矩阵形状不变；当前查询再乘以新状态得到输出" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>先更新状态，再读取。</strong> 新键和值的外积加入旧状态；查询使用更新后的状态计算输出。</figcaption>
 </figure>
 
@@ -784,17 +784,17 @@ $c_{\text{state}}$ 是每个上下文 token 增加的状态字节数，$H^{*}$ �
 这些状态支持不同的信息访问方式：全局 KV 允许查询直接选择旧 token，递推矩阵靠逐步更新保留上下文关系，压缩索引则在较少条目中寻找相关内容。2.6.3 节将结合具体检索任务比较资源需求。（脚注 10：混合状态计算；脚注 11：完整模型实验。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-qwen36-layers.svg" alt="两个并列分支：30 层线性注意力对应固定递推状态，10 层完整注意力对应逐 token 上下文；两者汇入层内归一化与残差，随后执行 256 选 8 的路由专家与共享专家" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-qwen36-layers.svg" alt="两个并列分支：30 层线性注意力对应固定递推状态，10 层完整注意力对应逐 token 上下文；两者汇入层内归一化与残差，随后执行 256 选 8 的路由专家与共享专家" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>配置决定每层走哪条路。</strong> 线性注意力维护固定递推状态，完整注意力保留逐 token 上下文；两分支输出汇合后，都执行路由专家和共享专家。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-state-capacity-curves.svg" alt="横轴为上下文长度（千 token，对数轴，10^1 到 10^3），纵轴为单请求状态容量（GiB，对数轴，10^-1 到 10^2）；图例有 V4.1 Flash、Qwen3-8B、Qwen3.6、V4-Flash、Kimi K3 五条曲线" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-state-capacity-curves.svg" alt="横轴为上下文长度（千 token，对数轴，10^1 到 10^3），纵轴为单请求状态容量（GiB，对数轴，10^-1 到 10^2）；图例有 V4.1 Flash、Qwen3-8B、Qwen3.6、V4-Flash、Kimi K3 五条曲线" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>看斜率判断增长方式。</strong> 五个模型分别通过逐 token 追加、递推、压缩和跨层共享来组织状态；双对数坐标下，斜率 1 表示线性增长，斜率 0 表示常量。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-state-access-curves.svg" alt="横轴为上下文长度（千 token，对数轴），纵轴为每步状态访问量（GiB，对数轴）；逐 token 上下文计读取，递推矩阵计一读一写，图例与容量图相同" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-state-access-curves.svg" alt="横轴为上下文长度（千 token，对数轴），纵轴为每步状态访问量（GiB，对数轴）；逐 token 上下文计读取，递推矩阵计一读一写，图例与容量图相同" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>容量与访问量分开看。</strong> 这里统计的是指定路径的逻辑数据量，用于比较容量与访问的不同增长方式。</figcaption>
 </figure>
 
@@ -912,12 +912,12 @@ $$
 V4.1 的 38 个全局注意力层中，有 4 个 Full、4 个 Reindex 和 30 个 Reuse；另外两个层仅使用 SWA。解码器的首个 Full 层扫描全局，并选出最多 $2048 \times 8 = 16{,}384$ 个候选条目；技术报告第 2.3.2 节把这一集合称为候选池（candidate pool），其中的候选是可供注意力检索的缓存条目。后续 Reindex 层只在池内各自选取最多 512 个条目。后续层的搜索量因此有了上限，但初始全局扫描仍随上下文增长。（脚注 14：DeepSeek V4.1 技术报告，第 2.3.2 节 Hierarchical Sparse Indexer 使用 candidate pool 和 candidate positions；Figure 5 展示共享候选池与后续 top-k 的区别。）
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-ced-flow.svg" alt="提示 token 经编码器 20 层得到编码器末层表示，投影为全局 KV 供解码器读取；提示末尾 128 个 token 还经解码器 20 层重放构建局部 SWA；新 token 经编码器与解码器输出" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-ced-flow.svg" alt="提示 token 经编码器 20 层得到编码器末层表示，投影为全局 KV 供解码器读取；提示末尾 128 个 token 还经解码器 20 层重放构建局部 SWA；新 token 经编码器与解码器输出" width="800" height="376" loading="lazy" decoding="async">
   <figcaption><strong>大部分提示只走编码器。</strong> 全局 KV 由编码器主体生成；只有末尾窗口额外经过解码器重放，近似构建局部 SWA。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-global-kv-sharing.svg" alt="左侧 V4 逐层保存，层 1、层 2、层 3 各有一份本层全局 KV；右侧 V4.1 跨层共享，层 2、8、14 各按 2:1 服务后续五层，层 20 按 1:1 服务层 21–39" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-global-kv-sharing.svg" alt="左侧 V4 逐层保存，层 1、层 2、层 3 各有一份本层全局 KV；右侧 V4.1 跨层共享，层 2、8、14 各按 2:1 服务后续五层，层 20 按 1:1 服务层 21–39" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>从逐层复制到跨层复用。</strong> 左侧每个代表层都保存自己的全局 KV；右侧只在少数层保存，其他使用层按比例复用。</figcaption>
 </figure>
 
@@ -943,7 +943,7 @@ Full／Reindex／Reuse 三种模式可以理解为省算力的三级台阶：Ful
 
 最后那句没写完的例子（131,072 个条目 → 16,384 块）指向的是分级稀疏索引的成本：块数随上下文线性增长，所以首个 Full 层的全局扫描是唯一一个仍随上下文增长的开销，而候选池把它限制在 16,384 个候选、后续层只选 512 条。本章后文会接着这里把这句话写完。
 
-> 来源确认：这里说 CED 的设计「受到 YoCo 跨层复用 KV 的思路启发」。跨层共享单一全局 KV 缓存的做法确实来自 YoCo（You Only Cache Once: Decoder-Decoder Architectures for Language Models，NeurIPS 2024），其核心正是「只缓存一次、由后续层复用」，与这里此处描述一致。（来源：[You Only Cache Once: Decoder-Decoder Architectures for Language Models](https://proceedings.neurips.cc/paper_files/paper/2024/file/0df38cd13520747e1e64e5b123a78ef8-Paper-Conference.pdf)）
+> 来源确认： CED 的设计「受到 YoCo 跨层复用 KV 的思路启发」。跨层共享单一全局 KV 缓存的做法确实来自 YoCo（You Only Cache Once: Decoder-Decoder Architectures for Language Models，NeurIPS 2024），其核心正是「只缓存一次、由后续层复用」，与这里此处描述一致。（来源：[You Only Cache Once: Decoder-Decoder Architectures for Language Models](https://proceedings.neurips.cc/paper_files/paper/2024/file/0df38cd13520747e1e64e5b123a78ef8-Paper-Conference.pdf)）
 
 拿这张表估一条 8K 上下文的请求，可以走三步：取第二列得到上下文驻留量（Qwen3-8B 是 1,152 MiB，V4.1 Flash 是 6.953 MiB）；加上该模型的固定状态（Kimi K3 要加 433.406 MiB，Qwen3.6 要加 61.875 MiB，纯 GQA 模型这一项为 0）；再乘并发请求数，与显存预算比较。第 2 步常被漏掉，而它恰恰在短上下文时是主导项（2.3.5 节的 $H^{*}$）。
 
@@ -951,7 +951,7 @@ Full／Reindex／Reuse 三种模式可以理解为省算力的三级台阶：Ful
 
 最该记住的一行对比：Qwen3-8B 是 147,456 B/token，V4.1 Flash 是 890 B/token，相差 165 倍（$147{,}456/890 = 165.7$）。这个差距是「GQA → 潜变量压缩 → 压缩条目 → 跨层共享 → 更低精度」一路叠出来的，每一步都带着计算量、精度或实现复杂度的代价，本节最后几段讲的正是这些代价。
 
-几条分界线理一下。「8K 全局历史」与「一次 decode 读取量」在前七行数值相同（逐 token 机制，读一次即全部），最后两行不同（生产混合格式下存与读是两套数）。BF16 参考格式与生产混合格式也别混：2.3.3 节的 53.75 MiB 全局历史、27.625 MiB 读取量是 BF16 参考格式，表中 V4-Flash 的 27.455 MiB、12.556 MiB 是生产格式，这里提醒这两组数只是接近。3,514.25 B/token 与 890 B/token 都是平均值，实际是每 4 个或每 128 个 token 跳一次的台阶。「跨层共享」减少的是同一段信息被多少层各存一份，GQA 的层内共享减少的是同一层里存几份 K/V，两者都省空间，都不减少使用方（查询头、使用层）的计算与读取次数。Full／Reindex／Reuse 的区别在于 KV 是否自己生成、条目是否自己选，Reuse 最省算力也最不灵活，Full 反之。
+几条分界线理一下。「8K 全局历史」与「一次 decode 读取量」在前七行数值相同（逐 token 机制，读一次即全部），最后两行不同（生产混合格式下存与读是两套数）。BF16 参考格式与生产混合格式也别混：2.3.3 节的 53.75 MiB 全局历史、27.625 MiB 读取量是 BF16 参考格式，表中 V4-Flash 的 27.455 MiB、12.556 MiB 是生产格式，要提醒这两组数只是接近。3,514.25 B/token 与 890 B/token 都是平均值，实际是每 4 个或每 128 个 token 跳一次的台阶。「跨层共享」减少的是同一段信息被多少层各存一份，GQA 的层内共享减少的是同一层里存几份 K/V，两者都省空间，都不减少使用方（查询头、使用层）的计算与读取次数。Full／Reindex／Reuse 的区别在于 KV 是否自己生成、条目是否自己选，Reuse 最省算力也最不灵活，Full 反之。
 
 比较上下文成本必须同时给出三个数：每个 token 的存储增量、$N$ 时实际保存的状态、一次 decode 读取的历史。V4.1 Flash 用「4 层独立 KV + 2:1／1:1 压缩 + FP4」把增长压到 890 B/token，靠的主要是跨层共享与更低精度，并没有继续提高压缩比。
 
@@ -966,7 +966,7 @@ Full／Reindex／Reuse 三种模式可以理解为省算力的三级台阶：Ful
 图 2-22 的四段标注给出了三类层的分工：「Full：扫描全局历史」「候选池：最多 16,384 个条目」「Reindex：在池内重选 512 个」「Reuse：使用已有条目选择」，以及「选块，每块含 8 个缓存条目」。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-tiered-cache.svg" alt="Full 层对全部全局历史评分，按块选出 2,048 个块，每块 8 条，形成容量上限 16,384 的候选池；Reindex 层在池内重新打分并各选 512 条；Reuse 层直接沿用已有选择" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-tiered-cache.svg" alt="Full 层对全部全局历史评分，按块选出 2,048 个块，每块 8 条，形成容量上限 16,384 的候选池；Reindex 层在池内重新打分并各选 512 条；Reuse 层直接沿用已有选择" width="800" height="368" loading="lazy" decoding="async">
   <figcaption><strong>逐层缩小搜索范围。</strong> Full 层面面对全部历史，Reindex 只在候选池内重打分，Reuse 不再重新搜索。</figcaption>
 </figure>
 
@@ -1042,7 +1042,7 @@ $$
 
 这里用的是十进制 GB（$1\ \text{GB}=10^9$ 字节），与前面 MiB 的口径不同，本章两种单位混用是这里的既定约定（见本章前文的开篇计数口径）。
 
-稠密 FFN 与 MoE 的区别一句话能说清：稠密 FFN 是所有 token 排队走同一条通道，MoE 是所有 token 各自挑几条通道走。模型总量由通道总数决定（容量），每次实际走几条由路由决定（计算量），这就是这里说的「分别调整」。
+稠密 FFN 与 MoE 的区别一句话能说清：稠密 FFN 是所有 token 排队走同一条通道，MoE 是所有 token 各自挑几条通道走。模型总量由通道总数决定（容量），每次实际走几条由路由决定（计算量），这就是的「分别调整」。
 
 用 MoE 的动机在于，稠密模型想把参数量做大，每加一个参数就要给每个 token 多做一次乘加；MoE 把新增参数放进平时不用的专家里，于是显存涨、算力不涨。代价也跟着来：显存与带宽成本上去了，路由和收集散发本身有开销，训练与推理时还会遇到负载不均（下一小节的例题 2-4 讲的就是这个）。
 
@@ -1117,7 +1117,7 @@ M_{\text{全部路由专家}} = 40 \times 1.5\ \text{GiB} = 60\ \text{GiB}, \qqu
 $$
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-expert-dispatch.svg" alt="左侧分散：64 个 token 各选 8 个专家，扇出到 256 个专家，每个专家平均收到 2 行；右侧集中：64 个 token 全部落到同 8 个专家，每个专家平均收到 64 行" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-expert-dispatch.svg" alt="左侧分散：64 个 token 各选 8 个专家，扇出到 256 个专家，每个专家平均收到 2 行；右侧集中：64 个 token 全部落到同 8 个专家，每个专家平均收到 64 行" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>分派次数相同，访问范围不同。</strong> 两种情况下总次数都是 512，但被访问到的权重份数可以从 256 变到 8。</figcaption>
 </figure>
 
@@ -1249,7 +1249,7 @@ $$
 
 表中两列里的 $d$ 被约掉了，比较的只是系数。
 
-「深度换宽度」的代价落在哪，值得掰开看。$L d^2$ 相同意味着权重容量相同、逐层 FLOPs 总量也相近，但串行层数翻了四倍。单卡上，串行步骤多就意味着 kernel 启动多、层间同步多，每层还要往显存里落一次中间结果；做流水线并行时，层数多可以把流水级切得更细，同时通信次数与流水气泡也更多。同样是这个参数量，两种模型形状在系统上的表现能差出不少，这就是这里强调计算粒度和依赖深度的原因。
+「深度换宽度」的代价落在哪，值得掰开看。$L d^2$ 相同意味着权重容量相同、逐层 FLOPs 总量也相近，但串行层数翻了四倍。单卡上，串行步骤多就意味着 kernel 启动多、层间同步多，每层还要往显存里落一次中间结果；做流水线并行时，层数多可以把流水级切得更细，同时通信次数与流水气泡也更多。同样是这个参数量，两种模型形状在系统上的表现能差出不少，这就是计算粒度和依赖深度的原因。
 
 专家粒度的等价变换之所以成立，是因为 $3Edf$ 里 $E$ 与 $f$ 是乘积关系，$6k_{\text{top}}df$ 里 $k_{\text{top}}$ 与 $f$ 也是乘积关系。「专家数减半、每个专家宽一倍、每 token 少选一半」正好是这套乘积的不变量。实际意义在于：模型的总容量和单 token 算力可以保持不变，只把矩阵从多而小换成少而大，而 GEMM 的 M/N/K 尺寸、访存比例和并行切分方式都会被这一步改动。
 
@@ -1272,7 +1272,7 @@ $$
 Kimi K3 走的是另一条路。它希望当前层能按需要选取不同深度的信息，不必只接收逐层相加后的单一混合结果，于是用了 Attention Residuals（AttnRes，注意力残差连接）：对较浅层的表示计算权重，再加权求和，形成当前层的输入。这种注意力沿网络深度选信息，前面讲的序列注意力则在不同 token 之间选信息。为了少存少读所有层的输出，块式实现把若干层组织成一块，保留供后续块选择的表示。¹⁹ 后续层还要用这些块表示，所以本次前向中要继续保存，前向结束就能释放；上下文 KV 则要保留到后续生成步骤。两者的保存时间范围不同：AttnRes 增加的是一次前向中的临时存储，KV 随请求跨多次调用保留。²⁰
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-mhc-residual.svg" alt="左侧普通残差只有一条 4096 维旁路，原输入与子层输出相加；右侧 mHC 有四条通路，四路先汇合成 4096 维子层输入，子层输出再混合写回四路" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-mhc-residual.svg" alt="左侧普通残差只有一条 4096 维旁路，原输入与子层输出相加；右侧 mHC 有四条通路，四路先汇合成 4096 维子层输入，子层输出再混合写回四路" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>加宽的是残差通路。</strong> 两种结构的子层输入都是 4096 维；mHC 把残差保留为四路，再在子层前后汇合与混合。</figcaption>
 </figure>
 
@@ -1335,7 +1335,7 @@ $$
 
 其中 $m=1$ 是本次参与的行数，$d=4096$ 是 DeepSeek V4-Flash 的主干隐藏维度，$V=129280$ 是词表大小，系数 2 表示一次乘加计 2 FLOPs。这与这里「共享词表头约需 1.06 GFLOPs」一致；剩下的 $1.80 - 1.06 = 0.74$ GFLOPs 由辅助块的其他投影承担。**共享词表头不增加独立权重，运算却一笔都不少**，权重可以复用，每次调用仍得做一遍 $d\times V$ 的投影。
 
-MTP 与推测解码是两件事。MTP 属于训练目标或模块设计，让模型顺便学会猜后面几个 token；推测解码属于推理加速策略，用小成本模型猜、用大模型验。两者可以结合：把 MTP 的辅助头当作草稿模型，就省下了一个独立小模型。这里讲的顺序也是这样，先讲 MTP，再讲「用于推测解码时……」。
+MTP 与推测解码是两件事。MTP 属于训练目标或模块设计，让模型顺便学会猜后面几个 token；推测解码属于推理加速策略，用小成本模型猜、用大模型验。两者可以结合：把 MTP 的辅助头当作草稿模型，就省下了一个独立小模型。讲的顺序也是这样，先讲 MTP，再讲「用于推测解码时……」。
 
 验证为什么不会损失正确性，值得说一句。推测解码的验证是并行的：把草稿的 $g$ 个 token 一次送进目标模型，逐位置比对目标模型自己的分布，从头开始接受到第一个不匹配处截断。输出分布与逐 token 生成一致，加速只来自把 $g$ 次串行调用压成 1 次，这也是第 8 章要算的东西。收益条件换个说法就是「一轮的总时间要小于老老实实跑 $\bar{g}$ 步 decode 的时间」。$\bar{g}$ 是接受长度，取决于草稿模型和目标的分布有多接近，任务越可预测（代码补全、复制粘贴这类），$\bar{g}$ 越大。
 
@@ -1404,17 +1404,17 @@ $$
 | Kimi K3 | MLA＋KDA＋卷积 | 潜空间专家、AttnRes | 展开路径、跨层临时状态、首层差异 |
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-main-layers.svg" alt="五根柱依次为 DeepSeek V4.1 Flash 40.00、Qwen3-8B 36.00、Qwen3.6 40.00、DeepSeek V4-Flash 43.00、Kimi K3 93.00" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-main-layers.svg" alt="五根柱依次为 DeepSeek V4.1 Flash 40.00、Qwen3-8B 36.00、Qwen3.6 40.00、DeepSeek V4-Flash 43.00、Kimi K3 93.00" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>网络深度的差异。</strong> 五个模型使用同一线性刻度；层数决定同类工作沿网络深度重复多少次。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-hidden-dim.svg" alt="五根柱依次是 5,120.00、4,096.00、2,048.00、4,096.00、7,168.00" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-hidden-dim.svg" alt="五根柱依次是 5,120.00、4,096.00、2,048.00、4,096.00、7,168.00" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>特征宽度决定投影尺寸。</strong> 同一线性刻度下，每个 token 的特征宽度决定投影的输入或输出尺寸。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-routed-experts.svg" alt="五根柱依次是 384.00、0.00、256.00、256.00、896.00；Qwen3-8B 的柱高为 0" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-routed-experts.svg" alt="五根柱依次是 384.00、0.00、256.00、256.00、896.00；Qwen3-8B 的柱高为 0" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>保存的专家总数。</strong> 同一线性刻度下，Qwen3-8B 使用稠密前馈层，因此路由专家数为 0。</figcaption>
 </figure>
 
@@ -1441,17 +1441,17 @@ V4.1 Flash 的执行阶段为什么重要：常规模型「一层 = 一份 KV」
 参数被划分成互不重叠的六类：嵌入与输出、注意力投影、稠密或共享 FFN、路由专家、Engram、其余组件。各类相加就是模型总参数量，再按每个参数 2 字节换算，得到图 2-28 的权重容量。这种分解能直观展示参数的分布，也是解释下一张表的依据。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-full-weight-capacity.svg" alt="五根柱依次是 V4.1 Flash 1,496.99、Qwen3-8B 16.38、Qwen3.6 69.32、V4-Flash 568.66、Kimi K3 5,558.97，单位 GB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-full-weight-capacity.svg" alt="五根柱依次是 V4.1 Flash 1,496.99、Qwen3-8B 16.38、Qwen3.6 69.32、V4-Flash 568.66、Kimi K3 5,558.97，单位 GB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>完整参数容量。</strong> 全部参数统一按 BF16 表示，包括每次仅选中部分的路由专家；这是容量图，不是计算量图。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-step-matrix-ops.svg" alt="五根柱依次是 35.92、19.97、7.33、29.54、249.44，单位 GFLOPs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-step-matrix-ops.svg" alt="五根柱依次是 35.92、19.97、7.33、29.54、249.44，单位 GFLOPs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>单步计算量对比。</strong> 同一单请求、已有 8K 上下文时，五个模型再处理一个 token 的矩阵运算量。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-request-state.svg" alt="五根柱依次是 30.09、1,152.00、221.88、70.77、649.41，单位 MiB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-request-state.svg" alt="五根柱依次是 30.09、1,152.00、221.88、70.77、649.41，单位 MiB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>一条请求的状态容量。</strong> 相同 8K 上下文下，各模型为一条请求保存 8192 个 token 所需的容量。</figcaption>
 </figure>
 
@@ -1566,7 +1566,7 @@ Engram 的特殊性在于它是一张查表（按 n-gram 取向量），所以�
 长文档问答和多轮任务会放大上下文访问的成本。下面保持单请求、一次新增一个 token 和末尾 token 词表头不变。8K 场景有 8192 个历史 token；1M 场景有 1,048,575 个历史 token，加上当前查询正好为 1,048,576 个可见位置。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-context-ops-8k-1m.svg" alt="两组柱并排：8K 的五个值为 35.92、19.97、7.33、29.54、249.44；1M 的五个值为 57.49、633.61、177.79、140.34、5,465.40，单位 GFLOPs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-context-ops-8k-1m.svg" alt="两组柱并排：8K 的五个值为 35.92、19.97、7.33、29.54、249.44；1M 的五个值为 57.49、633.61、177.79、140.34、5,465.40，单位 GFLOPs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>上下文变长后的单步开销。</strong> 同样的五个模型，在 8K 与 1M 上下文下再处理一个 token 的矩阵运算量对比。</figcaption>
 </figure>
 
@@ -1641,17 +1641,17 @@ $$
 换到一张显存 80 GB（十进制）的 H100 SXM、固定预留 2 GiB：8-bit 方案能放 1 条 8K 请求，4-bit 方案能放 14 条。上下文从 8K 增到 32K 时，每请求 KV 变成四倍，4-bit 方案能同时容纳的请求数掉到 3 条。压缩权重释放出来的空间可以装下更多请求的上下文，代价是每条上下文越长，同时能容纳的请求就越少。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-memory-budget.svg" alt="三组配置并排：Qwen BF16 配 24 GB 的 RTX 4090，70B 8-bit 与 70B 4-bit 各配 80 GB 的 H100 SXM；每根柱内部按权重、工作区预留、单请求 KV 三段堆叠" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-memory-budget.svg" alt="三组配置并排：Qwen BF16 配 24 GB 的 RTX 4090，70B 8-bit 与 70B 4-bit 各配 80 GB 的 H100 SXM；每根柱内部按权重、工作区预留、单请求 KV 三段堆叠" width="800" height="380" loading="lazy" decoding="async">
   <figcaption><strong>每根柱的三段构成。</strong> 三段依次为权重、工作区预留和单请求 KV；短竖线标出 24 GB 与 80 GB 的容量上限。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-request-capacity.svg" alt="两根柱：上下文 8K 时可同时容纳 14.00 条独立请求，32K 时为 3.00 条" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-request-capacity.svg" alt="两根柱：上下文 8K 时可同时容纳 14.00 条独立请求，32K 时为 3.00 条" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>上下文变长，并发下降。</strong> 每请求状态增加，剩余空间能容纳的独立请求数从 14 条降到 3 条。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-4090-budget.svg" alt="一根堆叠柱表示 RTX 4090 的 24 GB：4 条请求 KV 4.83 GB、工作区 2.15 GB、权重余量 17.02 GB" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-4090-budget.svg" alt="一根堆叠柱表示 RTX 4090 的 24 GB：4 条请求 KV 4.83 GB、工作区 2.15 GB、权重余量 17.02 GB" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>容量逐段扣除。</strong> 24 GB 总容量先留出请求 KV 与工作区，剩下的 17.02 GB 作为权重余量，对应 BF16 参数上界约 85.1 亿。</figcaption>
 </figure>
 
@@ -1839,12 +1839,12 @@ $$
 5）短语检索任务的质量标准（示例）：① 固定题目与标准答案（目标短语的这里）；② 固定判定规则（答案中是否包含目标短语，是否要求逐字匹配）；③ 固定执行条件（权重精度、KV 精度、推理框架与采样参数）；④ 记录各模型的实际 token 数与延迟。**同 token 数比较**回答「在相同位置规模下，各模型的计算与存储结构有什么差异」；**同文本比较**回答「完成同一个任务，各模型实际需要执行多少工作」。
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-generation-calls.svg" alt="四步调用从左到右：prefill 处理 128 个 token 并输出 y1，保留 128 个；decode 1 输出 y2，保留 129 个；decode 2 输出 y3，保留 130 个；decode 3 输出 y4，保留 131 个" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-generation-calls.svg" alt="四步调用从左到右：prefill 处理 128 个 token 并输出 y1，保留 128 个；decode 1 输出 y2，保留 129 个；decode 2 输出 y3，保留 130 个；decode 3 输出 y4，保留 131 个" width="800" height="200" loading="lazy" decoding="async">
   <figcaption><strong>首输出之后逐次回送。</strong> prefill 一次处理 128 个输入并产生首输出；之后每次 decode 把前一输出送回模型，保留的 token 数逐次加一。</figcaption>
 </figure>
 
 <figure class="diagram">
-  <img src="../../figures/ai-infra/infra-ch02-generation-ops.svg" alt="五根柱依次是 4.14、1.83、0.66、3.40、27.16，单位 TFLOPs" width="800" height="450" loading="lazy" decoding="async">
+  <img src="../../figures/ai-infra/infra-ch02-generation-ops.svg" alt="五根柱依次是 4.14、1.83、0.66、3.40、27.16，单位 TFLOPs" width="800" height="387" loading="lazy" decoding="async">
   <figcaption><strong>逐调用累计的计算量。</strong> 同一请求输入 128 个 token、输出四个 token 时，各模型完成 prefill 与三次 decode 的矩阵运算量。</figcaption>
 </figure>
 
@@ -2050,7 +2050,7 @@ HCA 专有工作
 
 核心是三条增长曲线。$A$（主注意力）有上限，每层最多 128 个局部 token 加 512 个全局条目，所以它不随历史长度增长，对应 2.3.3 节的「选择上限保持不变」。$I$（索引扫描）随历史增长，索引要对全局历史逐条打分，上下文越长 $I$ 越大，这是 V4-Flash 在 1M 时上下文交互涨到 113.80 GFLOPs 的主因。压缩投影（CSA／HCA 那几行）只对新输入执行，投影次数正比于本次输入行数 $m$，与历史长度无关，但它每层都要做，属于固定每步成本。
 
-$A$ 与 $I$ 都不含头数，这里特别说明了这一点，所以主注意力那行要乘「$4\times64\times512$」把头数 64 与头宽 512 补回去，索引扫描那行要乘「$2\times64\times128$」。读这两行时别忘了补头数。
+$A$ 与 $I$ 都不含头数，还要说明了这一点，所以主注意力那行要乘「$4\times64\times512$」把头数 64 与头宽 512 补回去，索引扫描那行要乘「$2\times64\times128$」。读这两行时别忘了补头数。
 
 分组输出投影为什么带 $8 \times$：八组各自处理一份切片，组间没有连接，所以是 8 个独立的 $4096\times1024$，合不成一个 $4096\times8192$。表下说明「不能把组间不存在的连接计入」，正是防止把它误算成一个大矩阵。mHC 那一行写「独立累计」，因为混合矩阵、标量与特殊函数（如 Sinkhorn 归一化）不与普通矩阵一起算，需要单独累加，这与 2.5.2 节给出的 555 GFLOPs 混合投影加 149 GFLOPs 非矩阵运算对应。
 
@@ -2120,7 +2120,7 @@ Kimi K3 有几个「分别」要记住。注意力层数上，$69 + 24 = 93$，�
 
 共享专家与路由专家的输入宽度不同。共享专家处理 7168 维主干，分支宽度 6144；路由专家先降到 3584 维。所以「进入专家潜空间」与「合并后离开潜空间」两行是每层都要执行的固定成本（层数 92），这正是 2.4.3 节说的「降维减少了路由专家的矩阵尺寸，同时增加了进入和离开潜空间的两次投影」。
 
-紧凑 MLA 有四个「每头」行（$128\times512$、$512\times128$ 各 96 个）。96 路小投影把「键的上投影」和「查询变换」合并，把「值表示」的恢复放到汇总之后，也就是这里说的把上投影移到查询和汇总一侧。它改变的是矩阵执行的位置与形状，$N_{\text{pair}}$ 那行的评分宽度 576 与汇总宽度 512 仍然要按 96 头累计。AttnRes 那两格没有数字，这里写的是「按每层参与混合的块数计，不作为上下文 KV」与「按参与混合的块数累计」，这与 2.5.2 节「AttnRes 增加一次前向中的临时存储」互相印证：它的成本要按块数算，并且不进 KV 账。
+紧凑 MLA 有四个「每头」行（$128\times512$、$512\times128$ 各 96 个）。96 路小投影把「键的上投影」和「查询变换」合并，把「值表示」的恢复放到汇总之后，也就是的把上投影移到查询和汇总一侧。它改变的是矩阵执行的位置与形状，$N_{\text{pair}}$ 那行的评分宽度 576 与汇总宽度 512 仍然要按 96 头累计。AttnRes 那两格没有数字，这里写的是「按每层参与混合的块数计，不作为上下文 KV」与「按参与混合的块数累计」，这与 2.5.2 节「AttnRes 增加一次前向中的临时存储」互相印证：它的成本要按块数算，并且不进 KV 账。
 
 **表 2-6　DeepSeek V4.1 Flash：CED、共享上下文与 Engram**
 

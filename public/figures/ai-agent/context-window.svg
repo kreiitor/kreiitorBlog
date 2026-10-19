@@ -1,45 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="416" viewBox="0 34 800 416" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">上下文窗口的组成</title>
   <desc id="fig-desc">一次模型调用看到的上下文窗口由系统提示词、工具定义、对话历史、本轮思考和当前生成位置组成，最终序列化为 token 流交给 Transformer。</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:28px;font-weight:700;fill:var(--ink)}
-    .head{font-size:20px;font-weight:600;fill:var(--ink)}
-    .label{font-size:20px;font-weight:600;fill:var(--ink)}
-    .small{font-size:15px;fill:var(--muted)}
-    .on-blue{fill:var(--on-blue)}
-    .on-yellow{fill:var(--on-yellow)}
+    .title{font-size:28px;font-weight:700;fill:var(--ink,#202735)}
+    .head{font-size:20px;font-weight:600;fill:var(--ink,#202735)}
+    .label{font-size:20px;font-weight:600;fill:var(--ink,#202735)}
+    .small{font-size:15px;fill:var(--muted,#596171)}
+    .on-blue{fill:var(--on-blue,#fffefa)}
+    .on-yellow{fill:var(--on-yellow,#202735)}
   </style>
-  <rect width="800" height="450" fill="var(--paper)"/>
+  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
 
-  <rect x="80" y="62" width="430" height="330" rx="12" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <rect x="80" y="62" width="430" height="330" rx="12" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
   <text x="295" y="90" text-anchor="middle" class="head">上下文窗口</text>
 
-  <rect x="102" y="108" width="386" height="50" rx="6" fill="var(--blue)"/>
+  <rect x="102" y="108" width="386" height="50" rx="6" fill="var(--blue,#2647d7)"/>
   <text x="295" y="130" text-anchor="middle" class="label on-blue">系统提示词</text>
   <text x="295" y="149" text-anchor="middle" class="small on-blue">角色 · 规则 · 输出约束</text>
 
-  <rect x="102" y="168" width="386" height="58" rx="6" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.5"/>
+  <rect x="102" y="168" width="386" height="58" rx="6" fill="var(--blue-soft,#e9eefe)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
   <text x="295" y="191" text-anchor="middle" class="label">工具定义</text>
   <text x="295" y="213" text-anchor="middle" class="small">名称 · 参数 · 描述</text>
 
-  <rect x="102" y="236" width="386" height="80" rx="6" fill="var(--paper)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="102" y="236" width="386" height="80" rx="6" fill="var(--paper,#f9faf7)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="295" y="260" text-anchor="middle" class="label">对话历史</text>
   <text x="295" y="283" text-anchor="middle" class="small">用户消息 · 模型回复</text>
   <text x="295" y="302" text-anchor="middle" class="small">工具调用 · 工具结果</text>
 
-  <rect x="102" y="326" width="386" height="40" rx="6" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.5"/>
+  <rect x="102" y="326" width="386" height="40" rx="6" fill="var(--yellow-soft,#fff5b7)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
   <text x="295" y="351" text-anchor="middle" class="label on-yellow">本轮思考 / 当前生成位置</text>
 
-  <path d="M295 386 V402" stroke="var(--blue)" stroke-width="3" fill="none"/>
+  <path d="M295 386 V402" stroke="var(--blue,#2647d7)" stroke-width="3" fill="none"/>
   <text x="295" y="424" text-anchor="middle" class="small">所有内容序列化为一条 token 流</text>
 
-  <rect x="552" y="118" width="180" height="220" rx="12" fill="var(--paper)" stroke="var(--line-soft)" stroke-width="1.5"/>
+  <rect x="552" y="118" width="180" height="220" rx="12" fill="var(--paper,#f9faf7)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
   <text x="642" y="150" text-anchor="middle" class="head">token 流</text>
-  <path d="M642 172 V278" stroke="var(--blue)" stroke-width="3" fill="none"/>
-  <path d="M632 266 642 282 652 266" fill="var(--blue)"/>
+  <path d="M642 172 V278" stroke="var(--blue,#2647d7)" stroke-width="3" fill="none"/>
+  <path d="M632 266 642 282 652 266" fill="var(--blue,#2647d7)"/>
   <text x="642" y="314" text-anchor="middle" class="head">Transformer</text>
   <text x="642" y="338" text-anchor="middle" class="small">注意力机制</text>
   <text x="400" y="445" text-anchor="middle" class="small">顺序、边界与前缀稳定性都会影响缓存和推理成本。</text>
