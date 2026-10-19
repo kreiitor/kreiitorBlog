@@ -17,7 +17,6 @@
     <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--blue)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="40" text-anchor="middle" class="title">Model + Harness</text>
 
   <rect x="45" y="68" width="710" height="330" rx="16" fill="none" stroke="var(--blue)" stroke-width="2" stroke-dasharray="8 6"/>
   <text x="70" y="96" class="head">Agent 边界</text>

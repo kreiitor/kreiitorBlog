@@ -15,8 +15,6 @@
     .onyellow{fill:var(--on-yellow)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">Skills 在上下文中的位置</text>
-  <text x="400" y="60" text-anchor="middle" class="sub">目录常驻，正文按需追加；已写入的前缀不再移动</text>
 
   <path d="M60 84 V420" stroke="var(--blue)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="60" y="78" text-anchor="middle" class="tiny">只追加</text>

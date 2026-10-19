@@ -15,8 +15,6 @@
     .onyellow{fill:var(--on-yellow)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">Agent 能力更新的三个层次</text>
-  <text x="400" y="60" text-anchor="middle" class="sub">更新位置不同，时间尺度与可回滚程度也不同</text>
 
   <text x="150" y="86" text-anchor="middle" class="tiny">秒 — 分钟</text>
   <text x="400" y="86" text-anchor="middle" class="tiny">天 — 周</text>

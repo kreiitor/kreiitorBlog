@@ -15,8 +15,6 @@
     .onyellow{fill:var(--on-yellow)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="34" text-anchor="middle" class="title">六个并行方式，切的是五个维度</text>
-  <text x="400" y="58" text-anchor="middle" class="sub">先问切哪个维度，再问通信组是谁</text>
 
   <path d="M30 78 H470" stroke="var(--line)" stroke-width="1.5" fill="none"/>
   <text x="250" y="74" text-anchor="middle" class="tiny">激活</text>

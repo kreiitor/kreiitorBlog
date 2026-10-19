@@ -1,61 +1,60 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">六种压缩策略的处理方式与代价</title>
-  <desc id="fig-desc">每次搜索约 52K 字符进入六条压缩路线：无压缩失败，个体摘要与组合摘要任务无关节省有限，上下文感知最省，感知加引用换取可溯源，自适应窗口换取前期完整性</desc>
+  <desc id="fig-desc">每次搜索约 52K 字符进入六条路线：无压缩累计 166K 并在第 5 轮失败，个体摘要 277K，组合摘要 93K，上下文感知 40K 且迭代最少，感知加引用 223K 换取可溯源，自适应窗口 175K 换取前期完整</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)">六种压缩策略的处理方式与代价</text>
-  <text x="400" y="60" text-anchor="middle" font-size="14" fill="var(--muted)">同一起点、同一 128K 预算，六条路线各自怎么压、代价是什么</text>
 
-  <text x="200" y="88" font-size="11" fill="var(--muted)">策略与做法</text>
-  <text x="540" y="88" font-size="11" fill="var(--muted)">结果：token · 压缩率 · 迭代</text>
+  <text x="196" y="76" font-size="10.5" fill="var(--muted)">处理方式</text>
+  <text x="520" y="76" font-size="10.5" fill="var(--muted)">累计 token</text>
+  <text x="630" y="76" font-size="10.5" fill="var(--muted)">压缩率</text>
+  <text x="690" y="76" font-size="10.5" fill="var(--muted)">迭代</text>
 
-  <rect x="24" y="196" width="104" height="64" rx="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
-  <text x="76" y="222" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">每次搜索</text>
-  <text x="76" y="242" text-anchor="middle" font-size="11.5" fill="var(--ink)">约 52K 字符</text>
+  <text x="40" y="106" font-size="11" fill="var(--muted)">每次搜索</text>
+  <text x="40" y="124" font-size="11" fill="var(--muted)">约 52K 字符</text>
 
-  <path d="M128 228 L156 228" stroke="var(--blue)" stroke-width="2" fill="none"/>
-  <line x1="156" y1="118" x2="156" y2="358" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="118" x2="184" y2="118" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="166" x2="184" y2="166" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="214" x2="184" y2="214" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="262" x2="184" y2="262" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="310" x2="184" y2="310" stroke="var(--blue)" stroke-width="2"/>
-  <line x1="156" y1="358" x2="184" y2="358" stroke="var(--blue)" stroke-width="2"/>
+  <line x1="196" y1="90" x2="760" y2="90" stroke="var(--line)" stroke-width="1"/>
 
-  <rect x="186" y="100" width="336" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="200" y="123" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">① 无压缩</tspan> · 完整结果全部保留</text>
-  <rect x="534" y="100" width="242" height="36" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
-  <text x="548" y="123" font-size="11.5" fill="var(--ink)">166K · 102.1% · 5 轮 · 失败</text>
+  <text x="196" y="118" font-size="11.5" fill="var(--ink)">① 无压缩：完整结果全部保留</text>
+  <text x="520" y="118" font-size="11.5" fill="var(--ink)" class="mono">166K</text>
+  <text x="630" y="118" font-size="11.5" fill="var(--ink)" class="mono">102.1%</text>
+  <text x="690" y="118" font-size="11.5" fill="var(--ink)" class="mono">5 轮 · 失败</text>
+  <line x1="196" y1="130" x2="760" y2="130" stroke="var(--line-soft)" stroke-width="1"/>
 
-  <rect x="186" y="148" width="336" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="200" y="171" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">② 个体摘要</tspan> · 每个结果独立生成 2–3 段摘要</text>
-  <rect x="534" y="148" width="242" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="548" y="171" font-size="11.5" fill="var(--ink)">277K · 10.9% · 12 轮</text>
+  <text x="196" y="158" font-size="11.5" fill="var(--ink)">② 个体摘要：每个结果独立压缩</text>
+  <text x="520" y="158" font-size="11.5" fill="var(--ink)" class="mono">277K</text>
+  <text x="630" y="158" font-size="11.5" fill="var(--ink)" class="mono">10.9%</text>
+  <text x="690" y="158" font-size="11.5" fill="var(--ink)" class="mono">12 轮</text>
+  <line x1="196" y1="170" x2="760" y2="170" stroke="var(--line-soft)" stroke-width="1"/>
 
-  <rect x="186" y="196" width="336" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="200" y="219" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">③ 组合摘要</tspan> · 拼接后统一摘要，超长截断</text>
-  <rect x="534" y="196" width="242" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="548" y="219" font-size="11.5" fill="var(--ink)">93K · 4.3% · 10 轮</text>
+  <text x="196" y="198" font-size="11.5" fill="var(--ink)">③ 组合摘要：拼接后统一压缩，超长截断</text>
+  <text x="520" y="198" font-size="11.5" fill="var(--ink)" class="mono">93K</text>
+  <text x="630" y="198" font-size="11.5" fill="var(--ink)" class="mono">4.3%</text>
+  <text x="690" y="198" font-size="11.5" fill="var(--ink)" class="mono">10 轮</text>
+  <line x1="196" y1="210" x2="760" y2="210" stroke="var(--line-soft)" stroke-width="1"/>
 
-  <rect x="186" y="244" width="336" height="36" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
-  <text x="200" y="267" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">④ 上下文感知</tspan> · 带查询与已有信息做针对性压缩</text>
-  <rect x="534" y="244" width="242" height="36" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.6"/>
-  <text x="548" y="267" font-size="11.5" font-weight="600" fill="var(--ink)">40K · 3.0% · 7 轮</text>
+  <rect x="188" y="216" width="580" height="40" fill="var(--blue-soft)"/>
+  <text x="196" y="241" font-size="11.5" font-weight="600" fill="var(--ink)">④ 上下文感知：带查询与已有信息做针对性压缩</text>
+  <text x="520" y="241" font-size="11.5" font-weight="600" fill="var(--ink)" class="mono">40K</text>
+  <text x="630" y="241" font-size="11.5" font-weight="600" fill="var(--ink)" class="mono">3.0%</text>
+  <text x="690" y="241" font-size="11.5" font-weight="600" fill="var(--ink)" class="mono">7 轮</text>
+  <line x1="196" y1="256" x2="760" y2="256" stroke="var(--line-soft)" stroke-width="1"/>
 
-  <rect x="186" y="292" width="336" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="200" y="315" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">⑤ 感知＋引用</tspan> · 同上，压缩内容保留来源 URL</text>
-  <rect x="534" y="292" width="242" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="548" y="315" font-size="11.5" fill="var(--ink)">223K · 4.1% · 10 轮</text>
+  <text x="196" y="284" font-size="11.5" fill="var(--ink)">⑤ 感知＋引用：压缩内容保留来源 URL</text>
+  <text x="520" y="284" font-size="11.5" fill="var(--ink)" class="mono">223K</text>
+  <text x="630" y="284" font-size="11.5" fill="var(--ink)" class="mono">4.1%</text>
+  <text x="690" y="284" font-size="11.5" fill="var(--ink)" class="mono">10 轮</text>
+  <line x1="196" y1="296" x2="760" y2="296" stroke="var(--line-soft)" stroke-width="1"/>
 
-  <rect x="186" y="340" width="336" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="200" y="363" font-size="11.5" fill="var(--ink)"><tspan font-weight="700">⑥ 自适应窗口</tspan> · 低于 80% 不压，越线批量压</text>
-  <rect x="534" y="340" width="242" height="36" rx="7" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="548" y="363" font-size="11.5" fill="var(--ink)">175K · 102.4% · 7 轮</text>
+  <text x="196" y="324" font-size="11.5" fill="var(--ink)">⑥ 自适应窗口：低于 80% 不压，越线批量压</text>
+  <text x="520" y="324" font-size="11.5" fill="var(--ink)" class="mono">175K</text>
+  <text x="630" y="324" font-size="11.5" fill="var(--ink)" class="mono">102.4%</text>
+  <text x="690" y="324" font-size="11.5" fill="var(--ink)" class="mono">7 轮</text>
+  <line x1="196" y1="336" x2="760" y2="336" stroke="var(--line)" stroke-width="1"/>
 
-  <text x="400" y="406" text-anchor="middle" font-size="12" fill="var(--muted)">压缩率是压缩后体积占原始内容的比例，超过 100% 表示没压，还多背了对话与工具调用的开销。</text>
-  <text x="400" y="428" text-anchor="middle" font-size="12" fill="var(--muted)">token 少不等于效果好：⑤ 买可溯源，⑥ 买前期完整性，两者都主动放弃了极致压缩。</text>
+  <text x="196" y="362" font-size="10.5" fill="var(--muted)">压缩率按压缩后体积占原始内容的比例计，超过 100% 说明没压，反而多背了对话与工具调用</text>
 </svg>

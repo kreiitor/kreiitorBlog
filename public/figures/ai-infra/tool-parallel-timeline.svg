@@ -16,8 +16,6 @@
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--line)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">工具依赖决定任务的关键路径</text>
-  <text x="400" y="62" text-anchor="middle" class="sub">同样 16 秒工具工作：串行 21 秒，并行只需 15 秒</text>
 
   <text x="28" y="104" class="b">工具 B 依赖 A</text>
   <text x="772" y="104" text-anchor="end" class="b">总计 21 s</text>

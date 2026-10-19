@@ -13,8 +13,6 @@
     .tiny{font-size:11px;fill:var(--muted)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">MHA、GQA、MQA：共享的是 KV，不是查询</text>
-  <text x="400" y="62" text-anchor="middle" class="sub">四个查询头仍各自打分；减少的是需要保存和读取的 KV 组数</text>
 
   <text x="28" y="94" class="s">固定四个查询头</text>
 

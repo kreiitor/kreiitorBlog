@@ -12,7 +12,6 @@
     .ridge{font-size:18px;font-weight:600;fill:var(--ink)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="38" text-anchor="middle" class="title">Roofline：算术强度决定瓶颈</text>
 
   <g stroke="var(--line-soft)" stroke-width="1" stroke-dasharray="4 6">
     <path d="M200 90 V380"/><path d="M330 90 V380"/><path d="M460 90 V380"/><path d="M590 90 V380"/>

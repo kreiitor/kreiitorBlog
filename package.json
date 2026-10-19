@@ -25,7 +25,8 @@
     "links:check": "node scripts/check-external-links.mjs",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "style:check": "node scripts/check-style.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.2",

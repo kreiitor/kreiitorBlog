@@ -19,8 +19,6 @@
     <marker id="arrow-y" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--yellow)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="34" text-anchor="middle" class="title">一次训练步的状态与数据流</text>
-  <text x="400" y="58" text-anchor="middle" class="sub">前向保留激活，更新读取高精度主权重与矩状态</text>
 
   <rect x="28" y="96" width="105" height="64" rx="7" fill="var(--blue)" stroke="var(--blue)" stroke-width="2"/>
   <text x="80" y="122" text-anchor="middle" class="h onblue">输入与权重</text>

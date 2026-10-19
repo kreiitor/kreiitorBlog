@@ -35,6 +35,7 @@ npm run check:watch          # 首次检查后增量检查
 npm run test:browser:fast    # 2 个 worker 跑浏览器回归
 npm run test:browser:changed # 只跑与当前改动相关的测试文件
 npm run build:fast           # 只构建页面，跳过 Pagefind、锚点与站内检查
+npm run style:check          # 插图与文字的风格体检，只报告不改动
 ```
 
 `build:fast` 的产物没有搜索索引和标题永久链接，只适合快速看页面；发布前仍要跑完整的 `npm run check && npm run test:unit && npm run build`。`preview` 本身只是启动静态服务器，耗时主要来自之前的构建，不需要额外加速。

@@ -13,7 +13,6 @@
     .on-yellow{fill:var(--on-yellow)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="38" text-anchor="middle" class="title">上下文窗口的组成</text>
 
   <rect x="80" y="62" width="430" height="330" rx="12" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
   <text x="295" y="90" text-anchor="middle" class="head">上下文窗口</text>

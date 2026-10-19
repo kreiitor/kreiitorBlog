@@ -17,8 +17,6 @@
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">两层工具匹配：先选服务器，再选工具</text>
-  <text x="400" y="62" text-anchor="middle" class="sub">一次自然语言需求，把数千个工具收敛到少数几个 schema</text>
 
   <rect x="24" y="172" width="154" height="92" rx="8" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.5"/>
   <text x="101" y="198" text-anchor="middle" class="b" fill="var(--on-blue)">Agent 需求</text>

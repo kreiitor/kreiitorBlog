@@ -13,8 +13,6 @@
     .tiny{font-size:11px;fill:var(--muted)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">KV 的多级存储：越往下容量越大、取回越慢</text>
-  <text x="400" y="62" text-anchor="middle" class="sub">8K 前缀 1.125 GiB；四级取回都远快于重算的 856 ms</text>
 
   <text x="28" y="90" class="s">存储层级（方框宽度只表示容量次序）</text>
 

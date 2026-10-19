@@ -19,8 +19,6 @@
     <marker id="arrow-y" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--yellow)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="34" text-anchor="middle" class="title">编码器放在哪：跨网络的对象不同</text>
-  <text x="400" y="58" text-anchor="middle" class="sub">同样一张截图，可以传图片，也可以传特征</text>
 
   <line x1="400" y1="82" x2="400" y2="392" stroke="var(--line)" stroke-width="2" stroke-dasharray="6 5"/>
   <text x="400" y="78" text-anchor="middle" class="tiny">部署边界 · 上行 6.4 Mbit/s</text>

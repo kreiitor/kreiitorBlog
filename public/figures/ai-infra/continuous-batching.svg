@@ -15,8 +15,6 @@
     .onyellow{fill:var(--on-yellow)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="34" text-anchor="middle" class="title">固定批处理与连续批处理</text>
-  <text x="400" y="58" text-anchor="middle" class="sub">空出的执行位置，什么时候能被新请求使用</text>
 
   <rect x="40" y="78" width="720" height="150" rx="9" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
   <text x="58" y="102" class="h">固定 batch</text>

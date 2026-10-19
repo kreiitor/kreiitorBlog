@@ -1,65 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" role="img" aria-labelledby="fig-title fig-desc">
-  <title id="fig-title">Skill 目录与正文的缓存账</title>
-  <desc id="fig-desc">第 1 轮写入静态前缀、目录与正文，累计约 2.5k tokens 的 cache_creation；第 2、3 轮这些内容全部命中，只有新增的 tool_use 与 tool_result 需要计算</desc>
+  <title id="fig-title">Skill 目录与正文在三轮请求中的缓存状态</title>
+  <desc id="fig-desc">第 1 轮里静态前缀、目录与正文全部新写入，合计约 2.5k tokens；第 2、3 轮这三段全部命中缓存，只有末尾新增的 tool_use 与 tool_result 需要计算，分别约 0.5k 与 0.4k</desc>
   <style>
     :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#e9eefe;--yellow:#ffe04b;--yellow-soft:#fff5b7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
     @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)">Skill 目录与正文的缓存账</text>
-  <text x="400" y="60" text-anchor="middle" font-size="14" fill="var(--muted)">首轮一次性写入约 2.5k tokens，之后每轮只计算新增内容</text>
+  <g transform="translate(0,20)">
 
-  <text x="251" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">第 1 轮</text>
-  <text x="465" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">第 2 轮</text>
-  <text x="679" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">第 3 轮</text>
+  <text x="56" y="64" font-size="10.5" fill="var(--muted)">第 1 轮</text>
+  <text x="56" y="128" font-size="10.5" fill="var(--muted)">第 2 轮</text>
+  <text x="56" y="188" font-size="10.5" fill="var(--muted)">第 3 轮</text>
 
-  <text x="130" y="136" text-anchor="end" font-size="11.5" fill="var(--muted)">静态前缀</text>
-  <text x="130" y="182" text-anchor="end" font-size="11.5" fill="var(--muted)">Skill 目录</text>
-  <text x="130" y="228" text-anchor="end" font-size="11.5" fill="var(--muted)">Skill 正文</text>
-  <text x="130" y="274" text-anchor="end" font-size="11.5" fill="var(--muted)">本轮新增</text>
+  <rect x="128" y="46" width="180" height="26" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.2"/>
+  <text x="218" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink)">静态前缀</text>
+  <rect x="308" y="46" width="56" height="26" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.2"/>
+  <text x="336" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink)">目录</text>
+  <rect x="364" y="46" width="236" height="26" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.2"/>
+  <text x="482" y="63" text-anchor="middle" font-size="10.5" fill="var(--ink)">Skill 正文</text>
+  <text x="616" y="63" font-size="10.5" fill="var(--muted)">写入 2.5k</text>
 
-  <rect x="156" y="112" width="190" height="38" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
-  <text x="251" y="136" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">写入</text>
-  <rect x="370" y="112" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="465" y="136" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
-  <rect x="584" y="112" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="679" y="136" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
+  <rect x="128" y="110" width="180" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="218" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink)">静态前缀</text>
+  <rect x="308" y="110" width="56" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="336" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink)">目录</text>
+  <rect x="364" y="110" width="236" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="482" y="127" text-anchor="middle" font-size="10.5" fill="var(--ink)">Skill 正文</text>
+  <rect x="600" y="110" width="40" height="26" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="616" y="152" font-size="10.5" fill="var(--muted)">新增 0.5k</text>
 
-  <rect x="156" y="158" width="190" height="38" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
-  <text x="251" y="182" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">写入 0.3k</text>
-  <rect x="370" y="158" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="465" y="182" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
-  <rect x="584" y="158" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="679" y="182" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
+  <rect x="128" y="174" width="180" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="218" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink)">静态前缀</text>
+  <rect x="308" y="174" width="56" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="336" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink)">目录</text>
+  <rect x="364" y="174" width="236" height="26" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="482" y="191" text-anchor="middle" font-size="10.5" fill="var(--ink)">Skill 正文</text>
+  <rect x="600" y="174" width="32" height="26" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="616" y="216" font-size="10.5" fill="var(--muted)">新增 0.4k</text>
 
-  <rect x="156" y="204" width="190" height="38" rx="7" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
-  <text x="251" y="228" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">写入 2k</text>
-  <rect x="370" y="204" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="465" y="228" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
-  <rect x="584" y="204" width="190" height="38" rx="7" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="679" y="228" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">命中</text>
+  <line x1="128" y1="232" x2="720" y2="232" stroke="var(--line-soft)" stroke-width="1"/>
+  <text x="128" y="256" font-size="10.5" fill="var(--muted)">目录与正文在第 1 轮各写一次，位置此后不再移动</text>
+  <text x="128" y="276" font-size="10.5" fill="var(--muted)">第 2、3 轮只付末尾新增的 tool_use 与 tool_result</text>
 
-  <rect x="156" y="250" width="190" height="38" rx="7" fill="none" stroke="var(--line-soft)" stroke-width="1.4"/>
-  <text x="251" y="274" text-anchor="middle" font-size="12" fill="var(--muted)">首轮全量</text>
-  <rect x="370" y="250" width="190" height="38" rx="7" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="465" y="274" text-anchor="middle" font-size="12" font-weight="600" fill="var(--on-blue)">0.5k</text>
-  <rect x="584" y="250" width="190" height="38" rx="7" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="679" y="274" text-anchor="middle" font-size="12" font-weight="600" fill="var(--on-blue)">0.4k</text>
+  <rect x="128" y="312" width="14" height="14" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.2"/>
+  <text x="150" y="323" font-size="10.5" fill="var(--muted)">首轮写入</text>
+  <rect x="222" y="312" width="14" height="14" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="244" y="323" font-size="10.5" fill="var(--muted)">命中缓存</text>
+  <rect x="316" y="312" width="14" height="14" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.1"/>
+  <text x="338" y="323" font-size="10.5" fill="var(--muted)">本轮新增</text>
 
-  <line x1="140" y1="306" x2="774" y2="306" stroke="var(--line-soft)" stroke-width="1.5"/>
-  <text x="251" y="328" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">2.5k</text>
-  <text x="465" y="328" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">0</text>
-  <text x="679" y="328" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">0</text>
-  <text x="130" y="328" text-anchor="end" font-size="11" fill="var(--muted)">cache_creation</text>
-
-  <rect x="156" y="356" width="16" height="16" rx="4" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.4"/>
-  <text x="164" y="369" font-size="11.5" fill="var(--muted)">首轮写入</text>
-  <rect x="256" y="356" width="16" height="16" rx="4" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="280" y="369" font-size="11.5" fill="var(--muted)">命中复用</text>
-  <rect x="372" y="356" width="16" height="16" rx="4" fill="var(--blue)" stroke="var(--blue)" stroke-width="1.4"/>
-  <text x="396" y="369" font-size="11.5" fill="var(--muted)">本轮新增</text>
-
-  <text x="400" y="406" text-anchor="middle" font-size="12" fill="var(--muted)">目录与正文各自 emit-once：首次出现时写入，位置固定后再不搬动。</text>
-  <text x="400" y="428" text-anchor="middle" font-size="12" fill="var(--muted)">若每轮把正文搬到末尾，前缀就变了，它之后的 KV 全部作废。</text>
+  </g>
 </svg>

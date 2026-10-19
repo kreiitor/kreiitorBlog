@@ -14,8 +14,6 @@
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">ReAct 轨迹：上下文只追加</text>
-  <text x="400" y="62" text-anchor="middle" class="sub">每一次模型调用都读取「静态前缀 + 已经写下的完整轨迹」</text>
 
   <text x="30" y="100" class="b">第 1 轮</text>
   <rect x="110" y="82" width="50" height="36" rx="5" fill="var(--line-soft)" stroke="var(--line)" stroke-width="1.2"/>

@@ -9,9 +9,7 @@
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">图重放的输入地址</text>
-  <text x="400" y="58" text-anchor="middle" font-size="13" fill="var(--muted)">新输入先复制到固定缓冲 G，再重放图</text><rect x="47.66666666666667" y="104.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
+  <rect width="800" height="450" fill="var(--paper)"/><rect x="47.66666666666667" y="104.5" width="210" height="112" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/>
   <text x="152.66666666666669" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">本次新输入</text>
   <text x="152.66666666666669" y="173.5" font-size="12" fill="var(--ink)" font-weight="400" text-anchor="middle">地址 X</text><rect x="295.00000000000006" y="104.5" width="210" height="112" rx="8" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="1.6"/>
   <text x="400.00000000000006" y="157.25" font-size="13" fill="var(--ink)" font-weight="700" text-anchor="middle">复制 X → G</text>

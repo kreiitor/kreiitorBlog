@@ -20,11 +20,9 @@
     <marker id="arrow-yellow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--yellow)"/></marker>
   </defs>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="38" text-anchor="middle" class="title">Agent 与 Environment 的闭环</text>
 
   <rect x="55" y="70" width="360" height="310" rx="14" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"/>
   <text x="235" y="102" text-anchor="middle" class="head">Agent</text>
-  <text x="235" y="126" text-anchor="middle" class="sub">Model + Harness</text>
 
   <rect x="85" y="145" width="300" height="58" rx="8" fill="var(--surface)" stroke="var(--line-soft)" stroke-width="1.5"/>
   <text x="235" y="170" text-anchor="middle" class="label">Harness</text>
@@ -42,7 +40,6 @@
 
   <rect x="500" y="70" width="245" height="310" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
   <text x="622" y="102" text-anchor="middle" class="head">Environment</text>
-  <text x="622" y="128" text-anchor="middle" class="sub">状态与转移规律</text>
   <text x="622" y="176" text-anchor="middle" class="small">文件系统 · 数据库</text>
   <text x="622" y="204" text-anchor="middle" class="small">网页 · API · 应用</text>
   <text x="622" y="232" text-anchor="middle" class="small">用户 · 其他 Agent</text>

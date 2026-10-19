@@ -13,8 +13,6 @@
     .num{font-size:15px;font-weight:700;fill:var(--on-blue)}
   </style>
   <rect width="800" height="450" fill="var(--paper)"/>
-  <text x="400" y="36" text-anchor="middle" class="title">从任务到硬件的六层分工</text>
-  <text x="400" y="60" text-anchor="middle" class="sub">向下变成计算与数据访问，向上决定能力与边界</text>
 
   <g>
     <rect x="80" y="82" width="640" height="48" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
