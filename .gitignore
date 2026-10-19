@@ -31,3 +31,6 @@ playwright-report/
 .playwright-cli/
 
 output/playwright/
+
+# local agent workspace data
+.workbuddy/
