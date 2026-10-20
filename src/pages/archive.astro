@@ -26,11 +26,11 @@ const groups = getArchiveGroups(await getCollection('posts')).map(group => ({
  .archive-intro > p:not(.eyebrow) { color: var(--color-ink-soft); font-size: 14px; line-height: 2; }
  .archive-intro > a { margin-top: 16px; }
  .archive-year + .archive-year { margin-top: 48px; }
- .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-line-strong); }
+ .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-blossom-line); }
  .archive-year-heading h2 { font-family: var(--font-editorial); font-size: clamp(48px,6vw,76px); line-height: 1.1; font-weight: 400; color: var(--color-accent-strong); font-variant-numeric: tabular-nums; }
  .archive-year-heading > span,.archive-month h3 span { font-family: var(--font-sans); font-size: 13px; font-weight: 400; color: var(--color-ink-soft); }
- .archive-month h3 { position: sticky; top: 89px; z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); }
- .archive-row { display: grid; grid-template-columns: 45px minmax(0,1fr) 18px; gap: 16px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--color-line); }
+ .archive-month h3 { position: sticky; top: 89px; z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); }
+ .archive-row { display: grid; grid-template-columns: 45px minmax(0,1fr) 18px; gap: 16px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--color-blossom-line); }
  .archive-row time { color: var(--color-ink-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
  .archive-row h4 { font-family: var(--font-sans); font-size: 15px; line-height: 1.9; font-weight: 400; }
  .archive-row:hover h4 { color: var(--color-accent); }

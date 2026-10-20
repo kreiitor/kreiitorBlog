@@ -23,7 +23,7 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
    <aside class="course-intro"><p class="eyebrow">学习路径</p><img class="course-art" src={withBase(cover)} alt="" width="800" height="420"/><span class="course-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={28}/></span><h1>{titleParts ? <><span>{titleParts[1]}</span>{' '}<span>{titleParts[2]}</span></> : entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
    <div class="chapter-list">
     {entry.body?.trim() && <div class="rich-content series-overview"><Content/></div>}
-    <h2 class="eyebrow chapter-label">CONTENTS / 按章节阅读</h2>
+    <h2 class="eyebrow chapter-label">Contents / 按章节阅读</h2>
     {chapters.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index+1).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-arrow" aria-hidden="true">→</span></a>)}
    </div>
   </section>
@@ -31,9 +31,9 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 </BaseLayout>
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 30px; align-items: start; }
- .course-intro { padding: 32px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper-warm); position: sticky; top: 118px; }
- .course-art { display: block; width: 100%; margin-top: 18px; border-radius: 6px; }
- .course-emblem { color: var(--color-sage); display: grid; place-items: center; width: 48px; height: 48px; margin-top: 22px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface); }
+ .course-intro { padding: 32px; border: 1px solid var(--color-blossom-line); border-radius: 22px; background: var(--color-paper-warm); position: sticky; top: 118px; box-shadow: var(--shadow-whisper); }
+ .course-art { display: block; width: 100%; margin-top: 18px; border-radius: 14px; }
+ .course-emblem { color: var(--color-sage); display: grid; place-items: center; width: 48px; height: 48px; margin-top: 22px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); }
  .course-intro h1 { font-size: 23px; line-height: 1.4; margin-top: 10px; text-wrap: balance; }
  .course-intro h1 > span { display: block; }
  .course-english { font-family: var(--font-editorial); font-size: 18px; line-height: 1.4; color: var(--color-accent); margin-top: 10px; }
@@ -42,11 +42,11 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .course-intro .zen-btn { width: 100%; }
  .source-note { margin-top: 23px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
  .series-overview { margin-bottom: 30px; }
- .chapter-label { padding-bottom: 18px; border-bottom: 1px solid var(--color-line); }
- .chapter-row { padding: 22px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 8px; transition: background-color .2s var(--ease-smooth); }
- .chapter-row:hover { background: var(--color-surface-hover); }
+ .chapter-label { padding-bottom: 18px; border-bottom: 1px solid var(--color-blossom-line); }
+ .chapter-row { padding: 22px 12px; margin-inline: -12px; border-bottom: 1px solid var(--color-blossom-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 14px; transition: background-color var(--dur-base) var(--ease-smooth); }
+ .chapter-row:hover { background: var(--color-blossom-soft); }
  .chapter-number { font-family: var(--font-editorial); font-size: 24px; color: var(--color-accent); line-height: 1.4; }
- .chapter-row h3 { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; font-weight: 500; transition: color .2s var(--ease-smooth); }
+ .chapter-row h3 { font-family: var(--font-sans); font-size: 17px; line-height: 1.6; font-weight: 600; transition: color var(--dur-base) var(--ease-smooth); }
  .chapter-row p { margin-top: 7px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); }
  .chapter-arrow { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
  .chapter-row:hover h3 { color: var(--color-accent); }

@@ -2,49 +2,49 @@
   <title id="fig-title">MCP 协议交互时序</title>
   <desc id="fig-desc">MCP 客户端与服务器依次完成能力发现、工具发现和工具调用；客户端不必预先知道服务器暴露了哪些工具。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
-    .sub{font-size:14px;fill:var(--muted,#596171)}
-    .h{font-size:17px;font-weight:700;fill:var(--ink,#202735)}
-    .phase{font-size:15px;font-weight:700;fill:var(--ink,#202735)}
-    .msg{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
-    .small{font-size:12px;fill:var(--muted,#596171)}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#3b3024)}
+    .sub{font-size:14px;fill:var(--muted,#5f4f3c)}
+    .h{font-size:17px;font-weight:700;fill:var(--ink,#3b3024)}
+    .phase{font-size:15px;font-weight:700;fill:var(--ink,#3b3024)}
+    .msg{font-size:13px;font-weight:600;fill:var(--ink,#3b3024)}
+    .small{font-size:12px;fill:var(--muted,#5f4f3c)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
-  <rect x="175" y="82" width="110" height="34" rx="6" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <text x="230" y="104" text-anchor="middle" class="h" fill="var(--on-blue,#fffefa)">MCP Client</text>
-  <rect x="515" y="82" width="110" height="34" rx="6" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="175" y="82" width="110" height="34" rx="6" fill="var(--blue,#466b3f)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <text x="230" y="104" text-anchor="middle" class="h" fill="var(--on-blue,#fffcf5)">MCP Client</text>
+  <rect x="515" y="82" width="110" height="34" rx="6" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="2"/>
   <text x="570" y="104" text-anchor="middle" class="h">MCP Server</text>
-  <line x1="230" y1="116" x2="230" y2="404" stroke="var(--line,#a2aec1)" stroke-width="2" stroke-dasharray="5 5"/>
-  <line x1="570" y1="116" x2="570" y2="404" stroke="var(--line,#a2aec1)" stroke-width="2" stroke-dasharray="5 5"/>
+  <line x1="230" y1="116" x2="230" y2="404" stroke="var(--line,#c9b49c)" stroke-width="2" stroke-dasharray="5 5"/>
+  <line x1="570" y1="116" x2="570" y2="404" stroke="var(--line,#c9b49c)" stroke-width="2" stroke-dasharray="5 5"/>
 
   <text x="40" y="142" class="phase">① 能力发现</text>
   <text x="40" y="162" class="small">initialize</text>
-  <path d="M230 142 H570" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M230 142 H570" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="135" text-anchor="middle" class="msg">initialize</text>
-  <path d="M570 168 H230" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M570 168 H230" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="161" text-anchor="middle" class="msg">protocol version + capabilities</text>
-  <path d="M230 194 H570" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M230 194 H570" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="187" text-anchor="middle" class="msg">notifications/initialized</text>
 
   <text x="40" y="236" class="phase">② 工具发现</text>
   <text x="40" y="256" class="small">tools/list</text>
-  <path d="M230 236 H570" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M230 236 H570" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="229" text-anchor="middle" class="msg">tools/list</text>
-  <path d="M570 262 H230" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M570 262 H230" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="255" text-anchor="middle" class="msg">tool schema：get_weather</text>
 
   <text x="40" y="326" class="phase">③ 工具调用</text>
   <text x="40" y="346" class="small">tools/call</text>
-  <path d="M230 326 H570" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M230 326 H570" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="319" text-anchor="middle" class="msg">tools/call：get_weather(Beijing)</text>
-  <path d="M570 362 H230" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M570 362 H230" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
   <text x="400" y="355" text-anchor="middle" class="msg">result：Beijing 22°C，晴</text>
 
   <text x="400" y="430" text-anchor="middle" class="small">三类原语：tools（可执行）· resources（只读）· prompts（可复用模板）</text>

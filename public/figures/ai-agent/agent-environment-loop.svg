@@ -2,24 +2,24 @@
   <title id="fig-title">Agent 与 Environment 的观察—行动闭环</title>
   <desc id="fig-desc">环境向 Agent 提供观察，Agent 向环境施加行动；Agent 内部由上下文、Model 和工具接口组成，三者由 Harness 统一运行与治理。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
     .t{font-size:12.5px;font-weight:600;fill:var(--ink)}
     .l{font-size:10.5px;font-weight:400;fill:var(--ink)}
     .m{font-size:9.5px;font-weight:400;fill:var(--muted)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="320" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="320" fill="var(--paper,#faf6f0)"/>
 
-  <rect x="56" y="32" width="432" height="244" fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <rect x="56" y="32" width="432" height="244" fill="none" stroke="var(--line-soft,#e4d6c5)" stroke-width="1"/>
   <text x="76" y="54" class="m">Agent</text>
 
-  <g fill="none" stroke="var(--line-soft,#dce1e8)" stroke-width="1">
+  <g fill="none" stroke="var(--line-soft,#e4d6c5)" stroke-width="1">
     <rect x="80" y="100" width="112" height="76"/>
-    <rect x="222" y="100" width="96" height="76" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+    <rect x="222" y="100" width="96" height="76" stroke="var(--line,#c9b49c)" stroke-width="1.5"/>
     <rect x="348" y="100" width="112" height="76"/>
   </g>
   <g class="t" text-anchor="middle">
@@ -33,12 +33,12 @@
     <text x="404" y="152">调用协议</text>
   </g>
 
-  <g stroke="var(--line,#a2aec1)" stroke-width="1" fill="none">
+  <g stroke="var(--line,#c9b49c)" stroke-width="1" fill="none">
     <path d="M192 138H218" marker-end="url(#arrow)"/>
     <path d="M318 138H344" marker-end="url(#arrow)"/>
   </g>
 
-  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1" fill="none">
+  <g stroke="var(--line-soft,#e4d6c5)" stroke-width="1" fill="none">
     <path d="M136 176V196"/>
     <path d="M270 176V196"/>
     <path d="M404 176V196"/>
@@ -46,7 +46,7 @@
   </g>
   <text x="80" y="220" class="l">Harness：循环 · 状态 · 约束 · 验证 · 纠正</text>
 
-  <rect x="584" y="60" width="168" height="196" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <rect x="584" y="60" width="168" height="196" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1"/>
   <text x="604" y="88" class="t">Environment</text>
   <g class="m">
     <text x="604" y="116">文件系统</text>
@@ -55,8 +55,8 @@
     <text x="604" y="182">用户与其他 Agent</text>
   </g>
 
-  <path d="M584 110H492" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M488 238H580" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M584 110H492" stroke="var(--blue,#466b3f)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M488 238H580" stroke="var(--blue,#466b3f)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
   <text x="538" y="100" text-anchor="middle" class="l">观察</text>
   <text x="534" y="256" text-anchor="middle" class="l">行动</text>
 </svg>

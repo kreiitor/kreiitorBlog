@@ -57,9 +57,9 @@ import Icon from './Icon.astro';
     }
     const series = element.matches('.series-card');
     const animation = element.animate([
-     {opacity:.65,transform:`translateY(${series ? 8 : 12}px)`},
+     {opacity:.7,transform:`translateY(${series ? 10 : 14}px)`},
      {opacity:1,transform:'translate(0,0)'}
-    ],{duration:series ? 480 : 420,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
+    ],{duration:series ? 600 : 520,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
     entrances.add(animation);
     animation.finished.then(() => entrances.delete(animation),() => entrances.delete(animation));
     observer.unobserve(element);
@@ -71,12 +71,12 @@ import Icon from './Icon.astro';
 </script>
 <style is:global>
  .site-header[data-scrolled="true"] { box-shadow: 0 5px 22px var(--color-head-shadow); }
- .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-paper); color: var(--color-accent-strong); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity .25s var(--ease-smooth),visibility .25s var(--ease-smooth),translate .25s var(--ease-out-expo),background-color .2s var(--ease-smooth),color .2s var(--ease-smooth); }
+ .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); color: var(--color-accent-strong); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity var(--dur-base) var(--ease-smooth),visibility var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth); }
  .back-to-top[data-visible="true"] { opacity: 1; visibility: visible; translate: 0 0; }
  .back-to-top:is(:hover,:focus-visible) { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
  .back-to-top:active { translate: 0 1px; }
  @view-transition { navigation: auto; }
- ::view-transition-old(root),::view-transition-new(root) { animation-duration: .18s; }
+ ::view-transition-old(root),::view-transition-new(root) { animation-duration: var(--dur-base); }
  @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 </style>

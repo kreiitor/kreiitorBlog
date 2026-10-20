@@ -2,67 +2,67 @@
   <title id="fig-title">多 Agent 协作的两个维度</title>
   <desc id="fig-desc">上层对比共享上下文与隔离上下文的协作方式，下层给出对等、管理者与去中心化三种控制流拓扑。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
-    .sub{font-size:14px;fill:var(--muted,#596171)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
-    .b{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
-    .s{font-size:12px;fill:var(--muted,#596171)}
-    .tiny{font-size:11px;fill:var(--muted,#596171)}
-    .onblue{fill:var(--on-blue,#fffefa)}
-    .onyellow{fill:var(--on-yellow,#202735)}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#3b3024)}
+    .sub{font-size:14px;fill:var(--muted,#5f4f3c)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#3b3024)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink,#3b3024)}
+    .s{font-size:12px;fill:var(--muted,#5f4f3c)}
+    .tiny{font-size:11px;fill:var(--muted,#5f4f3c)}
+    .onblue{fill:var(--on-blue,#fffcf5)}
+    .onyellow{fill:var(--on-yellow,#3b3024)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
-  <rect x="32" y="78" width="356" height="150" rx="9" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
+  <rect x="32" y="78" width="356" height="150" rx="9" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="2"/>
   <text x="52" y="104" class="h">共享上下文 · 记忆接力</text>
-  <rect x="52" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="52" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
   <text x="98" y="144" text-anchor="middle" class="b">需求</text>
-  <rect x="164" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="164" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
   <text x="210" y="144" text-anchor="middle" class="b">开发</text>
-  <rect x="276" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="276" y="120" width="92" height="38" rx="6" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
   <text x="322" y="144" text-anchor="middle" class="b">审查</text>
-  <path d="M146 139 H160" stroke="var(--blue,#2647d7)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <path d="M258 139 H272" stroke="var(--blue,#2647d7)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <rect x="52" y="178" width="316" height="30" rx="6" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <path d="M146 139 H160" stroke="var(--blue,#466b3f)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M258 139 H272" stroke="var(--blue,#466b3f)" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="52" y="178" width="316" height="30" rx="6" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
   <text x="210" y="198" text-anchor="middle" class="tiny">同一份对话历史持续增长</text>
 
-  <rect x="412" y="78" width="356" height="150" rx="9" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
+  <rect x="412" y="78" width="356" height="150" rx="9" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="2"/>
   <text x="432" y="104" class="h">隔离上下文 · 产物交接</text>
-  <rect x="432" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="432" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="478" y="144" text-anchor="middle" class="b">术语</text>
-  <rect x="544" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="544" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="590" y="144" text-anchor="middle" class="b">翻译</text>
-  <rect x="656" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="656" y="120" width="92" height="38" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="702" y="144" text-anchor="middle" class="b">校对</text>
-  <g stroke="var(--line,#a2aec1)" stroke-width="1.5" stroke-dasharray="3 4">
+  <g stroke="var(--line,#c9b49c)" stroke-width="1.5" stroke-dasharray="3 4">
     <path d="M478 158 V174"/><path d="M590 158 V174"/><path d="M702 158 V174"/>
   </g>
-  <rect x="432" y="178" width="316" height="30" rx="6" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.5"/>
+  <rect x="432" y="178" width="316" height="30" rx="6" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.5"/>
   <text x="590" y="198" text-anchor="middle" class="tiny">共享文件系统：glossary · chapter · review</text>
 
   <text x="150" y="258" text-anchor="middle" class="b">对等：环</text>
-  <circle cx="100" cy="314" r="18" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="200" cy="314" r="18" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="150" cy="374" r="18" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <g stroke="var(--blue,#2647d7)" stroke-width="2" fill="none">
+  <circle cx="100" cy="314" r="18" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="200" cy="314" r="18" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="150" cy="374" r="18" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <g stroke="var(--blue,#466b3f)" stroke-width="2" fill="none">
     <path d="M116 306 L184 306" marker-end="url(#arrow)"/>
     <path d="M190 328 L162 360" marker-end="url(#arrow)"/>
     <path d="M138 360 L110 328" marker-end="url(#arrow)"/>
   </g>
 
   <text x="400" y="258" text-anchor="middle" class="b">管理者：星</text>
-  <circle cx="400" cy="324" r="22" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
-  <circle cx="330" cy="286" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="470" cy="286" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="330" cy="372" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="470" cy="372" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <g stroke="var(--blue,#2647d7)" stroke-width="2" fill="none">
+  <circle cx="400" cy="324" r="22" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="2"/>
+  <circle cx="330" cy="286" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="470" cy="286" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="330" cy="372" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="470" cy="372" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <g stroke="var(--blue,#466b3f)" stroke-width="2" fill="none">
     <path d="M384 312 L342 296" marker-end="url(#arrow)"/>
     <path d="M416 312 L458 296" marker-end="url(#arrow)"/>
     <path d="M384 338 L342 362" marker-end="url(#arrow)"/>
@@ -70,11 +70,11 @@
   </g>
 
   <text x="650" y="258" text-anchor="middle" class="b">去中心化：网</text>
-  <circle cx="590" cy="300" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="710" cy="300" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="590" cy="380" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <circle cx="710" cy="380" r="16" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
-  <g stroke="var(--blue,#2647d7)" stroke-width="2" fill="none">
+  <circle cx="590" cy="300" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="710" cy="300" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="590" cy="380" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <circle cx="710" cy="380" r="16" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
+  <g stroke="var(--blue,#466b3f)" stroke-width="2" fill="none">
     <path d="M606 308 L694 308" marker-end="url(#arrow)"/>
     <path d="M606 372 L694 372" marker-end="url(#arrow)"/>
     <path d="M598 316 L598 364" marker-end="url(#arrow)"/>

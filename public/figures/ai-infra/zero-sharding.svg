@@ -2,20 +2,20 @@
   <title id="fig-title">ZeRO 四个阶段的状态归属</title>
   <desc id="fig-desc">普通数据并行完整复制权重、梯度与优化器状态；ZeRO-1 分片优化器状态，ZeRO-2 再分片梯度，ZeRO-3 连权重也分片。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
-    .sub{font-size:14px;fill:var(--muted,#596171)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
-    .b{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
-    .s{font-size:12px;fill:var(--muted,#596171)}
-    .tiny{font-size:11px;fill:var(--muted,#596171)}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#3b3024)}
+    .sub{font-size:14px;fill:var(--muted,#5f4f3c)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#3b3024)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink,#3b3024)}
+    .s{font-size:12px;fill:var(--muted,#5f4f3c)}
+    .tiny{font-size:11px;fill:var(--muted,#5f4f3c)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
   <text x="20" y="128" class="tiny">权重</text>
   <text x="20" y="178" class="tiny">梯度</text>
@@ -26,112 +26,112 @@
   <text x="450" y="106" text-anchor="middle" class="b">ZeRO-2</text>
   <text x="630" y="106" text-anchor="middle" class="b">ZeRO-3</text>
 
-  <rect x="90" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="90" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="107" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="128" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="128" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="145" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="166" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="166" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="183" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="204" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="204" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="221" y="136" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="90" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="90" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="107" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="128" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="128" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="145" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="166" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="166" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="183" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="204" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="204" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="221" y="186" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="90" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="90" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="107" y="236" text-anchor="middle" class="tiny">完整</text>
-  <rect x="128" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="128" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="145" y="236" text-anchor="middle" class="tiny">完整</text>
-  <rect x="166" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="166" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="183" y="236" text-anchor="middle" class="tiny">完整</text>
-  <rect x="204" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="204" y="216" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="221" y="236" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="270" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="270" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="287" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="308" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="308" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="325" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="346" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="346" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="363" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="384" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="384" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="401" y="136" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="270" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="270" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="287" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="308" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="308" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="325" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="346" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="346" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="363" y="186" text-anchor="middle" class="tiny">完整</text>
-  <rect x="384" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="384" y="166" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="401" y="186" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="270" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="270" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="287" y="236" text-anchor="middle" class="tiny">片0</text>
-  <rect x="308" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="308" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="325" y="236" text-anchor="middle" class="tiny">片1</text>
-  <rect x="346" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="346" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="363" y="236" text-anchor="middle" class="tiny">片2</text>
-  <rect x="384" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="384" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="401" y="236" text-anchor="middle" class="tiny">片3</text>
 
-  <rect x="450" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="450" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="467" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="488" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="488" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="505" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="526" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="526" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="543" y="136" text-anchor="middle" class="tiny">完整</text>
-  <rect x="564" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.1"/>
+  <rect x="564" y="116" width="34" height="32" rx="3" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.1"/>
   <text x="581" y="136" text-anchor="middle" class="tiny">完整</text>
 
-  <rect x="450" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="450" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="467" y="186" text-anchor="middle" class="tiny">片0</text>
-  <rect x="488" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="488" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="505" y="186" text-anchor="middle" class="tiny">片1</text>
-  <rect x="526" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="526" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="543" y="186" text-anchor="middle" class="tiny">片2</text>
-  <rect x="564" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="564" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="581" y="186" text-anchor="middle" class="tiny">片3</text>
 
-  <rect x="450" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="450" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="467" y="236" text-anchor="middle" class="tiny">片0</text>
-  <rect x="488" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="488" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="505" y="236" text-anchor="middle" class="tiny">片1</text>
-  <rect x="526" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="526" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="543" y="236" text-anchor="middle" class="tiny">片2</text>
-  <rect x="564" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="564" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="581" y="236" text-anchor="middle" class="tiny">片3</text>
 
-  <rect x="630" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="630" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="647" y="136" text-anchor="middle" class="tiny">片0</text>
-  <rect x="668" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="668" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="685" y="136" text-anchor="middle" class="tiny">片1</text>
-  <rect x="706" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="706" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="723" y="136" text-anchor="middle" class="tiny">片2</text>
-  <rect x="744" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="744" y="116" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="761" y="136" text-anchor="middle" class="tiny">片3</text>
 
-  <rect x="630" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="630" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="647" y="186" text-anchor="middle" class="tiny">片0</text>
-  <rect x="668" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="668" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="685" y="186" text-anchor="middle" class="tiny">片1</text>
-  <rect x="706" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="706" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="723" y="186" text-anchor="middle" class="tiny">片2</text>
-  <rect x="744" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="744" y="166" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="761" y="186" text-anchor="middle" class="tiny">片3</text>
 
-  <rect x="630" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="630" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="647" y="236" text-anchor="middle" class="tiny">片0</text>
-  <rect x="668" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="668" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="685" y="236" text-anchor="middle" class="tiny">片1</text>
-  <rect x="706" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="706" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="723" y="236" text-anchor="middle" class="tiny">片2</text>
-  <rect x="744" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
+  <rect x="744" y="216" width="34" height="32" rx="3" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
   <text x="761" y="236" text-anchor="middle" class="tiny">片3</text>
 
   <text x="145" y="296" text-anchor="middle" class="b">122.1 GiB</text>
@@ -140,12 +140,12 @@
   <text x="685" y="296" text-anchor="middle" class="b">15.3 GiB</text>
   <text x="400" y="320" text-anchor="middle" class="tiny">每卡常驻训练状态（d = 8，N = 8.1907B）</text>
 
-  <line x1="90" y1="352" x2="760" y2="352" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="90" y1="352" x2="760" y2="352" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/>
   <text x="425" y="344" text-anchor="middle" class="s">分片范围扩大：优化器状态 → 梯度 → 权重</text>
 
-  <rect x="90" y="372" width="14" height="14" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
+  <rect x="90" y="372" width="14" height="14" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
   <text x="112" y="384" class="tiny">完整副本</text>
-  <rect x="200" y="372" width="14" height="14" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.2"/>
+  <rect x="200" y="372" width="14" height="14" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.2"/>
   <text x="222" y="384" class="tiny">本卡分片</text>
 
   <text x="400" y="424" text-anchor="middle" class="tiny">容量 = 完整复制的部分 + 分片部分 / d；执行时 AllGather 取参数，ReduceScatter 汇总梯度，每卡只更新自己负责的分片。</text>

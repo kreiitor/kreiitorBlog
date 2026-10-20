@@ -2,26 +2,26 @@
   <title id="fig-title">实体与关系的知识图谱</title>
   <desc id="fig-desc">用户节点分出两条边，分别指向张医生-A 与张医生-B；张医生-A 就职于仁爱口腔医院，该医院地址为徐汇区 XX 路；张医生-B 就职于华山医院，并连到心血管中心</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><line x1="80" y1="252.24137931034483" x2="300" y2="138.44827586206895" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="252.24137931034483" x2="300" y2="366.0344827586207" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="138.44827586206895" x2="500" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="110" x2="680" y2="110" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="366.0344827586207" x2="500" y2="385" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="385" x2="680" y2="385" stroke="var(--blue,#2647d7)" stroke-width="2" marker-end="url(#arrow)"/><rect x="30" y="228.24137931034483" width="100" height="48" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
-  <text x="80" y="256.3663793103448" font-size="11" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">用户</text>
-  <rect x="250" y="114.44827586206895" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
-  <text x="300" y="142.57327586206895" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">张医生-A</text>
-  <rect x="250" y="342.0344827586207" width="100" height="48" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.6"/>
-  <text x="300" y="370.1594827586207" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">张医生-B</text>
-  <rect x="450" y="86" width="100" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="500" y="114.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">仁爱口腔医院</text>
-  <rect x="450" y="361" width="100" height="48" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="500" y="389.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">华山医院</text>
-  <rect x="630" y="86" width="100" height="48" rx="8" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="680" y="114.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">徐汇区 XX 路</text>
-  <rect x="630" y="361" width="100" height="48" rx="8" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="680" y="389.125" font-size="11" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">心血管中心</text>
-  <text x="400" y="418" font-size="9.5" fill="var(--muted,#596171)" font-weight="400" text-anchor="middle">每条边是一个（主语-关系-宾语）三元组。</text>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/><line x1="80" y1="252.24137931034483" x2="300" y2="138.44827586206895" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><line x1="80" y1="252.24137931034483" x2="300" y2="366.0344827586207" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="138.44827586206895" x2="500" y2="110" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="110" x2="680" y2="110" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><line x1="300" y1="366.0344827586207" x2="500" y2="385" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><line x1="500" y1="385" x2="680" y2="385" stroke="var(--blue,#466b3f)" stroke-width="2" marker-end="url(#arrow)"/><rect x="30" y="228.24137931034483" width="100" height="48" rx="8" fill="var(--blue,#466b3f)" stroke="var(--blue,#466b3f)" stroke-width="1.6"/>
+  <text x="80" y="256.3663793103448" font-size="11" fill="var(--on-blue,#fffcf5)" font-weight="700" text-anchor="middle">用户</text>
+  <rect x="250" y="114.44827586206895" width="100" height="48" rx="8" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.6"/>
+  <text x="300" y="142.57327586206895" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">张医生-A</text>
+  <rect x="250" y="342.0344827586207" width="100" height="48" rx="8" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.6"/>
+  <text x="300" y="370.1594827586207" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">张医生-B</text>
+  <rect x="450" y="86" width="100" height="48" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="500" y="114.125" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">仁爱口腔医院</text>
+  <rect x="450" y="361" width="100" height="48" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="500" y="389.125" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">华山医院</text>
+  <rect x="630" y="86" width="100" height="48" rx="8" fill="var(--line-soft,#e4d6c5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="680" y="114.125" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">徐汇区 XX 路</text>
+  <rect x="630" y="361" width="100" height="48" rx="8" fill="var(--line-soft,#e4d6c5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="680" y="389.125" font-size="11" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">心血管中心</text>
+  <text x="400" y="418" font-size="9.5" fill="var(--muted,#5f4f3c)" font-weight="400" text-anchor="middle">每条边是一个（主语-关系-宾语）三元组。</text>
 </svg>

@@ -1,0 +1,56 @@
+---
+interface Props {
+	variant?: 'sprig' | 'divider' | 'corner';
+	class?: string;
+}
+const { variant = 'sprig', class: className } = Astro.props;
+const classes = ['botanical', `botanical-${variant}`, className].filter(Boolean).join(' ');
+---
+{variant === 'sprig' && (
+	<svg class={classes} viewBox="0 0 120 28" width="120" height="28" fill="none" aria-hidden="true">
+		<path d="M4 22c24 0 38-12 58-9 18 3 30 9 50 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+		<path d="M34 19c-6-7-3-13 2-15 3 6 3 11-2 15Z" fill="currentColor" opacity=".78"/>
+		<path d="M58 15c-2-8 2-13 7-14 1 7-1 12-7 14Z" fill="currentColor" opacity=".6"/>
+		<path d="M82 16c4-7 9-8 13-6-2 6-7 9-13 6Z" fill="currentColor" opacity=".72"/>
+		<g fill="var(--color-counterpoint)">
+			<circle cx="106" cy="4.5" r="3.2"/>
+			<circle cx="111.5" cy="8.5" r="3.2"/>
+			<circle cx="109.8" cy="15" r="3.2"/>
+			<circle cx="102.2" cy="15" r="3.2"/>
+			<circle cx="100.5" cy="8.5" r="3.2"/>
+		</g>
+		<circle cx="106" cy="11" r="2.6" fill="var(--color-ink)"/>
+	</svg>
+)}
+{variant === 'divider' && (
+	<svg class={classes} viewBox="0 0 360 24" width="360" height="24" fill="none" aria-hidden="true">
+		<path d="M0 12h132M228 12h132" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".55"/>
+		<path d="M132 12c14-8 30-8 48 0-18 8-34 8-48 0Z" fill="currentColor" opacity=".42"/>
+		<path d="M180 12c14-8 30-8 48 0-18 8-34 8-48 0Z" fill="currentColor" opacity=".42"/>
+		<g fill="var(--color-counterpoint)">
+			<circle cx="180" cy="2" r="4"/>
+			<circle cx="188" cy="7" r="4"/>
+			<circle cx="185" cy="16" r="4"/>
+			<circle cx="175" cy="16" r="4"/>
+			<circle cx="172" cy="7" r="4"/>
+		</g>
+		<circle cx="180" cy="10" r="3.2" fill="var(--color-ink)"/>
+	</svg>
+)}
+{variant === 'corner' && (
+	<svg class={classes} viewBox="0 0 180 140" width="180" height="140" fill="none" aria-hidden="true">
+		<path d="M8 132C36 118 58 96 74 70c16-26 40-46 96-54" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+		<path d="M38 112c-13-4-18-13-16-21 11 1 18 8 16 21Z" fill="currentColor" opacity=".5"/>
+		<path d="M62 87c-2-13 4-20 12-22 2 11-3 18-12 22Z" fill="currentColor" opacity=".62"/>
+		<path d="M88 59c8-11 17-13 24-9-4 10-13 14-24 9Z" fill="currentColor" opacity=".48"/>
+		<path d="M118 36c6-11 15-15 23-12-3 11-11 16-23 12Z" fill="currentColor" opacity=".56"/>
+		<g fill="var(--color-counterpoint)">
+			<circle cx="158" cy="8" r="5"/>
+			<circle cx="168" cy="14" r="5"/>
+			<circle cx="165" cy="25" r="5"/>
+			<circle cx="152" cy="25" r="5"/>
+			<circle cx="148" cy="14" r="5"/>
+		</g>
+		<circle cx="158" cy="17" r="4" fill="var(--color-ink)"/>
+	</svg>
+)}

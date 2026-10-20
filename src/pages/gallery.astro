@@ -80,20 +80,20 @@ const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
  .gallery-head > p span { display: block; margin-top: 10px; font-size: 13px; }
  .gallery-grid { columns: 2; column-gap: 32px; }
  .photo-card { break-inside: avoid; margin-bottom: 32px; }
- .photo-frame { display: block; padding: 8px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; cursor: zoom-in; }
+ .photo-frame { display: block; padding: 10px; background: var(--color-surface); border: 1px solid var(--color-blossom-line); border-radius: 18px; cursor: zoom-in; box-shadow: var(--shadow-whisper); }
  .photo-frame picture { display: block; }
- .photo-frame:hover { border-color: var(--color-line-strong); }
- .photo-frame img { width: 100%; height: auto; display: block; border-radius: 4px; }
+ .photo-frame:hover { border-color: var(--color-blossom); box-shadow: var(--shadow-soft); }
+ .photo-frame img { width: 100%; height: auto; display: block; border-radius: 12px; }
  figcaption { padding: 12px 2px 0; color: var(--color-ink-soft); font-size: 14px; }
  :global(html.photo-is-open) { overflow: hidden; }
- .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-line-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-ink); }
+ .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-blossom-line); border-radius: 22px; background: var(--color-surface); color: var(--color-ink); }
  .photo-dialog[open] { display: flex; flex-direction: column; }
  .photo-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
  .photo-toolbar,.photo-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; font-size: 14px; }
  .photo-toolbar { padding-bottom: 8px; }
  .photo-controls { padding-top: 8px; }
  .photo-controls span { color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
- .photo-dialog button { min-height: 44px; padding: 8px 12px; border-radius: 6px; }
+ .photo-dialog button { min-height: 44px; padding: 8px 16px; border-radius: 999px; }
  .photo-dialog button:hover { background: var(--color-accent-soft); }
  .photo-stage { min-height: 0; display: flex; justify-content: center; }
  .photo-stage img { max-width: 100%; max-height: calc(94dvh - 144px); width: auto; height: auto; object-fit: contain; }

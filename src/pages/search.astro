@@ -4,11 +4,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { withBase } from '../utils/url';
 ---
 <BaseLayout title="站内搜索" description="搜索研究札记、课程精讲与项目记录。" noIndex>
- <section data-pagefind-ignore class="page-shell search-layout"><SearchPanel/><aside><p class="eyebrow">A DIFFERENT WAY TO EXPLORE</p><h2>也可以，<br/>随意翻翻。</h2><p>有时候，下一个好问题<br/>藏在你没有搜索的地方。</p><a href={withBase('/notes/')} class="text-link">沿着学习路径阅读 →</a><a href={withBase('/archive/')} class="text-link">从时间归档开始 →</a><a href={withBase('/projects/')} class="text-link">看看研究项目 →</a></aside></section>
+ <section data-pagefind-ignore class="page-shell search-layout"><SearchPanel/><aside><p class="eyebrow">A different way to explore</p><h2>也可以，<br/>随意翻翻。</h2><p>有时候，下一个好问题<br/>藏在你没有搜索的地方。</p><a href={withBase('/notes/')} class="text-link">沿着学习路径阅读 →</a><a href={withBase('/archive/')} class="text-link">从时间归档开始 →</a><a href={withBase('/projects/')} class="text-link">看看研究项目 →</a></aside></section>
 </BaseLayout>
 <style>
  .search-layout { padding-top: 70px; display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 85px; min-height: 530px; }
- aside { margin-top: 8px; padding: 28px; border-left: 1px solid var(--color-line); } aside h2 { margin-top: 18px; font-size: 26px; line-height: 1.7; }
+ aside { margin-top: 8px; padding: 28px; border-left: 1px solid var(--color-blossom-line); } aside h2 { margin-top: 18px; font-size: 26px; line-height: 1.7; }
  aside p:not(.eyebrow) { margin-top: 18px; color: var(--color-ink-soft); font-size: 12px; line-height: 2; } aside a { display: flex; margin-top: 20px; font-size: var(--text-caption); }
  @media (max-width: 900px) { .search-layout { gap: 35px; grid-template-columns: minmax(0,1fr) 230px; } }
  @media (max-width: 700px) { .search-layout { padding-top: 36px; grid-template-columns: 1fr; gap: 30px; } aside { display: none; } }

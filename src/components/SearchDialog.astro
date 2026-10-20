@@ -30,7 +30,7 @@ import { withBase } from '../utils/url';
 </script>
 <style is:global>
  .search-is-open { overflow: hidden; }
- .search-dialog { position: fixed; inset: 10vh 0 auto; margin-inline: auto; width: min(720px,calc(100% - 32px)); max-height: 80dvh; padding: 0; border: 1px solid var(--color-line-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-ink); box-shadow: 0 24px 100px var(--color-dialog-shadow); overflow: hidden; }
+ .search-dialog { position: fixed; inset: 10vh 0 auto; margin-inline: auto; width: min(720px,calc(100% - 32px)); max-height: 80dvh; padding: 0; border: 1px solid var(--color-blossom-line); border-radius: 20px; background: var(--color-surface); color: var(--color-ink); box-shadow: 0 24px 100px var(--color-dialog-shadow); overflow: hidden; }
  .search-dialog[open] { display: flex; flex-direction: column; }
  .dialog-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px 32px; scrollbar-gutter: stable; display: flex; flex-direction: column; }
  .search-dialog .search-panel { display: flex; min-height: 0; flex: 1; flex-direction: column; }
@@ -46,9 +46,9 @@ import { withBase } from '../utils/url';
  .search-dialog .search-result h3 { font-size: 18px; }
  .search-dialog[open] { animation: reveal var(--dur-base) var(--ease-out-expo); }
  .search-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(3px); }
- .dialog-close { position: absolute; right: 16px; top: 14px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; }
+ .dialog-close { position: absolute; right: 16px; top: 14px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; }
  .dialog-close:hover { background: var(--color-paper-warm); }
- .dialog-footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--color-line); padding: 4px 24px; font-size: 12px; color: var(--color-ink-soft); background: var(--color-paper-warm); }
+ .dialog-footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--color-blossom-line); padding: 4px 24px; font-size: 12px; color: var(--color-ink-soft); background: var(--color-paper-warm); }
  .dialog-footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-accent); }
  @media (max-width: 600px) { .search-dialog { inset-block-start: 4vh; max-height: 90dvh; } .dialog-content { padding: 22px 20px; } .dialog-footer > span { display: none; } }
 </style>

@@ -2,53 +2,53 @@
   <title id="fig-title">两类评估环境的验证路径</title>
   <desc id="fig-desc">工具调用型只有一条检查：Agent 调用工具执行，断言或测试通过即得 reward 1.0。人机交互型里 Agent 与用户模拟器多轮对话，之后既要查数据库状态，又要确认对话里确实说明了必要信息，两处都过才得分</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
-  <text x="36" y="64" font-size="12" font-weight="600" fill="var(--ink,#202735)">工具调用型</text>
-  <text x="36" y="82" font-size="10.5" fill="var(--muted,#596171)">只做</text>
-  <rect x="36" y="110" width="92" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="82" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">Agent</text>
-  <path d="M128 130 L152 130" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="156" y="110" width="92" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="202" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">工具执行</text>
-  <path d="M248 130 L272 130" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="276" y="110" width="92" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="322" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">断言 / 测试</text>
-  <path d="M322 150 L322 196" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="262" y="200" width="120" height="38" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
-  <text x="322" y="224" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#202735)">reward 1.0</text>
-  <text x="36" y="290" font-size="10.5" fill="var(--muted,#596171)">一处判定：状态或测试通过即得分</text>
-  <text x="36" y="310" font-size="10.5" fill="var(--muted,#596171)" class="mono">run_python → assert fib(10) == 55</text>
+  <text x="36" y="64" font-size="12" font-weight="600" fill="var(--ink,#3b3024)">工具调用型</text>
+  <text x="36" y="82" font-size="10.5" fill="var(--muted,#5f4f3c)">只做</text>
+  <rect x="36" y="110" width="92" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="82" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">Agent</text>
+  <path d="M128 130 L152 130" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="156" y="110" width="92" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="202" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">工具执行</text>
+  <path d="M248 130 L272 130" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="276" y="110" width="92" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="322" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">断言 / 测试</text>
+  <path d="M322 150 L322 196" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="262" y="200" width="120" height="38" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
+  <text x="322" y="224" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#3b3024)">reward 1.0</text>
+  <text x="36" y="290" font-size="10.5" fill="var(--muted,#5f4f3c)">一处判定：状态或测试通过即得分</text>
+  <text x="36" y="310" font-size="10.5" fill="var(--muted,#5f4f3c)" class="mono">run_python → assert fib(10) == 55</text>
 
-  <line x1="400" y1="56" x2="400" y2="330" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <line x1="400" y1="56" x2="400" y2="330" stroke="var(--line-soft,#e4d6c5)" stroke-width="1"/>
 
-  <text x="424" y="64" font-size="12" font-weight="600" fill="var(--ink,#202735)">人机交互型</text>
-  <text x="424" y="82" font-size="10.5" fill="var(--muted,#596171)">做且说</text>
-  <rect x="424" y="110" width="92" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="470" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">Agent</text>
-  <path d="M516 122 L596 122" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M596 140 L516 140" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="600" y="110" width="120" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="660" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">用户模拟器</text>
+  <text x="424" y="64" font-size="12" font-weight="600" fill="var(--ink,#3b3024)">人机交互型</text>
+  <text x="424" y="82" font-size="10.5" fill="var(--muted,#5f4f3c)">做且说</text>
+  <rect x="424" y="110" width="92" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="470" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">Agent</text>
+  <path d="M516 122 L596 122" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M596 140 L516 140" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="600" y="110" width="120" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="660" y="135" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">用户模拟器</text>
 
-  <path d="M470 150 L470 190" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M660 150 L660 190" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="410" y="194" width="120" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="470" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">数据库状态</text>
-  <rect x="600" y="194" width="120" height="40" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.2"/>
-  <text x="660" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink,#202735)">对话内容</text>
+  <path d="M470 150 L470 190" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M660 150 L660 190" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="410" y="194" width="120" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="470" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">数据库状态</text>
+  <rect x="600" y="194" width="120" height="40" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.2"/>
+  <text x="660" y="219" text-anchor="middle" font-size="11.5" fill="var(--ink,#3b3024)">对话内容</text>
 
-  <path d="M470 234 L470 264 M660 234 L660 264 M470 264 L660 264" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none"/>
-  <path d="M590 264 L590 282" stroke="var(--blue,#2647d7)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <rect x="516" y="286" width="148" height="38" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="1.3"/>
-  <text x="590" y="310" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#202735)">reward 0 / 1</text>
-  <text x="424" y="356" font-size="10.5" fill="var(--muted,#596171)">两处都过才得分：改对了，还要把退款金额与到账时间说到</text>
+  <path d="M470 234 L470 264 M660 234 L660 264 M470 264 L660 264" stroke="var(--blue,#466b3f)" stroke-width="1.5" fill="none"/>
+  <path d="M590 264 L590 282" stroke="var(--blue,#466b3f)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="516" y="286" width="148" height="38" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="1.3"/>
+  <text x="590" y="310" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink,#3b3024)">reward 0 / 1</text>
+  <text x="424" y="356" font-size="10.5" fill="var(--muted,#5f4f3c)">两处都过才得分：改对了，还要把退款金额与到账时间说到</text>
 </svg>

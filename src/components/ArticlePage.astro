@@ -37,7 +37,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
    <article data-pagefind-body data-reading-article data-article-slug={post.id} data-article-title={post.data.title} data-article-description={post.data.description} data-article-type={post.data.category === 'course' ? '学习笔记' : '博客文章'} data-pagefind-meta="slug[data-article-slug], title[data-article-title], description[data-article-description], type[data-article-type]">
     <header class="article-header">
      <span data-pagefind-meta="type" class="sr-only">{post.data.category === 'course' ? '学习笔记' : '博客文章'}</span>
-     <p class="eyebrow">{group ? `${group.entry.data.englishTitle ?? group.entry.data.title} / ${String(chapterIndex + 1).padStart(2,'0')}` : 'FIELD NOTES'}</p>
+     <p class="eyebrow">{group ? `${group.entry.data.englishTitle ?? group.entry.data.title} / ${String(chapterIndex + 1).padStart(2,'0')}` : 'Field notes'}</p>
      <h1 data-pagefind-meta="title" data-pagefind-weight="8">{post.data.title}</h1>
      <p class="article-summary" data-pagefind-meta="description">{post.data.description}</p>
      <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <span>· 更新于 {formatDate(post.data.updatedDate)}</span>}</div>
@@ -51,7 +51,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
     {related.length > 0 && <section class="related-posts" data-pagefind-ignore aria-labelledby="related-heading"><h2 id="related-heading">延伸阅读</h2><ul>{related.map(item => <li><a href={withBase(`/blog/${item.id}/`)}><span class="related-title">{item.data.title}</span><span class="related-desc">{item.data.description}</span></a></li>)}</ul></section>}
     <div data-pagefind-ignore><GiscusComments articlePath={withBase(`/blog/${post.id}/`)}/></div>
    </article>
-   <aside data-pagefind-ignore><nav class="article-toc" aria-label="本篇目录"><p class="eyebrow">ON THIS PAGE / 本篇目录</p>{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined} data-toc-link><MathLabel text={h.text}/></a>)}{group && <a href={withBase(seriesHref)} class="toc-series">完整学习路径 →</a>}</nav></aside>
+   <aside data-pagefind-ignore><nav class="article-toc" aria-label="本篇目录"><p class="eyebrow">On this page / 本篇目录</p>{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined} data-toc-link><MathLabel text={h.text}/></a>)}{group && <a href={withBase(seriesHref)} class="toc-series">完整学习路径 →</a>}</nav></aside>
   </div>
  </section>
 </BaseLayout>
@@ -60,7 +60,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
  .article-tags :global(.zen-tag) { padding: 2px 9px; font-size: 12px; }
  .article-cover { margin-top: 22px; }
- .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-line); padding: 26px 0; margin-bottom: 36px; }
+ .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-blossom-line); padding: 26px 0; margin-bottom: 36px; }
  .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
  .chapter-nav strong { font-weight: 500; font-size: 15px; line-height: 1.8; }
  .chapter-nav span { color: var(--color-ink-soft); }
@@ -73,9 +73,9 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .mobile-toc .toc-h3 { padding-left: 16px; }
  .mobile-toc a[aria-current="location"] { color: var(--color-accent-strong); font-weight: 600; }
  .related-posts { margin-bottom: 36px; }
- .related-posts h2 { font-size: 13px; font-family: var(--font-sans); font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--color-accent); padding-bottom: 14px; border-bottom: 1px solid var(--color-line); }
+ .related-posts h2 { font-size: 15px; font-family: var(--font-sans); font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--color-sage); padding-bottom: 14px; border-bottom: 1px solid var(--color-blossom-line); }
  .related-posts ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
- .related-posts li a { display: grid; gap: 6px; padding: 16px 0; border-bottom: 1px solid var(--color-line); transition: color var(--dur-base) var(--ease-smooth); }
+ .related-posts li a { display: grid; gap: 6px; padding: 16px 0; border-bottom: 1px solid var(--color-blossom-line); transition: color var(--dur-base) var(--ease-smooth); }
  .related-posts li a:hover { color: var(--color-accent); }
  .related-title { font-family: var(--font-display); font-size: 17px; line-height: 1.65; }
  .related-desc { font-size: 13px; line-height: 1.8; color: var(--color-ink-soft); }

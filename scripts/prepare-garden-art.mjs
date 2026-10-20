@@ -1,16 +1,17 @@
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { brandSymbol } from './brand-art.mjs';
 
-// Geometric field notes: large cut-paper silhouettes carry the subject at card size.
-// Keep the same semantic palette in both themes; PNG exports bake the light tokens.
+// A cottagecore field-notes palette: cream paper, grass green, earth brown,
+// daisy yellow and a little blossom pink. PNG exports bake the light tokens.
 const palette = {
- paper: ['#eef2f8', '#222e47'], surface: ['#f9faf7', '#30405e'],
- blue: ['#2647d7', '#8ba3ff'], yellow: ['#ffe04b', '#f0cd42'],
- soft: ['#d8e1f2', '#364969'], ink: ['#202735', '#eef3ff'],
- onBlue: ['#f9faf7', '#222e47'], onYellow: ['#202735', '#222e47'],
+ paper: ['#faf6f0', '#211c16'], surface: ['#fffcf5', '#2c251d'],
+ blue: ['#466b3f', '#a9c89a'], yellow: ['#f5d75f', '#e7c96b'],
+ soft: ['#e4d6c5', '#4b3f32'], ink: ['#3b3024', '#f4ebdc'],
+ onBlue: ['#fffcf5', '#211c16'], onYellow: ['#3b3024', '#2a2418'],
+ blossom: ['#d4a0a0', '#c98f8f'],
 };
 const c = name => `var(--cover-${name})`;
-const rect = (x,y,w,h,fill='blue',r=0,extra='') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${c(fill)}" ${extra}/>`;
+const rect = (x,y,w,h,fill='blue',r=6,extra='') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${c(fill)}" ${extra}/>`;
 const disk = (x,y,r,fill='yellow',extra='') => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c(fill)}" ${extra}/>`;
 const shape = (d,fill='blue',extra='') => `<path d="${d}" fill="${c(fill)}" ${extra}/>`;
 const stroke = (d,color='blue',width=4,extra='') => `<path d="${d}" fill="none" stroke="${c(color)}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
@@ -18,8 +19,9 @@ const ring = (x,y,r,color='blue',width=4,extra='') => `<circle cx="${x}" cy="${y
 const text = (x,y,value,size=32,color='ink',extra='') => `<text x="${x}" y="${y}" font-family="Georgia,serif" font-size="${size}" fill="${c(color)}" ${extra}>${value}</text>`;
 const group = (transform,art) => `<g transform="${transform}">${art}</g>`;
 const repeat = (n,draw) => Array.from({length:n},(_,i)=>draw(i)).join('');
-const star = (x,y,r=24,color='yellow') => group(`translate(${x} ${y})`,shape(`M0 ${-r} 7 -7 ${r} 0 7 7 0 ${r} -7 7 ${-r} 0 -7 -7Z`,color));
-const sheet = (x,y,w,h,color='surface') => rect(x,y,w,h,color,3) + shape(`M${x+w-42} ${y}h42v42Z`,'soft');
+// Five-petal daisy replaces the old sparkle: the covers now carry a small floral motif.
+const star = (x,y,r=24) => group(`translate(${x} ${y})`, repeat(5,i=>`<ellipse cx="0" cy="${-r*.62}" rx="${r*.33}" ry="${r*.55}" fill="${c('blossom')}" transform="rotate(${i*72})"/>`) + disk(0,0,r*.27,'yellow'));
+const sheet = (x,y,w,h,color='surface') => rect(x,y,w,h,color,10) + shape(`M${x+w-42} ${y}h42v42Z`,'soft');
 const bars = (x,y,width=100,color='blue') => repeat(3,i=>rect(x,y+i*23,width-[0,16,36][i],6,color,3));
 const contour = (x,y) => repeat(5,i=>`<ellipse cx="${x}" cy="${y}" rx="${46+i*35}" ry="${24+i*20}" fill="none" stroke="${c('blue')}" stroke-width="${i===4?3:1.5}"/>`);
 
@@ -65,6 +67,7 @@ for (const {id,label} of catalog) {
  await writeFile(`${target}.tmp`,svg);
  await rename(`${target}.tmp`,target);
 }
-const socialCard = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f9faf7"/><path d="M790 0h410v630H790Z" fill="#2647d7"/><circle cx="1020" cy="319" r="173" fill="#ffe04b"/><text x="78" y="116" font-family="sans-serif" font-size="20" fill="#2647d7">Kreiitor / 研究与实践</text><text x="74" y="275" font-family="Georgia,serif" font-size="76" fill="#202735">Read. Build.</text><text x="74" y="372" font-family="Georgia,serif" font-size="76" fill="#2647d7">Then verify.</text><text x="78" y="460" font-family="sans-serif" font-size="20" fill="#596176">AI for Software Engineering · Research · Learning</text><path d="M78 530h630" stroke="#d8d9e6"/><text x="78" y="567" font-family="sans-serif" font-size="15" fill="#596176">kreiitor.github.io/kreiitorBlog</text><g transform="translate(896 195) scale(3.9)">${brandSymbol}</g></svg>`;
+const socialBrand = brandSymbol.replace(/var\(--color-[^,]+, ([^)]+)\)/g, '$1');
+const socialCard = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#faf6f0"/><path d="M840 630V210c0-110 80-190 180-190s180 80 180 190v420Z" fill="#3f5b38"/><g transform="translate(1020 318)">${Array.from({length:8},(_,i)=>`<ellipse cx="0" cy="-104" rx="38" ry="82" fill="#d4a0a0" opacity=".92" transform="rotate(${i*45})"/>`).join('')}<circle r="64" fill="#f5d75f"/><circle r="27" fill="#3b3024"/></g><path d="M886 596c58-16 96-58 114-124" stroke="#fffcf5" stroke-width="4" stroke-linecap="round" fill="none" opacity=".85"/><path d="M938 552c-22-4-32-18-30-32 18 2 31 14 30 32Z" fill="#a9c89a"/><path d="M968 500c-4-22 5-35 18-39 4 18-4 33-18 39Z" fill="#a9c89a"/><text x="78" y="112" font-family="Georgia,'Songti SC','Microsoft YaHei',serif" font-size="21" fill="#466b3f">kreiitor / 研究札记</text><text x="74" y="272" font-family="Georgia,'Songti SC','Microsoft YaHei',serif" font-size="78" fill="#3b3024">Read. Build.</text><text x="74" y="370" font-family="Georgia,'Songti SC','Microsoft YaHei',serif" font-size="78" fill="#466b3f">Then verify.</text><text x="78" y="452" font-family="Georgia,'Songti SC','Microsoft YaHei',serif" font-size="20" fill="#5f4f3c">AI for Software Engineering · Research · Learning</text><path d="M78 520h636" stroke="#e4d6c5" stroke-width="2"/><text x="78" y="562" font-family="Georgia,'Songti SC','Microsoft YaHei',serif" font-size="16" fill="#5f4f3c">kreiitor.github.io/kreiitorBlog</text><g transform="translate(72 596) scale(1.15)">${socialBrand}</g></svg>`;
 await writeFile('public/social-card.svg',socialCard);
-console.log(`Prepared ${catalog.length} geometric field-note covers and the social card.`);
+console.log(`Prepared ${catalog.length} cottagecore field-note covers and the social card.`);
