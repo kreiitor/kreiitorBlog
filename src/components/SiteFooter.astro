@@ -12,12 +12,13 @@ import Botanical from './Botanical.astro';
     <div><p class="eyebrow">联系</p>{siteConfig.socialLinks.map(link => <a href={link.href} target="_blank" rel="noreferrer">{link.label} ↗</a>)}<a href={withBase('/rss.xml')}>RSS 订阅 ↗</a></div>
    </div>
   </div>
-  <div class="footer-divider"><Botanical variant="divider"/></div>
+  <div class="footer-divider"><Botanical variant="divider" class="botanical-sway"/></div>
   <div class="footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.author} · 研究札记</p><p>思考有迹，探索不止。<span class="footer-dot" aria-hidden="true"></span>武汉，中国</p><a href={`mailto:${siteConfig.email}`} class="text-link">{siteConfig.email}</a><a href="#top" class="text-link">回到顶部 ↑</a></div>
  </div>
 </footer>
 <style>
- .site-footer { margin-top: 80px; padding: 55px 0 24px; background: var(--color-paper-warm); border-top: 1px solid var(--color-blossom-line); }
+ /* 规范页脚：雏菊黄浅底（f5d75f/10），链接用草绿。暗色自动走令牌。 */
+ .site-footer { margin-top: 80px; padding: 55px 0 24px; background: var(--color-highlight-soft); border-top: 1px solid var(--color-blossom-line); }
  .footer-top { display: flex; justify-content: space-between; gap: 40px; padding-bottom: 30px; }
  .footer-wordmark { font-family: var(--font-editorial); font-size: 34px; line-height: 1.2; letter-spacing: -.025em; }
  .footer-wordmark span { display: block; color: var(--color-accent); }
@@ -25,11 +26,13 @@ import Botanical from './Botanical.astro';
  .footer-links { display: flex; gap: 80px; padding-right: 30px; }
  .footer-links div { display: flex; flex-direction: column; gap: 0; font-size: 14px; }
  .footer-links .eyebrow { margin-bottom: 7px; font-size: var(--text-caption); }
- .footer-links a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--dur-base) var(--ease-smooth),padding-left var(--dur-base) var(--ease-out-expo); }
+ .footer-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-ink-soft); transition: color var(--dur-base) var(--ease-smooth),padding-left var(--dur-base) var(--ease-out-expo); }
  .footer-links a:hover { color: var(--color-accent); padding-left: 4px; }
  .footer-divider { display: flex; justify-content: center; padding-bottom: 14px; color: var(--color-sage); }
  .footer-divider :global(svg) { width: min(360px,100%); height: auto; opacity: .8; }
  .footer-bottom { border-top: 1px solid var(--color-blossom-line); padding-top: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--color-ink-soft); }
+ .footer-bottom .text-link { color: var(--color-accent); }
+ .footer-bottom .text-link:hover { color: var(--color-accent-strong); }
  .footer-dot { display: inline-block; width: 4px; height: 4px; background: var(--color-blossom); border-radius: 50%; margin: 0 12px 2px; }
  @media (max-width: 600px) { .site-footer { margin-top: 50px; padding-top: 35px; } .footer-top { flex-direction: column; gap: 30px; } .footer-links { gap: 70px; } .footer-bottom { align-items: start; flex-wrap: wrap; } .footer-bottom > p:nth-child(2) { display: none; } }
 </style>

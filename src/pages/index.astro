@@ -36,7 +36,7 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
  <div class="home-page" data-pagefind-ignore>
   <section class="page-shell home-hero">
    <div class="hero-copy zen-reveal">
-    <p class="hero-kicker"><Botanical variant="sprig" class="hero-sprig"/>AI for Software Engineering</p>
+    <p class="hero-kicker"><Botanical variant="sprig" class="hero-sprig botanical-sway"/>AI for Software Engineering</p>
     <h1>读论文，写代码，<span>让想法经得起实验。</span></h1>
     <p class="hero-description">我是 <a href={withBase('/about/')} class="hero-author">{siteConfig.author}</a>，研究 AI 与软件工程。<br/>记录论文阅读、实验复现与技术写作。</p>
     <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">阅读研究札记 <Icon name="arrow" size={18}/></a><a href={withBase('/notes/')} class="text-link">探索学习专题 <Icon name="arrow" size={16}/></a></div>
@@ -76,7 +76,7 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
     <div class="topic-list">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}><span>{item.tag}</span><span>{item.count} →</span></a>)}</div>
     <div class="aside-note"><span aria-hidden="true">↳</span><p>不急于给出答案。<br/>先把值得追问的问题留下来。</p></div>
     <a href={withBase('/rss.xml')} class="text-link rss-link">用 RSS 订阅新札记 <span aria-hidden="true">↗</span></a>
-    <Botanical variant="corner" class="aside-botanical"/>
+    <Botanical variant="corner" class="aside-botanical botanical-sway"/>
    </aside>
   </section>
  </div>
@@ -104,7 +104,9 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
  .selected-writing { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.9fr); gap: 56px; margin-top: 30px; align-items: start; }
  .selected-writing > *, .home-hero > * { min-width: 0; }
  .selected-rows { border-top: 1px solid var(--color-blossom-line); }
- .selected-row { position: relative; display: block; padding: 24px 0 26px; border-bottom: 1px solid var(--color-blossom-line); }
+ .selected-row { position: relative; display: block; padding: 24px 20px 26px; border-radius: 16px; transition: background-color var(--dur-base) var(--ease-smooth); }
+ @media (hover: hover) { .selected-row:hover { background: var(--color-surface); box-shadow: var(--shadow-whisper); } }
+
  .selected-writing :global(.card-content h3) { font-size: 27px; line-height: 1.6; text-wrap: pretty; }
  .selection-label { font-size: var(--text-caption); font-weight: 400; font-style: italic; color: var(--color-counterpoint-ink); }
  .selected-row h3 { font-size: 23px; margin-block: 12px; line-height: 1.65; }
@@ -146,13 +148,16 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
  .hero-actions .zen-btn { min-height: 48px; padding-inline: 26px; border-radius: 999px; }
  .hero-caption { margin-top: 22px; color: var(--color-ink-muted); }
  .hero-caption p { font-size: var(--text-caption); } .hero-caption p > span { margin: 0 12px; color: var(--color-line-strong); }
- .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-block: 9px; border-block: 1px solid var(--color-blossom-line); }
+ /* 概况条：账本式双线改成圆角奶油面板，是田园风对「结构」的改写。
+    上下内边距收在 10px：面板变厚会把精选区推出首屏设计红线（design.spec 850px）。 */
+ .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 10px 28px; border: 1px solid var(--color-blossom-line); border-radius: 18px; background: var(--color-surface); box-shadow: var(--shadow-whisper); }
  .journal-strip > p { display: flex; align-items: center; gap: 12px; font-size: var(--text-caption); }
  .strip-subtitle { font-size: var(--text-caption); color: var(--color-ink-muted); padding-left: 10px; }
  .journal-counts { display: flex; gap: 25px; font-size: var(--text-caption); color: var(--color-ink-soft); }
- .journal-counts a { display: inline-flex; align-items: center; min-height: 44px; }
+ .journal-counts a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--dur-base) var(--ease-smooth); }
+ .journal-counts a:hover { color: var(--color-accent); }
  .journal-counts strong { font-family: var(--font-editorial); font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--color-ink); margin-right: 6px; }
- .learning-section { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 40px; padding: 32px; border-radius: 22px; border: 1px solid var(--color-blossom-line); background: var(--color-paper-cool); }
+ .learning-section { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 40px; padding: 32px; border-radius: 22px; border: 1px solid var(--color-blossom-line); background: var(--color-paper-cool); box-shadow: var(--shadow-whisper); }
  .learning-section :global(.section-heading) { display: block; padding: 0; border: 0; }
  .learning-section :global(.section-heading .text-link) { margin-top: 20px; }
  .learning-section :global(.section-description) { line-height: 1.9; }
@@ -167,11 +172,14 @@ const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featu
  .project-grid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 32px; margin-top: 30px; }
  .project-grid :global(.project-showcase:nth-child(2)) { margin-top: 40px; }
  .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 65px; }
- .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--color-blossom-line); }
+ .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 24px; border: 1px solid var(--color-blossom-line); border-radius: 16px; background: var(--color-surface); box-shadow: var(--shadow-whisper); transition: box-shadow var(--dur-slow) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth), translate var(--dur-slow) var(--ease-out-expo); }
+ .recent-row + .recent-row { margin-top: 12px; }
+ @media (hover: hover) and (prefers-reduced-motion: no-preference) { .recent-row:hover { box-shadow: var(--shadow-soft); border-color: var(--color-blossom); translate: 0 -2px; } }
  .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-ink-muted); }
  .recent-row h3 { font-family: var(--font-title); font-size: 18px; font-weight: 600; line-height: 1.65; margin-top: 6px; }
  .recent-row > :global(svg) { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
- .garden-aside { position: relative; overflow: hidden; padding: 30px; background: var(--color-highlight-soft); border: 1px solid var(--color-blossom-line); border-radius: 20px; box-shadow: var(--shadow-whisper); }
+ .garden-aside { position: relative; overflow: hidden; padding: 30px; background: var(--color-highlight-soft); border: 1px solid var(--color-blossom-line); border-radius: 20px; box-shadow: var(--shadow-whisper); transition: box-shadow var(--dur-slow) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth); }
+ @media (hover: hover) and (prefers-reduced-motion: no-preference) { .garden-aside:hover { box-shadow: var(--shadow-soft); border-color: var(--color-blossom); } }
  .aside-kicker { font-size: var(--text-caption); color: var(--color-ink-soft); }
  .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; }
  .topic-list { margin-top: 23px; } .topic-list a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-blossom-line); }

@@ -6,6 +6,16 @@ interface Props {
 const { variant = 'sprig', class: className } = Astro.props;
 const classes = ['botanical', `botanical-${variant}`, className].filter(Boolean).join(' ');
 ---
+<style>
+ /* 规范：装饰花叶 hover 微幅摆动；reduced-motion 全局归零已兜底。 */
+ .botanical-sway { animation: botanical-sway 7s var(--ease-smooth) infinite; transform-origin: 8px 22px; }
+ @keyframes botanical-sway {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(-1.2deg); }
+  70% { transform: rotate(.8deg); }
+ }
+ @media (prefers-reduced-motion: reduce) { .botanical-sway { animation: none; } }
+</style>
 {variant === 'sprig' && (
 	<svg class={classes} viewBox="0 0 120 28" width="120" height="28" fill="none" aria-hidden="true">
 		<path d="M4 22c24 0 38-12 58-9 18 3 30 9 50 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>

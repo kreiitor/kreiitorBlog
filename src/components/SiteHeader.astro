@@ -79,7 +79,8 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  if (typeof window.__applyTheme === 'function') window.__applyTheme();
 </script>
 <style>
- .site-header { position: sticky; top: 0; z-index: 40; background: var(--color-header-bg); backdrop-filter: blur(16px) saturate(1.05); border-bottom: 1px solid var(--color-blossom-line); view-transition-name: site-header; }
+ /* 规范禁玻璃态：导航栏用奶油实底 + 花粉描边。 */
+ .site-header { position: sticky; top: 0; z-index: 40; background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); box-shadow: 0 2px 12px rgb(139 115 85 / .06); view-transition-name: site-header; }
  /* Keep the sticky header's layout height stable: resizing it at the scroll
     threshold shifts the whole document while the reader is scrolling. */
  .header-inner { height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 30px; }
@@ -132,7 +133,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
   .mobile-menu[open] .menu-icon-open { display: none; }
   .mobile-menu[open] .menu-icon-close { display: flex; }
   .site-header:has(.mobile-menu[open]) .menu-backdrop { display: block; position: absolute; top: 100%; left: 0; width: 100%; height: calc(100dvh - 75px); background: var(--color-overlay); z-index: -1; }
-  .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 75px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-surface); border-bottom: 1px solid var(--color-blossom-line); box-shadow: var(--shadow-soft); animation: menuSlide var(--dur-base) var(--ease-out-expo); }
+  .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100vh - 74px); max-height: calc(100dvh - 75px); overflow-y: auto; overscroll-behavior: contain; padding: 15px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); box-shadow: var(--shadow-soft); animation: menuSlide var(--dur-base) var(--ease-out-expo); }
   .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--color-blossom-line); font-size: 14px; transition: color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
   .mobile-menu nav a:is(:hover,:focus-visible) { color: var(--color-accent-strong); border-bottom-color: var(--color-accent); }
   .mobile-menu nav a[aria-current] { color: var(--color-accent); border-bottom-color: var(--color-accent); }
