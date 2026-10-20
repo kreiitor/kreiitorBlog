@@ -1,40 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="408" viewBox="0 42 800 408" role="img" aria-labelledby="fig-title fig-desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="380" viewBox="0 0 800 380" role="img" aria-labelledby="fig-title fig-desc">
   <title id="fig-title">Roofline 模型</title>
-  <desc id="fig-desc">横轴是算术强度，纵轴是可达性能。算术强度低于转折点时受带宽限制，沿斜线增长；高于转折点时受算力限制，性能停在峰值。</desc>
+  <desc id="fig-desc">横轴是算术强度，纵轴是可达性能。算术强度低于转折点时受带宽限制，沿斜线增长；高于转折点时受算力限制，性能停在 165.2 TFLOP/s。RTX 4090 的转折点约为 164 FLOPs/byte。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
+    :root{--paper:#f9faf7;--blue:#2647d7;--yellow:#ffe04b;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
+    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--blue:#8ba3ff;--yellow:#f0cd42;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
     text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:28px;font-weight:700;fill:var(--ink,#202735)}
-    .axis{font-size:18px;fill:var(--muted,#596171)}
-    .region{font-size:24px;font-weight:700;fill:var(--blue,#2647d7)}
-    .small{font-size:16px;fill:var(--muted,#596171)}
-    .ridge{font-size:18px;font-weight:600;fill:var(--ink,#202735)}
+    .t{font-size:12.5px;font-weight:600;fill:var(--ink)}
+    .l{font-size:10.5px;font-weight:400;fill:var(--ink)}
+    .m{font-size:9.5px;font-weight:400;fill:var(--muted)}
   </style>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="380" fill="var(--paper,#f9faf7)"/>
 
-  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1" stroke-dasharray="4 6">
-    <path d="M200 90 V380"/><path d="M330 90 V380"/><path d="M460 90 V380"/><path d="M590 90 V380"/>
-    <path d="M90 130 H720"/><path d="M90 250 H720"/><path d="M90 340 H720"/>
+  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1">
+    <line x1="96" y1="232" x2="736" y2="232"/>
+    <line x1="96" y1="144" x2="736" y2="144"/>
+    <line x1="96" y1="56" x2="736" y2="56"/>
+    <line x1="309.3" y1="56" x2="309.3" y2="320"/>
+    <line x1="522.7" y1="56" x2="522.7" y2="320"/>
   </g>
-  <path d="M90 70 V380 H720" fill="none" stroke="var(--ink,#202735)" stroke-width="2"/>
-  <text x="405" y="418" text-anchor="middle" class="axis">算术强度 I（FLOP/byte，对数）</text>
-  <text x="44" y="225" text-anchor="middle" class="axis" transform="rotate(-90 44 225)">可达性能 P（FLOP/s，对数）</text>
+  <line x1="96" y1="320" x2="736" y2="320" stroke="var(--line,#a2aec1)" stroke-width="1"/>
+  <line x1="96" y1="320" x2="96" y2="56" stroke="var(--line,#a2aec1)" stroke-width="1"/>
 
-  <path d="M100 360 L430 140" fill="none" stroke="var(--blue,#2647d7)" stroke-width="6" stroke-linecap="round"/>
-  <path d="M430 140 H700" fill="none" stroke="var(--blue,#2647d7)" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="430" cy="140" r="11" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="3"/>
-  <text x="512" y="122" class="ridge">转折点 I* = P / R</text>
+  <path d="M96 319.7L568.5 124.8H736" fill="none" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <line x1="568.5" y1="124.8" x2="568.5" y2="320" stroke="var(--line-soft,#dce1e8)" stroke-width="1" stroke-dasharray="4 4"/>
 
-  <text x="255" y="196" text-anchor="middle" class="region">带宽受限</text>
-  <text x="255" y="222" text-anchor="middle" class="small">斜线斜率 ≈ 带宽</text>
-  <text x="590" y="230" text-anchor="middle" class="region">算力受限</text>
-  <text x="590" y="256" text-anchor="middle" class="small">平顶 ≈ 峰值算力</text>
+  <circle cx="112.9" cy="312.7" r="3" fill="var(--blue,#2647d7)"/>
+  <circle cx="599" cy="124.8" r="3" fill="var(--blue,#2647d7)"/>
+  <circle cx="568.5" cy="124.8" r="4" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="1"/>
 
-  <circle cx="180" cy="315" r="8" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="2"/>
-  <text x="180" y="350" text-anchor="middle" class="small">decode / 低强度</text>
-  <circle cx="560" cy="140" r="8" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="2"/>
-  <text x="560" y="168" text-anchor="middle" class="small">prefill / 高强度</text>
+  <g class="t">
+    <text x="200" y="286">带宽受限</text>
+    <text x="620" y="170">算力受限</text>
+  </g>
+  <g class="m">
+    <text x="200" y="302">斜率 = R</text>
+    <text x="620" y="188">平顶 = P</text>
+    <text x="122" y="306">decode</text>
+    <text x="607" y="142">prefill</text>
+    <text x="300" y="196">P = R · I</text>
+  </g>
+  <text x="560" y="112" text-anchor="end" class="l">I* ≈ 164 FLOPs/byte</text>
+  <text x="730" y="112" text-anchor="end" class="m">P ≈ 165.2 TFLOP/s</text>
 
-  <text x="400" y="441" text-anchor="middle" class="small">斜线的斜率是带宽，平顶的高度是峰值算力；交点是硬件的转折点。</text>
+  <g class="m" text-anchor="end">
+    <text x="86" y="324">1</text>
+    <text x="86" y="236">10</text>
+    <text x="86" y="148">100</text>
+    <text x="86" y="60">1000</text>
+  </g>
+  <g class="m" text-anchor="middle">
+    <text x="96" y="338">1</text>
+    <text x="309.3" y="338">10</text>
+    <text x="522.7" y="338">100</text>
+    <text x="736" y="338">1000</text>
+  </g>
+  <text x="416" y="362" text-anchor="middle" class="l">算术强度 I（FLOP/byte，对数）</text>
+  <text x="46" y="188" text-anchor="middle" class="l" transform="rotate(-90 46 188)">可达性能 P（TFLOP/s，对数）</text>
 </svg>
