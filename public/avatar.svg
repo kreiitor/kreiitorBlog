@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
- <title id="logo-title">kreiitor · K 索引标记</title>
- <path class="logo-stem" d="M12 12H22V52H12Z" fill="#2647d7"/>
- <path class="logo-arms" d="M22 30L42 12H55L34 32L56 52H42L22 35Z" fill="#2647d7"/>
- <rect class="logo-index" x="47" y="9" width="10" height="10" rx="1.5" fill="#f2cc27"/>
+ <title id="logo-title">kreiitor · 叶脉 K 标记</title>
+ <rect class="logo-stem" x="12" y="10" width="7" height="44" rx="3.5" fill="var(--color-accent, #466b3f)"/>
+ <path class="logo-arms" d="M21 32.5 39 12h9L30 34l19 20h-9L21 36.5Z" fill="var(--color-accent, #466b3f)"/>
+ <path class="logo-leaf" d="M18.5 42.5c-5.5-3.2-6.6-9.2-4.2-12.4 5.4 1.1 7.4 6.2 4.2 12.4Z" fill="var(--color-sage, #4e6e48)"/>
+ <g class="logo-index" fill="var(--color-counterpoint, #e9c766)">
+  <circle cx="49" cy="6" r="4.2"/>
+  <circle cx="55.7" cy="10.8" r="4.2"/>
+  <circle cx="53.1" cy="18.8" r="4.2"/>
+  <circle cx="44.9" cy="18.8" r="4.2"/>
+  <circle cx="42.3" cy="10.8" r="4.2"/>
+ </g>
+ <circle class="logo-center" cx="49" cy="13" r="3.4" fill="var(--color-ink, #3b3024)"/>
 </svg>

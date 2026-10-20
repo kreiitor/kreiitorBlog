@@ -1,28 +1,28 @@
-/* Match the site's midnight-blue surfaces and cobalt actions inside Giscus. */
+/* Match the site's warm dark surfaces and moss-green actions inside Giscus. */
 @import url("https://giscus.app/themes/dark.css");
 main {
- --color-canvas-default: #222e43;
- --color-canvas-subtle: #161d2c;
- --color-canvas-inset: #111c2e;
- --color-canvas-overlay: #2c3a53;
- --color-fg-default: #eff3f9;
- --color-fg-muted: #cbd3e2;
- --color-fg-subtle: #aab9cf;
- --color-fg-on-emphasis: #ffffff;
- --color-border-default: #879eb9;
- --color-border-muted: #3b4b65;
- --color-control-line: #879eb9;
- --color-accent-fg: #b7cbff;
- --color-accent-emphasis: #4764d6;
- --color-accent-muted: #263a57;
- --color-accent-subtle: #2b406b;
- --color-btn-primary-bg: #4764d6;
- --color-btn-primary-border: #4764d6;
- --color-btn-primary-hover-bg: #3851b6;
- --color-btn-primary-hover-border: #3851b6;
- --color-btn-primary-text: #ffffff;
+ --color-canvas-default: #2c251d;
+ --color-canvas-subtle: #211c16;
+ --color-canvas-inset: #1a1611;
+ --color-canvas-overlay: #372e24;
+ --color-fg-default: #f4ebdc;
+ --color-fg-muted: #d8c8b2;
+ --color-fg-subtle: #b9a78e;
+ --color-fg-on-emphasis: #fffcf5;
+ --color-border-default: #7b6a55;
+ --color-border-muted: #4b3f32;
+ --color-control-line: #9c876d;
+ --color-accent-fg: #a9c89a;
+ --color-accent-emphasis: #4f7444;
+ --color-accent-muted: #34412c;
+ --color-accent-subtle: #34412c;
+ --color-btn-primary-bg: #4f7444;
+ --color-btn-primary-border: #4f7444;
+ --color-btn-primary-hover-bg: #405f37;
+ --color-btn-primary-hover-border: #405f37;
+ --color-btn-primary-text: #fffcf5;
  color-scheme: dark;
 }
 .gsc-comment-box, .gsc-main textarea { border-color: var(--color-control-line); }
-.gsc-main { font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", sans-serif; }
-.gsc-comment-box, .gsc-comment { border-radius: 10px; }
+.gsc-main { font-family: Georgia, "Songti SC", "Microsoft YaHei", serif; }
+.gsc-comment-box, .gsc-comment { border-radius: 16px; }

@@ -2,68 +2,68 @@
   <title id="fig-title">六个并行方式与五个切分维度</title>
   <desc id="fig-desc">数据并行切样本 B，序列并行与上下文并行切序列 S，张量并行切特征 H，流水线并行切层 L，专家并行切专家 E。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
-    .sub{font-size:14px;fill:var(--muted,#596171)}
-    .h{font-size:17px;font-weight:700;fill:var(--ink,#202735)}
-    .b{font-size:14px;font-weight:600;fill:var(--ink,#202735)}
-    .s{font-size:12px;fill:var(--muted,#596171)}
-    .tiny{font-size:11px;fill:var(--muted,#596171)}
-    .onblue{fill:var(--on-blue,#fffefa)}
-    .onyellow{fill:var(--on-yellow,#202735)}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#3b3024)}
+    .sub{font-size:14px;fill:var(--muted,#5f4f3c)}
+    .h{font-size:17px;font-weight:700;fill:var(--ink,#3b3024)}
+    .b{font-size:14px;font-weight:600;fill:var(--ink,#3b3024)}
+    .s{font-size:12px;fill:var(--muted,#5f4f3c)}
+    .tiny{font-size:11px;fill:var(--muted,#5f4f3c)}
+    .onblue{fill:var(--on-blue,#fffcf5)}
+    .onyellow{fill:var(--on-yellow,#3b3024)}
   </style>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
-  <path d="M30 78 H470" stroke="var(--line,#a2aec1)" stroke-width="1.5" fill="none"/>
+  <path d="M30 78 H470" stroke="var(--line,#c9b49c)" stroke-width="1.5" fill="none"/>
   <text x="250" y="74" text-anchor="middle" class="tiny">激活</text>
-  <path d="M480 78 H770" stroke="var(--line,#a2aec1)" stroke-width="1.5" fill="none"/>
+  <path d="M480 78 H770" stroke="var(--line,#c9b49c)" stroke-width="1.5" fill="none"/>
   <text x="625" y="74" text-anchor="middle" class="tiny">模型结构</text>
 
-  <rect x="30" y="96" width="140" height="220" rx="9" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="30" y="96" width="140" height="220" rx="9" fill="var(--blue,#466b3f)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
   <text x="100" y="126" text-anchor="middle" class="h onblue">样本 B</text>
   <text x="100" y="150" text-anchor="middle" class="tiny onblue">不同请求</text>
-  <rect x="48" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="48" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="100" y="197" text-anchor="middle" class="b">DP</text>
   <text x="100" y="232" text-anchor="middle" class="tiny onblue">推理不交换</text>
   <text x="100" y="250" text-anchor="middle" class="tiny onblue">训练汇合梯度</text>
 
-  <rect x="184" y="96" width="140" height="220" rx="9" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="2"/>
+  <rect x="184" y="96" width="140" height="220" rx="9" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="2"/>
   <text x="254" y="126" text-anchor="middle" class="h">序列 S</text>
   <text x="254" y="150" text-anchor="middle" class="tiny">位置维</text>
-  <rect x="202" y="176" width="104" height="30" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="202" y="176" width="104" height="30" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="254" y="196" text-anchor="middle" class="b">SP</text>
-  <rect x="202" y="212" width="104" height="30" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="202" y="212" width="104" height="30" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="254" y="232" text-anchor="middle" class="b">CP</text>
   <text x="254" y="264" text-anchor="middle" class="tiny">SP 切逐 token 算子</text>
   <text x="254" y="282" text-anchor="middle" class="tiny">CP 切注意力</text>
 
-  <rect x="338" y="96" width="140" height="220" rx="9" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
+  <rect x="338" y="96" width="140" height="220" rx="9" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="2"/>
   <text x="408" y="126" text-anchor="middle" class="h">特征 H</text>
   <text x="408" y="150" text-anchor="middle" class="tiny">矩阵与注意力头</text>
-  <rect x="356" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="356" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="408" y="197" text-anchor="middle" class="b">TP</text>
   <text x="408" y="232" text-anchor="middle" class="tiny">部分和需要相加</text>
   <text x="408" y="250" text-anchor="middle" class="tiny">通信常留在机内</text>
 
-  <rect x="492" y="96" width="140" height="220" rx="9" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="2"/>
+  <rect x="492" y="96" width="140" height="220" rx="9" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="2"/>
   <text x="562" y="126" text-anchor="middle" class="h">层 L</text>
   <text x="562" y="150" text-anchor="middle" class="tiny">连续层段</text>
-  <rect x="510" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="510" y="176" width="104" height="32" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="562" y="197" text-anchor="middle" class="b">PP</text>
   <text x="562" y="232" text-anchor="middle" class="tiny">阶段之间交接激活</text>
   <text x="562" y="250" text-anchor="middle" class="tiny">训练再交梯度</text>
 
-  <rect x="646" y="96" width="124" height="220" rx="9" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="646" y="96" width="124" height="220" rx="9" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="2"/>
   <text x="708" y="126" text-anchor="middle" class="h">专家 E</text>
   <text x="708" y="150" text-anchor="middle" class="tiny">MoE 子网络</text>
-  <rect x="662" y="176" width="92" height="32" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.5"/>
+  <rect x="662" y="176" width="92" height="32" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.5"/>
   <text x="708" y="197" text-anchor="middle" class="b">EP</text>
   <text x="708" y="232" text-anchor="middle" class="tiny">token 送到专家</text>
   <text x="708" y="250" text-anchor="middle" class="tiny">结果再送回来</text>
 
-  <rect x="30" y="340" width="740" height="40" rx="8" fill="var(--blue-soft,#f2f5fc)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
+  <rect x="30" y="340" width="740" height="40" rx="8" fill="var(--blue-soft,#e8f0e2)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
   <text x="400" y="365" text-anchor="middle" class="b">组合示例：DP2 × PP2 × TP4 = 16 卡；SP 与 TP 共用设备，不额外乘</text>
   <text x="400" y="414" text-anchor="middle" class="tiny">切数据、层、专家时结果互不重叠；切特征维时各卡贡献同一输出的一部分。</text>
 </svg>

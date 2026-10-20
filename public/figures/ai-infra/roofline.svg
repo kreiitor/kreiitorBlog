@@ -2,31 +2,31 @@
   <title id="fig-title">Roofline 模型</title>
   <desc id="fig-desc">横轴是算术强度，纵轴是可达性能。算术强度低于转折点时受带宽限制，沿斜线增长；高于转折点时受算力限制，性能停在 165.2 TFLOP/s。RTX 4090 的转折点约为 164 FLOPs/byte。</desc>
   <style>
-    :root{--paper:#f9faf7;--blue:#2647d7;--yellow:#ffe04b;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--blue:#8ba3ff;--yellow:#f0cd42;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--blue:#466b3f;--yellow:#f5d75f;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--blue:#a9c89a;--yellow:#e7c96b;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
     .t{font-size:12.5px;font-weight:600;fill:var(--ink)}
     .l{font-size:10.5px;font-weight:400;fill:var(--ink)}
     .m{font-size:9.5px;font-weight:400;fill:var(--muted)}
   </style>
-  <rect width="800" height="380" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="380" fill="var(--paper,#faf6f0)"/>
 
-  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1">
+  <g stroke="var(--line-soft,#e4d6c5)" stroke-width="1">
     <line x1="96" y1="232" x2="736" y2="232"/>
     <line x1="96" y1="144" x2="736" y2="144"/>
     <line x1="96" y1="56" x2="736" y2="56"/>
     <line x1="309.3" y1="56" x2="309.3" y2="320"/>
     <line x1="522.7" y1="56" x2="522.7" y2="320"/>
   </g>
-  <line x1="96" y1="320" x2="736" y2="320" stroke="var(--line,#a2aec1)" stroke-width="1"/>
-  <line x1="96" y1="320" x2="96" y2="56" stroke="var(--line,#a2aec1)" stroke-width="1"/>
+  <line x1="96" y1="320" x2="736" y2="320" stroke="var(--line,#c9b49c)" stroke-width="1"/>
+  <line x1="96" y1="320" x2="96" y2="56" stroke="var(--line,#c9b49c)" stroke-width="1"/>
 
-  <path d="M96 319.7L568.5 124.8H736" fill="none" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
-  <line x1="568.5" y1="124.8" x2="568.5" y2="320" stroke="var(--line-soft,#dce1e8)" stroke-width="1" stroke-dasharray="4 4"/>
+  <path d="M96 319.7L568.5 124.8H736" fill="none" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
+  <line x1="568.5" y1="124.8" x2="568.5" y2="320" stroke="var(--line-soft,#e4d6c5)" stroke-width="1" stroke-dasharray="4 4"/>
 
-  <circle cx="112.9" cy="312.7" r="3" fill="var(--blue,#2647d7)"/>
-  <circle cx="599" cy="124.8" r="3" fill="var(--blue,#2647d7)"/>
-  <circle cx="568.5" cy="124.8" r="4" fill="var(--yellow,#ffe04b)" stroke="var(--ink,#202735)" stroke-width="1"/>
+  <circle cx="112.9" cy="312.7" r="3" fill="var(--blue,#466b3f)"/>
+  <circle cx="599" cy="124.8" r="3" fill="var(--blue,#466b3f)"/>
+  <circle cx="568.5" cy="124.8" r="4" fill="var(--yellow,#f5d75f)" stroke="var(--ink,#3b3024)" stroke-width="1"/>
 
   <g class="t">
     <text x="200" y="286">带宽受限</text>

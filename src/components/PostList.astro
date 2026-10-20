@@ -15,12 +15,12 @@ const labels = { writing: '研究与思考', knowledge: '知识笔记', course: 
  </a>)}
 </div>
 <style>
- .post-row { display: grid; grid-template-columns: minmax(0,1fr) 32px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
+ .post-row { display: grid; grid-template-columns: minmax(0,1fr) 32px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-blossom-line); }
  .row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--color-ink-muted); }
  .row-category { color: var(--color-accent-strong); }
  .post-row h2 { margin-top: 10px; font-size: 22px; font-weight: 600; line-height: 1.6; transition: color .2s var(--ease-smooth); }
  .row-description { max-width: 78ch; margin-top: 8px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
- .row-arrow { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); font-size: 24px; transition: transform .25s var(--ease-out-expo),background-color .2s var(--ease-smooth); }
+ .row-arrow { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); color: var(--color-accent); font-size: 24px; transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth); }
  .post-row:hover h2 { color: var(--color-accent-strong); }
  .post-row:hover .row-arrow { transform: translateX(3px); background: var(--color-accent-soft); }
  @media (max-width: 600px) { .post-row { gap: 12px; padding: 22px 0; grid-template-columns: minmax(0,1fr) 32px; } .post-row h2 { font-size: 20px; } .row-meta { gap: 6px 10px; } }

@@ -2,23 +2,23 @@
   <title id="fig-title">上下文窗口的组成</title>
   <desc id="fig-desc">一次模型调用看到的上下文窗口由系统提示词、工具定义、对话历史、本轮思考和当前生成位置组成，最终序列化为 token 流交给 Transformer。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#eef2fb;--yellow:#ffe04b;--yellow-soft:#fdf7d9;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#22314c;--yellow:#f0cd42;--yellow-soft:#33341f;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
     .t{font-size:12.5px;font-weight:600;fill:var(--ink)}
     .l{font-size:10.5px;font-weight:400;fill:var(--ink)}
     .m{font-size:9.5px;font-weight:400;fill:var(--muted)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="300" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="300" fill="var(--paper,#faf6f0)"/>
 
-  <rect x="80" y="213" width="320" height="47" fill="var(--yellow-soft,#fdf7d9)"/>
-  <rect x="80" y="40" width="320" height="220" fill="none" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+  <rect x="80" y="213" width="320" height="47" fill="var(--yellow-soft,#fbf3d9)"/>
+  <rect x="80" y="40" width="320" height="220" fill="none" stroke="var(--line,#c9b49c)" stroke-width="1.5"/>
   <text x="96" y="64" class="m">上下文窗口</text>
 
-  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1">
+  <g stroke="var(--line-soft,#e4d6c5)" stroke-width="1">
     <line x1="80" y1="72" x2="400" y2="72"/>
     <line x1="80" y1="119" x2="400" y2="119"/>
     <line x1="80" y1="166" x2="400" y2="166"/>
@@ -38,8 +38,8 @@
     <text x="166" y="235">当前生成位置</text>
   </g>
 
-  <path d="M400 150H536" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <g stroke="var(--blue,#2647d7)" stroke-width="1">
+  <path d="M400 150H536" stroke="var(--blue,#466b3f)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <g stroke="var(--blue,#466b3f)" stroke-width="1">
     <line x1="424" y1="144" x2="424" y2="156"/>
     <line x1="432" y1="144" x2="432" y2="156"/>
     <line x1="440" y1="144" x2="440" y2="156"/>
@@ -55,7 +55,7 @@
   </g>
   <text x="468" y="136" text-anchor="middle" class="m">序列化为 token 流</text>
 
-  <rect x="540" y="90" width="150" height="120" fill="none" stroke="var(--line,#a2aec1)" stroke-width="1.5"/>
+  <rect x="540" y="90" width="150" height="120" fill="none" stroke="var(--line,#c9b49c)" stroke-width="1.5"/>
   <text x="615" y="142" text-anchor="middle" class="t">Transformer</text>
   <text x="615" y="164" text-anchor="middle" class="m">注意力计算</text>
   <text x="615" y="230" text-anchor="middle" class="m">逐 token 生成</text>

@@ -2,22 +2,22 @@
   <title id="fig-title">从任务到硬件的六层分工</title>
   <desc id="fig-desc">应用与任务、模型与负载、训练与推理系统、算子与编译运行时、处理器与存储、互联与数据中心，六层自上而下把任务变成计算与数据访问。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
     .t{font-size:12.5px;font-weight:600;fill:var(--ink)}
     .m{font-size:9.5px;font-weight:400;fill:var(--muted)}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="340" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="340" fill="var(--paper,#faf6f0)"/>
 
   <text x="88" y="48" text-anchor="middle" class="m">任务</text>
-  <path d="M88 60V300" stroke="var(--blue,#2647d7)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M88 60V300" stroke="var(--blue,#466b3f)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
   <text x="88" y="320" text-anchor="middle" class="m">计算与数据</text>
 
-  <g stroke="var(--line-soft,#dce1e8)" stroke-width="1">
+  <g stroke="var(--line-soft,#e4d6c5)" stroke-width="1">
     <line x1="124" y1="60" x2="716" y2="60"/>
     <line x1="124" y1="100" x2="716" y2="100"/>
     <line x1="124" y1="140" x2="716" y2="140"/>

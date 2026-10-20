@@ -2,27 +2,27 @@
   <title id="fig-title">混合检索与重排序流水线</title>
   <desc id="fig-desc">查询同时进入稠密检索和 BM25 稀疏检索，两路结果经 RRF 融合成候选池，再由跨编码器重排序输出最终顺序。</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-    .title{font-size:26px;font-weight:700;fill:var(--ink,#202735)}
-    .sub{font-size:14px;fill:var(--muted,#596171)}
-    .h{font-size:16px;font-weight:700;fill:var(--ink,#202735)}
-    .b{font-size:13px;font-weight:600;fill:var(--ink,#202735)}
-    .s{font-size:12px;fill:var(--muted,#596171)}
-    .tiny{font-size:11px;fill:var(--muted,#596171)}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
+    .title{font-size:26px;font-weight:700;fill:var(--ink,#3b3024)}
+    .sub{font-size:14px;fill:var(--muted,#5f4f3c)}
+    .h{font-size:16px;font-weight:700;fill:var(--ink,#3b3024)}
+    .b{font-size:13px;font-weight:600;fill:var(--ink,#3b3024)}
+    .s{font-size:12px;fill:var(--muted,#5f4f3c)}
+    .tiny{font-size:11px;fill:var(--muted,#5f4f3c)}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/>
 
-  <rect x="28" y="186" width="132" height="72" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.5"/>
-  <text x="94" y="212" text-anchor="middle" class="b" fill="var(--on-blue,#fffefa)">查询</text>
-  <text x="94" y="235" text-anchor="middle" class="tiny" fill="var(--on-blue,#fffefa)">kitty behavior</text>
+  <rect x="28" y="186" width="132" height="72" rx="8" fill="var(--blue,#466b3f)" stroke="var(--blue,#466b3f)" stroke-width="1.5"/>
+  <text x="94" y="212" text-anchor="middle" class="b" fill="var(--on-blue,#fffcf5)">查询</text>
+  <text x="94" y="235" text-anchor="middle" class="tiny" fill="var(--on-blue,#fffcf5)">kitty behavior</text>
 
-  <rect x="200" y="92" width="200" height="128" rx="8" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="200" y="92" width="200" height="128" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.8"/>
   <text x="216" y="116" class="b">稠密检索 · cos</text>
   <text x="216" y="138" class="s">语义匹配：kitty ≈ cat</text>
   <text x="216" y="162" class="tiny">doc3 feline habits</text>
@@ -32,7 +32,7 @@
   <text x="216" y="206" class="tiny">doc1 pet care</text>
   <text x="380" y="206" text-anchor="end" class="tiny">0.71</text>
 
-  <rect x="200" y="250" width="200" height="128" rx="8" fill="var(--surface,#fffefa)" stroke="var(--yellow,#ffe04b)" stroke-width="1.8"/>
+  <rect x="200" y="250" width="200" height="128" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--yellow,#f5d75f)" stroke-width="1.8"/>
   <text x="216" y="274" class="b">稀疏检索 · BM25</text>
   <text x="216" y="296" class="s">精确匹配：含 kitty</text>
   <text x="216" y="320" class="tiny">doc5 kitty litter</text>
@@ -42,26 +42,26 @@
   <text x="216" y="364" class="tiny">doc2 kitten health</text>
   <text x="380" y="364" text-anchor="end" class="tiny">3.2</text>
 
-  <path d="M160 210 L200 170" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M160 234 L200 300" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M160 210 L200 170" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M160 234 L200 300" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="440" y="184" width="120" height="76" rx="8" fill="var(--yellow-soft,#fdf9e8)" stroke="var(--yellow,#ffe04b)" stroke-width="2"/>
+  <rect x="440" y="184" width="120" height="76" rx="8" fill="var(--yellow-soft,#fbf3d9)" stroke="var(--yellow,#f5d75f)" stroke-width="2"/>
   <text x="500" y="209" text-anchor="middle" class="b">RRF 融合</text>
   <text x="500" y="231" text-anchor="middle" class="tiny">6 篇 → 5 篇</text>
   <text x="500" y="249" text-anchor="middle" class="tiny">只看名次</text>
 
-  <path d="M400 156 L440 208" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M400 314 L440 236" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M400 156 L440 208" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M400 314 L440 236" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="604" y="158" width="168" height="128" rx="8" fill="var(--surface,#fffefa)" stroke="var(--blue,#2647d7)" stroke-width="1.8"/>
+  <rect x="604" y="158" width="168" height="128" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--blue,#466b3f)" stroke-width="1.8"/>
   <text x="688" y="184" text-anchor="middle" class="b">跨编码器精排</text>
   <text x="688" y="208" text-anchor="middle" class="tiny">查询 + 文档联合打分</text>
   <text x="688" y="230" text-anchor="middle" class="tiny">只处理候选池</text>
-  <line x1="620" y1="246" x2="756" y2="246" stroke="var(--line-soft,#dce1e8)" stroke-width="1"/>
+  <line x1="620" y1="246" x2="756" y2="246" stroke="var(--line-soft,#e4d6c5)" stroke-width="1"/>
   <text x="688" y="268" text-anchor="middle" class="b">输出 Top-N</text>
 
-  <path d="M560 222 L604 222" stroke="var(--blue,#2647d7)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M560 222 L604 222" stroke="var(--blue,#466b3f)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
 
-  <rect x="28" y="400" width="744" height="30" rx="6" fill="var(--surface,#fffefa)" stroke="var(--line-soft,#dce1e8)" stroke-width="1.2"/>
+  <rect x="28" y="400" width="744" height="30" rx="6" fill="var(--surface,#fffcf5)" stroke="var(--line-soft,#e4d6c5)" stroke-width="1.2"/>
   <text x="400" y="420" text-anchor="middle" class="tiny">cos 在 0–1 之间，BM25 可达几十：不能直接相加；融合负责合并两路，重排序负责在候选池内精判。</text>
 </svg>

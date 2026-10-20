@@ -3,7 +3,7 @@ import Icon from './Icon.astro';
 import { withBase } from '../utils/url';
 ---
 <aside class="research-art" aria-label="从一个问题开始探索">
- <div class="art-top"><span>研究从一个问题开始</span><svg viewBox="0 0 36 36" width="36" height="36" aria-hidden="true"><path d="M18 3v30M3 18h30M7.4 7.4l21.2 21.2M7.4 28.6 28.6 7.4" stroke="currentColor" stroke-width="3"/></svg></div>
+ <div class="art-top"><span>研究从一个问题开始</span><svg viewBox="0 0 36 36" width="36" height="36" aria-hidden="true"><g fill="var(--color-counterpoint)"><circle cx="18" cy="5.5" r="5"/><circle cx="28.5" cy="13" r="5"/><circle cx="24.5" cy="25.5" r="5"/><circle cx="11.5" cy="25.5" r="5"/><circle cx="7.5" cy="13" r="5"/></g><circle cx="18" cy="16" r="4.6" fill="var(--color-hero-ink)"/></svg></div>
  <div class="art-papers">
   <a class="question-paper art-layer" href={withBase('/blog/llm-eval-pipeline/')}>
    <span class="paper-label">一个值得追问的问题</span>
@@ -18,25 +18,25 @@ import { withBase } from '../utils/url';
  <p class="art-caption">阅读给出线索，实验留下证据。</p>
 </aside>
 <style>
- .research-art { padding: 20px; border-radius: 6px; background: var(--color-hero-panel); color: white; position: relative; }
+ .research-art { padding: 22px; border-radius: 22px; background: var(--color-hero-panel); color: var(--color-hero-on); position: relative; box-shadow: var(--shadow-lift); }
  .art-top { display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 13px; }
- .art-top > svg { color: var(--color-highlight); }
- .art-papers { display: grid; gap: 10px; margin-top: 16px; }
- .question-paper { display: block; position: relative; background: var(--color-highlight); color: var(--color-hero-ink); padding: 18px; border-radius: 3px; transform: rotate(-2deg); box-shadow: 5px 7px 0 rgb(0 0 0 / .14); }
+ .art-top > svg { color: var(--color-counterpoint); }
+ .art-papers { display: grid; gap: 12px; margin-top: 16px; }
+ .question-paper { display: block; position: relative; background: var(--color-hero-paper); color: var(--color-hero-ink); padding: 20px; border-radius: 16px; transform: rotate(-1.5deg); box-shadow: 6px 8px 0 rgb(0 0 0 / .12); }
  .paper-label { display: block; font-size: 12px; margin-bottom: 6px; }
  .question-paper strong { display: block; font-family: var(--font-title); font-size: clamp(23px,2vw,27px); font-weight: 600; line-height: 1.35; }
  .paper-description { display: none; font-size: 12px; margin-top: 12px; }
  .paper-link { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid currentColor; font-size: 13px; }
  .paper-mobile { display: none; }
- .reading-paper,.experiment-paper { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 48px; border-radius: 3px; color: var(--color-hero-ink); background: #fdfefb; }
+ .reading-paper,.experiment-paper { display: flex; align-items: center; gap: 12px; padding: 10px 16px; min-height: 48px; border-radius: 14px; color: var(--color-hero-ink); background: var(--color-hero-on); }
  .reading-paper > span,.experiment-paper > span { flex: 1; }
  .art-papers strong { font-weight: 600; }
  .reading-paper strong,.experiment-paper strong { font-size: 14px; }
- small { display: none; font-size: 11px; margin-top: 2px; color: #526078; }
- .art-caption { margin-top: 14px; color: white; font-size: 12px; }
- .art-layer { transition: transform var(--dur-base) var(--ease-out-expo),box-shadow var(--dur-base); }
- .art-layer:focus-visible { outline-color: white; outline-offset: 5px; }
- @media(hover:hover) and (prefers-reduced-motion:no-preference) { .question-paper:hover { transform: rotate(0) translateY(-3px); box-shadow: 5px 10px 0 rgb(0 0 0 / .15); } .reading-paper:hover,.experiment-paper:hover { transform: translateX(4px); } }
+ small { display: none; font-size: 11px; margin-top: 2px; color: var(--color-ink-soft); }
+ .art-caption { margin-top: 14px; color: var(--color-hero-on); font-size: 12px; }
+ .art-layer { transition: transform var(--dur-slow) var(--ease-out-expo),box-shadow var(--dur-slow); }
+ .art-layer:focus-visible { outline-color: var(--color-hero-on); outline-offset: 5px; }
+ @media(hover:hover) and (prefers-reduced-motion:no-preference) { .question-paper:hover { transform: rotate(-.4deg) translateY(-3px) scale(1.01); box-shadow: 6px 11px 0 rgb(0 0 0 / .14); } .reading-paper:hover,.experiment-paper:hover { transform: translateX(4px) rotate(-.4deg); } }
  @media (max-width:700px) {
   .research-art { padding: 16px; }
   .art-top { font-size: 12px; }

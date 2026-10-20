@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import PostList from '../../components/PostList.astro';
 import SeriesCard from '../../components/SeriesCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Botanical from '../../components/Botanical.astro';
 import { getPublishedPosts } from '../../utils/content';
 import { getLearningSeries } from '../../utils/series';
 import { withBase } from '../../utils/url';
@@ -14,10 +15,10 @@ const independentCount = posts.filter(post => !post.data.series).length;
 ---
 <BaseLayout title="博客" description="研究与思考、实践知识与成体系的学习笔记。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><p class="eyebrow">THE JOURNAL / WRITING & LEARNING</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>从一篇札记开始，也可以沿着一条学习路径读下去。</p></section>
+  <section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">The journal / Writing & learning</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>从一篇札记开始，也可以沿着一条学习路径读下去。</p></section>
   <section class="page-shell blog-content">
    <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? independentCount : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 →</a></div>
-   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">LEARNING PATHS</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true">⌄</span></summary><div class="series-grid">{series.map(group => <SeriesCard headingLevel="h2" series={group} compact/>)}</div></details>
+   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">Learning paths</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true">⌄</span></summary><div class="series-grid">{series.map(group => <SeriesCard headingLevel="h2" series={group} compact/>)}</div></details>
    <p class="filter-status" data-filter-status aria-live="polite">{independentCount} 篇独立札记 · 系列章节可从上方专题阅读</p>
    <PostList posts={posts} interactive/>
    <nav class="list-pagination" data-list-pagination aria-label="文章列表翻页"><button type="button" class="zen-btn zen-btn-secondary" data-list-previous disabled>← 上一页</button><span data-list-page>1 / 2</span><button type="button" class="zen-btn zen-btn-secondary" data-list-next>下一页 →</button></nav>
@@ -72,12 +73,12 @@ const independentCount = posts.filter(post => !post.data.series).length;
  .blog-content { padding-top: 28px; }
  .blog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
  .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
- .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px; border: 1px solid transparent; border-radius: 5px; font-size: 13px; color: var(--color-ink-soft); }
+ .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: 999px; font-size: 14px; color: var(--color-ink-soft); }
  .filter-tabs button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); }
  .filter-tabs button { transition: color 160ms, background-color 160ms, border-color 160ms; }
- .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-line); background: var(--color-accent-soft); }
+ .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-blossom-line); background: var(--color-accent-soft); }
  .filter-tabs span { font-size: 12px; }
- .blog-series { margin-top: 24px; padding: 16px 0; border-block: 1px solid var(--color-line); }
+ .blog-series { margin-top: 24px; padding: 16px 0; border-block: 1px solid var(--color-blossom-line); }
  .blog-series summary { display: flex; align-items: center; justify-content: flex-start; gap: 16px; cursor: pointer; list-style: none; min-height: 44px; }
  .blog-series summary::-webkit-details-marker { display: none; }
  .blog-series summary > span:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
@@ -94,7 +95,7 @@ const independentCount = posts.filter(post => !post.data.series).length;
   .blog-toolbar { display: block; }
   .blog-toolbar > a { display: none; }
   .filter-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
-  .filter-tabs button { justify-content: space-between; gap: 8px; padding-inline: 12px; border-color: var(--color-line); }
+  .filter-tabs button { justify-content: space-between; gap: 8px; padding-inline: 14px; border-color: var(--color-blossom-line); }
   .blog-series { margin-top: 18px; padding-block: 8px; }
   .blog-series summary > span:first-child { gap: 4px 12px; }
   .blog-series summary .eyebrow { font-size: 10px; }

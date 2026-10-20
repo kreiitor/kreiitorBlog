@@ -2,17 +2,17 @@
   <title id="fig-title">core scheduling 排空另一个线程</title>
   <desc id="fig-desc">一个物理核的硬件线程 0 运行 LS 任务，硬件线程 1 保持空闲；开启 core scheduling 后，同一物理核的两个线程只运行同一组任务</desc>
   <style>
-    :root{--paper:#f9faf7;--surface:#fffefa;--blue:#2647d7;--blue-soft:#f2f5fc;--yellow:#ffe04b;--yellow-soft:#fdf9e8;--ink:#202735;--muted:#596171;--line:#a2aec1;--line-soft:#dce1e8;--on-blue:#fffefa;--on-yellow:#202735}
-    @media (prefers-color-scheme: dark){:root{--paper:#161d2c;--surface:#222e43;--blue:#8ba3ff;--blue-soft:#2b406b;--yellow:#f0cd42;--yellow-soft:#3b3c23;--ink:#eff3f9;--muted:#cbd3e2;--line:#758ba8;--line-soft:#3b4b65;--on-blue:#161d2c;--on-yellow:#eff3f9}}
-    text{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+    :root{--paper:#faf6f0;--surface:#fffcf5;--blue:#466b3f;--blue-soft:#e8f0e2;--yellow:#f5d75f;--yellow-soft:#fbf3d9;--ink:#3b3024;--muted:#5f4f3c;--line:#c9b49c;--line-soft:#e4d6c5;--on-blue:#fffcf5;--on-yellow:#3b3024}
+    @media (prefers-color-scheme: dark){:root{--paper:#211c16;--surface:#2c251d;--blue:#a9c89a;--blue-soft:#34412c;--yellow:#e7c96b;--yellow-soft:#3b3623;--ink:#f4ebdc;--muted:#d8c8b2;--line:#7b6a55;--line-soft:#4b3f32;--on-blue:#211c16;--on-yellow:#f4ebdc}}
+    text{font-family:'Source Serif 4 Variable','Journal Serif SC',Georgia,serif}
   </style>
   <defs>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#2647d7)"/></marker>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 9 4.5 0 9Z" fill="var(--blue,#466b3f)"/></marker>
   </defs>
-  <rect width="800" height="450" fill="var(--paper,#f9faf7)"/><rect x="109.5" y="104.5" width="210" height="112" rx="8" fill="var(--surface,#fffefa)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="214.5" y="157.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">一个物理核</text>
-  <text x="214.5" y="173.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">同一组任务</text><rect x="480.5" y="104.5" width="210" height="112" rx="8" fill="var(--blue,#2647d7)" stroke="var(--blue,#2647d7)" stroke-width="1.6"/>
-  <text x="585.5" y="157.25" font-size="13" fill="var(--on-blue,#fffefa)" font-weight="700" text-anchor="middle">硬件线程 0</text>
-  <text x="585.5" y="173.5" font-size="12" fill="var(--on-blue,#fffefa)" font-weight="400" text-anchor="middle">LS 任务</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--line-soft,#dce1e8)" stroke="var(--line,#a2aec1)" stroke-width="1.6"/>
-  <text x="214.5" y="320.25" font-size="13" fill="var(--ink,#202735)" font-weight="700" text-anchor="middle">硬件线程 1</text>
-  <text x="214.5" y="336.5" font-size="12" fill="var(--ink,#202735)" font-weight="400" text-anchor="middle">空闲</text><path d="M319.5 160.5 L480.5 160.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M214.5 216.5 L214.5 242 L214.5 242 L214.5 267.5" fill="none" stroke="var(--blue,#2647d7)" stroke-width="2.1" marker-end="url(#arrow)"/></svg>
+  <rect width="800" height="450" fill="var(--paper,#faf6f0)"/><rect x="109.5" y="104.5" width="210" height="112" rx="8" fill="var(--surface,#fffcf5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="214.5" y="157.25" font-size="13" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">一个物理核</text>
+  <text x="214.5" y="173.5" font-size="12" fill="var(--ink,#3b3024)" font-weight="400" text-anchor="middle">同一组任务</text><rect x="480.5" y="104.5" width="210" height="112" rx="8" fill="var(--blue,#466b3f)" stroke="var(--blue,#466b3f)" stroke-width="1.6"/>
+  <text x="585.5" y="157.25" font-size="13" fill="var(--on-blue,#fffcf5)" font-weight="700" text-anchor="middle">硬件线程 0</text>
+  <text x="585.5" y="173.5" font-size="12" fill="var(--on-blue,#fffcf5)" font-weight="400" text-anchor="middle">LS 任务</text><rect x="109.5" y="267.5" width="210" height="112" rx="8" fill="var(--line-soft,#e4d6c5)" stroke="var(--line,#c9b49c)" stroke-width="1.6"/>
+  <text x="214.5" y="320.25" font-size="13" fill="var(--ink,#3b3024)" font-weight="700" text-anchor="middle">硬件线程 1</text>
+  <text x="214.5" y="336.5" font-size="12" fill="var(--ink,#3b3024)" font-weight="400" text-anchor="middle">空闲</text><path d="M319.5 160.5 L480.5 160.5" fill="none" stroke="var(--blue,#466b3f)" stroke-width="2.1" marker-end="url(#arrow)"/><path d="M214.5 216.5 L214.5 242 L214.5 242 L214.5 267.5" fill="none" stroke="var(--blue,#466b3f)" stroke-width="2.1" marker-end="url(#arrow)"/></svg>

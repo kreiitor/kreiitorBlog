@@ -31,25 +31,25 @@ const cards = await Promise.all(catalog.map(async item => {
 const html = `<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>封面选图册 · kreiitor</title>
 <style>
- :root { color-scheme:light; --paper:#f6f3eb; --surface:#fbf9f3; --ink:#33362e; --muted:#5b6154; --sage:#55624b; --clay:#9e5130; --line:#d8d6c5; }
+ :root { color-scheme:light; --paper:#faf6f0; --surface:#fffcf5; --ink:#3b3024; --muted:#5f4f3c; --sage:#466b3f; --clay:#35552f; --line:#e4d6c5; }
  * { box-sizing:border-box; } [hidden] { display:none!important; }
- body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
+ body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.75 Georgia,"Songti SC","Microsoft YaHei",serif; }
  button,input { font:inherit; } button { cursor:pointer; } button,input { color:inherit; } button:focus-visible,input:focus-visible,a:focus-visible { outline:2px solid var(--clay); outline-offset:4px; }
  .skip { position:absolute; left:24px; top:-80px; padding:8px 16px; background:var(--ink); color:var(--paper); z-index:5; } .skip:focus { top:12px; }
  .page { max-width:1344px; padding:64px 40px 36px; margin:auto; }
  header { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; padding-bottom:36px; border-bottom:1px solid var(--line); }
- .eyebrow { margin:0 0 18px; font-size:11px; letter-spacing:.18em; color:var(--sage); }
+ .eyebrow { margin:0 0 18px; font-size:12px; font-style:italic; letter-spacing:0; color:var(--sage); }
  h1 { margin:0; font:normal clamp(29px,3.5vw,44px)/1.4 Georgia,"Songti SC",SimSun,serif; letter-spacing:.02em; }
  .lead { margin:18px 0 0; max-width:650px; color:var(--muted); line-height:1.9; font-size:14px; }
  .edition { text-align:right; color:var(--sage); font-size:12px; white-space:nowrap; } .edition strong { display:block; font:normal 52px/1.2 Georgia,serif; color:var(--ink); }
  .toolbar { display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:space-between; padding:30px 0 18px; }
- .filters { display:flex; flex-wrap:wrap; gap:7px; } .filters button { border:1px solid transparent; border-radius:5px; background:transparent; color:var(--muted); padding:7px 12px; font-size:13px; }
+ .filters { display:flex; flex-wrap:wrap; gap:7px; } .filters button { border:1px solid transparent; border-radius:999px; background:transparent; color:var(--muted); padding:7px 14px; font-size:13px; }
  .filters button[aria-pressed="true"] { border-color:var(--sage); background:var(--sage); color:var(--surface); } .filters button:hover { border-color:var(--sage); }
  .filters span { margin-left:7px; opacity:.78; font-size:11px; }
- .search { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--muted); } .search input { width:260px; max-width:100%; border:1px solid var(--line); border-radius:5px; background:var(--surface); padding:9px 12px; font-size:13px; }
+ .search { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--muted); } .search input { width:260px; max-width:100%; border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:9px 12px; font-size:13px; }
  .status-row { display:flex; justify-content:space-between; gap:16px; min-height:28px; margin-bottom:18px; color:var(--muted); font-size:12px; } #copy-status { color:var(--clay); }
  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
- .cover-card { border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--surface); }
+ .cover-card { border:1px solid rgba(212,160,160,.42); border-radius:16px; overflow:hidden; background:var(--surface); }
  .cover-card img { display:block; width:100%; height:auto; aspect-ratio:800/420; border-bottom:1px solid var(--line); }
  .card-body { padding:21px 22px 17px; } .card-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; } h2 { margin:0; font-size:17px; font-weight:550; letter-spacing:.02em; }
  .family { flex-shrink:0; font-size:11px; color:var(--sage); border-bottom:1px solid var(--line); padding-bottom:2px; }
