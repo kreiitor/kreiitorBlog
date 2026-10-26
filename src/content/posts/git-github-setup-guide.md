@@ -2,7 +2,7 @@
 title: "Git 仓库初始化与 GitHub 连接教程"
 description: "从本地初始化 Git 仓库，到连接 GitHub 并完成日常提交、拉取、分支管理和问题排查的一份实用教程。"
 pubDate: 2026-05-25
-updatedDate: 2026-10-11
+updatedDate: 2026-10-26
 tags:
   - "Git"
   - "GitHub"
@@ -11,20 +11,15 @@ category: knowledge
 cover: /covers/post-git-graph.svg
 ---
 
-## 这份文档适合什么场景
+## 适用场景
 
-这份文档适合下面几类情况：
-
-- 你有一个本地文件夹，还不是 Git 仓库
-- 你希望把本地项目接入 Git，并同步到 GitHub
-- 你经常和 AI 协作，希望 AI 能识别当前目录是一个 Git 仓库
-- 你想要一份可以长期复用的 Git 常用命令速查
+本地文件夹还不是 Git 仓库、需要接入 GitHub，或者想让 AI 工具识别当前目录是仓库时，可以按下面的顺序做。命令按 Git 2.55 验证。
 
 ---
 
 ## 什么是 Git 仓库
 
-Git 是一个版本控制工具，用来记录项目文件的历史变化。  
+Git 是一个版本控制工具，用来记录项目文件的历史变化。
 当一个文件夹被初始化为 Git 仓库后，里面会出现一个隐藏目录 `.git`，Git 会用它保存版本历史、分支信息和远程仓库配置。
 
 如果当前目录没有 `.git`，很多工具和 AI 助手就会提示：
@@ -36,7 +31,7 @@ fatal: not a git repository (or any of the parent directories): .git
 这通常意味着两种情况：
 
 1. 这个目录还没有执行过 `git init`
-2. 你当前所在的目录不是项目根目录，而是跑到了仓库外面
+2. 你当前不在项目根目录，跑到了仓库外面
 
 ---
 
@@ -45,10 +40,10 @@ fatal: not a git repository (or any of the parent directories): .git
 ### 1. 进入项目目录
 
 ```powershell
-cd C:/Projects/example
+cd E:\Code\your-project
 ```
 
-请把 `C:/Projects/example` 替换成你的实际项目目录。
+请把 `E:\Code\your-project` 替换成你的实际项目目录。
 
 ### 2. 初始化仓库
 
@@ -82,7 +77,7 @@ No commits yet
 
 ```powershell
 git config --global user.name "你的名字"
-git config --global user.email "user@example.com"
+git config --global user.email "你的邮箱@example.com"
 ```
 
 检查配置：
@@ -97,7 +92,7 @@ git config --global --list
 
 ## 建议创建 `.gitignore`
 
-`.gitignore` 用来告诉 Git 哪些文件不要纳入版本控制。  
+`.gitignore` 用来告诉 Git 哪些文件不要纳入版本控制。
 这一步很重要，尤其是和 AI 协作时，避免把缓存、依赖、日志、密钥文件一起提交。
 
 常见示例：
@@ -189,7 +184,7 @@ https://github.com/你的用户名/你的仓库名.git
 git@github.com:你的用户名/你的仓库名.git
 ```
 
-如果你刚开始使用 Git，`HTTPS` 更容易上手。  
+如果你刚开始使用 Git，`HTTPS` 更容易上手。
 如果你长期开发，`SSH` 通常更省事。
 
 ### 3. 添加远程仓库
@@ -260,7 +255,7 @@ git push -u origin main
 常见流程：
 
 ```powershell
-ssh-keygen -t ed25519 -C "user@example.com"
+ssh-keygen -t ed25519 -C "你的邮箱@example.com"
 ```
 
 然后把公钥内容添加到 GitHub 的 SSH Keys 设置里，再测试连接：
@@ -566,10 +561,10 @@ git switch -c experiment/ai-refactor
 如果你只想要一套最短命令，可以直接照着执行：
 
 ```powershell
-cd C:/Projects/example
+cd E:\Code\your-project
 git init
 git config user.name "你的名字"
-git config user.email "user@example.com"
+git config user.email "你的邮箱@example.com"
 git add .
 git commit -m "chore: initial commit"
 git branch -M main

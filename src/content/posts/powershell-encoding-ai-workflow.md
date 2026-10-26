@@ -1,8 +1,8 @@
 ---
 title: "PowerShell 中文编码与 AI 工作流配置指南"
-description: "系统整理 Windows 下 PowerShell 中文编码问题的成因、PowerShell 7 与 5.1 的差异、推荐配置、实际改动、验证方法、常见坑与回滚方式，适合中文 AI 工作流长期参考。"
+description: "说明 Windows 下 PowerShell 中文编码问题的成因、PowerShell 7 与 5.1 的差异、推荐配置、验证方法、常见坑与回滚方式。"
 pubDate: 2026-06-01
-updatedDate: 2026-10-11
+updatedDate: 2026-10-26
 tags:
   - "PowerShell"
   - "编码"
@@ -12,23 +12,15 @@ category: knowledge
 cover: /covers/post-cli-terminal.svg
 ---
 
-## 这篇文档解决什么问题
+## 适用场景
 
-这篇文档主要解决下面几类问题：
-
-- PowerShell 里中文输出乱码
-- AI 工具调用终端时中文工作流不顺畅
-- Git 中文文件名显示异常
-- Python、Node、PowerShell 之间传中文时容易出错
-- Windows 上 `powershell.exe` 和 `pwsh` 混用导致行为不一致
-
-如果你在和 AI 协作时，常见到“中文输出不对”“命令通过 shell 执行后乱码”“文件名正常但日志乱码”等现象，这篇文档就是为这种场景准备的。
+PowerShell 里中文输出乱码、Git 中文文件名显示异常、Python/Node/AI 工具之间传中文出错，通常来自终端、shell、子进程和文件读写的编码不一致，单一工具往往解释不了。下面按“先定位、再配置、最后回滚”的顺序处理。
 
 ---
 
 ## 为什么 PowerShell 中文会出问题
 
-Windows 上的中文编码问题，通常不是单一工具的问题，而是多层叠加：
+Windows 上的中文编码问题通常是多层叠加，单一工具的问题解释不了：
 
 1. 终端本身的控制台代码页不是 UTF-8
 2. PowerShell 的输入编码、输出编码和管道编码不一致
@@ -36,7 +28,7 @@ Windows 上的中文编码问题，通常不是单一工具的问题，而是多
 4. Git、Python、Node、AI 工具各自对子进程编码有自己的处理方式
 5. 某些工具虽然界面是新的，但底层仍然偷偷调用 `powershell.exe`
 
-所以中文工作流是否稳定，关键不是只看“能不能显示中文”，而是看整条链路：
+所以中文工作流是否稳定，要看整条链路，不能只看“能不能显示中文”：
 
 `终端 -> shell -> 子进程 -> 文件读写 -> Git/AI工具`
 
@@ -58,7 +50,7 @@ Windows 上的中文编码问题，通常不是单一工具的问题，而是多
 可执行文件通常是：
 
 ```text
-%SystemRoot%System32WindowsPowerShell1.0powershell.exe
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
 ```
 
 ### PowerShell 7
@@ -76,14 +68,14 @@ Windows 上的中文编码问题，通常不是单一工具的问题，而是多
 pwsh.exe
 ```
 
-对于中文 AI 工作流，推荐优先使用 `PowerShell 7`，但不要立刻删除 `5.1`。  
+对于中文 AI 工作流，推荐优先使用 `PowerShell 7`，但不要立刻删除 `5.1`。
 原因很简单：老脚本可能还依赖 `5.1`，而新工作流更适合 `7`。
 
 ---
 
 ## 推荐配置方案
 
-推荐方案不是“只升级 PowerShell”，而是同时处理 4 件事：
+推荐同时处理 4 件事，不只升级 PowerShell：
 
 1. 安装 `PowerShell 7`
 2. 把 Windows Terminal 默认 shell 改成 `pwsh`
@@ -97,36 +89,87 @@ pwsh.exe
 
 ---
 
-## 可直接使用的 profile 片段
+## 具体改动清单
 
-PowerShell 7（`$PROFILE.CurrentUserAllHosts`）：
+### 1. 安装了 PowerShell 7
 
-```powershell
-$utf8 = [System.Text.UTF8Encoding]::new($false)
-[Console]::InputEncoding = $utf8
-[Console]::OutputEncoding = $utf8
-$OutputEncoding = $utf8
+安装的版本是：
+
+```text
+PowerShell 7.6.1
 ```
 
-Windows PowerShell 5.1（同样写入 `$PROFILE.CurrentUserAllHosts`）：
+安装方式：
 
 ```powershell
-$utf8 = [System.Text.UTF8Encoding]::new($false)
-[Console]::OutputEncoding = $utf8
-$OutputEncoding = $utf8
+winget install --id Microsoft.PowerShell --exact --source winget
 ```
 
-注意：5.1 的 `Set-Content -Encoding utf8` 会写入 BOM，PowerShell 7 的 `utf8` 默认不写 BOM；需要无 BOM 时，7 用 `-Encoding utf8NoBOM`，5.1 应改用 .NET 的 `[System.IO.File]::WriteAllText`。
+### 2. 把 Windows Terminal 默认 shell 改成 PowerShell 7
+
+修改了：
+
+`$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`
+
+并保留了备份：
+
+`$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.backup.2026-05-11.json`
+
+新增了一个显式的 `PowerShell 7` profile，并把它设为默认 profile。
+
+### 3. 写入了 `pwsh` 的 UTF-8 profile
+
+文件：
+
+`$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1`
+
+核心逻辑：
+
+```powershell
+$Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = $Utf8NoBom
+[Console]::OutputEncoding = $Utf8NoBom
+$OutputEncoding = $Utf8NoBom
+chcp.com 65001 > $null
+```
+
+作用：
+
+- 统一控制台输入编码
+- 统一控制台输出编码
+- 统一 PowerShell 管道输出编码
+- 把控制台代码页切到 UTF-8 对应的 `65001`
+
+### 4. 给旧版 Windows PowerShell 5.1 加了 UTF-8 兜底
+
+文件：
+
+`$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+
+这样即使某些工具仍然调用：
+
+```text
+powershell.exe
+```
+
+中文链路也更稳定。
+
+### 5. 调整了 Git 的全局中文显示设置
+
+执行了：
+
+```powershell
+git config --global core.quotepath false
+git config --global i18n.commitEncoding utf-8
+git config --global i18n.logOutputEncoding utf-8
+```
+
+作用：
+
+- Git 不再把中文文件名显示成转义形式
+- Git 提交信息和日志统一按 UTF-8 处理
 
 ---
-
-## 一套可复用的配置顺序
-
-1. 安装并使用 PowerShell 7。
-2. 在 Windows Terminal 设置中选择默认终端。
-3. 通过 `$PROFILE` 定位当前 shell 的配置文件，并统一控制台与管道编码。
-4. 按需要设置 Git 的中文显示与提交编码。
-5. 修改前备份配置，修改后验证中文读取、输出与重定向。
 
 ## 如何检查当前终端是不是 UTF-8
 
@@ -196,9 +239,7 @@ Active code page: 65001
 - 用 `pwsh` 追加一行中文
 - 再读回最后一行
 
-实际测试文件：
-
-`中文说明.md`
+实际测试文件：`中文说明.md`
 
 结果：
 
@@ -236,9 +277,7 @@ git log --oneline -1
 
 ### 4. Python 中文输出
 
-测试文件：
-
-`print_zh.py`
+测试文件：`print_zh.py`
 
 结果：
 
@@ -246,9 +285,7 @@ git log --oneline -1
 
 ### 5. Node 中文输出
 
-测试文件：
-
-`print_zh.js`
+测试文件：`print_zh.js`
 
 结果：
 
@@ -256,10 +293,7 @@ git log --oneline -1
 
 ### 6. Python / Node 读取中文文件名文件
 
-测试文件：
-
-`read_zh.py`
-`read_zh.js`
+测试文件：`read_zh.py`、`read_zh.js`
 
 结果：
 
@@ -268,7 +302,7 @@ git log --oneline -1
 
 ### 7. PowerShell 通过 STDIN 接收中文脚本
 
-这一步很关键，因为很多 AI 工具不是直接执行脚本文件，而是把命令通过标准输入喂给 shell。
+这一步很关键，因为很多 AI 工具会把命令通过标准输入喂给 shell，不直接执行脚本文件。
 
 这次分别验证了：
 
@@ -394,30 +428,27 @@ false
 
 如果你想回退这次改动，可以按下面处理。
 
-### 1. 回滚 profile 设置
+### 1. 回滚 Windows Terminal 设置
 
-把备份的 profile 覆盖回去：
+把备份文件覆盖回去：
 
 ```powershell
-$profilePath = $PROFILE.CurrentUserAllHosts
-$backupPath = "$profilePath.bak"
-if (Test-Path $backupPath) { Copy-Item $backupPath $profilePath -Force }
+Copy-Item `
+  "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.backup.2026-05-11.json" `
+  "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json" `
+  -Force
 ```
 
 ### 2. 删除 `pwsh` profile
 
 ```powershell
-$profilePath = $PROFILE.CurrentUserAllHosts
-if (Test-Path $profilePath) { Remove-Item $profilePath }
+Remove-Item "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
 ```
 
 ### 3. 删除旧版 PowerShell 5.1 的 profile
 
-在 Windows PowerShell 5.1 中执行：
-
 ```powershell
-$profilePath = $PROFILE.CurrentUserAllHosts
-if (Test-Path $profilePath) { Remove-Item $profilePath }
+Remove-Item "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
 ```
 
 ### 4. 取消 Git 全局设置
@@ -440,22 +471,25 @@ winget uninstall --id Microsoft.PowerShell
 
 ---
 
-## 最短结论
+## 结论
 
 如果你只是想记住最关键的结论，可以只记这几条：
 
 1. Windows 中文 AI 工作流优先用 `PowerShell 7`
 2. `pwsh` 和 `powershell.exe` 最好都做 UTF-8 profile 兜底
 3. Git 需要设置 `core.quotepath=false` 和 UTF-8 相关项
-4. 乱码问题往往不是单点问题，而是整条 shell 调用链的问题
+4. 乱码问题往往出在整条 shell 调用链上，不只是一个点
 5. 如果终端本身已经正常，但 AI 仍乱码，就该查工具怎么调用 shell，而不是只查 PowerShell 版本
 
 ---
 
-## 通用排查入口
+## 参考路径
 
-- 当前 PowerShell 配置：`$PROFILE`。
-- Windows Terminal 设置：从应用设置菜单打开配置。
-- Git 编码配置：通过 `git config --get` 查询对应选项。
+涉及的关键路径：
 
-不同设备的具体目录与用户名无需写入公开笔记。
+- PowerShell 7 profile：`$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1`
+- Windows PowerShell 5.1 profile：`$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`
+- Windows Terminal settings：`$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`
+- Windows Terminal settings backup：`$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.backup.2026-05-11.json`
+
+这些路径后续都可以作为排查入口。

@@ -2,6 +2,7 @@
 title: "Rust 刷 Hot100 速拾手册"
 description: "用 Rust 刷题的最小工作集：所有权/借用的刷题语境化、Rc<RefCell> 树与 take() 链表生存指南、单调栈/单调队列/并查集专项与避坑清单。"
 pubDate: 2026-10-14
+updatedDate: 2026-10-26
 tags:
   - "算法"
   - "学习笔记"
@@ -11,12 +12,55 @@ cover: /covers/post-code-rust.svg
 featured: true
 ---
 
-
-> 定位：Rust 语法学过但手生，目标是用 Rust 刷完 Hot100，而不是重学语言。
-> 实话先说：**Rust 不是刷题的最顺手语言**——所有权/借用检查在链表、树、图题上会持续制造摩擦。但正因如此，用 Rust 刷题对理解所有权是最好的实战。
-> 用法：第 1～2 节是刷题语境下的 Rust 最小工作集（含 LeetCode 特有的 `Option<Rc<RefCell<TreeNode>>>` 处理套路），第 3 节模板，第 4～6 节专项，最后是刷题顺序与避坑清单。
+这份笔记给“学过 Rust 语法但手生”的人用，目标是用 Rust 刷完 Hot100。Rust 在链表、树、图题上会碰到所有权和借用的摩擦，这份笔记的重点就是把常见摩擦处理掉。没写过 Rust 的，先看第 0 节和第 1.2 节。
 
 ---
+
+## 0. 完全没写过 Rust
+
+Rust 的门槛主要在所有权和借用，不在语法。先看这段，能理解“`&nums` 是借用、`nums` 是移动”，再进第 1 节。
+
+```rust
+use std::collections::HashMap;
+
+impl Solution {
+    pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
+        let mut seen: HashMap<i32, i32> = HashMap::new();
+
+        for (i, &x) in nums.iter().enumerate() {
+            if let Some(&j) = seen.get(&(target - x)) {
+                return vec![j, i as i32];
+            }
+            seen.insert(x, i as i32);
+        }
+
+        vec![]
+    }
+}
+```
+
+刷题只需要这些：
+
+| 需求 | 写法 |
+| --- | --- |
+| 变量 | `let x = 0;`、`let mut y = 0;` |
+| 动态数组 | `let mut a: Vec<i32> = Vec::new();`、`a.push(x);`、`a.len()` |
+| 哈希表 | `use std::collections::HashMap;`、`let mut m = HashMap::new();` |
+| 遍历 | `for x in &a {}`、`for (i, x) in a.iter().enumerate() {}` |
+| 条件 | `if x > 0 { } else { }`、`match x { 1 => ..., _ => ... }` |
+| 函数 | `fn f(x: i32) -> i32 { x + 1 }` |
+| 方法 | `impl Solution { pub fn f(&self) {} }` |
+| 可选值 | `Option<T>`、`Some(x)`、`None`、`if let Some(x) = opt {}` |
+| 借用 | `&x` 只读，`&mut x` 可改，`x` 是移动 |
+
+几个容易卡住的点：
+
+- 赋值和传参默认移动；移动后原变量不能再用，需要 `.clone()` 或改用借用。
+- 同一时间只能有一个可变借用，不能一边遍历一边 `push`。
+- 索引是 `usize`，和 `i32` 混用要显式转换。
+- `unwrap()` 只适合确定有值的场景；不确定就用 `match` 或 `if let`。
+- `String` 和 `&str` 不是一回事；函数参数常用 `&str`。
+- 链表和树题会用 `Box`、`Rc<RefCell<T>>`，第 3 节有专门写法。
 
 ## 1. 最小必要语法
 
@@ -205,7 +249,7 @@ use std::cmp::Reverse;
 let mut h = BinaryHeap::new();
 h.push(x); h.pop(); h.peek();    // 大根堆
 
-let mut min_h = BinaryHeap::from([Reverse(x)]);   // 小根堆：包 Reverse
+let mut min_h = BinaryHeap::from(Reverse(x));   // 小根堆：包 Reverse
 min_h.push(Reverse(5));
 min_h.pop().map(|Reverse(v)| v);
 
@@ -571,7 +615,7 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 
 ---
 
-## 9. 避坑清单（按翻车频率排序）
+## 9. 避坑清单（按出错频率排序）
 
 1. **遍历中修改同一容器** → 借用冲突。改下标循环、先收集后改、或 `split_at_mut`。
 2. **链表忘了 `.take()`** → "cannot move out of borrowed content"。

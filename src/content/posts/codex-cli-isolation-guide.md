@@ -2,7 +2,7 @@
 title: "Codex CLI 当前目录隔离与中转服务配置指南"
 description: "在 Linux 共享服务器上用项目内 .codex-home 隔离 Codex CLI 的配置、认证、日志与会话，并通过中转服务启动。"
 pubDate: 2026-05-20
-updatedDate: 2026-10-11
+updatedDate: 2026-10-26
 tags:
   - "工具"
   - "AI"
@@ -11,18 +11,11 @@ category: knowledge
 cover: /covers/post-cli-terminal.svg
 ---
 
-## 这篇文档解决什么问题
+## 适用场景
 
-在导师服务器、实验室服务器或多人共享账号环境中使用 Codex CLI 时，常见问题是：
+在共享服务器上使用 Codex CLI 时，默认的 `~/.codex` 会和同门或全局配置混在一起。常见问题是读到别人的配置、想用中转服务但启动时仍弹登录、`codex login status` 显示未登录但实际能对话。
 
-- 不想读取同门已经配置好的 `~/.codex`
-- 希望 Codex 只在当前项目目录中保存配置、日志、会话
-- 使用中转服务，而不是直接用 OpenAI 官方登录
-- 已经写了 `base_url` 和 API key，但启动时仍然弹出登录菜单
-- `codex login status` 显示 `Not logged in`，但 Codex 实际可以对话
-- 之前项目里的 `.codex/config.toml` 和用户级配置混在一起，导致行为难以判断
-
-核心方案是：不要依赖当前目录下的 `.codex/config.toml` 作为完整隔离方案，而是显式设置 `CODEX_HOME`，让 Codex 把用户级状态目录放进当前项目。
+做法是给项目单独一个 `CODEX_HOME`，把配置、认证、日志和会话都放进去。项目目录下的 `.codex/config.toml` 只是覆盖层，不是完整的用户目录。
 
 ---
 
@@ -47,7 +40,7 @@ codex
 推荐结构是：
 
 ```text
-/srv/project
+/nasdata/cn/decompile
 ├── .codex-home/
 │   ├── config.toml
 │   ├── sessions/
@@ -73,7 +66,7 @@ codex
 进入项目目录：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 ```
 
 创建隔离目录：
@@ -83,7 +76,7 @@ mkdir -p .codex-home
 chmod 700 .codex-home
 ```
 
-这里使用 `.codex-home`，而不是 `.codex`。  
+这里使用 `.codex-home`，而不是 `.codex`。
 原因是 `.codex` 更适合保留项目级规则或说明；`.codex-home` 则明确表示这是 Codex 的用户状态目录。
 
 ---
@@ -94,12 +87,12 @@ chmod 700 .codex-home
 
 ```bash
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "custom_provider"
+model_provider = "lucen"
 model = "gpt-5-codex"
 
-[model_providers.custom_provider]
-name = "custom_provider"
-base_url = "https://api.example.com/v1"
+[model_providers.lucen]
+name = "lucen"
+base_url = "https://lucen.run/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -111,13 +104,13 @@ chmod 600 .codex-home/config.toml
 
 | 配置项 | 含义 |
 | --- | --- |
-| `model_provider = "custom_provider"` | 让 Codex 使用名为 `custom_provider` 的 provider |
+| `model_provider = "lucen"` | 让 Codex 使用名为 `lucen` 的 provider |
 | `model = "gpt-5-codex"` | 默认模型名，可按中转服务支持情况修改 |
-| `base_url = "https://api.example.com/v1"` | 中转服务地址 |
+| `base_url = "https://lucen.run/v1"` | 中转服务地址 |
 | `env_key = "OPENAI_API_KEY"` | 从环境变量 `OPENAI_API_KEY` 读取 API key |
 | `wire_api = "responses"` | 使用 Responses API 格式 |
 
-注意：`env_key = "OPENAI_API_KEY"` 不是把 API key 写在配置里，而是告诉 Codex 去环境变量 `OPENAI_API_KEY` 读取密钥。
+注意：`env_key = "OPENAI_API_KEY"` 的作用是让 Codex 去环境变量 `OPENAI_API_KEY` 读取密钥，不是把 API key 写进配置。
 
 ---
 
@@ -162,7 +155,7 @@ codex
 启动：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 ./run-codex.sh
 ```
 
@@ -171,7 +164,7 @@ cd /srv/project
 ```text
 OpenAI Codex
 model:     gpt-5-codex
-directory: /srv/project
+directory: /nasdata/cn/decompile
 ```
 
 并且能够正常对话，说明中转服务路径可用。
@@ -212,7 +205,7 @@ CODEX_HOME="$PWD/.codex-home" codex login status
 Not logged in
 ```
 
-原因是 `codex login status` 主要检查 Codex 官方账号登录状态，例如 ChatGPT 登录或官方 API key 登录。  
+原因是 `codex login status` 主要检查 Codex 官方账号登录状态，例如 ChatGPT 登录或官方 API key 登录。
 如果当前配置走的是自定义 provider，并且 API key 来自 `OPENAI_API_KEY` 环境变量，那么即使 `login status` 显示未登录，Codex 仍然可以通过中转服务正常请求模型。
 
 判断是否可用，应该以实际对话和中转服务响应为准。
@@ -250,7 +243,7 @@ codex
 如果不用脚本，必须先设置：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex
@@ -316,7 +309,7 @@ model = "gpt-5-codex"
 model = "gpt-5.5"
 ```
 
-如果模型名不被中转服务支持，常见表现是请求失败、超时或模型不存在。  
+如果模型名不被中转服务支持，常见表现是请求失败、超时或模型不存在。
 这种情况下应该查看中转服务后台支持的模型列表，并把 `model` 改成可用值。
 
 ---
@@ -340,8 +333,8 @@ ls -l run-codex.sh .codex-home/config.toml
 期望类似：
 
 ```text
--rw------- 1 user user 303 Jun  2 11:29 .codex-home/config.toml
--rwx------ 1 user user 207 Jun  2 11:28 run-codex.sh
+-rw------- 1 cn cn 303 Jun  2 11:29 .codex-home/config.toml
+-rwx------ 1 cn cn 207 Jun  2 11:28 run-codex.sh
 ```
 
 含义：
@@ -366,7 +359,7 @@ ls -l run-codex.sh .codex-home/config.toml
 那么原来的 `.codex` 可以检查后删除：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 ls -la .codex
 ```
 
@@ -392,18 +385,18 @@ rm -rf .codex
 下面是一套从零开始的完整命令。执行前把 API key 占位符替换成自己的密钥。
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 
 mkdir -p .codex-home
 chmod 700 .codex-home
 
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "custom_provider"
+model_provider = "lucen"
 model = "gpt-5-codex"
 
-[model_providers.custom_provider]
-name = "custom_provider"
-base_url = "https://api.example.com/v1"
+[model_providers.lucen]
+name = "lucen"
+base_url = "https://lucen.run/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -434,7 +427,7 @@ chmod 700 run-codex.sh
 检查 Codex home：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 CODEX_HOME="$PWD/.codex-home" codex login status
 ls -la .codex-home
 ```
@@ -448,7 +441,7 @@ ls -l run-codex.sh .codex-home/config.toml
 临时绕过脚本启动：
 
 ```bash
-cd /srv/project
+cd /nasdata/cn/decompile
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex

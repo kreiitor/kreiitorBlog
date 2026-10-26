@@ -2,7 +2,7 @@
 title: "远程服务器 SSH 连接与 CLI AI 代理使用指南"
 description: "整理远程服务器 SSH、tmux、VS Code Remote 与 CLI AI 代理的配置、密钥管理和安全实践。"
 pubDate: 2026-06-04
-updatedDate: 2026-10-11
+updatedDate: 2026-10-26
 tags:
   - "SSH"
   - "CLI"
@@ -12,18 +12,9 @@ category: knowledge
 cover: /covers/post-cli-terminal.svg
 ---
 
-## 这篇文档解决什么问题
+## 适用场景
 
-这篇文档主要解决下面几类问题：
-
-- 需要通过 SSH 连接远程服务器（GPU 服务器、云主机、HPC 集群）但配置混乱
-- 远程会话经常因网络断开而丢失工作状态
-- 不确定如何高效地在远程服务器上做日常开发
-- 想在远程服务器上使用 opencode、codex、claude-code 等 CLI AI 代理但不知道最佳方案
-- API 密钥在远程服务器上的安全管理
-- 文件在本地和远程之间同步的困惑
-
-如果你日常需要连远程服务器跑代码、训练模型、做开发，或者正在搭建 AI 辅助的远程开发工作流，这篇文档就是为这种场景准备的。
+连接 GPU 服务器、云主机或 HPC 集群时，SSH 配置、会话保持、密钥管理和远程 CLI AI 代理的使用容易混在一起。下面按连接、保持、开发、代理四部分整理，命令按 OpenSSH 9+ 验证。
 
 ---
 
@@ -70,6 +61,20 @@ New-Item -ItemType File -Path "$sshDir\config" -Force
 
 ```ssh-config
 # ═══════════════════════════════════════════
+# 全局默认（放在文件最后，对所有 Host 生效）
+# ═══════════════════════════════════════════
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 5
+    TCPKeepAlive yes
+    Compression yes
+    ForwardAgent no
+    ForwardX11 no
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+    StrictHostKeyChecking ask
+
+# ═══════════════════════════════════════════
 # 生产服务器
 # ═══════════════════════════════════════════
 Host prod-web
@@ -84,7 +89,7 @@ Host prod-web
 # GPU 开发服务器（非标准端口）
 # ═══════════════════════════════════════════
 Host gpu-dev
-    HostName 192.0.2.10
+    HostName 192.168.1.100
     User developer
     Port 2222
     IdentityFile ~/.ssh/id_ed25519_dev
@@ -103,7 +108,7 @@ Host bastion
 # 通过跳板机访问的内网服务器
 # ═══════════════════════════════════════════
 Host db-internal
-    HostName 192.0.2.10
+    HostName 10.0.1.50
     User postgres
     IdentityFile ~/.ssh/id_ed25519_prod
     ProxyJump bastion
@@ -122,21 +127,6 @@ Host gitlab.com
     User git
     IdentityFile ~/.ssh/id_ed25519_gitlab
     IdentitiesOnly yes
-
-# ═══════════════════════════════════════════
-# 全局默认（放在文件末尾；OpenSSH 取第一个匹配值，主机专属配置应在前）
-# ═══════════════════════════════════════════
-Host *
-    ServerAliveInterval 60
-    ServerAliveCountMax 5
-    TCPKeepAlive yes
-    Compression yes
-    ForwardAgent no
-    ForwardX11 no
-    IdentitiesOnly yes
-    AddKeysToAgent yes
-    StrictHostKeyChecking ask
-
 ```
 
 ### 1.4 关键配置项说明
@@ -167,8 +157,6 @@ Host *
     ControlPersist 10m
 ```
 
-> 注意：连接复用依赖 Unix 域套接字，Windows 自带的 OpenSSH 客户端不支持 ControlMaster/ControlPath；Windows 用户可在 WSL 内使用 OpenSSH。
-
 先创建 socket 目录：
 
 ```bash
@@ -187,17 +175,17 @@ Ed25519 是现代标准：更快、更安全、密钥更短。
 
 ```bash
 # Ed25519（推荐）
-ssh-keygen -t ed25519 -C "user@example.com" -f ~/.ssh/id_ed25519
+ssh-keygen -t ed25519 -C "你的邮箱@example.com" -f ~/.ssh/id_ed25519
 
 # RSA 4096（仅用于不支持 Ed25519 的老系统）
-ssh-keygen -t rsa -b 4096 -C "user@example.com" -f ~/.ssh/id_rsa_4096
+ssh-keygen -t rsa -b 4096 -C "你的邮箱@example.com" -f ~/.ssh/id_rsa_4096
 ```
 
 **密钥类型对比**：
 
 | 类型 | 安全性 | 兼容性 | 速度 | 推荐 |
 |------|--------|--------|------|------|
-| Ed25519 | 极高 | 现代系统 | 最快 | **首选** |
+| Ed25519 | 高 | 现代系统 | 较快 | 优先 |
 | RSA 4096 | 高 | 通用 | 较慢 | 老系统备选 |
 | ECDSA | 高 | 较好 | 快 | 不推荐（随机数风险） |
 | DSA | 低 | 老旧 | 慢 | **已废弃，不要用** |
@@ -208,7 +196,7 @@ ssh-keygen -t rsa -b 4096 -C "user@example.com" -f ~/.ssh/id_rsa_4096
 
 ```bash
 # 生成时设置密码（交互式提示）
-ssh-keygen -t ed25519 -C "user@example.com"
+ssh-keygen -t ed25519 -C "your@email.com"
 
 # 为已有密钥添加或修改密码
 ssh-keygen -p -f ~/.ssh/id_ed25519
@@ -415,7 +403,7 @@ brew install mosh       # macOS
 mosh gpu-dev -- tmux new -A -s work
 ```
 
-**Mosh + tmux 是最强组合**：Mosh 保证连接稳定，tmux 保证会话持久。
+**Mosh + tmux 是常用组合**：Mosh 改善连接稳定性，tmux 保证会话持久。
 
 > Mosh 的限制：不支持端口转发（-L/-R/-D），不支持 agent 转发，不能滚动查看历史（用 tmux 弥补）。
 
@@ -467,7 +455,7 @@ tmux attach -t work
 
 ```ssh-config
 Host gpu-dev
-    HostName 192.0.2.10
+    HostName 192.168.1.100
     User developer
     LocalForward 8888 localhost:8888
     LocalForward 6006 localhost:6006
@@ -538,7 +526,7 @@ scp -r local_dir/ user@server:/remote/dir/
 scp user@server:/remote/file.txt ./local/
 
 # 使用 SSH config 别名（省去完整地址）
-scp file.txt gpu-dev:/home/user/data/
+scp file.txt gpu-dev:/home/developer/data/
 
 # 压缩传输（文本文件效果好）
 scp -C large_log.txt user@server:/tmp/
@@ -602,7 +590,7 @@ opencode serve                 ◄─── VS Code 插件（多个开发者）
 
 ### 6.2 OpenCode 在远程服务器上
 
-#### 安装 OpenCode
+#### 安装
 
 ```bash
 # Linux 服务器（推荐安装脚本）
@@ -697,7 +685,7 @@ opencode run -f json "列出项目中的所有 TODO 注释"
 
 ### 6.3 Codex CLI 在远程服务器上
 
-#### 安装 Codex CLI
+#### 安装
 
 ```bash
 npm install -g @openai/codex
@@ -981,17 +969,17 @@ which python
 
 ### 8.6 API 密钥报错 "Invalid API key"
 
-- 检查环境变量是否设置：`test -n "$ANTHROPIC_API_KEY" && echo "configured"`
+- 检查环境变量是否设置：`echo $ANTHROPIC_API_KEY`
 - 如果用了 restricted 文件，检查文件权限：`ls -la ~/.secrets/`
 - OpenCode 配置中变量替换格式是 `{env:VAR_NAME}`（注意大括号和冒号）
 
 ---
 
-## 九、最短结论
+## 九、结论
 
-1. **花 10 分钟配好 `~/.ssh/config`**，后续所有远程操作效率翻倍
-2. **必装 tmux**，远程会话不会因为网络断开而丢失工作
-3. **VS Code Remote SSH + tmux** 是远程开发的黄金组合
+1. **花 10 分钟配好 `~/.ssh/config`**，后续远程操作会省很多重复输入
+2. **建议装 tmux**，远程会话不会因为网络断开而丢失工作
+3. **VS Code Remote SSH + tmux** 是常用的远程开发组合
 4. **代码走 Git 同步**，数据文件走 rsync 同步
 5. AI 代理在远程服务器上首选 **模式 A**（代理跑在服务器上），最贴近实际运行环境
 6. API 密钥用**环境变量**或**600 权限文件**管理，永远不要硬编码在配置文件里
@@ -1006,7 +994,7 @@ which python
 
 ```bash
 # 1. 生成密钥
-ssh-keygen -t ed25519 -C "user@example.com"
+ssh-keygen -t ed25519 -C "your@email.com"
 ssh-add ~/.ssh/id_ed25519
 
 # 2. 部署公钥

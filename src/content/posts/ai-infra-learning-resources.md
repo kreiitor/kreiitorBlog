@@ -2,7 +2,7 @@
 title: "AI Infra、算法、Agent 与后端学习资源推荐"
 description: "面向 AI Infra、算法、Agent 与后端岗位的系统工程学习路线：从 C++、系统与分布式基础，到 PyTorch、CUDA、vLLM 和 Agent 工程化。"
 pubDate: 2026-07-06
-updatedDate: 2026-10-11
+updatedDate: 2026-10-26
 tags:
   - "ai知识库"
   - "career"
@@ -17,425 +17,145 @@ category: knowledge
 cover: /covers/post-cli-terminal.svg
 ---
 
-## 这篇文档解决什么问题
-
-这篇文档回答一个具体问题：
-
-如果求职意向同时包括 `AI Infra`、算法、Agent 开发、后端开发和 `C++`，应该读什么书、学哪些课程、做什么项目，才能形成一条不分裂的学习路线。
-
-核心结论是：不要把这几个方向分开学。更稳的路线是围绕一条主线积累：
-
-```text
-系统工程能力
-→ 高性能 C++ 与后端基础
-→ 分布式系统与数据系统
-→ 深度学习系统与推理服务
-→ Agent 工程化与平台化
-```
-
-这样准备出来的能力可以同时覆盖：
-
-- AI Infra / ML Systems 工程师
-- LLM 推理服务与模型平台工程师
-- Agent 后端 / Agent 平台工程师
-- 偏系统的算法工程师
-- C++ 后端 / 高性能服务开发
+这份路线不是一条适合所有人的 12 个月计划。AI Infra、C++ 后端、Agent 工程是三套不同的岗位准备，共享一部分系统基础，但项目、面试重点和时间投入不一样。先选一条主线，再把另外两条当辅助。
 
 相关文档：
 
 - [就业方向规划与学习路线](/blog/career-planning-learning-roadmap/)
 - [前沿算法岗位从零开始路线图](/blog/algorithm-career-roadmap/)
-- [uv包管理工具实践哲学与完整使用流程](/blog/uv-package-manager-guide/)
 
----
+## 先选主线
 
-## 总体路线
+| 主线 | 主要语言 | 核心能力 | 适合的人 |
+| --- | --- | --- | --- |
+| AI Infra / ML Systems | Python，C++ 加分 | PyTorch、推理服务、CUDA/Triton、分布式训练、K8s | 想做模型训练/推理系统、平台、性能优化 |
+| C++ / 后端 | C++，Go/Python 加分 | Linux、网络、数据库、RPC、分布式、性能 | 想做后端、基础架构、高性能服务 |
+| Agent / LLM 应用工程 | Python/TypeScript | 后端、RAG、工具调用、eval、可观测性 | 想做 LLM 应用、Agent 平台、AI 产品后端 |
+| 算法岗 | Python | 深度学习、Transformer、训练/评测、论文复现 | 想做模型算法、研究工程；见[另一篇路线](/blog/algorithm-career-roadmap/) |
 
-最推荐的能力组合是：
+现实一点说：同时把四条线都准备好，通常每条都只能停在“看过教程”。选一条主线，另一条只补到能配合项目的程度。
 
-```text
-C++ / CSAPP / Linux
-→ 算法与数据结构
-→ 后端与分布式系统
-→ PyTorch / LLM 基础
-→ CUDA / Triton / vLLM
-→ Agent 工程化
-```
+## 共同底座
 
-其中 `Agent` 适合作为上层应用方向，`AI Infra` 和 `后端/C++` 是底层护城河。只学 Agent 框架容易变成调 API；只学 C++ 又可能离 AI 岗位太远。把两者接起来，最好的作品形态是：
+不管选哪条，下面这些都要有：
 
-```text
-一个可观测、可评测、可部署、可扩展的 LLM/Agent 后端系统
-```
+- 一门主力语言：Python 或 C++，能写 500 行以上的完整项目，不是只会做题。
+- 计算机基础：进程/线程、内存、文件、网络、基本的性能分析。
+- Git、Linux、Docker：能独立把项目跑起来、打包、部署。
+- 算法：Hot100 常见题型能稳定写出来，面试前再集中刷。
+- 一个能讲 20 分钟的项目：有 README、有数据、有失败记录。
 
----
+## AI Infra / ML Systems
 
-## 学习模块优先级
+### 先学什么
 
-| 优先级 | 模块 | 为什么重要 | 交付标准 |
-|---|---|---|---|
-| P0 | C++ 与计算机系统 | 决定后端、AI Infra、性能优化的底层理解 | 能写稳定的多线程程序，能解释内存、链接、缓存、并发问题 |
-| P0 | 算法与数据结构 | 面试硬门槛，也是系统设计中的基本语言 | 中等题稳定，图、堆、二分、DP、并查集不怵 |
-| P0 | 后端与分布式系统 | AI Infra 和 Agent 平台最终都要上线服务 | 能实现 RPC、KV store、任务队列、限流、监控 |
-| P1 | PyTorch 与 LLM 基础 | 进入 AI Infra 和算法方向的桥 | 能写训练循环，理解 Transformer、微调和评测 |
-| P1 | CUDA / Triton / 推理服务 | AI Infra 的核心差异化能力 | 能写基础 kernel，能部署 vLLM 并 benchmark |
-| P1 | Agent 工程化 | 贴近当前落地岗位和项目机会 | 能实现工具调用、RAG、workflow、tracing、eval |
-| P2 | K8s / MLOps / 可观测性 | 平台岗加分项，线上系统必备 | 能容器化、部署、监控、定位性能瓶颈 |
+1. Python 工程化：包管理、类型标注、测试、日志。
+2. PyTorch：训练循环、autograd、DataLoader、AMP、checkpoint。
+3. Transformer：attention、tokenizer、KV cache。
+4. 推理服务：vLLM 或 SGLang，理解 batching、TTFT、TPOT、吞吐和 p95 延迟。
+5. 分布式训练：DDP、FSDP、ZeRO、NCCL，重点是显存和通信，不是把 Megatron 跑通。
+6. CUDA/Triton：能写 vector add、reduce、softmax、matmul，能和 PyTorch baseline 对比。
+7. 部署与监控：Docker、K8s、Prometheus/Grafana。
 
----
+### 资源
 
-## 必读书籍
+- [Stanford CS336](https://cs336.stanford.edu/)：从零理解 LLM 训练与系统，优先级最高。
+- [CMU Deep Learning Systems](https://dlsyscourse.org/)：自动求导、算子、训练系统。
+- [PyTorch FSDP 文档](https://docs.pytorch.org/docs/stable/fsdp.html)：分布式训练入门。
+- [CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/index.html)：需要查手册时看。
+- [Triton Documentation](https://triton-lang.org/)：写 kernel 入门比 CUDA 轻。
+- [vLLM Documentation](https://docs.vllm.ai/)：推理服务主线。
+- [nanoGPT](https://github.com/karpathy/nanoGPT)：从零复现一个小 GPT。
+- [Designing Data-Intensive Applications](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/)：做平台和分布式时补。
 
-### 计算机系统与 C++
+### 项目
 
-| 资源 | 用途 | 建议读法 |
-|---|---|---|
-| [Computer Systems: A Programmer's Perspective](https://csapp.cs.cmu.edu/) | 计算机系统底座，理解程序如何运行 | 精读第 1-3、6、8、9、10、12 章 |
-| 《Effective Modern C++》 | 现代 C++ 语义、RAII、移动语义、模板习惯 | 边读边重构自己的 C++ 小项目 |
-| [C++ Concurrency in Action](https://www.manning.com/books/c-plus-plus-concurrency-in-action-second-edition) | C++ 多线程、锁、原子变量、内存模型 | 配合线程池、任务队列项目练习 |
-| [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) | 现代 C++ 长期查阅手册 | 遇到风格、生命周期、所有权问题时查阅 |
+优先做一个完整的推理服务，而不是五个 demo：
 
-### 后端与分布式系统
+- 用 LoRA 微调一个小模型，整理数据、训练、评测。
+- 用 vLLM 部署成 OpenAI-compatible 服务，支持 streaming。
+- 压测并记录 TTFT、TPOT、吞吐、p95 延迟、GPU 利用率。
+- 用 Docker 打包，部署到一台带 GPU 的机器或 K8s。
+- 接 Prometheus/Grafana，写一页性能分析。
 
-| 资源 | 用途 | 建议读法 |
-|---|---|---|
-| [Designing Data-Intensive Applications](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/) | 数据系统、复制、分区、一致性、流处理 | 后端和 AI Infra 都建议精读 |
-| [MIT 6.5840 Distributed Systems](https://pdos.csail.mit.edu/6.824/) | 分布式系统经典课，含 MapReduce、Raft、KV store | 至少做 MapReduce 和 Raft/KV labs |
-| [CMU 15-445/645 Database Systems](https://15445.courses.cs.cmu.edu/) | 数据库系统实现，项目质量高 | 适合补 buffer pool、索引、查询执行 |
+这个项目能同时讲清训练、推理、部署和性能，比“跑过 CS336”更有说服力。
 
-### 算法与机器学习
+## C++ / 后端
 
-| 资源 | 用途 | 建议读法 |
-|---|---|---|
-| [Algorithms by Jeff Erickson](https://jeffe.cs.illinois.edu/teaching/algorithms/) | 算法理论与直觉，免费教材 | 按专题补图、DP、贪心、复杂度 |
-| [Dive into Deep Learning](https://d2l.ai/) | 深度学习入门，代码和数学结合 | 先用它建立 ML/DL 主线 |
-| [Deep Learning Book](https://www.deeplearningbook.org/) | 深度学习理论参考书 | 用作查漏补缺，不建议一开始硬啃 |
+### 先学什么
 
----
+1. C++ 基础：RAII、智能指针、移动语义、模板基础。
+2. 并发：线程池、锁、条件变量、原子变量、内存模型。
+3. Linux：进程、线程、文件、socket、epoll。
+4. 网络与协议：TCP、HTTP、RPC、序列化。
+5. 数据库：索引、事务、MVCC，至少懂 MySQL 或 PostgreSQL 的基本原理。
+6. 分布式：复制、分区、一致性、Raft。
+7. 性能：cache、false sharing、profiling、benchmark。
 
-## 官方课程与文档
+### 资源
 
-### AI Infra / ML Systems
+- [CSAPP](https://csapp.cs.cmu.edu/)：第 1–3、6、8、9、10、12 章优先。
+- 《Effective Modern C++》：现代 C++ 语义和习惯。
+- [C++ Concurrency in Action](https://www.manning.com/books/c-plus-plus-concurrency-in-action-second-edition)：多线程和内存模型。
+- [MIT 6.5840](https://pdos.csail.mit.edu/6.824/)：分布式系统，做 MapReduce 和 Raft。
+- [CMU 15-445/645](https://15445.courses.cs.cmu.edu/)：数据库系统实现。
+- [DDIA](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/)：数据系统设计。
 
-| 资源 | 用途 | 重点 |
-|---|---|---|
-| [CMU Deep Learning Systems](https://dlsyscourse.org/) | 深度学习系统全栈课程 | 自动求导、算子、编译、训练系统 |
-| [Stanford CS336: Language Modeling from Scratch](https://cs336.stanford.edu/) | 从零理解 LLM 训练与系统 | tokenizer、Transformer、训练、推理、profiling |
-| [PyTorch FSDP 文档](https://docs.pytorch.org/docs/stable/fsdp.html) | 分布式训练基础 | 参数、梯度、优化器状态如何分片 |
-| [PyTorch FSDP2 Tutorial](https://docs.pytorch.org/tutorials/intermediate/FSDP_tutorial.html) | 官方上手教程 | 小规模跑通并理解显存变化 |
-| [CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/index.html) | CUDA 官方权威文档 | GPU 执行模型、内存层次、kernel 编写 |
-| [Triton Documentation](https://triton-lang.org/) | 更适合 AI kernel 入门 | matmul、softmax、layernorm 小练习 |
-| [vLLM Documentation](https://docs.vllm.ai/) | LLM 推理服务核心项目 | continuous batching、KV cache、engine 参数、benchmark |
+### 项目
 
-### LLM / 算法 / NLP
+- C++ 线程池 + 任务队列：练并发和优雅退出。
+- mini RPC：练网络、序列化、超时和重试。
+- Raft KV store：练共识、复制、故障恢复。
+- 高性能日志库：练异步写入和锁竞争。
 
-| 资源 | 用途 | 重点 |
-|---|---|---|
-| [Stanford CS224N](https://web.stanford.edu/class/cs224n/) | NLP 与深度学习经典课 | Transformer、预训练、NLP 任务 |
-| [Full Stack Deep Learning](https://fullstackdeeplearning.com/) | 从模型到产品的工程视角 | 训练、部署、评测、LLMOps |
-| [Full Stack LLM Bootcamp](https://fullstackdeeplearning.com/llm-bootcamp/) | LLM 应用工程入门 | RAG、eval、产品化、部署 |
-| [DataTalksClub MLOps Zoomcamp](https://github.com/DataTalksClub/mlops-zoomcamp) | MLOps 免费项目课 | 实验追踪、部署、监控、pipeline |
+不要只写“语法练习”。后端岗位看的是你能不能把服务跑稳，而不是会不会写智能指针。
 
-### Agent 工程化
+## Agent / LLM 应用工程
 
-| 资源 | 用途 | 重点 |
-|---|---|---|
-| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | 官方 Agent SDK | turns、tool execution、handoffs、sessions |
-| [OpenAI Agents SDK Tracing](https://openai.github.io/openai-agents-python/tracing/) | Agent 可观测性 | LLM generations、tool calls、handoffs、guardrails |
-| [OpenAI Agents SDK Guardrails](https://openai.github.io/openai-agents-python/guardrails/) | 安全与边界控制 | 输入/输出检查、工具调用约束 |
-| [LangGraph / LangSmith Agent Docs](https://docs.langchain.com/langsmith/develop-agents-overview) | 复杂 Agent workflow | streaming、human-in-the-loop、MCP、tracing |
-| [Hugging Face Agents Course](https://huggingface.co/learn/agents-course/unit0/introduction) | 免费 Agent 入门课 | 从基础 agent 到工具调用实践 |
+### 先学什么
 
----
+1. 后端基础：HTTP、鉴权、队列、缓存、重试、限流。
+2. LLM 调用：prompt、function calling、流式输出、成本统计。
+3. RAG：切分、embedding、检索、rerank、引用溯源。
+4. Agent：工具调用、状态机、human-in-the-loop、失败恢复。
+5. 评测：数据集、指标、回归测试、人工抽检。
+6. 可观测性：tracing、日志、token/成本统计。
 
-## 分方向学习建议
+### 资源
 
-### 1. C++ 与系统基础
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)：工具调用、handoff、tracing。
+- [LangGraph / LangSmith](https://docs.langchain.com/langsmith/develop-agents-overview)：复杂 workflow 和可观测性。
+- [Hugging Face Agents Course](https://huggingface.co/learn/agents-course/unit0/introduction)：免费入门。
+- [MCP 文档](https://modelcontextprotocol.io/)：工具协议与 SDK 参考。
 
-目标不是“会写语法”，而是能写可靠、高性能、可调试的系统程序。
+### 项目
 
-必须掌握：
+- 一个带 RAG 的问答后端：能引用原文、能处理无答案。
+- 一个工具调用 Agent：有权限边界、超时、重试和错误提示。
+- 一个 eval harness：固定数据集、指标、回归测试和成本统计。
 
-- RAII、智能指针、生命周期与所有权
-- 移动语义、完美转发、模板基础
-- 多线程、锁、条件变量、原子变量、内存模型
-- Linux 进程、线程、文件、socket、epoll/io_uring 基础
-- cache locality、false sharing、profiling、benchmark
+Agent 岗位的区分度不在“用了哪个框架”，而在你能不能处理失败、控制成本、做评测和定位问题。
 
-建议项目：
+## 时间怎么排
 
-| 项目 | 训练能力 |
-|---|---|
-| C++ 线程池 | 并发、任务队列、条件变量、优雅退出 |
-| C++ 内存池 | 内存分配、对象生命周期、性能 benchmark |
-| mini RPC | 网络、序列化、线程模型、超时重试 |
-| 高性能日志库 | 异步写入、缓冲、锁竞争优化 |
+不要按“第 1 个月学 C++、第 2 个月学后端、第 3 个月学 AI”排。更实际的方式是：
 
----
+- 前 3 个月：补共同底座，选一个主线开始做项目。
+- 中间 6 个月：主线项目做深，辅助线只补项目需要的部分。
+- 最后 3 个月：面试题、项目复盘、系统设计、简历。
 
-### 2. 算法与面试
+如果你只有 6 个月，主线项目 + 算法 + 计算机基础，比四条线都碰一遍更有效。
 
-算法学习不要只追求题量，而要建立题型模板和复盘体系。
+## 常见问题
 
-优先顺序：
+**Q：C++ 和 AI Infra 必须同时学吗？**
+不必须。AI Infra 的日常更多是 Python、PyTorch、推理框架和系统排查；C++ 在 kernel、性能、基础架构岗位更有用。先把 Python 和推理服务做熟，再补 C++。
 
-1. 数组、哈希、双指针、滑动窗口
-2. 二分、前缀和、差分
-3. 栈、队列、堆、单调栈、单调队列
-4. 二叉树、DFS、BFS、回溯
-5. 图、拓扑排序、最短路、并查集
-6. 动态规划：背包、区间、状态机、树形 DP
-7. 高频困难题适量练，不要一开始陷进去
+**Q：Agent 开发要不要学 C++？**
+大多数 Agent 应用岗位不需要。后端、Python/TypeScript、RAG、eval 更重要。
 
-建议标准：
+**Q：资源都要看完吗？**
+不需要。每一条主线选 2–3 个核心资源，其他当查阅。看完不是目标，做出项目才是。
 
-| 阶段 | 目标 |
-|---|---|
-| 入门 | 100 道基础题，覆盖所有常见数据结构 |
-| 提升 | 200 道中等题，能稳定写出主流题型 |
-| 秋招 | 250-300 道高质量题，有错题复盘和限时训练 |
-
----
-
-### 3. 后端与分布式系统
-
-后端方向的重点不是 CRUD，而是系统边界、性能、可靠性和数据一致性。
-
-必须掌握：
-
-- HTTP、RPC、序列化、连接池
-- MySQL / PostgreSQL 基础与索引原理
-- Redis、缓存一致性、热点 key、限流
-- 消息队列、任务队列、重试、幂等
-- 分布式一致性：Raft、复制、分区、故障恢复
-- 可观测性：日志、metrics、tracing
-
-建议项目：
-
-| 项目 | 训练能力 |
-|---|---|
-| mini HTTP/RPC server | 网络编程、协议设计、并发模型 |
-| Raft KV store | 共识、复制、故障恢复 |
-| 任务队列系统 | 可靠投递、重试、幂等、延迟任务 |
-| API Gateway | 鉴权、限流、路由、监控 |
-
----
-
-### 4. AI Infra / ML Systems
-
-AI Infra 的关键不是“会调模型”，而是理解模型在真实系统里如何训练、推理、部署、监控和优化。
-
-必须掌握：
-
-- PyTorch 训练循环、autograd、AMP、checkpoint
-- Transformer、attention、tokenizer、KV cache
-- LoRA/QLoRA、SFT、eval、ablation
-- DDP、FSDP、ZeRO、NCCL、AllReduce
-- vLLM/SGLang 推理服务、batching、TTFT、TPOT、p95 latency
-- CUDA/Triton 基础 kernel，能做 benchmark
-- Docker/K8s/GPU resource request、Prometheus/Grafana
-
-建议项目：
-
-| 项目 | 训练能力 |
-|---|---|
-| nanoGPT 训练复现 | Transformer、训练循环、显存分析 |
-| LoRA 微调 + 评测 pipeline | 数据、训练、评测、可复现 |
-| vLLM 推理服务 benchmark | 吞吐、延迟、batching、KV cache |
-| Triton matmul/softmax/layernorm | GPU kernel、访存、性能对比 |
-| K8s 部署模型服务 | 容器化、GPU 调度、监控 |
-
----
-
-### 5. Agent 开发
-
-Agent 开发要避免只停留在“套一个框架”。真正有岗位价值的是工程化能力：
-
-- 工具调用与权限边界
-- RAG 与数据权限
-- workflow、状态机、任务恢复
-- human-in-the-loop
-- eval 与回归测试
-- tracing 与成本统计
-- 队列、缓存、重试、超时、限流
-- 多租户、鉴权、审计日志
-
-建议项目：
-
-| 项目 | 训练能力 |
-|---|---|
-| RAG 问答后端 | embedding、检索、rerank、引用溯源 |
-| 工具调用 Agent | function calling、权限、错误处理 |
-| Code Review Agent | 代码解析、PR 上下文、静态检查、报告生成 |
-| Agent workflow platform | 多步骤任务、状态持久化、人工确认、tracing |
-| Agent eval harness | 数据集、指标、回归测试、成本统计 |
-
----
-
-## 推荐项目组合
-
-如果只做几个最有简历价值的项目，建议优先这 5 个。
-
-### 1. C++ mini RPC + 线程池
-
-目标：证明 C++ 后端和系统能力。
-
-应包含：
-
-- 线程池
-- TCP 连接管理
-- 简单序列化协议
-- 超时和重试
-- benchmark
-- README 说明性能结果
-
-### 2. MIT 6.5840 Raft KV Store
-
-目标：证明分布式系统能力。
-
-应包含：
-
-- Raft leader election
-- log replication
-- snapshot
-- fault tolerance
-- KV service
-- 测试说明和踩坑记录
-
-### 3. Triton/CUDA Kernel Benchmark
-
-目标：证明 AI Infra 性能优化潜力。
-
-应包含：
-
-- vector add
-- reduce
-- softmax
-- matmul 或 layernorm
-- 与 PyTorch baseline 对比
-- Nsight / profiler 结果截图或表格
-
-### 4. vLLM LLM Inference Service
-
-目标：证明推理服务和模型平台能力。
-
-应包含：
-
-- OpenAI-compatible API
-- streaming
-- batching 配置
-- TTFT / TPOT / throughput / p95 latency
-- Docker 部署
-- Prometheus/Grafana 监控
-
-### 5. Production-style Agent Backend
-
-目标：连接 Agent、后端和 AI Infra。
-
-应包含：
-
-- RAG
-- tool calling
-- task queue
-- tracing
-- eval
-- auth
-- rate limit
-- 成本统计
-- 错误恢复
-
----
-
-## 12个月学习顺序
-
-这是一条偏稳的顺序，不要求每一步完全结束再进入下一步，但主线不要乱。
-
-| 时间 | 主线 | 交付 |
-|---|---|---|
-| 第 1-2 个月 | C++、CSAPP、Linux、LeetCode 基础 | 线程池、内存池、100 道算法题 |
-| 第 3-4 个月 | 后端、网络、数据库、分布式入门 | mini RPC、Redis/MySQL 小项目 |
-| 第 5-6 个月 | MIT 6.5840 / DDIA | MapReduce、Raft KV store |
-| 第 7-8 个月 | PyTorch、Transformer、D2L、CS224N | mini Transformer、LoRA 微调 |
-| 第 9-10 个月 | AI Infra：FSDP、CUDA/Triton、vLLM | kernel benchmark、推理服务 benchmark |
-| 第 11-12 个月 | Agent 工程化 + 项目整合 | Production-style Agent backend |
-
----
-
-## 每周学习节奏
-
-如果一周能投入 20-25 小时，可以这样分配：
-
-| 模块 | 时间 | 目标 |
-|---|---:|---|
-| C++ / 系统 / 后端 | 6-8 小时 | 写代码和读源码 |
-| 算法题 | 4-5 小时 | 每周 6-10 题，必须复盘 |
-| AI / ML / Infra | 6-8 小时 | 课程 + 项目推进 |
-| 文档与复盘 | 2-3 小时 | 写 README、技术这里、踩坑记录 |
-| 行业/论文跟进 | 1-2 小时 | 只跟和项目相关的内容 |
-
----
-
-## 常见误区
-
-### 误区一：五个方向平均用力
-
-平均用力会导致每个方向都浅。更好的方式是用 `AI 系统工程` 作为主线，把后端、C++、算法、Agent 都服务于这个主线。
-
-### 误区二：Agent 只学框架
-
-框架很快会变。真正稳定的是：
-
-- 状态管理
-- 工具调用
-- 权限边界
-- 可观测性
-- 评测
-- 失败恢复
-- 成本控制
-
-### 误区三：AI Infra 只看论文不写系统
-
-AI Infra 岗位很看重动手。只会讲 FlashAttention、PagedAttention、FSDP 不够，最好能给出自己的 benchmark、部署记录和性能分析。
-
-### 误区四：C++ 只刷语法题
-
-C++ 的求职价值来自系统能力，不是语法熟练度本身。要尽早写线程池、RPC、日志库、内存池这类项目。
-
-### 误区五：算法刷题没有复盘
-
-没有复盘的刷题很容易“看懂但写不出”。每道错题至少记录：
-
-- 题型
-- 核心思路
-- 卡住原因
-- 模板代码
-- 一周后是否能独立写出
-
----
-
-## 最小可执行版本
-
-如果时间有限，只做下面这些：
-
-1. 精读 CSAPP 核心章节，写一个 C++ 线程池
-2. 刷 200 道 LeetCode 高频题并做错题本
-3. 读 DDIA，做 MIT 6.5840 的 Raft KV store
-4. 用 D2L + CS224N 补深度学习和 Transformer
-5. 用 vLLM 部署一个 LLM 推理服务并做 benchmark
-6. 用 OpenAI Agents SDK 或 LangGraph 做一个带 tracing 和 eval 的 Agent 后端
-
-这 6 件事做扎实，比泛泛看 30 门课更有求职信号。
-
----
-
-## 最终目标
-
-这条路线最后要让简历和面试呈现出一种清晰信号：
-
-> 我不是只会调用模型 API，也不是只会写普通后端。我能理解模型系统的底层约束，能写可靠的服务，能做性能分析，能把 LLM/Agent 系统真正部署、评测和维护起来。
-
-如果要给这条路线起一个统一名字，可以叫：
-
-```text
-面向 AI Infra 与 Agent 平台的系统工程路线
-```
+**Q：项目要做几个？**
+一个做深，两个做辅助。简历上三个能讲透的项目，比十个 demo 有用。
