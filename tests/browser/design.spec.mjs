@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import sharp from 'sharp';
 
 test('Home brings varied editorial selections into view before the second screen', async ({ page }) => {
  await page.goto('');
@@ -31,19 +30,12 @@ test('Mobile blog keeps articles ahead of expandable learning paths and opens pa
  await expect(paths).not.toHaveAttribute('open', '');
 });
 
-test('Research covers load with either manually selected theme', async ({ page }) => {
- await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
- await page.addInitScript(() => localStorage.setItem('theme', 'light'));
+test('Post cards and articles carry no decorative cover images', async ({ page }) => {
  await page.goto('');
- const cover = page.locator('.selected-writing .card-cover img');
- await cover.scrollIntoViewIfNeeded();
- await expect(cover).toHaveAttribute('src', /\/covers\/research\/.*\.webp$/);
- const sample = async () => sharp(await cover.screenshot()).metadata();
- expect((await sample()).width).toBeGreaterThan(0);
- await page.locator('[data-theme-toggle]').click();
- expect((await sample()).width).toBeGreaterThan(0);
- await page.locator('[data-theme-toggle]').click();
- expect((await sample()).width).toBeGreaterThan(0);
+ await expect(page.locator('.post-card img')).toHaveCount(0);
+ await page.goto('blog/llm-eval-pipeline/');
+ await expect(page.locator('.article-body')).toBeVisible();
+ await expect(page.locator('.article-header ~ img, .article-cover')).toHaveCount(0);
 });
 
 test('Practical articles lead directly into their text without a decorative cover', async ({ page }) => {

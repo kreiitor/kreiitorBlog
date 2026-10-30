@@ -1,8 +1,6 @@
 ---
 import type { LearningSeries } from '../utils/series';
 import { withBase } from '../utils/url';
-import { DEFAULT_SERIES_COVER } from '../utils/series';
-import { resolveCover } from '../utils/covers';
 import Icon from './Icon.astro';
 interface Props { series: LearningSeries; compact?: boolean; presentation?: 'card' | 'index'; headingLevel?: 'h2' | 'h3'; }
 const { series, compact = false, presentation = 'card', headingLevel: Heading = 'h3' } = Astro.props;
@@ -10,16 +8,13 @@ const { entry, chapters } = series;
 const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 ---
 <a href={withBase(`/notes/${entry.id}/`)} class:list={['zen-card','series-card',{'series-compact':compact,'series-index':presentation === 'index' && !compact}]} data-series={entry.id}>
- {!compact && <img class="series-illustration series-thumbnail" src={withBase(resolveCover(entry.data.cover ?? DEFAULT_SERIES_COVER))} width="2048" height="1152" alt="" loading="lazy"/>}
  <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'Structured learning'}</p><Heading>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
  <p class="series-description">{entry.data.description}</p>
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>
 <style>
- .series-card { display: flex; flex-direction: column; padding: 0 0 22px; }
- .series-thumbnail { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--color-surface-soft); transition: transform var(--dur-slower) var(--ease-out-expo); }
- @media (hover: hover) { .series-card:not(.series-index):hover .series-thumbnail { transform: scale(1.045); } }
- .series-card:not(.series-index) > :not(.series-thumbnail) { margin-inline: 24px; }
+ .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; }
+ .series-card:not(.series-index) > * { margin-inline: 24px; }
  .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; margin-top: 20px; }
  .series-heading > div { min-width: 0; }
  .series-heading .eyebrow { font-size: 11.5px; overflow-wrap: anywhere; }
@@ -34,10 +29,10 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-description { margin-block: 14px 18px; color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; }
  .series-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px dashed var(--color-line-strong); color: var(--color-ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
  .series-bottom > span:last-child { color: var(--color-ink); font-weight: 600; }
- @media (max-width: 600px) { .series-card:not(.series-index) > :not(.series-thumbnail) { margin-inline: 20px; } .series-heading :is(h2,h3) { font-size: 21px; } .series-card:not(.series-compact) .series-heading .eyebrow { display: none; } .series-card:not(.series-compact) .series-heading :is(h2,h3) { margin-top: 0; } }
+ @media (max-width: 600px) { .series-card:not(.series-index) > * { margin-inline: 20px; } .series-heading :is(h2,h3) { font-size: 21px; } .series-card:not(.series-compact) .series-heading .eyebrow { display: none; } .series-card:not(.series-compact) .series-heading :is(h2,h3) { margin-top: 0; } }
 
  .series-compact { padding: 18px 20px; }
- .series-compact > :not(.series-thumbnail) { margin-inline: 0 !important; }
+ .series-compact > * { margin-inline: 0 !important; }
  .series-compact .series-heading { display: flex; align-items: center; gap: 14px; margin-top: 0; }
  .series-compact .series-heading > div { flex: 1; }
  .series-compact .series-heading .eyebrow,.series-compact .series-description { display: none; }
@@ -47,10 +42,9 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-compact .series-bottom { margin-top: 10px; padding-top: 0; border-top: 0; }
  .series-compact .series-bottom > span:last-child { display: none; }
 
- .series-index { display: grid; grid-template-columns: 160px minmax(180px,240px) minmax(0,1fr) 150px; align-items: center; gap: 32px; padding: 28px 0; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; overflow: visible; }
+ .series-index { display: grid; grid-template-columns: minmax(180px,260px) minmax(0,1fr) 150px; align-items: center; gap: 32px; padding: 28px 0; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; overflow: visible; }
  .series-index::after { display: none; }
  .series-index > * { min-width: 0; margin: 0 !important; }
- .series-index .series-thumbnail { width: 160px; height: 90px; border-radius: 10px; }
  .series-index .series-heading { display: block; }
  .series-index .series-heading .eyebrow,.series-index .series-arrow { display: none; }
  .series-index .series-heading :is(h2,h3) { margin-top: 0; font-size: 23px; transition: color var(--dur-base); }
@@ -61,16 +55,14 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-index:is(:hover,:focus-visible) { translate: none; box-shadow: none; border-color: var(--color-line-strong); }
  .series-index:is(:hover,:focus-visible) :is(h2,h3),.series-index:is(:hover,:focus-visible) .series-bottom > span:last-child { color: var(--color-accent); }
  @media (min-width: 601px) and (max-width: 900px) {
-  .series-index { grid-template-columns: 120px minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
-  .series-index .series-thumbnail { grid-column: 1; grid-row: 1 / span 2; width: 120px; height: 68px; }
-  .series-index .series-heading { grid-column: 2; grid-row: 1; }
-  .series-index .series-description { grid-column: 2; grid-row: 2; -webkit-line-clamp: 2; }
-  .series-index .series-bottom { grid-column: 3; grid-row: 1 / span 2; }
+  .series-index { grid-template-columns: minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
+  .series-index .series-heading { grid-column: 1; grid-row: 1; }
+  .series-index .series-description { grid-column: 1; grid-row: 2; -webkit-line-clamp: 2; }
+  .series-index .series-bottom { grid-column: 2; grid-row: 1 / span 2; }
  }
  @media (max-width: 600px) {
-  .series-index { grid-template-columns: 96px minmax(0,1fr); gap: 16px 18px; padding: 22px 0; }
-  .series-index .series-thumbnail { grid-column: 1; grid-row: 1; width: 96px; height: 54px; }
-  .series-index .series-heading { grid-column: 2; grid-row: 1; }
+  .series-index { grid-template-columns: minmax(0,1fr); gap: 16px 18px; padding: 22px 0; }
+  .series-index .series-heading { grid-column: 1; grid-row: 1; }
   .series-index .series-heading :is(h2,h3) { font-size: 20px; }
   .series-index .series-description { grid-column: 1 / -1; -webkit-line-clamp: 2; }
   .series-index .series-bottom { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; text-align: left; }

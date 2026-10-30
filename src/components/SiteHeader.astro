@@ -80,7 +80,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
 </script>
 <style>
  .site-header { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb,var(--color-paper) 82%,transparent); border-bottom: 1px solid var(--color-line); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); transition: background-color var(--dur-slow) var(--ease-smooth),border-color var(--dur-slow) var(--ease-smooth); view-transition-name: site-header; }
- /* 首页主视觉上方：透明底，取暗色令牌；离开主视觉后由 Motion.astro 去掉 data-over-hero。 */
+ /* 首页主视觉上方：透明底，与主视觉连成一张纸；离开主视觉后由 Motion.astro 去掉 data-over-hero。 */
  .site-header[data-over-hero="true"] { background: transparent; border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
  /* 高度固定：滚动越过阈值时改变高度会让整页内容跳动。 */
  .header-inner { height: var(--header-height); display: flex; justify-content: space-between; align-items: center; gap: 30px; }

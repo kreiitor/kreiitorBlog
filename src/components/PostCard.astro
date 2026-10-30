@@ -1,6 +1,6 @@
 ---
 import type { PostEntry } from '../utils/content';
-import { getReadingTime, getPostCover } from '../utils/content';
+import { getReadingTime } from '../utils/content';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
@@ -8,10 +8,8 @@ import Icon from './Icon.astro';
 interface Props { post: PostEntry; featured?: boolean; featuredLabel?: string; }
 const { post, featured = false, featuredLabel = '精选札记' } = Astro.props;
 const href = withBase(`/blog/${post.id}/`);
-const cover = getPostCover(post);
 ---
 <article class:list={['zen-card','post-card',{'post-featured':featured}]} data-post-tags={JSON.stringify(post.data.tags)}>
- <a href={href} class="card-cover" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="2048" height="1152"/></a>
  <div class="card-content">
   {featured && <p class="featured-label">{featuredLabel}</p>}
   <div class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span></div>
@@ -22,7 +20,6 @@ const cover = getPostCover(post);
 </article>
 <style>
  .featured-label { align-self: start; color: var(--color-sage); font-size: 12.5px; font-weight: 600; letter-spacing: .06em; }
- .post-featured .card-cover { aspect-ratio: 16 / 9; }
  .post-featured .card-meta { order: 1; }
  .post-featured .card-bottom { order: 2; }
 </style>

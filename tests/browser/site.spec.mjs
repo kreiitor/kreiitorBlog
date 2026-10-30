@@ -51,12 +51,6 @@ test('Blog categories and paging survive reload',async({page})=>{
  await expect(rows).toHaveCount(12);
  await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(currentPage===2?null:String(currentPage-1));
 });
-test('Practical knowledge cards do not repeat adjacent covers',async({page})=>{
- await page.goto('notes/');
- const covers=await page.locator('.section-grid .post-card .card-cover img').evaluateAll(images=>images.map(image=>image.getAttribute('src')));
- expect(covers.length).toBeGreaterThan(1);
- for(let index=1;index<covers.length;index++)expect(covers[index]).not.toBe(covers[index-1]);
-});
 test('Full-text results still find phrases absent from the title catalog',async({page})=>{
  await page.goto('search/?q=Fischer');
  await expect(page.locator('.search-result').first()).toBeVisible();

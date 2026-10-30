@@ -2,10 +2,8 @@
 /* ===========================================================================
    设计令牌
    色板：宣纸（底）、黛（字）、朱砂（强调，只落在少数焦点上）、松石绿（栏目标签）、藤黄（点缀）。
-   亮色令牌写在 :root；暗色令牌在「显式暗色 / 跟随系统 / .dark-island」三处生效。
-   .dark-island 让首页主视觉、页脚等区块在亮色主题下也取暗色令牌。
-   别名令牌（引用其他令牌的 var()）在声明处就会被求值，所以必须同时声明在
-   :root 与 .dark-island 上，否则孤岛内会继承到亮色的计算结果。
+   亮色令牌写在 :root；暗色令牌在「显式暗色 / 跟随系统」两个通道生效。
+   全站共用一张纸：首页主视觉和页脚不另设底色，只靠纸纹、光晕和留白分层。
    =========================================================================== */
 @theme {
  --font-sans: 'DM Sans Variable','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',system-ui,sans-serif;
@@ -45,9 +43,10 @@
   --color-grid-dot: rgb(29 34 48 / .14);
   --spot: rgb(178 58 31 / .07);
   --shadow-tint: rgb(52 42 28 / .1); --shadow-tint-strong: rgb(52 42 28 / .2);
-  --hero-bg: #131827; --hero-glow: rgb(208 84 52 / .3);
+  --hero-glow: rgb(178 58 31 / .1); --hero-glow-cool: rgb(61 106 90 / .09);
+  --paper-grain: .05;
  }
- :root,.dark-island,.site-header[data-over-hero="true"] {
+ :root {
   --color-blossom: var(--color-line-strong);
   --color-blossom-line: var(--color-line);
   --color-blossom-soft: var(--color-surface-soft);
@@ -64,6 +63,8 @@
  }
  html { background: var(--color-paper); scroll-padding-top: calc(var(--header-height) + 32px); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
  body { min-width: 0; color: var(--color-ink); background-color: var(--color-paper); font-family: var(--font-sans); font-size: var(--text-body); line-height: 1.75; font-optical-sizing: auto; }
+ /* 纸纹：静态噪点平铺在固定层上，透明度随主题调整，不参与滚动重绘。 */
+ body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: var(--paper-grain); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .3 0 0 0 1.4 -.35'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"); }
  h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.35; text-wrap: pretty; line-break: strict; overflow-wrap: anywhere; }
  h1 { font-size: clamp(32px,2rem + 1vw,48px); letter-spacing: -.015em; }
  a { color: inherit; text-decoration: none; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
@@ -77,7 +78,7 @@
 /* 暗色令牌：显式选择与孤岛共用一份；跟随系统的通道必须保持同样的集合。
    tests/browser/theme.spec.mjs 检查实际渲染色与对比度。 */
 :root[data-theme="light"] { color-scheme: light; }
-:root[data-theme="dark"],.dark-island,.site-header[data-over-hero="true"] {
+:root[data-theme="dark"] {
  color-scheme: dark;
  --color-paper: #12151c; --color-paper-warm: #171b24; --color-paper-cool: #171b24;
  --color-surface: #191d27; --color-surface-soft: #1f2430; --color-surface-hover: #262c3a;
@@ -96,7 +97,7 @@
  --spot: rgb(242 137 107 / .1);
  --shadow-tint: rgb(0 0 0 / .45); --shadow-tint-strong: rgb(0 0 0 / .6);
 }
-:root[data-theme="dark"] { --hero-bg: #0b0e15; --hero-glow: rgb(242 137 107 / .18); }
+:root[data-theme="dark"] { --hero-glow: rgb(242 137 107 / .1); --hero-glow-cool: rgb(148 196 176 / .07); --paper-grain: .07; }
 @media (prefers-color-scheme: dark) {
  :root:not([data-theme]) {
   color-scheme: dark;
@@ -116,13 +117,12 @@
   --color-grid-dot: rgb(236 230 218 / .09);
   --spot: rgb(242 137 107 / .1);
   --shadow-tint: rgb(0 0 0 / .45); --shadow-tint-strong: rgb(0 0 0 / .6);
-  --hero-bg: #0b0e15; --hero-glow: rgb(242 137 107 / .18);
+  --hero-glow: rgb(242 137 107 / .1); --hero-glow-cool: rgb(148 196 176 / .07); --paper-grain: .07;
  }
 }
 
 @layer components {
  .page-shell { width: min(100% - clamp(40px,7vw,96px),1200px); margin-inline: auto; }
- .dark-island { color: var(--color-ink); }
  .seal { display: inline-block; width: .3em; height: .3em; margin-left: .12em; border-radius: 2px; background: var(--color-accent); vertical-align: .06em; }
  .eyebrow,.zen-kicker { font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; letter-spacing: .06em; color: var(--color-sage); }
 
@@ -177,9 +177,6 @@
  @media (max-width: 760px) { .page-botanical { display: none; } }
 
  .post-card { display: flex; flex-direction: column; height: 100%; }
- .card-cover { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--color-surface-soft); }
- .card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slower) var(--ease-out-expo); }
- @media (hover: hover) { .zen-card:hover .card-cover img { transform: scale(1.045); } }
  .card-category { position: absolute; top: 14px; left: 15px; padding: 3px var(--space-2xs); border: 1px solid var(--color-badge-line); border-radius: 999px; background: var(--color-badge-bg); color: var(--color-accent-strong); font-size: 12px; }
  .card-content { display: flex; flex-direction: column; flex: 1; gap: 12px; padding: 22px 24px 24px; }
  .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--color-ink-muted); font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
@@ -241,7 +238,6 @@
  .article-header { padding-bottom: 28px; border-bottom: 1px solid var(--color-line); }
  .article-header h1 { margin: 16px 0; font-size: clamp(30px,1.25rem + 2vw,46px); line-height: 1.3; letter-spacing: -.015em; text-wrap: balance; }
  .article-summary { margin-bottom: 22px; color: var(--color-ink-soft); font-family: var(--font-reading); font-size: 17px; line-height: 1.8; }
- .article-cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; background: var(--color-surface-soft); }
  .article-body { margin-block: 40px; }
  .article-toc { position: sticky; top: calc(var(--header-height) + 40px); max-height: calc(100vh - var(--header-height) - 72px); overflow-y: auto; padding-left: var(--space-m); border-left: 1px solid var(--color-line); scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
  .article-toc .eyebrow { margin-bottom: 10px; }

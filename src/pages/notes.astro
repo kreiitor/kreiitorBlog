@@ -5,19 +5,13 @@ import Botanical from '../components/Botanical.astro';
 import PostCard from '../components/PostCard.astro';
 import SeriesCard from '../components/SeriesCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import { getPostCover, getPublishedPosts } from '../utils/content';
+import { getPublishedPosts } from '../utils/content';
 import { getLearningSeries } from '../utils/series';
 import { withBase } from '../utils/url';
 const posts = await getCollection('posts');
 const series = getLearningSeries(await getCollection('series'), posts);
 const knowledge = getPublishedPosts(posts).filter(post => post.data.category === 'knowledge' && !post.data.series);
-const knowledgeSelection = [];
-const candidates = [...knowledge];
-while (knowledgeSelection.length < 6 && candidates.length) {
- const previousCover = knowledgeSelection.length ? getPostCover(knowledgeSelection[knowledgeSelection.length - 1]) : undefined;
- const differentCover = candidates.findIndex(post => getPostCover(post) !== previousCover);
- knowledgeSelection.push(...candidates.splice(differentCover < 0 ? 0 : differentCover, 1));
-}
+const knowledgeSelection = knowledge.slice(0, 6);
 ---
 <BaseLayout title="学习专题" description="成体系的学习笔记与实践知识：沿着主线阅读，从概念到推导，再到实践。">
  <div data-pagefind-ignore>
