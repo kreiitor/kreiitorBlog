@@ -15,13 +15,16 @@ const labels = { writing: '研究与思考', knowledge: '知识笔记', course: 
  </a>)}
 </div>
 <style>
- .post-row { display: grid; grid-template-columns: minmax(0,1fr) 32px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-blossom-line); }
- .row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; color: var(--color-ink-muted); }
- .row-category { color: var(--color-accent-strong); }
- .post-row h2 { margin-top: 10px; font-size: 22px; font-weight: 600; line-height: 1.6; transition: color .2s var(--ease-smooth); }
- .row-description { max-width: 78ch; margin-top: 8px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
- .row-arrow { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); color: var(--color-accent); font-size: 24px; transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth); }
- .post-row:hover h2 { color: var(--color-accent-strong); }
- .post-row:hover .row-arrow { transform: translateX(3px); background: var(--color-accent-soft); }
- @media (max-width: 600px) { .post-row { gap: 12px; padding: 22px 0; grid-template-columns: minmax(0,1fr) 32px; } .post-row h2 { font-size: 20px; } .row-meta { gap: 6px 10px; } }
+ .post-list { border-top: 1px solid var(--color-line); }
+ .post-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 40px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
+ .post-row::before { content: ''; position: absolute; left: 0; bottom: -1px; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+ .row-category { color: var(--color-sage); font-weight: 600; }
+ .post-row h2 { margin-top: 8px; font-size: 22px; line-height: 1.45; transition: color var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo); }
+ .row-description { max-width: 72ch; margin-top: 8px; color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+ .row-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
+ .post-row:is(:hover,:focus-visible)::before { transform: scaleX(1); }
+ .post-row:is(:hover,:focus-visible) h2 { color: var(--color-accent-strong); }
+ .post-row:is(:hover,:focus-visible) .row-arrow { transform: translateX(3px); background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+ @media (max-width: 600px) { .post-row { gap: 12px; padding: 22px 0; grid-template-columns: minmax(0,1fr) 36px; } .post-row h2 { font-size: 19px; } .row-arrow { width: 36px; height: 36px; } }
 </style>

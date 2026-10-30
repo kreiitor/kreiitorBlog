@@ -5,8 +5,8 @@ export const journalCodeTheme = {
  name: 'research-paper',
  type: 'light',
  colors: {
-  'editor.background': '#f1e8d8',
-  'editor.foreground': '#3b3024',
+  'editor.background': '#efe9de',
+  'editor.foreground': '#1d2230',
  },
  tokenColors: [
   { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: '#6f5d47', fontStyle: 'italic' } },
@@ -28,8 +28,8 @@ export const journalCodeThemeDark = {
  name: 'research-paper-dark',
  type: 'dark',
  colors: {
-  'editor.background': '#1a1611',
-  'editor.foreground': '#f4ebdc',
+  'editor.background': '#0e1118',
+  'editor.foreground': '#ece6da',
  },
  tokenColors: [
   // contrast against #1a1611 (WCAG 2.x relative luminance): all >= 4.5:1

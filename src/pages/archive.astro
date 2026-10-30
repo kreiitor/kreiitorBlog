@@ -21,21 +21,22 @@ const groups = getArchiveGroups(await getCollection('posts')).map(group => ({
 </BaseLayout>
 <style>
  .archive-layout { display: grid; grid-template-columns: minmax(200px, .7fr) minmax(0,2fr); gap: 80px; padding-top: 56px; }
- .archive-intro { align-self: start; position: sticky; top: 120px; }
+ .archive-intro { align-self: start; position: sticky; top: calc(var(--header-height) + 40px); }
  .archive-intro h1 { font-size: clamp(32px,3.5vw,44px); margin-block: 16px 24px; }
  .archive-intro > p:not(.eyebrow) { color: var(--color-ink-soft); font-size: 14px; line-height: 2; }
  .archive-intro > a { margin-top: 16px; }
  .archive-year + .archive-year { margin-top: 48px; }
  .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-blossom-line); }
- .archive-year-heading h2 { font-family: var(--font-editorial); font-size: clamp(48px,6vw,76px); line-height: 1.1; font-weight: 400; color: var(--color-accent-strong); font-variant-numeric: tabular-nums; }
+ .archive-year-heading h2 { font-family: var(--font-editorial); font-size: clamp(48px,6vw,76px); line-height: 1.1; font-weight: 500; color: transparent; -webkit-text-stroke: 1px var(--color-ink); font-variant-numeric: tabular-nums; }
  .archive-year-heading > span,.archive-month h3 span { font-family: var(--font-sans); font-size: 13px; font-weight: 400; color: var(--color-ink-soft); }
- .archive-month h3 { position: sticky; top: 89px; z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); }
+ .archive-month h3 { position: sticky; top: var(--header-height); z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); }
  .archive-row { display: grid; grid-template-columns: 45px minmax(0,1fr) 18px; gap: 16px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--color-blossom-line); }
- .archive-row time { color: var(--color-ink-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
- .archive-row h4 { font-family: var(--font-sans); font-size: 15px; line-height: 1.9; font-weight: 400; }
+ .archive-row time { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+ .archive-row h4 { font-family: var(--font-sans); font-size: 15px; line-height: 1.9; font-weight: 500; transition: color var(--dur-base),translate var(--dur-base) var(--ease-out-expo); }
+ .archive-row:hover h4 { translate: 4px 0; }
  .archive-row:hover h4 { color: var(--color-accent); }
  .archive-row > span { color: var(--color-accent); opacity: 0; transition: opacity var(--dur-base); }
  .archive-row:is(:hover,:focus-visible) > span { opacity: 1; }
- @media (max-width: 900px) { .archive-layout { gap: 36px; grid-template-columns: 180px minmax(0,1fr); } .archive-month h3 { top: 75px; } }
+ @media (max-width: 900px) { .archive-layout { gap: 36px; grid-template-columns: 180px minmax(0,1fr); } }
  @media (max-width: 640px) { .archive-layout { grid-template-columns: 1fr; padding-top: 36px; gap: 32px; } .archive-intro { position: static; } .archive-intro h1 br { display: none; } .archive-intro h1 { margin-block: 12px 16px; } .archive-row { gap: 10px; } }
 </style>

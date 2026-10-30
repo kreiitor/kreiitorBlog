@@ -20,7 +20,13 @@ for (const source of sources) {
  const image = await sharp(Buffer.from(staticSvg)).resize(1200, 630, { fit: 'cover' }).png({ compressionLevel: 9 }).toBuffer();
  await writeAsset(source.replace(/\.svg$/, '.png'), image);
 }
-console.log(`Prepared ${sources.length} sharing images at 1200×630.`);
+const researchCovers = (await readdir('public/covers/research')).filter(file => file.endsWith('.webp'));
+for (const file of researchCovers) {
+ const source = `public/covers/research/${file}`;
+ const image = await sharp(source).resize(1200, 630, { fit: 'contain', background: '#f6f3ec' }).png({ compressionLevel: 9 }).toBuffer();
+ await writeAsset(source.replace(/\.webp$/, '.png'), image);
+}
+console.log(`Prepared ${sources.length + researchCovers.length} sharing images at 1200×630.`);
 
 // Keep the legacy favicon in sync with the vector mark. PNG frames are supported
 // in ICO and preserve sharp edges at each native browser / shortcut size.

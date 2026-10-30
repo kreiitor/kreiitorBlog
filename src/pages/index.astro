@@ -1,228 +1,264 @@
 ---
 import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import SeriesCard from '../components/SeriesCard.astro';
-import { getLearningSeries } from '../utils/series';
-import SectionHeading from '../components/SectionHeading.astro';
-import ResearchArt from '../components/ResearchArt.astro';
 import Icon from '../components/Icon.astro';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Botanical from '../components/Botanical.astro';
 import { siteConfig } from '../data/site';
-import { getFeaturedPosts, getFeaturedProjects, getPublishedPosts, getProjects, getTagSummaries, getReadingTime } from '../utils/content';
+import { getFeaturedPosts, getFeaturedProjects, getProjects, getPublishedPosts, getReadingTime, getTagSummaries } from '../utils/content';
+import { getLearningSeries } from '../utils/series';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
+
 const posts = await getCollection('posts');
 const projects = await getCollection('projects');
 const publishedPosts = getPublishedPosts(posts);
-const sortedProjects = getProjects(projects);
-const curatedSelections = siteConfig.homeFeaturedPosts.flatMap(selection => {
- const post = publishedPosts.find(post => post.id === selection.id);
+const curated = siteConfig.homeFeaturedPosts.flatMap(selection => {
+ const post = publishedPosts.find(item => item.id === selection.id);
  return post ? [{ post, label: selection.label }] : [];
 });
-const curatedPosts = curatedSelections.map(selection => selection.post);
-const featuredPosts = [...curatedPosts, ...getFeaturedPosts(posts).filter(post => !curatedPosts.some(item => item.id === post.id))].slice(0,3);
-const featuredLabels = featuredPosts.map(post => curatedSelections.find(selection => selection.post.id === post.id)?.label ?? '精选札记');
+const featuredPosts = [...curated.map(item => item.post), ...getFeaturedPosts(posts).filter(post => !curated.some(item => item.post.id === post.id))].slice(0, 3);
 const featuredIds = new Set(featuredPosts.map(post => post.id));
-const recentPosts = publishedPosts.filter(post => !featuredIds.has(post.id)).slice(0,5);
-const featuredProjects = getFeaturedProjects(projects,2);
-const allTags = getTagSummaries(posts,projects);
-const tags = allTags.slice(0,8);
-const learningSeries = getLearningSeries(await getCollection('series'), posts);
-const wanderingNotes = publishedPosts.filter(post => !post.data.series && !featuredIds.has(post.id)).map(post => ({ title:post.data.title, description:post.data.description, href:withBase(`/blog/${post.id}/`) }));
+const recentPosts = publishedPosts.filter(post => !featuredIds.has(post.id)).slice(0, 5);
+const series = getLearningSeries(await getCollection('series'), posts);
+const featuredProjects = getFeaturedProjects(projects, 2);
+const allTags = getTagSummaries(posts, projects);
+const tags = allTags.slice(0, 8);
+const ribbon = allTags.slice(0, 14);
+const stats = [
+ { href: '/blog/', label: '文章', value: publishedPosts.length },
+ { href: '/notes/', label: '学习专题', value: series.length },
+ { href: '/projects/', label: '研究项目', value: getProjects(projects).length },
+];
+const title = [...'研究札记'];
 ---
 <BaseLayout>
  <div class="home-page" data-pagefind-ignore>
-  <section class="page-shell home-hero">
-   <div class="hero-copy zen-reveal">
-    <p class="hero-kicker"><Botanical variant="sprig" class="hero-sprig botanical-sway"/>AI for Software Engineering</p>
-    <h1>读论文，写代码，<span>让想法经得起实验。</span></h1>
-    <p class="hero-description">我是 <a href={withBase('/about/')} class="hero-author">{siteConfig.author}</a>，研究 AI 与软件工程。<br/>记录论文阅读、实验复现与技术写作。</p>
-    <div class="hero-actions"><a href={withBase('/blog/')} class="zen-btn zen-btn-primary">阅读研究札记 <Icon name="arrow" size={18}/></a><a href={withBase('/notes/')} class="text-link">探索学习专题 <Icon name="arrow" size={16}/></a></div>
-    <div class="hero-caption"><p>程序分析 <span aria-hidden="true">/</span> LLM 评测 <span aria-hidden="true">/</span> 实验与复现</p></div>
+  <section class="home-hero dark-island" data-home-hero>
+   <canvas class="hero-threads" data-hero-threads aria-hidden="true"></canvas>
+   <div class="page-shell hero-inner">
+    <div class="hero-copy">
+     <p class="intro-label"><span class="live-dot" aria-hidden="true"></span>kreiitor 的个人网站 · 持续更新</p>
+     <h1 class="hero-title" aria-label="研究札记">{title.map((char, index) => <span aria-hidden="true" style={`--i:${index}`}>{char}</span>)}<span class="seal" aria-hidden="true"></span></h1>
+     <p class="hero-motto">研究、学习、动手做。</p>
+     <p class="intro-copy">关于 AI、软件工程和学习过程中的问题与发现。把读过的论文、做过的实验和走过的弯路，整理成可以再次使用的知识。</p>
+     <div class="intro-actions">
+      <a class="big-link" href={withBase('/blog/')}>开始阅读 <Icon name="arrow" size={18}/></a>
+      <a class="about-link" href={withBase('/about/')}>关于我 <Icon name="arrow" size={16}/></a>
+     </div>
+    </div>
+    <nav class="intro-index" aria-label="站点内容">
+     {stats.map((item, index) => <a href={withBase(item.href)} style={`--i:${index}`}><strong data-count={item.value}>{item.value}</strong><span>{item.label}</span><Icon name="arrow" size={18}/></a>)}
+    </nav>
    </div>
-   <div class="hero-visual zen-reveal zen-delay-1"><ResearchArt/></div>
-  </section>
-  <section class="page-shell journal-strip" aria-label="站点概况">
-   <p>以问题为线索<span class="strip-subtitle">论文、实验与持续学习</span></p>
-   <div class="journal-counts"><a href={withBase('/blog/')}><strong>{publishedPosts.length}</strong> 篇札记</a><a href={withBase('/projects/')}><strong>{sortedProjects.length}</strong> 个项目</a><a href={withBase('/tags/')}><strong>{allTags.length}</strong> 个话题</a></div>
-  </section>
-  <section class="page-shell editorial-section writing-section">
-   <SectionHeading title="精选札记" description="从问题出发，把方法与实践写清楚。" linkHref={withBase('/blog/')} linkLabel="阅读全部札记"/>
-   <div class="selected-writing">
-    {featuredPosts[0] && <PostCard post={featuredPosts[0]} featured featuredLabel={featuredLabels[0]}/>}
-    <div class="selected-rows">{featuredPosts.slice(1).map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row"><p class="selection-label">{featuredLabels[index+1]}</p><h3>{post.data.title}</h3><p class="card-description">{post.data.description}</p><div class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟阅读</span><Icon name="arrow" size={20}/></div></a>)}
-     {wanderingNotes.length > 0 && <div class="reading-detour" data-reading-detour data-notes={JSON.stringify(wanderingNotes)}><div class="detour-heading"><span>换个方向，随手翻翻</span><button type="button" data-another-note hidden>换一篇 <span aria-hidden="true">↻</span></button></div><a data-detour-link href={wanderingNotes[0].href}><strong data-detour-title>{wanderingNotes[0].title}</strong><Icon name="arrow" size={18}/></a><p data-detour-description role="status" aria-live="polite">{wanderingNotes[0].description}</p></div>}
+   <div class="hero-ribbon" aria-label="常见话题">
+    <div class="ribbon-track">
+     {[0, 1].map(copy => <ul class="ribbon-list" aria-hidden={copy === 1 ? 'true' : undefined} inert={copy === 1}>{ribbon.map(item => <li><a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>{item.tag}</a></li>)}</ul>)}
     </div>
    </div>
   </section>
-  <section class="page-shell editorial-section learning-section">
-   <SectionHeading title="沿着一条主线学下去" description="概念、推导与实践，整理成可以重访的路径。" linkHref={withBase('/notes/')} linkLabel="全部学习专题"/>
-   <div class="series-grid home-series">{learningSeries.slice(0,3).map(item => <SeriesCard series={item} presentation="index"/>)}</div>
-   {learningSeries.length === 0 && <p class="section-description">学习笔记正在整理中。</p>}
+
+  <section class="page-shell home-section writing-section" aria-labelledby="featured-heading">
+   <div class="section-bar"><div><p>从这里开始</p><h2 id="featured-heading">精选文章</h2></div><a href={withBase('/blog/')}>所有文章 <Icon name="arrow" size={16}/></a></div>
+   <div class="selected-writing">
+    {featuredPosts[0] && <PostCard post={featuredPosts[0]} featured featuredLabel={curated[0]?.label}/>}
+    <div class="selected-rows">
+     {featuredPosts.slice(1).map((post, index) => <a href={withBase(`/blog/${post.id}/`)} class="selected-row" data-spotlight>
+      <span class="selected-number" aria-hidden="true">{String(index + 2).padStart(2, '0')}</span>
+      <span class="selection-label">{curated[index + 1]?.label ?? '精选文章'}</span>
+      <h3>{post.data.title}</h3>
+      <p>{post.data.description}</p>
+      <span class="selected-meta"><span>{formatDate(post.data.pubDate)} · {getReadingTime(post)} 分钟</span><span class="selected-arrow"><Icon name="arrow" size={18}/></span></span>
+     </a>)}
+    </div>
+   </div>
   </section>
-  <section class="page-shell editorial-section">
-   <SectionHeading title="把想法做成工具" description="论文复现、实验平台，以及正在打磨的项目。" linkHref={withBase('/projects/')} linkLabel="浏览研究项目"/>
+
+  <section class="learning-band">
+   <div class="page-shell">
+    <div class="section-bar learning-heading"><div><p>一条线，一步步学</p><h2>学习专题</h2></div><a href={withBase('/notes/')}>全部专题 <Icon name="arrow" size={16}/></a></div>
+    <div class="series-grid home-series">{series.slice(0, 3).map(item => <SeriesCard series={item}/>)}</div>
+   </div>
+  </section>
+
+  <section class="page-shell home-section projects-section">
+   <div class="section-bar"><div><p>从想法到实践</p><h2>项目与实验</h2></div><a href={withBase('/projects/')}>所有项目 <Icon name="arrow" size={16}/></a></div>
    <div class="project-grid">{featuredProjects.map(project => <ProjectCard project={project} showcase/>)}</div>
   </section>
-  <section class="page-shell editorial-section lower-grid">
-   <div>
-    <SectionHeading title="最近写下" linkHref={withBase('/archive/')} linkLabel="时间归档"/>
-    <div class="recent-list">{recentPosts.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="recent-row"><span class="recent-number">{String(index+1).padStart(2,'0')}</span><div><p class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟</span></p><h3>{post.data.title}</h3></div><Icon name="arrow" size={18}/></a>)}</div>
+
+  <section class="page-shell home-section discovery">
+   <div class="recent">
+    <div class="section-bar"><div><p>持续更新</p><h2>最近写下</h2></div><a href={withBase('/archive/')}>时间归档 <Icon name="arrow" size={16}/></a></div>
+    <ol class="recent-list">{recentPosts.map(post => <li><a href={withBase(`/blog/${post.id}/`)} class="recent-row"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><h3>{post.data.title}</h3><Icon name="arrow" size={18}/></a></li>)}</ol>
    </div>
-   <aside class="garden-aside">
-    <p class="aside-kicker">话题索引</p><h2>循着好奇心，<br/>找到下一个问题。</h2>
-    <div class="topic-list">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}><span>{item.tag}</span><span>{item.count} →</span></a>)}</div>
-    <div class="aside-note"><span aria-hidden="true">↳</span><p>不急于给出答案。<br/>先把值得追问的问题留下来。</p></div>
-    <a href={withBase('/rss.xml')} class="text-link rss-link">用 RSS 订阅新札记 <span aria-hidden="true">↗</span></a>
-    <Botanical variant="corner" class="aside-botanical botanical-sway"/>
+   <aside class="topics dark-island">
+    <p>按话题探索</p>
+    <h2>今天想读什么？</h2>
+    <div class="topic-list">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>{item.tag}<span>{item.count}</span></a>)}</div>
+    <a class="topic-all" href={withBase('/tags/')}>所有话题 <Icon name="arrow" size={16}/></a>
    </aside>
   </section>
  </div>
 </BaseLayout>
 <script>
- const detour=document.querySelector<HTMLElement>('[data-reading-detour]');
- const another=detour?.querySelector<HTMLButtonElement>('[data-another-note]');
- const link=detour?.querySelector<HTMLAnchorElement>('[data-detour-link]');
- const title=detour?.querySelector<HTMLElement>('[data-detour-title]');
- const description=detour?.querySelector<HTMLElement>('[data-detour-description]');
- if(detour&&another&&link&&title&&description){
-  const notes=JSON.parse(detour.dataset.notes??'[]') as {title:string;description:string;href:string}[];
-  let current=0;
-  another.hidden=notes.length<2;
-  another.addEventListener('click',()=>{
-   current=(current+1+Math.floor(Math.random()*(notes.length-1)))%notes.length;
-   const note=notes[current];link.href=note.href;title.textContent=note.title;description.textContent=note.description;
+ import { mountThreads } from '../utils/threads';
+ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+ const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-threads]');
+ if (canvas) mountThreads(canvas, reduced);
+
+ // 数字从零走到实际值；减少动态效果时保持服务端渲染的最终值。
+ if (!reduced.matches) {
+  document.querySelectorAll<HTMLElement>('[data-count]').forEach((node, index) => {
+   const target = Number(node.dataset.count);
+   if (!Number.isFinite(target) || target <= 0) return;
+   const start = performance.now() + 450 + index * 120;
+   const duration = 1100;
+   node.textContent = '0';
+   const step = (now: number) => {
+    const t = Math.min(1, Math.max(0, (now - start) / duration));
+    node.textContent = String(Math.round(target * (1 - Math.pow(1 - t, 4))));
+    if (t < 1) requestAnimationFrame(step);
+   };
+   requestAnimationFrame(step);
   });
  }
 </script>
 <style>
- .home-hero { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); align-items: center; gap: 56px; padding-block: 42px 36px; }
- .hero-visual { width: 100%; max-width: 400px; justify-self: end; margin-right: 0; }
- .journal-strip + .editorial-section { margin-top: 40px; }
- .selected-writing { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.9fr); gap: 56px; margin-top: 30px; align-items: start; }
- .selected-writing > *, .home-hero > * { min-width: 0; }
- .selected-rows { border-top: 1px solid var(--color-blossom-line); }
- .selected-row { position: relative; display: block; padding: 24px 20px 26px; border-radius: 16px; transition: background-color var(--dur-base) var(--ease-smooth); }
- @media (hover: hover) { .selected-row:hover { background: var(--color-surface); box-shadow: var(--shadow-whisper); } }
+ .home-hero { position: relative; isolation: isolate; overflow: hidden; margin-top: calc(-1 * var(--header-height)); padding-top: var(--header-height); background-color: var(--hero-bg); background-image: radial-gradient(900px 520px at 78% 38%,var(--hero-glow),transparent 70%),radial-gradient(700px 420px at 8% 110%,rgb(61 106 90 / .28),transparent 70%); }
+ .home-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgb(236 230 218 / .07) 1px,transparent 1.4px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse at 70% 40%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse at 70% 40%,#000 10%,transparent 70%); pointer-events: none; }
+ .hero-threads { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; }
+ .hero-inner { display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 64px; align-items: end; padding-block: 60px 44px; }
+ .hero-copy { animation: rise var(--dur-slower) var(--ease-out-expo) both; }
+ .intro-label { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 12px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: rgb(18 21 28 / .5); color: var(--color-ink-soft); font-size: 13px; backdrop-filter: blur(6px); }
+ .live-dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--color-sage); }
+ .live-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--color-sage); animation: pulse 2.4s var(--ease-smooth) infinite; }
+ .hero-title { margin-top: 26px; font-family: var(--font-display); font-size: clamp(54px,min(17vw,4rem + 5vw),136px); white-space: nowrap; font-weight: 600; line-height: 1; letter-spacing: .02em; color: var(--color-ink); }
+ .hero-title > span[style] { display: inline-block; animation: rise 1s var(--ease-out-expo) both; animation-delay: calc(120ms + var(--i) * 90ms); }
+ .hero-title .seal { width: .16em; height: .16em; margin-left: .1em; vertical-align: .06em; animation: stamp .7s var(--ease-out-expo) .6s both; }
+ .hero-motto { margin-top: 22px; color: var(--color-counterpoint); font-family: var(--font-kai); font-size: clamp(22px,1.2rem + .8vw,30px); letter-spacing: .12em; }
+ .intro-copy { max-width: 34em; margin-top: 18px; color: var(--color-ink-soft); font-size: 16px; line-height: 1.85; }
+ .intro-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 26px; margin-top: 34px; }
+ .big-link { display: inline-flex; align-items: center; gap: 14px; min-height: 52px; padding: 12px 26px; border-radius: 999px; background: var(--color-accent); color: var(--color-on-primary); font-size: 15px; font-weight: 600; box-shadow: 0 14px 40px -12px rgb(242 137 107 / .55); transition: transform var(--dur-base) var(--ease-out-expo),box-shadow var(--dur-base),background-color var(--dur-base); }
+ .big-link:hover { background: var(--color-accent-strong); transform: translateY(-2px); box-shadow: 0 20px 44px -12px rgb(242 137 107 / .65); }
+ .big-link:active { transform: scale(.97); }
+ .big-link :global(svg),.about-link :global(svg) { transition: transform var(--dur-base) var(--ease-out-expo); }
+ .big-link:hover :global(svg),.about-link:hover :global(svg) { transform: translateX(4px); }
+ .about-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--color-ink); font-size: 14px; font-weight: 600; }
+ .about-link:hover { color: var(--color-accent-strong); }
+ .intro-index { display: grid; border-top: 1px solid var(--color-line-strong); }
+ .intro-index a { display: grid; grid-template-columns: auto 1fr 18px; align-items: baseline; gap: 14px; padding: 18px 0 16px; border-bottom: 1px solid var(--color-line-strong); color: var(--color-ink); animation: rise .9s var(--ease-out-expo) both; animation-delay: calc(500ms + var(--i) * 110ms); }
+ .intro-index strong { min-width: 2.2ch; font-family: var(--font-display); font-size: 40px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+ .intro-index span { color: var(--color-ink-soft); font-size: 14px; }
+ .intro-index :global(svg) { align-self: center; color: var(--color-ink-muted); transition: transform var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
+ .intro-index a:hover span,.intro-index a:hover :global(svg) { color: var(--color-accent-strong); }
+ .intro-index a:hover :global(svg) { transform: translateX(4px); }
+ .hero-ribbon { position: relative; overflow: hidden; border-top: 1px solid var(--color-line); -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+ .ribbon-track { display: flex; width: max-content; animation: ribbon 60s linear infinite; }
+ .hero-ribbon:hover .ribbon-track,.hero-ribbon:focus-within .ribbon-track { animation-play-state: paused; }
+ .ribbon-list { display: flex; flex-shrink: 0; }
+ .ribbon-list a { display: inline-flex; align-items: center; gap: 28px; min-height: 52px; padding-right: 28px; color: var(--color-ink-muted); font-family: var(--font-display); font-size: 17px; white-space: nowrap; }
+ .ribbon-list a::after { content: ''; width: 5px; height: 5px; border-radius: 1px; background: var(--color-accent); opacity: .7; rotate: 45deg; }
+ .ribbon-list a:hover { color: var(--color-ink); }
 
- .selected-writing :global(.card-content h3) { font-size: 27px; line-height: 1.6; text-wrap: pretty; }
- .selection-label { font-size: var(--text-caption); font-weight: 400; font-style: italic; color: var(--color-counterpoint-ink); }
- .selected-row h3 { font-size: 23px; margin-block: 12px; line-height: 1.65; }
- .selected-row .card-description { overflow-wrap: anywhere; }
- .selected-row:is(:hover,:focus-visible) h3 { color: var(--color-accent); }
- .selected-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; font-size: 12px; color: var(--color-ink-soft); }
- .selected-meta :global(svg) { color: var(--color-accent); transition: transform 160ms var(--ease-smooth); }
- .selected-row:is(:hover,:focus-visible) :global(svg) { transform: translateX(5px); }
- .selected-row::after { content: ''; position: absolute; inset: auto 0 -1px; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform 280ms var(--ease-out-expo); }
- .selected-row:is(:hover,:focus-visible)::after { transform: scaleX(1); }
- .selected-invitation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-top: 24px; font-size: 12px; color: var(--color-ink-soft); }
- .selected-invitation span:last-child { color: var(--color-accent); }
- .reading-detour { padding-top: 16px; }
- .detour-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
- .detour-heading > span { padding: 2px 10px; border-radius: 999px; background: var(--color-highlight); color: var(--color-on-highlight); font-size: 12px; }
- .detour-heading button { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; font-size: 13px; color: var(--color-accent); }
- .detour-heading button:hover { text-decoration: underline; text-underline-offset: 4px; }
- .reading-detour > a { display: flex; justify-content: space-between; align-items: start; gap: 16px; font-size: 16px; line-height: 1.8; padding-block: 8px; }
- .reading-detour strong { font-weight: 500; }
- .reading-detour > a:hover { color: var(--color-accent); }
- .reading-detour > p { font-size: 13px; line-height: 1.8; color: var(--color-ink-soft); }
- @media (max-width: 900px) { .selected-writing { grid-template-columns: minmax(0,1fr); gap: 25px; } .selected-row h3 { font-size: 22px; } }
- .hero-kicker { display: flex; align-items: center; gap: 10px; font-size: var(--text-caption); color: var(--color-accent); }
- .hero-sprig { width: 42px; height: 18px; flex-shrink: 0; color: var(--color-accent); }
- .hero-copy h1 { font-family: var(--font-title); font-size: clamp(38px,4.3vw,62px); font-weight: 600; line-height: 1.35; letter-spacing: -.035em; margin-top: 24px; text-wrap: balance; }
- .hero-copy h1 span { display: block; }
- .hero-copy.zen-reveal { animation: none; }
- .hero-copy > * { animation: hero-intro 560ms var(--ease-out-expo) both; }
- .hero-copy h1 { animation-delay: 50ms; }
- .hero-copy .hero-description { animation-delay: 100ms; }
- .hero-copy .hero-actions { animation-delay: 150ms; }
- .hero-copy .hero-caption { animation-delay: 200ms; }
- @keyframes hero-intro { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
- @media (prefers-reduced-motion: reduce) { .hero-copy > * { animation: none; } }
- .hero-description { margin-top: 24px; font-size: 15px; line-height: 1.95; color: var(--color-ink-soft); }
- .hero-author { display: inline-block; padding-block: 3px; font-weight: 500; color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-blossom); text-underline-offset: 4px; }
- .hero-author:hover { color: var(--color-accent); text-decoration-color: currentColor; }
- .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 24px; }
- .hero-actions .zen-btn { min-height: 48px; padding-inline: 26px; border-radius: 999px; }
- .hero-caption { margin-top: 22px; color: var(--color-ink-muted); }
- .hero-caption p { font-size: var(--text-caption); } .hero-caption p > span { margin: 0 12px; color: var(--color-line-strong); }
- /* 概况条：账本式双线改成圆角奶油面板，是田园风对「结构」的改写。
-    上下内边距收在 10px：面板变厚会把精选区推出首屏设计红线（design.spec 850px）。 */
- .journal-strip { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 10px 28px; border: 1px solid var(--color-blossom-line); border-radius: 18px; background: var(--color-surface); box-shadow: var(--shadow-whisper); }
- .journal-strip > p { display: flex; align-items: center; gap: 12px; font-size: var(--text-caption); }
- .strip-subtitle { font-size: var(--text-caption); color: var(--color-ink-muted); padding-left: 10px; }
- .journal-counts { display: flex; gap: 25px; font-size: var(--text-caption); color: var(--color-ink-soft); }
- .journal-counts a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--dur-base) var(--ease-smooth); }
- .journal-counts a:hover { color: var(--color-accent); }
- .journal-counts strong { font-family: var(--font-editorial); font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--color-ink); margin-right: 6px; }
- .learning-section { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 40px; padding: 32px; border-radius: 22px; border: 1px solid var(--color-blossom-line); background: var(--color-paper-cool); box-shadow: var(--shadow-whisper); }
- .learning-section :global(.section-heading) { display: block; padding: 0; border: 0; }
- .learning-section :global(.section-heading .text-link) { margin-top: 20px; }
- .learning-section :global(.section-description) { line-height: 1.9; }
- .home-series :global(.series-index) { grid-template-columns: 88px minmax(0,1fr) 120px; column-gap: 24px; row-gap: 8px; padding: 22px 0; }
- .home-series :global(.series-index:first-child) { padding-top: 0; }
- .home-series :global(.series-illustration) { grid-column: 1; grid-row: 1 / span 2; width: 88px; height: 76px; }
- .home-series :global(.series-heading) { grid-column: 2; grid-row: 1; }
- .home-series :global(.series-description) { grid-column: 2; grid-row: 2; -webkit-line-clamp: 2; }
- .home-series :global(.series-bottom) { grid-column: 3; grid-row: 1 / span 2; }
- .home-series { grid-template-columns: minmax(0,1fr); gap: 0; margin-top: 6px; }
- .home-page :global(.section-heading h2) { font-size: 30px; }
- .project-grid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 32px; margin-top: 30px; }
- .project-grid :global(.project-showcase:nth-child(2)) { margin-top: 40px; }
- .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 65px; }
- .recent-row { display: flex; gap: 20px; align-items: center; padding: 22px 24px; border: 1px solid var(--color-blossom-line); border-radius: 16px; background: var(--color-surface); box-shadow: var(--shadow-whisper); transition: box-shadow var(--dur-slow) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth), translate var(--dur-slow) var(--ease-out-expo); }
- .recent-row + .recent-row { margin-top: 12px; }
- @media (hover: hover) and (prefers-reduced-motion: no-preference) { .recent-row:hover { box-shadow: var(--shadow-soft); border-color: var(--color-blossom); translate: 0 -2px; } }
- .recent-number { font-family: var(--font-editorial); font-size: 19px; color: var(--color-ink-muted); }
- .recent-row h3 { font-family: var(--font-title); font-size: 18px; font-weight: 600; line-height: 1.65; margin-top: 6px; }
- .recent-row > :global(svg) { margin-left: auto; color: var(--color-accent); } .recent-row:hover h3 { color: var(--color-accent); }
- .garden-aside { position: relative; overflow: hidden; padding: 30px; background: var(--color-highlight-soft); border: 1px solid var(--color-blossom-line); border-radius: 20px; box-shadow: var(--shadow-whisper); transition: box-shadow var(--dur-slow) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth); }
- @media (hover: hover) and (prefers-reduced-motion: no-preference) { .garden-aside:hover { box-shadow: var(--shadow-soft); border-color: var(--color-blossom); } }
- .aside-kicker { font-size: var(--text-caption); color: var(--color-ink-soft); }
- .garden-aside h2 { font-size: 23px; line-height: 1.7; margin-top: 15px; }
- .topic-list { margin-top: 23px; } .topic-list a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 9px 0; font-size: var(--text-caption); border-bottom: 1px solid var(--color-blossom-line); }
- .topic-list a > span:last-child { color: var(--color-ink-soft); font-size: var(--text-caption); }
- .topic-list a:hover { color: var(--color-accent); }
- .aside-note { display: flex; gap: 14px; margin-top: 28px; color: var(--color-ink-soft); font-size: var(--text-caption); line-height: 2; }
- .aside-note > span { font-size: 24px; color: var(--color-accent); } .rss-link { margin-top: 25px; font-size: var(--text-caption); }
- .aside-botanical { position: absolute; right: -34px; bottom: -26px; width: 156px; height: auto; color: var(--color-sage); opacity: .3; pointer-events: none; }
- @media (max-width: 1100px) { .home-hero { gap: 35px; } .selected-writing { gap: 32px; } .strip-subtitle { display: none; } .lower-grid { gap: 35px; } }
- @media (max-width: 900px) { .lower-grid { grid-template-columns: 1fr 260px; gap: 25px; } .garden-aside { padding: 22px; } .project-grid { gap: 24px; } .selected-writing :global(.card-content h3) { font-size: 23px; } }
+ .home-section { margin-top: 88px; }
+ .section-bar { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+ .section-bar p { margin-bottom: 8px; color: var(--color-sage); font-size: 12.5px; font-weight: 600; letter-spacing: .08em; }
+ .section-bar h2 { font-size: clamp(30px,1.4rem + 1.2vw,42px); line-height: 1.2; letter-spacing: -.01em; }
+ .section-bar h2::after { content: ''; display: inline-block; width: .2em; height: .2em; margin-left: .12em; border-radius: 2px; background: var(--color-accent); vertical-align: .05em; }
+ .section-bar > a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 1px solid var(--color-line-strong); border-radius: 999px; color: var(--color-ink); font-size: 13px; font-weight: 600; transition: background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
+ .section-bar > a:hover { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+
+ .writing-section { margin-top: 56px; }
+ .selected-writing { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 24px; }
+ .selected-writing :global(.post-featured .card-content) { padding: 26px 30px 30px; }
+ .selected-writing :global(.post-featured h3) { font-size: 27px; line-height: 1.35; }
+ .selected-rows { display: grid; grid-template-rows: repeat(2,minmax(0,1fr)); gap: 24px; }
+ .selected-row { position: relative; isolation: isolate; display: flex; flex-direction: column; min-width: 0; overflow: hidden; padding: 28px 30px 26px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); transition: translate var(--dur-slow) var(--ease-out-expo),box-shadow var(--dur-slow) var(--ease-out-expo),border-color var(--dur-base); }
+ .selected-row::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(380px circle at var(--mx,80%) var(--my,0%),var(--spot),transparent 65%); opacity: 0; transition: opacity var(--dur-slow); }
+ .selected-number { position: absolute; right: 22px; top: 6px; z-index: -1; color: transparent; font-family: var(--font-display); font-size: 92px; font-weight: 600; line-height: 1; -webkit-text-stroke: 1px var(--color-line-strong); opacity: .55; transition: -webkit-text-stroke-color var(--dur-base),translate var(--dur-slow) var(--ease-out-expo); }
+ .selection-label { color: var(--color-sage); font-size: 12.5px; font-weight: 600; letter-spacing: .06em; }
+ .selected-row h3 { max-width: 18em; padding-right: 56px; margin-top: 14px; font-size: 23px; line-height: 1.4; }
+ .selected-row p { margin-top: 10px; color: var(--color-ink-soft); font-size: 14px; line-height: 1.8; }
+ .selected-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 22px; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+ .selected-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); transition: background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base),transform var(--dur-base) var(--ease-out-expo); }
+ @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .selected-row:hover { translate: 0 -4px; border-color: var(--color-line-strong); box-shadow: var(--shadow-lift); }
+  .selected-row:hover .selected-number { translate: -6px 4px; -webkit-text-stroke-color: var(--color-accent); }
+ }
+ .selected-row:is(:hover,:focus-visible)::before { opacity: 1; }
+ .selected-row:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); }
+ .selected-row:is(:hover,:focus-visible) .selected-arrow { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); transform: translateX(3px); }
+
+ .learning-band { position: relative; margin-top: 104px; padding-block: 80px 88px; overflow: hidden; background: var(--color-paper-warm); border-block: 1px solid var(--color-line); }
+ .learning-band::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(var(--color-grid-dot) 1px,transparent 1.4px); background-size: 24px 24px; -webkit-mask-image: linear-gradient(180deg,#000,transparent 65%); mask-image: linear-gradient(180deg,#000,transparent 65%); pointer-events: none; }
+ .learning-band > .page-shell { position: relative; }
+ .home-series { margin-top: 0; }
+
+ .project-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+
+ .discovery { display: grid; grid-template-columns: minmax(0,1fr) 380px; align-items: start; gap: 56px; }
+ .recent-list { list-style: none; border-top: 1px solid var(--color-ink); }
+ .recent-row { position: relative; display: grid; grid-template-columns: 116px minmax(0,1fr) 18px; gap: 20px; align-items: center; min-height: 72px; padding-block: 14px; border-bottom: 1px solid var(--color-line); }
+ .recent-row::before { content: ''; position: absolute; left: 0; bottom: -1px; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .recent-row time { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+ .recent-row h3 { font-family: var(--font-sans); font-size: 16px; font-weight: 600; line-height: 1.55; transition: translate var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
+ .recent-row :global(svg) { color: var(--color-ink-muted); transition: transform var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
+ .recent-row:is(:hover,:focus-visible)::before { transform: scaleX(1); }
+ .recent-row:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); translate: 6px 0; }
+ .recent-row:is(:hover,:focus-visible) :global(svg) { color: var(--color-accent); transform: translateX(3px); }
+ .topics { position: relative; overflow: hidden; padding: 32px; border-radius: 22px; background-color: var(--hero-bg); background-image: radial-gradient(360px 260px at 100% 0%,var(--hero-glow),transparent 70%); }
+ .topics > p { color: var(--color-sage); font-size: 12.5px; font-weight: 600; letter-spacing: .08em; }
+ .topics h2 { margin-top: 10px; font-size: 28px; line-height: 1.3; }
+ .topic-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+ .topic-list a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px; border: 1px solid var(--color-line-strong); border-radius: 999px; color: var(--color-ink); font-size: 13px; transition: background-color var(--dur-base),border-color var(--dur-base),color var(--dur-base),transform var(--dur-base) var(--ease-out-expo); }
+ .topic-list a:hover { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); transform: translateY(-2px); }
+ .topic-list span { color: var(--color-ink-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+ .topic-all { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 18px; color: var(--color-ink); font-size: 14px; font-weight: 600; }
+ .topic-all:hover { color: var(--color-accent-strong); }
+
+ @keyframes rise { from { opacity: 0; transform: translateY(22px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+ @keyframes stamp { from { opacity: 0; transform: scale(2.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
+ @keyframes pulse { from { opacity: .9; transform: scale(.6); } to { opacity: 0; transform: scale(1.8); } }
+ @keyframes ribbon { to { transform: translateX(-50%); } }
+
+ @media (max-width: 1100px) {
+  .hero-inner { grid-template-columns: minmax(0,1fr) 220px; gap: 40px; }
+  .discovery { grid-template-columns: 1fr; gap: 48px; }
+  .home-series { grid-template-columns: repeat(3,minmax(0,1fr)); }
+ }
  @media (max-width: 900px) {
-  .learning-section { display: block; padding: 24px; }
-  .learning-section :global(.section-heading) { margin-bottom: 24px; }
-  .home-hero { grid-template-columns: 1fr; padding-block: 28px 24px; gap: 24px; }
-  .hero-copy h1 { font-size: clamp(29px,8vw,40px); margin-top: 18px; line-height: 1.5; }
-  .hero-description { font-size: 14px; margin-top: 18px; }
-  .hero-actions { margin-top: 20px; gap: 12px 20px; }
-  .hero-caption { display: none; }
-  .hero-visual { max-width: 420px; width: min(calc(100% - 8px),420px); justify-self: center; margin-right: 0; }
-  .journal-strip { padding-block: 6px; }
-  .journal-strip > p { display: none; }
-  .journal-counts { justify-content: space-between; gap: 12px; width: 100%; }
-  .lower-grid { grid-template-columns: 1fr; gap: 35px; }
-  .editorial-section { margin-top: 44px; }
-  .journal-strip + .editorial-section { margin-top: 32px; }
-  .selected-writing { margin-top: 20px; }
-  .home-page :global(.section-heading h2) { font-size: 25px; }
+  .selected-writing { grid-template-columns: 1fr; }
+  .selected-rows { grid-template-rows: none; grid-template-columns: 1fr 1fr; }
+  .home-series { grid-template-columns: 1fr 1fr; }
  }
  @media (max-width: 700px) {
-  .project-grid { grid-template-columns: minmax(0,1fr); }
-  .project-grid :global(.project-showcase:nth-child(2)) { margin-top: 0; }
- }
- @media (max-width: 600px) {
-  .home-series :global(.series-index) { grid-template-columns: 64px minmax(0,1fr); gap: 12px; }
-  .home-series :global(.series-illustration) { width: 64px; height: 64px; grid-row: 1; }
-  .home-series :global(.series-description) { grid-column: 1 / -1; grid-row: 2; }
-  .home-series :global(.series-bottom) { grid-column: 1 / -1; grid-row: 3; flex-direction: row; align-items: start; text-align: left; }
-  .home-series :global(.series-heading h3) { font-size: 20px; }
-  .home-series :global(.series-heading .series-subtitle) { font-size: 14px; }
-  .writing-section :global(.section-heading) { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px 12px; }
-  .writing-section :global(.section-heading > div) { display: contents; }
-  .writing-section :global(.section-heading h2) { grid-column: 1; grid-row: 1; }
-  .writing-section :global(.section-heading .text-link) { grid-column: 2; grid-row: 1; }
-  .writing-section :global(.section-heading .section-description) { grid-column: 1 / -1; grid-row: 2; margin-top: 0; }
+  .hero-inner { grid-template-columns: 1fr; gap: 36px; padding-block: 44px 32px; }
+  .hero-title { margin-top: 22px; }
+  .hero-motto { margin-top: 16px; }
+  .intro-copy { font-size: 15px; }
+  .intro-actions { margin-top: 26px; }
+  .intro-index { grid-template-columns: repeat(3,minmax(0,1fr)); border-top: 0; }
+  .intro-index a { grid-template-columns: 1fr; gap: 4px; padding: 14px 0 0 14px; border-bottom: 0; border-left: 1px solid var(--color-line-strong); }
+  .intro-index strong { font-size: 30px; }
+  .intro-index span { font-size: 12.5px; }
+  .intro-index :global(svg) { display: none; }
+  .ribbon-list a { min-height: 46px; font-size: 15px; }
+  .home-section { margin-top: 64px; }
+  .writing-section { margin-top: 44px; }
+  .section-bar { margin-bottom: 22px; }
+  .section-bar > a { padding: 0 14px; }
+  .selected-rows,.project-grid,.home-series { grid-template-columns: 1fr; }
+  .selected-writing,.selected-rows { gap: 18px; }
+  .selected-writing :global(.post-featured .card-content) { padding: 22px; }
+  .selected-writing :global(.post-featured h3) { font-size: 22px; }
+  .selected-row { padding: 24px 22px 22px; }
+  .selected-row h3 { font-size: 20px; }
+  .selected-number { font-size: 72px; }
+  .learning-band { margin-top: 72px; padding-block: 56px 60px; }
+  .recent-row { grid-template-columns: 1fr 18px; gap: 4px 12px; }
+  .recent-row time,.recent-row h3 { grid-column: 1; }
+  .recent-row :global(svg) { grid-column: 2; grid-row: 1 / span 2; }
+  .topics { padding: 26px 22px; }
  }
 </style>

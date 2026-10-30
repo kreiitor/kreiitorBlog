@@ -12,8 +12,8 @@ const readTheme=page=>page.evaluate(()=>({
  pref:document.querySelector('[data-theme-toggle]')?.getAttribute('data-pref'),
 }));
 
-const LIGHT='rgb(250, 246, 240)';
-const DARK='rgb(33, 28, 22)';
+const LIGHT='rgb(246, 243, 236)';
+const DARK='rgb(18, 21, 28)';
 
 for(const system of ['light','dark']) {
  test(`First visit persists the ${system} system preference`,async({page})=>{
@@ -23,7 +23,7 @@ for(const system of ['light','dark']) {
   expect([s.dataTheme,s.stored,s.pref]).toEqual([system,system,system]);
   expect(s.bg).toBe(system==='dark'?DARK:LIGHT);
   expect(String(s.colorScheme)).toContain(system);
-  expect(s.meta).toBe(system==='dark'?'#211c16':'#faf6f0');
+  expect(s.meta).toBe(system==='dark'?'#12151c':'#f6f3ec');
   // 首次选择后，操作系统改色和刷新都不能覆盖已保存的选择。
   await page.emulateMedia({colorScheme:system==='dark'?'light':'dark'});
   await page.reload();
@@ -42,7 +42,7 @@ test('Theme toggle switches light → dark → light and persists both choices',
  let s=await readTheme(page);
  expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['dark','dark','dark',DARK]);
  // 显式选择必须压过系统偏好（此处系统为浅色）
- expect(s.meta).toBe('#211c16');
+ expect(s.meta).toBe('#12151c');
 
  await page.reload();
  s=await readTheme(page);
@@ -52,7 +52,7 @@ test('Theme toggle switches light → dark → light and persists both choices',
  await btn.click();
  s=await readTheme(page);
  expect([s.pref,s.stored,s.dataTheme,s.bg]).toEqual(['light','light','light',LIGHT]);
- expect(s.meta).toBe('#faf6f0');
+ expect(s.meta).toBe('#f6f3ec');
  await page.reload();
  expect(await readTheme(page)).toEqual(s);
 });
@@ -78,7 +78,7 @@ for(const failingMethod of ['getItem','setItem']) {
   await page.goto('');
   const btn=page.locator('[data-theme-toggle]');
   await expect(btn).toHaveAttribute('data-pref','light');
-  for(const [theme,bg,meta] of [['dark',DARK,'#211c16'],['light',LIGHT,'#faf6f0']]) {
+  for(const [theme,bg,meta] of [['dark',DARK,'#12151c'],['light',LIGHT,'#f6f3ec']]) {
    await btn.click();
    await expect(btn).toHaveAttribute('data-pref',theme);
    await expect(page.locator('html')).toHaveAttribute('data-theme',theme);

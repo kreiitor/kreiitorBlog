@@ -12,12 +12,16 @@ const tags = getTagSummaries(await getCollection('posts'),await getCollection('p
  </div>
 </BaseLayout>
 <style>
- .topic-intro { padding-block: 48px 32px; display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
- .topic-intro h1 { font-size: 34px; }
+ .topic-intro { padding-block: 64px 36px; display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+ .topic-intro h1 { font-size: clamp(36px,1.6rem + 2.6vw,58px); letter-spacing: -.02em; }
  .topic-intro p { font-size: 14px; color: var(--color-ink-soft); }
  .topics-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); column-gap: 36px; }
  .topic-entry { position: relative; min-width: 0; border-top: 1px solid var(--color-blossom-line); padding: 24px 28px 24px 0; transition: color var(--dur-base); }
- .topic-entry:hover h2 { color: var(--color-accent); }
+ .topic-entry:hover h2 { color: var(--color-accent-strong); }
+ .topic-entry::before { content: ''; position: absolute; left: 0; top: -1px; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .topic-entry:hover::before { transform: scaleX(1); }
+ .topic-entry > span { transition: transform var(--dur-base) var(--ease-out-expo); }
+ .topic-entry:hover > span { transform: translateX(4px); }
  .topic-entry h2 { font-size: 23px; }
  .topic-entry p { font-size: 13px; color: var(--color-ink-soft); margin-top: 8px; }
  .topic-entry > span { position: absolute; right: 4px; top: 28px; color: var(--color-accent); }

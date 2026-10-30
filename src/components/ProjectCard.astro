@@ -3,13 +3,14 @@ import type { ProjectEntry } from '../utils/content';
 import { withBase } from '../utils/url';
 import TagLink from './TagLink.astro';
 import Icon from './Icon.astro';
+import { resolveCover } from '../utils/covers';
 interface Props { project: ProjectEntry; showcase?: boolean; headingLevel?: 'h2' | 'h3'; }
 const { project, showcase = false, headingLevel: Heading = 'h3' } = Astro.props;
 const href = withBase(`/projects/${project.id}/`);
-const cover = project.data.cover ?? '/covers/project-benchmark.svg';
+const cover = resolveCover(project.data.cover ?? '/covers/project-benchmark.svg');
 ---
 <article class:list={['zen-card','project-card',{'project-showcase':showcase}]}>
- <a href={href} class="project-image" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="800" height="420"/></a>
+ <a href={href} class="project-image" tabindex="-1" aria-hidden="true"><img src={withBase(cover)} alt="" loading="lazy" width="2048" height="1152"/></a>
  <div class="card-content">
   <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
   <Heading><a href={href}>{project.data.title}</a></Heading>
@@ -18,37 +19,24 @@ const cover = project.data.cover ?? '/covers/project-benchmark.svg';
  </div>
 </article>
 <style>
- .project-card { display: grid; grid-template-columns: minmax(0,1fr); overflow: hidden; background: var(--color-surface); }
- .project-image { aspect-ratio: 800 / 420; background: var(--color-sage-soft); overflow: hidden; border-bottom: 1px solid var(--color-blossom-line); display: flex; align-items: center; justify-content: center; }
- .project-image img { width: 100%; height: 100%; object-fit: contain; transition: transform var(--dur-slow) var(--ease-out-expo); }
- .project-card .card-content { min-width: 0; gap: 12px; padding: 24px; }
- .project-card :is(h2,h3) { font-size: 21px; line-height: 1.5; }
- .project-card .card-meta { font-size: 13px; }
- .project-card .card-description { font-size: 15px; }
- .project-status { display: flex; align-items: center; gap: 6px; color: var(--color-accent-strong); font-weight: 500; }
- .project-status span { width: 6px; height: 6px; background: currentColor; border-radius: 50%; flex-shrink: 0; }
+ .project-card { display: flex; flex-direction: column; }
+ .project-image { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--color-surface-soft); }
+ .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slower) var(--ease-out-expo); }
+ @media (hover: hover) { .project-card:hover .project-image img { transform: scale(1.045); } }
+ .project-card .card-content { min-width: 0; gap: 12px; }
+ .project-card :is(h2,h3) { font-size: 21px; line-height: 1.45; }
+ .project-status { display: inline-flex; align-items: center; gap: 8px; padding: 2px 10px 2px 8px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-counterpoint-ink); font-size: 12.5px; font-weight: 600; }
+ .project-status span { position: relative; width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
+ .project-status:not(.is-complete):not(.is-planned) span::after { content: ''; position: absolute; inset: -3px; border: 1px solid currentColor; border-radius: 50%; animation: status-pulse 2.2s var(--ease-smooth) infinite; }
  .project-status.is-complete { color: var(--color-sage); }
  .project-status.is-planned { color: var(--color-ink-muted); }
- @media (hover: hover) { .project-card:hover { translate: 0 0; } .project-card:hover .project-image img { transform: scale(1.025); } }
+ .project-showcase .card-content { padding: 26px 28px 28px; }
+ .project-showcase :is(h2,h3) { font-size: 24px; }
+ .project-showcase .card-description { line-height: 1.85; }
+ @keyframes status-pulse { from { opacity: .8; transform: scale(.6); } to { opacity: 0; transform: scale(2); } }
  @media (max-width: 600px) {
-  .project-card { grid-template-columns: minmax(0,1fr); }
-  .project-image { aspect-ratio: 800 / 420; border-right: 0; border-bottom: 1px solid var(--color-blossom-line); }
-  .project-image img { object-fit: cover; }
-  .project-card .card-content { padding: 22px; }
-  .project-card :is(h2,h3) { font-size: 22px; }
+  .project-card .card-content,.project-showcase .card-content { padding: 22px; }
+  .project-card :is(h2,h3),.project-showcase :is(h2,h3) { font-size: 21px; }
   .project-card .card-description { -webkit-line-clamp: 4; }
- }
- .project-showcase { display: flex; flex-direction: column; border-radius: 18px; }
- .project-showcase .project-image { aspect-ratio: 800 / 420; flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--color-blossom-line); background: var(--color-sage-soft); }
- .project-showcase .project-image img { width: 100%; height: 100%; object-fit: cover; }
- .project-showcase .card-content { flex: 1; gap: 14px; padding: 26px 28px; }
- .project-showcase :is(h2,h3) { font-size: 24px; line-height: 1.45; }
- .project-showcase .card-description { -webkit-line-clamp: 3; line-height: 1.85; }
- .project-showcase .card-bottom { padding-top: 12px; }
- .project-showcase .project-status:not(.is-complete):not(.is-planned) { color: var(--color-counterpoint-ink,var(--color-accent-strong)); }
- @media (max-width: 600px) {
-  .project-showcase .card-content { padding: 22px; }
-  .project-showcase :is(h2,h3) { font-size: 22px; }
-  .project-showcase .card-description { -webkit-line-clamp: 4; }
  }
 </style>

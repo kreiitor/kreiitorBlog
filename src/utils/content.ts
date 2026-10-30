@@ -1,5 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import { canonicalTag } from './tags';
+import { resolveCover } from './covers';
 
 export type PostEntry = CollectionEntry<'posts'>;
 export type ProjectEntry = CollectionEntry<'projects'>;
@@ -44,11 +45,11 @@ export function getReadingTime(post: PostEntry) {
 
 /** Explicit artwork always wins; infer a subject only when no cover is chosen. */
 export function getPostCover(post: PostEntry) {
-	if (post.data.cover) return post.data.cover;
-	if (post.id.includes('infra')) return '/covers/series-ai-infra.svg';
-	if (/reading|literature|annotation|paper/.test(post.id)) return '/covers/post-paper.svg';
-	if (/algorithm|career|roadmap/.test(post.id)) return '/covers/post-code-algorithm.svg';
-	return post.data.cover ?? (post.data.category === 'knowledge' ? '/covers/post-tools.svg' : '/covers/post-paper.svg');
+	if (post.data.cover) return resolveCover(post.data.cover);
+	if (post.id.includes('infra')) return resolveCover('/covers/series-ai-infra.svg');
+	if (/reading|literature|annotation|paper/.test(post.id)) return resolveCover('/covers/post-paper.svg');
+	if (/algorithm|career|roadmap/.test(post.id)) return resolveCover('/covers/post-code-algorithm.svg');
+	return resolveCover(post.data.category === 'knowledge' ? '/covers/post-tools.svg' : '/covers/post-paper.svg');
 }
 
 /** Preserve readable TOC labels before KaTeX adds visual and accessibility copies. */

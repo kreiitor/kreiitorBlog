@@ -4,6 +4,7 @@ import PostList from '../../components/PostList.astro';
 import SeriesCard from '../../components/SeriesCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Botanical from '../../components/Botanical.astro';
+import Icon from '../../components/Icon.astro';
 import { getPublishedPosts } from '../../utils/content';
 import { getLearningSeries } from '../../utils/series';
 import { withBase } from '../../utils/url';
@@ -15,10 +16,10 @@ const independentCount = posts.filter(post => !post.data.series).length;
 ---
 <BaseLayout title="博客" description="研究与思考、实践知识与成体系的学习笔记。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">The journal / Writing & learning</p><h1>把思考，留在纸上。</h1><p>论文里的灵感，工具里的门道，数学里的直觉。<br/>从一篇札记开始，也可以沿着一条学习路径读下去。</p></section>
+  <div class="page-intro-band"><section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">研究与实践</p><h1>文章</h1><p>论文阅读、工程实践与技术思考。系列章节可按学习专题阅读。</p></section></div>
   <section class="page-shell blog-content">
    <div class="blog-toolbar"><div class="filter-tabs" role="group" aria-label="按栏目筛选">{categories.map(item => <button type="button" data-category-filter={item.key} aria-pressed={item.key === 'all'}>{item.label}<span>{item.key === 'all' ? independentCount : posts.filter(post => post.data.category === item.key).length}</span></button>)}</div><a href={withBase('/search/')} class="text-link">搜索内容 →</a></div>
-   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">Learning paths</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true">⌄</span></summary><div class="series-grid">{series.map(group => <SeriesCard headingLevel="h2" series={group} compact/>)}</div></details>
+   <details data-blog-series class="blog-series"><summary><span><span class="eyebrow">Learning paths</span><span class="series-summary-title">浏览 {series.length} 个学习专题</span></span><span class="series-disclosure" aria-hidden="true"><Icon name="chevron" size={18}/></span></summary><div class="series-grid">{series.map(group => <SeriesCard headingLevel="h2" series={group} compact/>)}</div></details>
    <p class="filter-status" data-filter-status aria-live="polite">{independentCount} 篇独立札记 · 系列章节可从上方专题阅读</p>
    <PostList posts={posts} interactive/>
    <nav class="list-pagination" data-list-pagination aria-label="文章列表翻页"><button type="button" class="zen-btn zen-btn-secondary" data-list-previous disabled>← 上一页</button><span data-list-page>1 / 2</span><button type="button" class="zen-btn zen-btn-secondary" data-list-next>下一页 →</button></nav>
@@ -31,8 +32,6 @@ const independentCount = posts.filter(post => !post.data.series).length;
  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-post-row]'));
  const status = document.querySelector('[data-filter-status]');
  const series = document.querySelector<HTMLDetailsElement>('[data-blog-series]');
- const wideLayout = matchMedia('(min-width: 701px)');
- if (series) series.open = wideLayout.matches;
  const previous = document.querySelector<HTMLButtonElement>('[data-list-previous]');
  const next = document.querySelector<HTMLButtonElement>('[data-list-next]');
  const pageLabel = document.querySelector('[data-list-page]');
@@ -58,7 +57,7 @@ const independentCount = posts.filter(post => !post.data.series).length;
   if (page === 1) url.searchParams.delete('page'); else url.searchParams.set('page',String(page));
   history.replaceState(null,'',url);
  }
- buttons.forEach(button => button.addEventListener('click',() => { category = button.dataset.categoryFilter ?? 'all'; page = 1; if (series) series.open = category === 'course' || wideLayout.matches; render(true); }));
+ buttons.forEach(button => button.addEventListener('click',() => { category = button.dataset.categoryFilter ?? 'all'; page = 1; if (series) series.open = category === 'course'; render(true); }));
  function changePage(delta: number) { page += delta; render(true); const list=document.querySelector<HTMLElement>('[data-post-list]');if(list){list.tabIndex=-1;list.focus({preventScroll:true});list.scrollIntoView({ block:'start', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });} }
  previous?.addEventListener('click',() => changePage(-1));
  next?.addEventListener('click',() => changePage(1));
@@ -72,33 +71,31 @@ const independentCount = posts.filter(post => !post.data.series).length;
 <style>
  .blog-content { padding-top: 28px; }
  .blog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
- .filter-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
- .filter-tabs button { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: 999px; font-size: 14px; color: var(--color-ink-soft); }
- .filter-tabs button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); }
- .filter-tabs button { transition: color 160ms, background-color 160ms, border-color 160ms; }
- .filter-tabs button:not([aria-pressed="true"]):hover { border-color: var(--color-blossom-line); background: var(--color-accent-soft); }
- .filter-tabs span { font-size: 12px; }
- .blog-series { margin-top: 24px; padding: 16px 0; border-block: 1px solid var(--color-blossom-line); }
+ .filter-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); }
+ .filter-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 16px; border-radius: 999px; color: var(--color-ink-soft); font-size: 14px; font-weight: 500; transition: color var(--dur-base), background-color var(--dur-base); }
+ .filter-tabs button:not([aria-pressed="true"]):hover { color: var(--color-ink); background: var(--color-surface-hover); }
+ .filter-tabs button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); font-weight: 600; }
+ .filter-tabs span { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .75; }
+ .blog-series { margin-top: 24px; padding: 8px 20px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); }
  .blog-series summary { display: flex; align-items: center; justify-content: flex-start; gap: 16px; cursor: pointer; list-style: none; min-height: 44px; }
  .blog-series summary::-webkit-details-marker { display: none; }
  .blog-series summary > span:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
- .blog-series summary .eyebrow { font-size: 11px; }
- .series-summary-title { font-size: 14px; color: var(--color-ink); }
- .series-disclosure { color: var(--color-sage); font-size: 22px; transition: transform var(--dur-base) var(--ease-smooth); }
+ .blog-series summary .eyebrow { font-size: 11.5px; }
+ .series-summary-title { font-size: 14px; font-weight: 600; color: var(--color-ink); }
+ .series-disclosure { display: grid; place-items: center; width: 32px; height: 32px; margin-left: auto; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo); }
  .blog-series[open] .series-disclosure { transform: rotate(180deg); }
- .blog-series .series-grid { margin-top: 18px; }
- .filter-status { font-size: 12px; color: var(--color-ink-soft); margin: 24px 0 8px; }
+ .blog-series .series-grid { margin-block: 12px 14px; }
+ .filter-status { font-size: 13px; color: var(--color-ink-muted); margin: 28px 0 12px; }
  .list-pagination { display: flex; justify-content: center; align-items: center; gap: 24px; padding-top: 32px; font-size: 12px; }
  .list-pagination button:disabled { opacity: .5; cursor: default; }
  @media (max-width: 700px) {
   .blog-content { padding-top: 18px; }
   .blog-toolbar { display: block; }
   .blog-toolbar > a { display: none; }
-  .filter-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
-  .filter-tabs button { justify-content: space-between; gap: 8px; padding-inline: 14px; border-color: var(--color-blossom-line); }
-  .blog-series { margin-top: 18px; padding-block: 8px; }
+  .filter-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-radius: 22px; }
+  .filter-tabs button { justify-content: space-between; gap: 8px; padding-inline: 14px; }
+  .blog-series { margin-top: 18px; padding: 6px 16px; }
   .blog-series summary > span:first-child { gap: 4px 12px; }
-  .blog-series summary .eyebrow { font-size: 10px; }
   .filter-status { margin-top: 18px; }
   .list-pagination { gap: 14px; }
  }

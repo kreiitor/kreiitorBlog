@@ -2,7 +2,7 @@
 
 基于 Astro 7、Tailwind CSS 4、Pagefind、KaTeX 与 Giscus 的静态研究博客与作品集。文章、学习专题和项目分别由 `src/content/posts/`、`src/content/series/`、`src/content/projects/` 下的 Markdown 驱动，构建后是纯静态页面。
 
-当前视觉采用田园核风：奶油纸 `#FAF6F0`、草绿 `#466B3F`（压深以满足正文对比度）、雏菊黄 `#F5D75F`、泥土棕 `#3B3024` 与花粉 `#D4A0A0`，提供明暗两套主题。标题与正文使用 Lora / 思源宋体，界面统一为衬线字体，代码使用 JetBrains Mono；页面叠加低透明度亚麻纹理，并用稀疏的植物线稿做装饰。
+站点以个人研究和写作为中心。配色取自宣纸、黛色与朱砂：浅色主题是暖白纸底配深黛文字，朱砂只用在按钮、当前项和少量焦点上，松石绿用于栏目标签；首页主视觉与页脚是深黛色区块（`.dark-island` 让区块内的令牌取暗色值），主视觉中的「线索」画布由 `src/utils/threads.ts` 绘制，只在可见时运行，减少动态效果时停在静止帧。文章阅读页保持低调：窄栏衬线正文、发丝线分隔、目录当前项用朱砂细线标记。标题使用 Lora / 思源宋体，界面使用 DM Sans 与系统中文无衬线字体，正文使用 Source Serif / 思源宋体，代码使用 JetBrains Mono；明暗两套主题的令牌集中在 `src/styles/global.css` 顶部。
 
 这份 README 是当前唯一需要维护的项目文档；提交前请先阅读根目录的 [AGENTS.md](AGENTS.md)。历史设计稿、审查报告和迭代记录已移除；需要追溯时查看 Git 历史。
 
@@ -192,16 +192,16 @@ cover: /covers/project-benchmark.svg
 
 ## 封面库
 
-`public/covers/` 中有 30 张统一风格的 SVG 封面：22 张文章、6 张学习专题、2 张项目。封面原稿为 800×420，同名分享 PNG 为 1200×630。
+`public/covers/research/` 中有 5 张研究刊物风格的主题封面，覆盖研究评测、论文阅读、数学、系统和算法。封面为 2048×1152 的 WebP，同名分享 PNG 为 1200×630。
 
-- 文章、项目和专题都可以用 `cover` 指定封面。显式配置的封面始终优先。
+- 文章、项目和专题都可以用 `cover` 指定封面。原有内置 SVG 路径会按主题映射到新封面；其他显式配置的封面保持不变。
 - 未指定时，文章按 `src/utils/content.ts` 的规则推断：文件名含 `infra`、阅读 / 论文类、算法 / 路线类、知识笔记分别使用对应默认图；其余文章使用通用论文封面。项目卡片未指定时使用 `/covers/project-benchmark.svg`。
 - 学习专题的 `cover` 同时用于专题卡片、目录和分享预览；章节分享图优先使用自己的 `cover`，没有时继承专题封面。
 - `cover` 始终影响卡片与分享图；`writing` 文章还会在正文顶部显示封面，`course` / `knowledge` 文章不插入装饰性大封面，项目详情页只在填写 `cover` 时显示横幅。
 
-选择封面时打开 [离线选图册](docs/cover-catalog.html)，按用途筛选、搜索并复制 `cover: /covers/…svg`。选图册内嵌图片，不需要启动网站或联网。
+选择封面时打开 [离线选图册](docs/cover-catalog.html)，按用途筛选、搜索并复制 `cover: /covers/research/…webp`。选图册内嵌图片，不需要启动网站或联网。
 
-封面使用奶油纸、草绿、雏菊黄与泥土棕，并加入五瓣雏菊花形；SVG 内部通过语义变量和 `prefers-color-scheme` 适配明暗主题；分享 PNG 固定浅色版本。新增主题时，在 `scripts/prepare-garden-art.mjs` 中增加构图，在 `src/data/cover-catalog.json` 登记同名条目，然后运行：
+封面使用柔和色块和抽象线条表达主题，浅色与深色界面使用同一张图片。新增封面时将 WebP 放入 `public/covers/research/`，在 `src/data/cover-catalog.json` 登记，再运行：
 
 ```sh
 npm run art:prepare
@@ -209,7 +209,7 @@ npm run check
 npm run build
 ```
 
-`art:prepare` 会重新生成品牌标记、30 张 SVG 封面、同名分享 PNG、站点分享图与离线选图册。只更新选图册时运行 `npm run covers:catalog`。
+`art:prepare` 会同步品牌标记、封面的同名分享 PNG、站点分享图与离线选图册，不会重新绘制或覆盖封面。只更新选图册时运行 `npm run covers:catalog`。
 
 ## 字体
 
@@ -233,7 +233,7 @@ npm run check
 npm run build
 ```
 
-脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 13 个字体文件合计 **1,261,376 字节**，覆盖 2,181 个语料字形、1,170 个展示字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
+脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 14 个字体文件合计 **1,309,928 字节**，覆盖 2,270 个语料字形、1,264 个展示字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
 
 所有字体使用 `font-display: swap`，不做全站预加载。KaTeX 与代码字体样式只在文章 / 项目阅读页引入。新增超出 400–600 的英文设计字重或新增中文字重时，需要同步修改生成脚本、CSS 声明和字体资产。
 

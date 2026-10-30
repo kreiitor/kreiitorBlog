@@ -31,22 +31,19 @@ test('Mobile blog keeps articles ahead of expandable learning paths and opens pa
  await expect(paths).not.toHaveAttribute('open', '');
 });
 
-test('Vector covers follow manual theme choices even when they override the operating system', async ({ page }) => {
+test('Research covers load with either manually selected theme', async ({ page }) => {
  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
  await page.addInitScript(() => localStorage.setItem('theme', 'light'));
  await page.goto('');
  const cover = page.locator('.selected-writing .card-cover img');
- const sample = async () => {
-  await cover.scrollIntoViewIfNeeded();
-  const screenshot = await cover.screenshot();
-  const { data } = await sharp(screenshot).extract({ left: 8, top: 8, width: 2, height: 2 }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  return [...data].reduce((sum, value) => sum + value, 0) / data.length;
- };
- expect(await sample()).toBeGreaterThan(200);
+ await cover.scrollIntoViewIfNeeded();
+ await expect(cover).toHaveAttribute('src', /\/covers\/research\/.*\.webp$/);
+ const sample = async () => sharp(await cover.screenshot()).metadata();
+ expect((await sample()).width).toBeGreaterThan(0);
  await page.locator('[data-theme-toggle]').click();
- expect(await sample()).toBeLessThan(80);
+ expect((await sample()).width).toBeGreaterThan(0);
  await page.locator('[data-theme-toggle]').click();
- expect(await sample()).toBeGreaterThan(200);
+ expect((await sample()).width).toBeGreaterThan(0);
 });
 
 test('Practical articles lead directly into their text without a decorative cover', async ({ page }) => {
@@ -55,33 +52,22 @@ test('Practical articles lead directly into their text without a decorative cove
  await expect(page.locator('.article-body')).toBeVisible();
 });
 
-test('Layered illustration settles and stays still with reduced motion', async ({ page }) => {
+test('Learning paths are immediately visible without scroll-triggered entrances', async ({ page }) => {
  await page.emulateMedia({ reducedMotion: 'no-preference' });
  await page.goto('');
- const art = page.locator('.research-art');
- await expect(art.locator('.art-layer')).toHaveCount(3);
- await expect.poll(() => art.evaluate(node => node.getAnimations({subtree:true}).filter(animation => animation.playState === 'running').length)).toBe(0);
- await page.emulateMedia({ reducedMotion: 'reduce' });
- await expect.poll(() => art.locator('.art-layer').evaluateAll(nodes => nodes.every(node => getComputedStyle(node).animationName === 'none'))).toBe(true);
- for (const layer of await art.locator('.art-layer').all()) await expect(layer).toHaveCSS('opacity', '1');
+ const card = page.locator('.series-grid .series-card').first();
+ await card.scrollIntoViewIfNeeded();
+ await expect(card).toHaveCSS('opacity','1');
+ expect(await card.evaluate(node => node.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0);
 });
 
-test('Enabling reduced motion cancels card entrances already in flight', async ({ page }) => {
- await page.emulateMedia({ reducedMotion: 'no-preference' });
- await page.goto('');
- await page.evaluate(() => document.fonts.ready);
- const wasAnimating = await page.locator('.series-grid').evaluate(node => new Promise(resolve => {
-  node.scrollIntoView({block:'center',behavior:'instant'});
-  const until = performance.now() + 1200;
-  function inspect() {
-   const active = node.getAnimations({subtree:true}).some(animation => animation.playState === 'running' && animation.effect?.target?.matches('.series-card'));
-   if (active || performance.now() > until) resolve(active);
-   else requestAnimationFrame(inspect);
-  }
-  requestAnimationFrame(inspect);
- }));
- expect(wasAnimating).toBe(true);
- await page.emulateMedia({ reducedMotion: 'reduce' });
- await expect.poll(() => page.locator('.series-grid').evaluate(node => node.getAnimations({subtree:true}).filter(animation => animation.playState === 'running').length)).toBe(0);
- await expect(page.locator('.series-card').first()).toHaveCSS('opacity','1');
+test('Home fits narrow and wide viewports without horizontal overflow', async ({ page }) => {
+ for (const width of [320, 390, 768, 1440]) {
+  await page.setViewportSize({ width, height: 900 });
+  await page.goto('');
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await expect(page.getByRole('heading', { name: /研究札记/ })).toBeVisible();
+  await expect(page.locator('.selected-writing .post-featured')).toBeVisible();
+ }
 });

@@ -1,14 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
- <title id="logo-title">kreiitor · 叶脉 K 标记</title>
- <rect class="logo-stem" x="12" y="10" width="7" height="44" rx="3.5" fill="var(--color-accent, #466b3f)"/>
- <path class="logo-arms" d="M21 32.5 39 12h9L30 34l19 20h-9L21 36.5Z" fill="var(--color-accent, #466b3f)"/>
- <path class="logo-leaf" d="M18.5 42.5c-5.5-3.2-6.6-9.2-4.2-12.4 5.4 1.1 7.4 6.2 4.2 12.4Z" fill="var(--color-sage, #4e6e48)"/>
- <g class="logo-index" fill="var(--color-counterpoint, #e9c766)">
-  <circle cx="49" cy="6" r="4.2"/>
-  <circle cx="55.7" cy="10.8" r="4.2"/>
-  <circle cx="53.1" cy="18.8" r="4.2"/>
-  <circle cx="44.9" cy="18.8" r="4.2"/>
-  <circle cx="42.3" cy="10.8" r="4.2"/>
- </g>
- <circle class="logo-center" cx="49" cy="13" r="3.4" fill="var(--color-ink, #3b3024)"/>
+ <title id="logo-title">kreiitor 标记</title>
+ <path d="M14 12h7v40h-7zM23 31 40 12h9L32 32l19 20h-9L23 34z" fill="var(--color-ink, #1d2230)"/>
+ <circle cx="52" cy="12" r="4" fill="var(--color-accent, #b23a1f)"/>
 </svg>

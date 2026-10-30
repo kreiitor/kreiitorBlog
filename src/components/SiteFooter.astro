@@ -1,38 +1,40 @@
 ---
 import { siteConfig } from '../data/site';
 import { withBase } from '../utils/url';
-import Botanical from './Botanical.astro';
 ---
-<footer class="site-footer">
+<footer class="site-footer dark-island">
  <div class="page-shell">
   <div class="footer-top">
-   <div><p class="footer-wordmark">Stay curious.<span>Keep building.</span></p><p class="footer-note">保持好奇，把想法写下来，把问题做下去。</p></div>
+   <div class="footer-intro">
+    <p class="footer-motto">思考有迹，探索不止。</p>
+    <p class="footer-note">关于 AI、软件工程与学习的长期记录。有问题或想法，欢迎来信。</p>
+    <a href={`mailto:${siteConfig.email}`} class="footer-mail">{siteConfig.email} <span aria-hidden="true">↗</span></a>
+   </div>
    <div class="footer-links">
-    <div><p class="eyebrow">探索</p><a href={withBase('/blog/')}>全部文章</a><a href={withBase('/projects/')}>研究项目</a><a href={withBase('/archive/')}>时间归档</a></div>
+    <div><p class="eyebrow">探索</p><a href={withBase('/blog/')}>全部文章</a><a href={withBase('/notes/')}>学习专题</a><a href={withBase('/projects/')}>研究项目</a><a href={withBase('/archive/')}>时间归档</a></div>
     <div><p class="eyebrow">联系</p>{siteConfig.socialLinks.map(link => <a href={link.href} target="_blank" rel="noreferrer">{link.label} ↗</a>)}<a href={withBase('/rss.xml')}>RSS 订阅 ↗</a></div>
    </div>
   </div>
-  <div class="footer-divider"><Botanical variant="divider" class="botanical-sway"/></div>
-  <div class="footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.author} · 研究札记</p><p>思考有迹，探索不止。<span class="footer-dot" aria-hidden="true"></span>武汉，中国</p><a href={`mailto:${siteConfig.email}`} class="text-link">{siteConfig.email}</a><a href="#top" class="text-link">回到顶部 ↑</a></div>
+  <p class="footer-wordmark" aria-hidden="true">kreiitor<span class="seal"></span></p>
+  <div class="footer-bottom"><p>© {new Date().getFullYear()} {siteConfig.author} · 研究札记 · {siteConfig.location}</p><a href="#top" class="text-link">回到顶部 ↑</a></div>
  </div>
 </footer>
 <style>
- /* 规范页脚：雏菊黄浅底（f5d75f/10），链接用草绿。暗色自动走令牌。 */
- .site-footer { margin-top: 80px; padding: 55px 0 24px; background: var(--color-highlight-soft); border-top: 1px solid var(--color-blossom-line); }
- .footer-top { display: flex; justify-content: space-between; gap: 40px; padding-bottom: 30px; }
- .footer-wordmark { font-family: var(--font-editorial); font-size: 34px; line-height: 1.2; letter-spacing: -.025em; }
- .footer-wordmark span { display: block; color: var(--color-accent); }
- .footer-note { margin-top: 16px; color: var(--color-ink-soft); font-size: 13px; }
- .footer-links { display: flex; gap: 80px; padding-right: 30px; }
- .footer-links div { display: flex; flex-direction: column; gap: 0; font-size: 14px; }
- .footer-links .eyebrow { margin-bottom: 7px; font-size: var(--text-caption); }
- .footer-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-ink-soft); transition: color var(--dur-base) var(--ease-smooth),padding-left var(--dur-base) var(--ease-out-expo); }
- .footer-links a:hover { color: var(--color-accent); padding-left: 4px; }
- .footer-divider { display: flex; justify-content: center; padding-bottom: 14px; color: var(--color-sage); }
- .footer-divider :global(svg) { width: min(360px,100%); height: auto; opacity: .8; }
- .footer-bottom { border-top: 1px solid var(--color-blossom-line); padding-top: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--color-ink-soft); }
- .footer-bottom .text-link { color: var(--color-accent); }
- .footer-bottom .text-link:hover { color: var(--color-accent-strong); }
- .footer-dot { display: inline-block; width: 4px; height: 4px; background: var(--color-blossom); border-radius: 50%; margin: 0 12px 2px; }
- @media (max-width: 600px) { .site-footer { margin-top: 50px; padding-top: 35px; } .footer-top { flex-direction: column; gap: 30px; } .footer-links { gap: 70px; } .footer-bottom { align-items: start; flex-wrap: wrap; } .footer-bottom > p:nth-child(2) { display: none; } }
+ .site-footer { position: relative; overflow: hidden; margin-top: 120px; padding: 72px 0 20px; background-color: var(--hero-bg); background-image: radial-gradient(700px 360px at 85% 110%,var(--hero-glow),transparent 70%); }
+ .footer-top { display: flex; justify-content: space-between; gap: 48px; }
+ .footer-motto { color: var(--color-ink); font-family: var(--font-kai); font-size: clamp(26px,1.2rem + 1.2vw,36px); letter-spacing: .1em; }
+ .footer-note { max-width: 28em; margin-top: 14px; color: var(--color-ink-soft); font-size: 14px; }
+ .footer-mail { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 10px; color: var(--color-accent); font-size: 15px; font-weight: 600; }
+ .footer-mail:hover { color: var(--color-accent-strong); }
+ .footer-links { display: flex; gap: 72px; }
+ .footer-links div { display: flex; flex-direction: column; font-size: 14px; }
+ .footer-links .eyebrow { margin-bottom: 6px; }
+ .footer-links a { display: inline-flex; align-items: center; min-height: 40px; color: var(--color-ink-soft); transition: color var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo); }
+ .footer-links a:hover { color: var(--color-ink); translate: 4px 0; }
+ .footer-wordmark { margin: 56px 0 8px; color: transparent; font-family: var(--font-display); font-size: clamp(72px,17vw,240px); font-weight: 600; line-height: .95; letter-spacing: -.04em; white-space: nowrap; background-image: linear-gradient(180deg,var(--color-line-strong),transparent 90%); -webkit-background-clip: text; background-clip: text; user-select: none; }
+ .footer-wordmark .seal { width: .12em; height: .12em; }
+ .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 18px; border-top: 1px solid var(--color-line); color: var(--color-ink-muted); font-size: 13px; }
+ .footer-bottom .text-link { color: var(--color-ink-soft); font-weight: 500; }
+ .footer-bottom .text-link:hover { color: var(--color-ink); }
+ @media (max-width: 760px) { .site-footer { margin-top: 80px; padding-top: 52px; } .footer-top { flex-direction: column; gap: 36px; } .footer-links { gap: 56px; } .footer-wordmark { margin-top: 40px; } }
 </style>

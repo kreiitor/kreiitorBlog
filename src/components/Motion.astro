@@ -6,9 +6,6 @@ import Icon from './Icon.astro';
  const preference = matchMedia('(prefers-reduced-motion: reduce)');
  const header = document.querySelector<HTMLElement>('.site-header');
  const topLink = document.querySelector<HTMLAnchorElement>('[data-back-to-top]');
- const art = document.querySelector<HTMLElement>('.hero-visual');
- const revealTargets = document.querySelectorAll('.project-card,.series-card,.course-intro,.chapter-row');
- const entrances = new Set<Animation>();
  let framePending = false;
  let lastScrolled: boolean | null = null;
  let lastVisible: boolean | null = null;
@@ -32,46 +29,43 @@ import Icon from './Icon.astro';
     topLink.tabIndex = visible ? 0 : -1;
    }
   }
-  if (art) art.style.translate = preference.matches || innerWidth <= 900 ? '0 0' : `0 ${-Math.min(10,y*.03)}px`;
   lastY = y;
  }
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
  window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('resize',schedule,{passive:true});
  preference.addEventListener('change',() => {
-  if (preference.matches) { entrances.forEach(animation => animation.cancel()); entrances.clear(); }
   updateScroll();
  });
  updateScroll();
- if (!preference.matches && 'IntersectionObserver' in window && revealTargets.length) {
-  const staggerCache = new Map();
-  const observer = new IntersectionObserver(entries => {
+
+ // 首页：页头透明地压在深色主视觉上，主视觉离开页头下沿后换回纸色底。
+ const hero = document.querySelector<HTMLElement>('[data-home-hero]');
+ if (header && hero && 'IntersectionObserver' in window) {
+  const height = header.getBoundingClientRect().height;
+  new IntersectionObserver(entries => {
    for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
-    if (preference.matches) { observer.unobserve(entry.target); continue; }
-    const element = entry.target;
-    let stagger = staggerCache.get(element);
-    if (stagger === undefined) {
-     stagger = element.matches('.post-card,.project-card,.series-card') ? Array.from(element.parentElement?.children ?? []).indexOf(element)%3*70 : 0;
-     staggerCache.set(element, stagger);
-    }
-    const series = element.matches('.series-card');
-    const animation = element.animate([
-     {opacity:.7,transform:`translateY(${series ? 10 : 14}px)`},
-     {opacity:1,transform:'translate(0,0)'}
-    ],{duration:series ? 600 : 520,delay:stagger,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});
-    entrances.add(animation);
-    animation.finished.then(() => entrances.delete(animation),() => entrances.delete(animation));
-    observer.unobserve(element);
-    staggerCache.delete(element);
+    if (entry.isIntersecting) header.dataset.overHero = 'true';
+    else delete header.dataset.overHero;
    }
-  },{threshold:.07,rootMargin:'0px 0px -16px 0px'});
-  revealTargets.forEach(element => observer.observe(element));
+  },{ rootMargin: `-${Math.round(height)}px 0px 0px 0px` }).observe(hero);
+ }
+
+ // 卡片柔光跟随指针：只写两个自定义属性，绘制完全交给 CSS。
+ if (matchMedia('(hover: hover)').matches) {
+  document.addEventListener('pointermove',event => {
+   if (event.pointerType !== 'mouse' || !(event.target instanceof Element)) return;
+   const card = event.target.closest<HTMLElement>('.zen-card,[data-spotlight]');
+   if (!card) return;
+   const rect = card.getBoundingClientRect();
+   card.style.setProperty('--mx',`${event.clientX - rect.left}px`);
+   card.style.setProperty('--my',`${event.clientY - rect.top}px`);
+  },{ passive: true });
  }
 </script>
 <style is:global>
- .site-header[data-scrolled="true"] { box-shadow: 0 5px 22px var(--color-head-shadow); }
- .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); color: var(--color-accent-strong); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity var(--dur-base) var(--ease-smooth),visibility var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth); }
+ .site-header[data-scrolled="true"]:not([data-over-hero]) { box-shadow: 0 8px 28px -18px var(--color-head-shadow); }
+ .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-line); border-radius: 50%; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity var(--dur-base) var(--ease-smooth),visibility var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth); }
  .back-to-top[data-visible="true"] { opacity: 1; visibility: visible; translate: 0 0; }
  .back-to-top:is(:hover,:focus-visible) { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
  .back-to-top:active { translate: 0 1px; }

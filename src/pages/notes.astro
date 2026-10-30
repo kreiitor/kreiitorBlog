@@ -5,16 +5,23 @@ import Botanical from '../components/Botanical.astro';
 import PostCard from '../components/PostCard.astro';
 import SeriesCard from '../components/SeriesCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import { getPublishedPosts } from '../utils/content';
+import { getPostCover, getPublishedPosts } from '../utils/content';
 import { getLearningSeries } from '../utils/series';
 import { withBase } from '../utils/url';
 const posts = await getCollection('posts');
 const series = getLearningSeries(await getCollection('series'), posts);
 const knowledge = getPublishedPosts(posts).filter(post => post.data.category === 'knowledge' && !post.data.series);
+const knowledgeSelection = [];
+const candidates = [...knowledge];
+while (knowledgeSelection.length < 6 && candidates.length) {
+ const previousCover = knowledgeSelection.length ? getPostCover(knowledgeSelection[knowledgeSelection.length - 1]) : undefined;
+ const differentCover = candidates.findIndex(post => getPostCover(post) !== previousCover);
+ knowledgeSelection.push(...candidates.splice(differentCover < 0 ? 0 : differentCover, 1));
+}
 ---
 <BaseLayout title="学习专题" description="成体系的学习笔记与实践知识：沿着主线阅读，从概念到推导，再到实践。">
  <div data-pagefind-ignore>
-  <section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">The learning garden / Structured notes</p><h1>把知识，连成一片。</h1><p>沿着一条主线读下去，让孤立的概念彼此相连。<br/>这里收录系统课程、数学推导，以及日常工程实践。</p></section>
+  <div class="page-intro-band intro-sage"><section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">系统学习</p><h1>学习专题</h1><p>从概念和推导到工程实践，沿着章节逐步深入。</p></section></div>
   <section class="page-shell editorial-section">
    <SectionHeading kicker="01 / Structured learning" title="成体系的学习笔记" description={`${series.length} 组学习专题，各有一条可以慢慢走下去的路径。`}/>
    <div class="series-grid">{series.map(item => <SeriesCard series={item}/>)}</div>
@@ -22,7 +29,7 @@ const knowledge = getPublishedPosts(posts).filter(post => post.data.category ===
   </section>
   <section class="page-shell editorial-section">
    <SectionHeading kicker="02 / Practical knowledge" title="实践知识库" description="工具链、阅读方法与学习路线，随用随查。" linkHref={withBase('/blog/?category=knowledge')} linkLabel="查看全部"/>
-   <div class="section-grid">{knowledge.slice(0,6).map(post => <PostCard post={post}/>)}</div>
+   <div class="section-grid">{knowledgeSelection.map(post => <PostCard post={post}/>)}</div>
   </section>
  </div>
 </BaseLayout>

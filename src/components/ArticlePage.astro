@@ -10,6 +10,7 @@ import { getHeadingLabels, getReadingTime, getPostCover, getRelatedPosts } from 
 import { DEFAULT_SERIES_COVER, getLearningSeries } from '../utils/series';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
+import { resolveCover } from '../utils/covers';
 import 'katex/dist/katex.min.css';
 import '../styles/code-fonts.css';
 interface Props { post: PostEntry; }
@@ -27,7 +28,7 @@ const nextChapter = group?.chapters[chapterIndex + 1];
 const previous = previousChapter ? { href: `/blog/${previousChapter.id}/`, title: previousChapter.data.title, label: '上一章' } : undefined;
 const next = nextChapter ? { href: `/blog/${nextChapter.id}/`, title: nextChapter.data.title, label: '下一章' } : undefined;
 const cover = post.data.category === 'writing' ? getPostCover(post) : undefined;
-const shareCover = cover ?? post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : getPostCover(post));
+const shareCover = cover ?? resolveCover(post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : getPostCover(post)));
 const related = getRelatedPosts(post, await getCollection('posts'), 3);
 ---
 <BaseLayout title={post.data.title} description={post.data.description} image={shareCover} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1}>
@@ -45,7 +46,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
     </header>
     <ReadingTools/>
     <details class="mobile-toc" data-pagefind-ignore><summary>本篇目录 · {toc.length} 个小节</summary><nav aria-label="文章目录">{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined} data-toc-link><MathLabel text={h.text}/></a>)}</nav></details>
-    {cover && <img src={withBase(cover)} alt="" class="article-cover" width="800" height="420" fetchpriority="high"/>}
+    {cover && <img src={withBase(cover)} alt="" class="article-cover" width="2048" height="1152" fetchpriority="high"/>}
     <div class="rich-content article-body"><Content/></div>
     {(previous || next) && <nav class:list={["chapter-nav", {"chapter-nav-single": !previous || !next}]} data-pagefind-ignore aria-label="继续阅读"><div>{previous && <a href={withBase(previous.href)}><span>← {previous.label}</span><strong>{previous.title}</strong></a>}</div><div>{next && <a href={withBase(next.href)}><span>{next.label} →</span><strong>{next.title}</strong></a>}</div></nav>}
     {related.length > 0 && <section class="related-posts" data-pagefind-ignore aria-labelledby="related-heading"><h2 id="related-heading">延伸阅读</h2><ul>{related.map(item => <li><a href={withBase(`/blog/${item.id}/`)}><span class="related-title">{item.data.title}</span><span class="related-desc">{item.data.description}</span></a></li>)}</ul></section>}
@@ -56,28 +57,30 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  </section>
 </BaseLayout>
 <style>
- .reading-shell { padding-top: 32px; }
- .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
- .article-tags :global(.zen-tag) { padding: 2px 9px; font-size: 12px; }
- .article-cover { margin-top: 22px; }
- .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px; border-block: 1px solid var(--color-blossom-line); padding: 26px 0; margin-bottom: 36px; }
- .chapter-nav a { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
- .chapter-nav strong { font-weight: 500; font-size: 15px; line-height: 1.8; }
- .chapter-nav span { color: var(--color-ink-soft); }
+ .reading-shell { padding-top: 36px; }
+ .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+ .article-tags :global(.zen-tag) { padding: 2px 10px; font-size: 12px; }
+ .article-cover { margin-top: 24px; }
+ .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 40px; }
+ .chapter-nav a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 18px 20px; border: 1px solid var(--color-line); border-radius: 14px; font-size: 12.5px; transition: border-color var(--dur-base),background-color var(--dur-base); }
+ .chapter-nav a:hover { border-color: var(--color-line-strong); background: var(--color-surface); }
+ .chapter-nav a:hover strong { color: var(--color-accent-strong); }
+ .chapter-nav strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.6; transition: color var(--dur-base); }
+ .chapter-nav span { color: var(--color-ink-muted); }
  .chapter-nav > div:last-child { text-align: right; }
  .chapter-nav-single { grid-template-columns: 1fr; }
  .chapter-nav-single > div:empty { display: none; }
  .chapter-nav-single > div:last-child { text-align: left; }
- .toc-series { margin-top: 24px; }
+ .toc-series { margin-top: 20px; color: var(--color-ink) !important; font-weight: 600; }
  .mobile-toc nav a { display: flex; align-items: center; min-width: 0; min-height: 44px; padding-block: 4px; overflow-wrap: anywhere; }
  .mobile-toc .toc-h3 { padding-left: 16px; }
- .mobile-toc a[aria-current="location"] { color: var(--color-accent-strong); font-weight: 600; }
- .related-posts { margin-bottom: 36px; }
- .related-posts h2 { font-size: 15px; font-family: var(--font-sans); font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--color-sage); padding-bottom: 14px; border-bottom: 1px solid var(--color-blossom-line); }
- .related-posts ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
- .related-posts li a { display: grid; gap: 6px; padding: 16px 0; border-bottom: 1px solid var(--color-blossom-line); transition: color var(--dur-base) var(--ease-smooth); }
- .related-posts li a:hover { color: var(--color-accent); }
- .related-title { font-family: var(--font-display); font-size: 17px; line-height: 1.65; }
- .related-desc { font-size: 13px; line-height: 1.8; color: var(--color-ink-soft); }
- @media (max-width: 600px) { .reading-shell { padding-top: 22px; } .chapter-nav { gap: 18px; } }
+ .mobile-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; }
+ .related-posts { margin-bottom: 40px; }
+ .related-posts h2 { padding-bottom: 12px; border-bottom: 1px solid var(--color-line); color: var(--color-sage); font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; letter-spacing: .06em; }
+ .related-posts ul { display: grid; margin: 0; padding: 0; list-style: none; }
+ .related-posts li a { display: grid; gap: 4px; padding: 16px 0; border-bottom: 1px solid var(--color-line); }
+ .related-posts li a:hover .related-title { color: var(--color-accent-strong); }
+ .related-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.6; transition: color var(--dur-base); }
+ .related-desc { color: var(--color-ink-soft); font-size: 13.5px; line-height: 1.8; }
+ @media (max-width: 600px) { .reading-shell { padding-top: 24px; } .chapter-nav { grid-template-columns: 1fr; } .chapter-nav > div:last-child { text-align: left; } }
 </style>

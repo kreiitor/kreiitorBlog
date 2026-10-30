@@ -17,11 +17,11 @@ for (const item of catalog) {
 }
 const counts = Object.fromEntries(Object.keys(families).map(family => [family, catalog.filter(item => item.family === family).length]));
 const cards = await Promise.all(catalog.map(async item => {
- const svg = await readFile(path.join(root, `public/covers/${item.id}.svg`));
- const image = `data:image/svg+xml;base64,${svg.toString('base64')}`;
- const reference = `cover: /covers/${item.id}.svg`;
+ const asset = await readFile(path.join(root, `public/covers/research/${item.id}.webp`));
+ const image = `data:image/webp;base64,${asset.toString('base64')}`;
+ const reference = `cover: /covers/research/${item.id}.webp`;
  return `<article class="cover-card" data-family="${item.family}" data-search="${escape(`${item.label} ${item.description} ${item.id}`)}">
-  <img src="${image}" alt="${escape(item.label)}封面预览" width="800" height="420" loading="lazy"/>
+  <img src="${image}" alt="${escape(item.label)}封面预览" width="2048" height="1152" loading="lazy"/>
   <div class="card-body"><div class="card-heading"><h2>${escape(item.label)}</h2><span class="family">${families[item.family]}</span></div>
   <p class="description">${escape(item.description)}</p>
   <div class="reference"><input id="ref-${item.id}" type="text" readonly spellcheck="false" aria-label="${escape(item.label)}的封面引用" value="${escape(reference)}"/><button type="button" class="copy" aria-label="复制${escape(item.label)}封面引用" data-copy="ref-${item.id}">复制</button></div>
@@ -64,7 +64,7 @@ const html = `<!doctype html>
  @media(max-width:620px) { .page { padding:34px 20px 24px; } header { grid-template-columns:1fr; gap:20px; padding-bottom:26px; } .edition { display:none; } .lead { font-size:13px; } .grid { grid-template-columns:1fr; gap:20px; } .toolbar { gap:16px; padding-top:22px; } .filters { gap:3px; } .filters button { padding:7px 9px; } .search { width:100%; } .search input { flex:1; width:0; } .status-row { display:block; } #copy-status { display:block; margin-top:5px; } }
 </style></head><body>
 <a class="skip" href="#covers">跳到封面列表</a><div class="page">
-<header><div><p class="eyebrow">KREIITOR / COVER STUDIES</p><h1>为下一篇，选一张封面。</h1><p class="lead">统一纸色，各有题意。为文章、学习专题与项目准备的 ${catalog.length} 张插画，图片已内嵌，可直接离线挑选。复制引用后，粘贴到内容的 frontmatter。</p></div><div class="edition"><strong>${String(catalog.length).padStart(2,'0')}</strong>张原创主题封面<br/>800 × 420 · SVG + PNG</div></header>
+<header><div><p class="eyebrow">KREIITOR / COVER STUDIES</p><h1>为下一篇，选一张封面。</h1><p class="lead">为文章与学习专题准备的 ${catalog.length} 张主题封面，图片已内嵌，可直接离线挑选。复制引用后，粘贴到内容的 frontmatter。</p></div><div class="edition"><strong>${String(catalog.length).padStart(2,'0')}</strong>张主题封面<br/>2048 × 1152 · WebP + PNG</div></header>
 <div class="toolbar"><div class="filters" role="group" aria-label="按用途筛选"><button type="button" data-filter="all" aria-pressed="true">全部<span>${catalog.length}</span></button>${Object.entries(families).map(([family,label])=>`<button type="button" data-filter="${family}" aria-pressed="false">${label}<span>${counts[family]}</span></button>`).join('')}</div><label class="search">查找封面<input id="search" type="search" placeholder="主题、用途或文件名" autocomplete="off"/></label></div>
 <div class="status-row"><span id="result-status" role="status" aria-live="polite">显示 ${catalog.length} / ${catalog.length} 张</span><span id="copy-status" role="status" aria-live="polite"></span></div>
 <main id="covers" tabindex="-1"><div class="grid">${cards.join('\n')}</div><p class="empty" id="empty" hidden>没有找到匹配的封面，试试其他关键词或用途。</p></main>
