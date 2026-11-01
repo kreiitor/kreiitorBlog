@@ -19,17 +19,64 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 ---
 <BaseLayout title={entry.data.title} description={entry.data.description} image={shareCover}>
  <div data-pagefind-ignore>
-  <section class="page-shell pt-10 sm:pt-14"><a href={withBase('/notes/')} class="text-link back-link">← 全部学习专题</a></section>
+  <section class="page-shell pt-10 sm:pt-14"><a href={withBase('/notes/')} class="text-link back-link">← 全部长卷</a></section>
   <section class="page-shell learning-layout" aria-label={`${entry.data.title}学习路径`}>
-   <aside class="course-intro"><p class="eyebrow">学习路径</p><span class="course-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={28}/></span><h1>{titleParts ? <><span>{titleParts[1]}</span>{' '}<span>{titleParts[2]}</span></> : entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary">从第一篇开始 <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
+   <aside class="course-intro"><p class="eyebrow">长卷</p><span class="course-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={28}/></span><h1 data-vt-self>{titleParts ? <><span>{titleParts[1]}</span>{' '}<span>{titleParts[2]}</span></> : entry.data.title}</h1>{entry.data.englishTitle && <p class="course-english">{entry.data.englishTitle}</p>}<p class="course-description">{entry.data.description}</p><div class="course-facts"><span>{chapters.length} 篇笔记</span>{entry.data.facts && <span>{entry.data.facts}</span>}</div><div class="course-progress" data-course-progress hidden><span class="course-progress-track" aria-hidden="true"><span data-course-progress-bar></span></span><span data-course-progress-label></span></div><a href={withBase(`/blog/${chapters[0].id}/`)} class="zen-btn zen-btn-primary" data-course-start><span data-course-start-label>从第一篇开始</span> <Icon name="arrow" size={18}/></a>{entry.data.sourceNote && <p class="source-note">{entry.data.sourceNote}</p>}</aside>
    <div class="chapter-list">
     {entry.body?.trim() && <div class="rich-content series-overview"><Content/></div>}
     <h2 class="eyebrow chapter-label">Contents / 按章节阅读</h2>
-    {chapters.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row"><span class="chapter-number">{String(index+1).padStart(2,'0')}</span><div><h3>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-arrow" aria-hidden="true">→</span></a>)}
+    {chapters.map((post,index) => <a href={withBase(`/blog/${post.id}/`)} class="chapter-row" data-chapter={post.id} data-chapter-title={post.data.title}><span class="chapter-number">{String(index+1).padStart(2,'0')}</span><div><h3 data-vt-key={withBase(`/blog/${post.id}/`)}>{post.data.title}</h3><p>{post.data.description}</p></div><span class="chapter-state" data-chapter-state aria-hidden="true"><span class="chapter-arrow">→</span></span></a>)}
    </div>
   </section>
  </div>
 </BaseLayout>
+<script>
+ import { FINISHED, readRecord } from '../../utils/reading-memory';
+ // 阅读位置只存在本机；没有开启记录的读者看到的页面与原来一致。
+ const rows = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-chapter]'));
+ const records = rows.map(row => ({ row, record: readRecord(row.dataset.chapter ?? '') }));
+ const tracked = records.filter(item => item.record?.position);
+ if (tracked.length) {
+  let finished = 0;
+  let resume: (typeof records)[number] | undefined;
+  let latest = -1;
+  for (const item of records) {
+   const progress = item.record?.position?.progress;
+   if (progress === undefined) continue;
+   const state = item.row.querySelector<HTMLElement>('[data-chapter-state]');
+   const done = progress >= FINISHED;
+   if (done) finished++;
+   item.row.dataset.progress = done ? 'done' : 'partial';
+   item.row.style.setProperty('--chapter-progress',String(Math.max(.04,progress / 100)));
+   const label = document.createElement('span'); label.className = 'chapter-progress-label';
+   label.textContent = done ? '已读' : `${progress}%`;
+   state?.prepend(label);
+   const note = document.createElement('span'); note.className = 'sr-only'; note.textContent = done ? '（已读完）' : `（读到 ${progress}%）`;
+   item.row.querySelector('h3')?.append(note);
+   const updated = item.record?.position?.updatedAt ?? 0;
+   if (!done && updated >= latest) { latest = updated; resume = item; }
+  }
+  // 没有读到一半的章节时，推荐第一篇还没打开过的。
+  resume ??= records.find(item => !item.record?.position);
+  const box = document.querySelector<HTMLElement>('[data-course-progress]');
+  const bar = box?.querySelector<HTMLElement>('[data-course-progress-bar]');
+  const label = box?.querySelector<HTMLElement>('[data-course-progress-label]');
+  if (box && bar && label) {
+   box.hidden = false;
+   bar.style.transform = `scaleX(${finished / rows.length})`;
+   label.textContent = `已读完 ${finished} / ${rows.length} 篇`;
+  }
+  const start = document.querySelector<HTMLAnchorElement>('[data-course-start]');
+  const startLabel = start?.querySelector('[data-course-start-label]');
+  if (start && startLabel && resume) {
+   const index = rows.indexOf(resume.row) + 1;
+   start.href = resume.row.href;
+   startLabel.textContent = resume.record?.position ? `继续第 ${index} 篇` : `开始第 ${index} 篇`;
+   start.title = resume.row.dataset.chapterTitle ?? '';
+   resume.row.dataset.next = 'true';
+  } else if (start && startLabel && finished === rows.length) startLabel.textContent = '从头重读';
+ }
+</script>
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 30px; align-items: start; }
  .course-intro { position: sticky; top: calc(var(--header-height) + 28px); padding: 28px; border: 1px solid var(--color-line); border-radius: 22px; background: var(--color-surface); box-shadow: var(--shadow-soft); }
@@ -40,19 +87,30 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .course-english { font-family: var(--font-editorial); font-style: italic; font-size: 17px; line-height: 1.4; color: var(--color-accent); margin-top: 8px; }
  .course-description { margin-top: 25px; font-size: 14px; line-height: 1.9; color: var(--color-ink-soft); }
  .course-facts { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--text-caption); margin: 20px 0; color: var(--color-ink-soft); }
+ .course-progress { display: grid; gap: 8px; margin: -4px 0 20px; color: var(--color-ink-soft); font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
+ .course-progress-track { display: block; height: 3px; border-radius: 3px; background: var(--color-line); overflow: hidden; }
+ .course-progress-track > span { display: block; height: 100%; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slower) var(--ease-out-expo); }
  .course-intro .zen-btn { width: 100%; }
  .source-note { margin-top: 23px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
  .series-overview { margin-bottom: 30px; }
  .chapter-label { padding-bottom: 18px; border-bottom: 1px solid var(--color-blossom-line); }
- .chapter-row { padding: 20px 14px; margin-inline: -14px; border-bottom: 1px solid var(--color-blossom-line); display: grid; grid-template-columns: 36px minmax(0,1fr) 15px; gap: 15px; align-items: start; border-radius: 14px; transition: background-color var(--dur-base) var(--ease-smooth); }
- .chapter-row:hover { background: var(--color-surface); }
+ /* 行与行只靠底线分隔，悬停不加圆角底色（圆角会在分隔线两端露出弯角）；
+    左侧一根短竖线标出悬停行，强调色只落在当前行。 */
+ .chapter-row { position: relative; padding: 20px 0; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) auto; gap: 15px; align-items: start; }
+ .chapter-row::before { content: ''; position: absolute; left: -16px; top: 22px; bottom: 22px; width: 2px; border-radius: 2px; background: var(--color-accent); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out-expo); }
+ .chapter-row::after { content: ''; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--color-sage); transform: scaleX(var(--chapter-progress,0)); transform-origin: left; opacity: .7; }
+ .chapter-row:is(:hover,:focus-visible)::before,.chapter-row[data-next]::before { transform: scaleY(1); }
  .chapter-number { font-family: var(--font-mono); font-size: 14px; color: var(--color-ink-muted); line-height: 1.9; font-variant-numeric: tabular-nums; transition: color var(--dur-base); }
- .chapter-row:hover .chapter-number { color: var(--color-accent); }
- .chapter-row h3 { font-family: var(--font-display); font-size: 18px; line-height: 1.6; font-weight: 600; transition: color var(--dur-base) var(--ease-smooth); }
+ .chapter-row:is(:hover,:focus-visible) .chapter-number { color: var(--color-accent); }
+ .chapter-row h3 { font-family: var(--font-display); font-size: 18px; line-height: 1.6; font-weight: 600; transition: color var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo); }
  .chapter-row p { margin-top: 7px; font-size: 14px; line-height: 1.85; color: var(--color-ink-soft); }
- .chapter-arrow { color: var(--color-accent); transition: transform .25s var(--ease-out-expo); }
- .chapter-row:hover h3 { color: var(--color-accent-strong); }
- .chapter-row:hover .chapter-arrow { transform: translate(3px,-3px); }
+ .chapter-state { display: inline-flex; align-items: center; gap: 10px; line-height: 1.9; }
+ .chapter-progress-label { color: var(--color-ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .chapter-row[data-progress="done"] .chapter-progress-label { color: var(--color-sage); font-weight: 600; }
+ .chapter-row[data-progress="done"] h3 { color: var(--color-ink-soft); }
+ .chapter-arrow { color: var(--color-ink-muted); transition: transform var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
+ .chapter-row:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); translate: 3px 0; }
+ .chapter-row:is(:hover,:focus-visible) .chapter-arrow { color: var(--color-accent); transform: translate(3px,-3px); }
  @media (max-width: 900px) { .learning-layout { grid-template-columns: 260px minmax(0,1fr); gap: 30px; } .course-intro { padding: 24px; } }
- @media (max-width: 700px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } .chapter-row { padding: 18px 8px; margin-inline: -8px; grid-template-columns: 30px minmax(0,1fr) 12px; gap: 12px; } }
+ @media (max-width: 700px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } .chapter-row { padding: 18px 0; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; } .chapter-row::before { left: -10px; } }
 </style>

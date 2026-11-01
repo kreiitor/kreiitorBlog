@@ -1,29 +1,39 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Botanical from '../components/Botanical.astro';
-import PostCard from '../components/PostCard.astro';
+import PageIntro from '../components/PageIntro.astro';
 import SeriesCard from '../components/SeriesCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
-import { getPublishedPosts } from '../utils/content';
 import { getLearningSeries } from '../utils/series';
-import { withBase } from '../utils/url';
+import { formatDate } from '../utils/date';
+import { sections } from '../data/sections';
 const posts = await getCollection('posts');
 const series = getLearningSeries(await getCollection('series'), posts);
-const knowledge = getPublishedPosts(posts).filter(post => post.data.category === 'knowledge' && !post.data.series);
-const knowledgeSelection = knowledge.slice(0, 6);
+// 最近有新章节的专题放在最前面做主卡，其余按配置顺序排成索引行。
+const updatedAt = (group: typeof series[number]) => Math.max(...group.chapters.map(post => (post.data.updatedDate ?? post.data.pubDate).valueOf()));
+const lead = [...series].sort((a, b) => updatedAt(b) - updatedAt(a))[0];
+const rest = series.filter(group => group !== lead);
 ---
-<BaseLayout title="学习专题" description="成体系的学习笔记与实践知识：沿着主线阅读，从概念到推导，再到实践。">
+<BaseLayout title={sections.course.label} description="成体系的学习笔记：沿着章节从概念、推导读到工程实践。">
  <div data-pagefind-ignore>
-  <div class="page-intro-band intro-sage"><section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">系统学习</p><h1>学习专题</h1><p>从概念和推导到工程实践，沿着章节逐步深入。</p></section></div>
-  <section class="page-shell editorial-section">
-   <SectionHeading kicker="01 / Structured learning" title="成体系的学习笔记" description={`${series.length} 组学习专题，各有一条可以慢慢走下去的路径。`}/>
-   <div class="series-grid">{series.map(item => <SeriesCard series={item}/>)}</div>
+  <PageIntro eyebrow="成体系的学习笔记" title={sections.course.label} mark="path"><p>从概念和推导到工程实践，沿着章节逐步深入。{series.length} 卷，每一卷都可以从第一篇慢慢读下去。</p></PageIntro>
+  {lead && <section class="page-shell editorial-section notes-lead" aria-labelledby="lead-label">
+   <p id="lead-label" class="eyebrow">最近更新 · {formatDate(new Date(updatedAt(lead)))}</p>
+   <div class="notes-lead-card"><SeriesCard series={lead} headingLevel="h2"/></div>
+  </section>}
+  <section class="page-shell editorial-section notes-index">
+   <SectionHeading kicker="目录" title="全部长卷" description="可以从第一篇开始，也可以按章节挑着读。"/>
+   <div class="notes-rows">{rest.map(item => <SeriesCard series={item} presentation="index" headingLevel="h3"/>)}</div>
    {series.length === 0 && <p class="section-description">学习笔记正在整理中。</p>}
-  </section>
-  <section class="page-shell editorial-section">
-   <SectionHeading kicker="02 / Practical knowledge" title="实践知识库" description="工具链、阅读方法与学习路线，随用随查。" linkHref={withBase('/blog/?category=knowledge')} linkLabel="查看全部"/>
-   <div class="section-grid">{knowledgeSelection.map(post => <PostCard post={post}/>)}</div>
   </section>
  </div>
 </BaseLayout>
+<style>
+ .notes-lead { margin-top: 48px; }
+ .notes-lead .eyebrow { margin-bottom: 14px; }
+ .notes-lead-card :global(.series-card) { padding-bottom: 26px; }
+ .notes-lead-card :global(.series-heading :is(h2,h3)) { font-size: clamp(26px,1.2rem + 1vw,32px); }
+ .notes-lead-card :global(.series-description) { max-width: 46em; font-size: 15.5px; }
+ .notes-index :global(.section-heading) { border-bottom: 0; }
+ .notes-rows { border-top: 1px solid var(--color-line); }
+</style>

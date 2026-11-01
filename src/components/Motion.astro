@@ -10,6 +10,7 @@ import Icon from './Icon.astro';
  let lastScrolled: boolean | null = null;
  let lastVisible: boolean | null = null;
  let lastY = window.scrollY;
+ let movingUp = false;
  function updateScroll() {
   framePending = false;
   const y = window.scrollY;
@@ -21,7 +22,7 @@ import Icon from './Icon.astro';
    // Avoid covering article text while reading down; reveal it on the way back up
    // and near the end of the page, where returning to the top is the likely action.
    const nearBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 8;
-   const visible = y > 650 && (y < lastY || nearBottom);
+   const visible = y > 650 && (movingUp || nearBottom);
    if (visible !== lastVisible) {
     lastVisible = visible;
     topLink.dataset.visible = String(visible);
@@ -29,10 +30,15 @@ import Icon from './Icon.astro';
     topLink.tabIndex = visible ? 0 : -1;
    }
   }
-  lastY = y;
  }
  function schedule() { if (!framePending) { framePending = true; requestAnimationFrame(updateScroll); } }
- window.addEventListener('scroll',schedule,{passive:true});
+ // 方向在每个 scroll 事件里记：同一帧内的多次滚动会合并成一次 rAF，只比较帧间位置会把「先下后上」读成向下。
+ window.addEventListener('scroll',() => {
+  const y = window.scrollY;
+  if (y !== lastY) movingUp = y < lastY;
+  lastY = y;
+  schedule();
+ },{passive:true});
  window.addEventListener('resize',schedule,{passive:true});
  preference.addEventListener('change',() => {
   updateScroll();
@@ -50,18 +56,6 @@ import Icon from './Icon.astro';
    }
   },{ rootMargin: `-${Math.round(height)}px 0px 0px 0px` }).observe(hero);
  }
-
- // 卡片柔光跟随指针：只写两个自定义属性，绘制完全交给 CSS。
- if (matchMedia('(hover: hover)').matches) {
-  document.addEventListener('pointermove',event => {
-   if (event.pointerType !== 'mouse' || !(event.target instanceof Element)) return;
-   const card = event.target.closest<HTMLElement>('.zen-card,[data-spotlight]');
-   if (!card) return;
-   const rect = card.getBoundingClientRect();
-   card.style.setProperty('--mx',`${event.clientX - rect.left}px`);
-   card.style.setProperty('--my',`${event.clientY - rect.top}px`);
-  },{ passive: true });
- }
 </script>
 <style is:global>
  .site-header[data-scrolled="true"]:not([data-over-hero]) { box-shadow: 0 8px 28px -18px var(--color-head-shadow); }
@@ -71,6 +65,8 @@ import Icon from './Icon.astro';
  .back-to-top:active { translate: 0 1px; }
  @view-transition { navigation: auto; }
  ::view-transition-old(root),::view-transition-new(root) { animation-duration: var(--dur-base); }
- @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
+ /* 标题从列表里的位置移到新页面的位置，两张快照各按自身宽高比缩放，不会拉伸。 */
+ ::view-transition-group(vt-title) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-out-expo); }
+ ::view-transition-old(vt-title),::view-transition-new(vt-title) { animation-duration: var(--dur-base); } @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 </style>

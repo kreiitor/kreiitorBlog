@@ -2,8 +2,8 @@
 import { getCollection } from 'astro:content';
 import { getPublishedPosts, getTagSummaries } from '../utils/content';
 import { withBase } from '../utils/url';
-interface Props { title?: string; description?: string; modal?: boolean; }
-const { title='寻找一条线索。', description='从标题、摘要与正文中，找到你想读的内容。', modal=false } = Astro.props;
+interface Props { title?: string; description?: string; modal?: boolean; bare?: boolean; }
+const { title='寻找一条线索。', description='从标题、摘要与正文中，找到你想读的内容。', modal=false, bare=false } = Astro.props;
 const queryId = modal ? 'quick-query' : 'journal-query';
 const resultId = modal ? 'quick-results' : 'search-results';
 const posts = modal ? [] : await getCollection('posts');
@@ -11,11 +11,12 @@ const recent = getPublishedPosts(posts).slice(0,3);
 const topics = getTagSummaries(posts,[]).slice(0,6);
 ---
 <section class="search-panel">
- <p class="eyebrow">寻找线索</p>{modal ? <h2 id="quick-search-title">{title}</h2> : <h1>{title}</h1>}<p class="search-description">{description}</p>
+ {!bare && <><p class="eyebrow">寻找线索</p>{modal ? <h2 id="quick-search-title">{title}</h2> : <h1>{title}</h1>}<p class="search-description">{description}</p></>}
  <div data-search-root data-search-modal={modal ? 'true' : undefined}>
   <form class="search-form" data-search-form role="search"><label class="sr-only" for={queryId}>搜索关键词</label><input id={queryId} data-search-input type="search" name="q" placeholder="线性模型、LLM、论文阅读…" class="zen-input" autocomplete="off" aria-controls={resultId}/><button type="submit" class="zen-btn zen-btn-primary">搜索 →</button></form>
   <div class="search-suggestions"><span>试着搜索</span>{['线性模型','LLM','论文阅读','Python'].map(query => <button type="button" data-query={query}>{query}</button>)}</div>
   <p data-search-status class="search-status" role="status" aria-live="polite">输入至少 2 个字符开始搜索。</p>
+  <div class="search-types" role="group" aria-label="按类型筛选结果" data-search-types hidden></div>
   <button type="button" data-search-retry class="text-link" hidden>重试搜索 →</button>
   <div data-search-results class="search-results" id={resultId}></div>
   <button type="button" data-search-more class="zen-btn zen-btn-secondary more-results" hidden>查看更多结果 ↓</button>
@@ -30,6 +31,15 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  interface Entry { slug:string; title:string; description:string; type:string; url:string; content?:string; excerpt?:string; }
  const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
  let enginePromise:Promise<any> | undefined, catalogPromise:Promise<Entry[]> | undefined;
+ function loadSearch() {
+  catalogPromise ??= fetch(`${base}search-catalog.json`).then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); });
+  enginePromise ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async engine => { await engine.options({ excerptLength:40, baseUrl:base }); return engine; });
+  return Promise.all([enginePromise,catalogPromise]);
+ }
+ // 指向搜索入口时就开始加载索引，打开对话框时不必再等第一次网络往返。
+ function prefetch() { loadSearch().catch(() => { enginePromise = undefined; catalogPromise = undefined; }); }
+ const searchLink = document.querySelector('[data-search-link]');
+ for (const type of ['pointerenter','focus','touchstart']) searchLink?.addEventListener(type,prefetch,{ once:true, passive:true });
  document.querySelectorAll<HTMLElement>('[data-search-root]').forEach(root => {
  const modal = root.dataset.searchModal === 'true';
  const input = root?.querySelector<HTMLInputElement>('[data-search-input]');
@@ -39,6 +49,8 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  const more = root?.querySelector<HTMLButtonElement>('[data-search-more]');
  const retry = root.querySelector<HTMLButtonElement>('[data-search-retry]');
  const discovery = root.querySelector<HTMLElement>('[data-search-discovery]');
+ const types = root.querySelector<HTMLElement>('[data-search-types]');
+ let typeFilter = '';
  let generation = 0, timer:ReturnType<typeof setTimeout>, query = '', limit = 12, cursor = 0;
  let hits:any[] = [], entries = new Map<string,Entry>(), catalog = new Map<string,Entry>();
  let loadingMore = false;
@@ -51,7 +63,9 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  }
  function renderResults() {
   if (!results || !more) return;
-  const ranked = rankSearchEntries(Array.from(entries.values()),query) as Entry[];
+  const all = rankSearchEntries(Array.from(entries.values()),query) as Entry[];
+  renderTypes(all);
+  const ranked = typeFilter ? all.filter(item => item.type === typeFilter) : all;
   const fragment = document.createDocumentFragment();
   for (const item of ranked.slice(0,limit)) {
    const article = document.createElement('article'); article.className = 'search-result';
@@ -68,6 +82,23 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
   more.hidden = ranked.length <= limit && cursor >= hits.length;
   more.disabled = false;
   setStatus(ranked.length ? (cursor < hits.length ? `已显示 ${Math.min(limit,ranked.length)} 条匹配结果，向下滚动查看，可继续加载。` : `找到 ${ranked.length} 条结果，显示 ${Math.min(limit,ranked.length)} 条。`) : '没有找到匹配内容，试试换一个关键词。');
+ }
+ // 结果里出现两种以上类型时才给筛选：一种类型时这组按钮没有信息量。
+ function renderTypes(all:Entry[]) {
+  if (!types) return;
+  const counts = new Map<string,number>();
+  for (const item of all) counts.set(item.type,(counts.get(item.type) ?? 0) + 1);
+  if (typeFilter && !counts.has(typeFilter)) typeFilter = '';
+  types.hidden = counts.size < 2;
+  if (types.hidden) { types.replaceChildren(); return; }
+  const options = [['',all.length] as const,...counts.entries()];
+  types.replaceChildren(...options.map(([type,count]) => {
+   const button = document.createElement('button'); button.type = 'button'; button.dataset.searchType = type;
+   button.setAttribute('aria-pressed',String(type === typeFilter));
+   button.append(document.createTextNode(type || '全部'));
+   const badge = document.createElement('span'); badge.textContent = String(count); button.append(badge);
+   return button;
+  }));
  }
  async function collect(request:number) {
   while (entries.size < limit && cursor < hits.length) {
@@ -86,7 +117,8 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  }
  async function runSearch(value:string) {
   const request = ++generation;
-  query = value.trim(); limit = 12; cursor = 0; hits = []; entries = new Map();
+  query = value.trim(); limit = 12; cursor = 0; hits = []; entries = new Map(); typeFilter = '';
+  if (types) { types.hidden = true; types.replaceChildren(); }
   if (discovery) discovery.hidden = query.length >= 2;
   try { sessionStorage.setItem('garden-search-query', query); } catch {}
   if (!modal) { const url = new URL(location.href); if (query) url.searchParams.set('q',query); else url.searchParams.delete('q'); url.searchParams.delete('focus'); history.replaceState(null,'',url); }
@@ -94,9 +126,7 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
   if (query.length < 2) { results?.replaceChildren();results?.removeAttribute('aria-busy'); if (more) more.hidden = true; setStatus('输入至少 2 个字符开始搜索。'); return; }
   setStatus(`正在寻找「${query}」…`); results?.replaceChildren();results?.setAttribute('aria-busy','true');if (more) more.hidden = true;
   try {
-   catalogPromise ??= fetch(`${base}search-catalog.json`).then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); });
-   enginePromise ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async engine => { await engine.options({ excerptLength:40, baseUrl:base }); return engine; });
-   const [engine, data] = await Promise.all([enginePromise,catalogPromise]);
+   const [engine, data] = await loadSearch();
    const response = await engine.search(query);
    if (request !== generation) return;
    catalog = new Map(data.map((entry:Entry) => [entry.slug,entry]));
@@ -133,6 +163,12 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
   });
   more?.addEventListener('click',async () => { if (loadingMore) return; loadingMore = true; const request = generation; limit += 12; more.disabled = true; try { await collect(request); if (request === generation) renderResults(); } catch { if (request === generation) setStatus('更多结果暂时无法加载，请重试。'); } finally { loadingMore = false; more.disabled = false; } });
   retry?.addEventListener('click', () => runSearch(input.value));
+  types?.addEventListener('click',event => {
+   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-search-type]');
+   if (!button) return;
+   typeFilter = button.dataset.searchType ?? ''; renderResults();
+   types.querySelector<HTMLButtonElement>(`[data-search-type="${CSS.escape(typeFilter)}"]`)?.focus();
+  });
   root.addEventListener('search:open', () => { input.focus(); input.select(); if (input.value.trim().length >= 2) runSearch(input.value); });
   if (!modal && input.value.trim().length >= 2) runSearch(input.value);
  }
@@ -144,11 +180,23 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  .search-description { margin-top: 16px; color: var(--color-ink-soft); font-size: 15px; }
  .search-form { display: flex; gap: 10px; margin-top: 30px; } .search-form button { flex-shrink: 0; }
  .search-form input { font-size: 16px; }
+ .search-panel > [data-search-root]:first-child .search-form { margin-top: 0; }
  .search-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--color-ink-soft); }
  .search-suggestions button { min-height: 44px; border: 1px solid var(--color-blossom-line); border-radius: 999px; padding: 5px 12px; }
  .search-suggestions button:hover { background: var(--color-accent-soft); }
  .search-status { border-top: 1px solid var(--color-blossom-line); margin-top: 28px; padding-top: 20px; font-size: 13px; color: var(--color-ink-soft); }
- .search-result { padding: 24px 0; border-bottom: 1px solid var(--color-blossom-line); }
+ .search-types { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+ .search-types button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),background-color var(--dur-base),border-color var(--dur-base); }
+ .search-types button span { font-size: 12px; opacity: .75; font-variant-numeric: tabular-nums; }
+ .search-types button:hover { color: var(--color-ink); border-color: var(--color-line-strong); }
+ .search-types button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); border-color: var(--color-primary); }
+ @media (pointer: coarse) { .search-types button { min-height: 44px; } }
+ .search-result { position: relative; padding: 24px 0; border-bottom: 1px solid var(--color-line); transition: background-color var(--dur-fast) var(--ease-smooth); }
+ .search-result::before { content: ''; position: absolute; left: -14px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; background: var(--color-accent); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out-expo); }
+ /* 键盘上下键移动时，整条结果都要能看出“当前选中”，不止链接上的焦点框。 */
+ .search-result:has(a:focus-visible),.search-result:hover { background: color-mix(in srgb,var(--color-surface-soft) 70%,transparent); }
+ .search-result:has(a:focus-visible)::before { transform: scaleY(1); }
+ .search-result a:focus-visible { outline: none; color: var(--color-accent-strong); }
  .search-result :is(h2,h3) { margin-top: 8px; font-size: 21px; line-height: 1.8; }
  .search-result > p:last-child { color: var(--color-ink-soft); font-size: 14px; line-height: 1.9; margin-top: 10px; }
  .search-result mark { color: var(--color-accent-strong); background: var(--color-highlight-soft); border-radius: 4px; padding-inline: 3px; }
@@ -157,7 +205,8 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  .search-discovery h2 { font-family: var(--font-sans); font-size: 14px; margin-bottom: 8px; }
  .discovery-post { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--color-blossom-line); font-size: 14px; }
  .discovery-post:hover { color: var(--color-accent); }
- .discovery-post span { color: var(--color-accent); }
+ .discovery-post span { color: var(--color-ink-muted); transition: transform var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
+ .discovery-post:hover span { color: var(--color-accent); transform: translateX(3px); }
  .discovery-topics { display: flex; flex-wrap: wrap; gap: 8px; }
  @media (max-width: 600px) { .search-form button { padding-inline: 14px; } .search-result :is(h2,h3) { font-size: 20px; } }
 </style>

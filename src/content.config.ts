@@ -15,7 +15,8 @@ const posts = defineCollection({
 		cover: z.string().optional(),
 		readingTime: z.number().int().positive().optional(),
 		featured: z.boolean().optional(),
-		category: z.enum(['writing', 'knowledge', 'course']).default('writing'),
+		// knowledge = 札记，course = 长卷，writing = 闲笔。
+		category: z.enum(['writing', 'knowledge', 'course']).default('knowledge'),
 		series: z.string().optional(),
 		order: z.number().int().optional(),
 	}).superRefine((post, ctx) => {

@@ -35,21 +35,24 @@ for(const theme of ['light','dark']) {
   await page.goto('');
   await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
   const selectors=[
-   '.section-bar a',
-   '.intro-label',
-   '.selected-row .selection-label',
-   '.selected-row p',
-   '.learning-heading a',
-   '.intro-index a',
-   '.big-link',
-   '.eyebrow',
-   '.text-link',
-   '.post-card .card-meta',
-   '.post-card .card-description',
-   '.post-card .zen-tag',
-   '.topic-all',
-   '.topics .topic-list a',
-   '.topics .topic-list a > span',
+   '.claim',
+   '.typed',
+   '.role',
+   '.motto',
+   '.stats',
+   '.stats b',
+   '.sec-head p',
+   '.sec-aside',
+   '.month',
+   '.feed-title',
+   '.feed-meta',
+   '.feed-time',
+   '.more',
+   '.latest',
+   '.year',
+   '.topic-row a',
+   '.outro-links b',
+   '.outro-links span',
   ];
   for(const selector of selectors) {
    const samples=await measureContrast(page.locator(selector));
@@ -58,7 +61,7 @@ for(const theme of ['light','dark']) {
   }
   // 浏览器触屏项目不模拟 hover；桌面同时检查按钮悬浮后色彩。
   if(info.project.name==='desktop') {
-   const primary=page.locator('.section-bar a').first();
+   const primary=page.locator('.more').first();
    await primary.hover();
    for(const sample of await measureContrast(primary))expect(sample.ratio,`${theme} hovered primary action`).toBeGreaterThanOrEqual(4.5);
   }

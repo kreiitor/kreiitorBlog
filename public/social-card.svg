@@ -20,7 +20,7 @@
  <path d="M560.0 642.2 L567.2 633.8 L574.3 626.1 L581.5 618.8 L588.7 611.9 L595.8 605.1 L603.0 598.5 L610.2 591.8 L617.3 585.0 L624.5 577.9 L631.7 570.4 L638.8 562.6 L646.0 554.4 L653.2 545.7 L660.3 536.5 L667.5 526.8 L674.7 516.8 L681.8 506.3 L689.0 495.5 L696.2 484.5 L703.3 473.2 L710.5 461.9 L717.7 450.6 L724.8 439.4 L732.0 428.3 L739.2 417.6 L746.3 407.2 L753.5 397.2 L760.7 387.8 L767.8 378.9 L775.0 370.6 L782.2 362.9 L789.3 355.9 L796.5 349.6 L803.7 344.0 L810.8 339.0 L818.0 334.6 L825.2 330.8 L832.3 327.5 L839.5 324.7 L846.7 322.3 L853.8 320.3 L861.0 318.6 L868.2 317.1 L875.3 315.8 L882.5 314.7 L889.7 313.6 L896.8 312.6 L904.0 311.6 L911.2 310.6 L918.3 309.5 L925.5 308.5 L932.7 307.3 L939.8 306.2 L947.0 305.1 L954.2 304.0 L961.3 303.0 L968.5 302.0 L975.7 301.2 L982.8 300.5 L990.0 300.0" fill="none" stroke="#ece6da" stroke-opacity=".2" stroke-width="1"/>
  <circle cx="990" cy="300" r="22" fill="none" stroke="#f2896b" stroke-opacity=".45"/>
  <circle cx="990" cy="300" r="7" fill="#f2896b"/>
- <text x="80" y="118" font-family="Georgia,serif" font-size="22" fill="#94c4b0">kreiitor / research journal</text>
+ <text x="80" y="118" font-family="Georgia,serif" font-size="22" fill="#94c4b0">千羽 / senbazuru</text>
  <text x="76" y="270" font-family="Georgia,serif" font-size="74" fill="#ece6da">Read. Build.</text>
  <text x="76" y="360" font-family="Georgia,serif" font-size="74" fill="#f2896b">Then verify.</text>
  <text x="80" y="455" font-family="Arial,sans-serif" font-size="20" fill="#c3bdb1">AI for Software Engineering · Research · Learning</text>

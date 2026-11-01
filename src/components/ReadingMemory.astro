@@ -1,0 +1,15 @@
+---
+// 阅读位置记录的开关放在文末：读完一篇时再决定要不要记录，不在标题和正文之间抢视线。
+// 「继续上次阅读」的提示由 ReadingTools 浮在视口底部，脚本也在那里。
+---
+<div class="reading-memory" data-reading-memory data-pagefind-ignore hidden>
+ <span data-memory-status role="status" aria-live="polite">可以在本机记录阅读位置，下次回来接着读</span>
+ <div><button type="button" data-memory-toggle aria-pressed="false" disabled>开启记录</button><button type="button" data-memory-clear hidden>清除记录</button></div>
+</div>
+<noscript><style>.reading-memory { display: none !important; }</style></noscript>
+<style is:global>
+ .reading-memory { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; align-items: center; margin-bottom: 32px; padding: 10px 16px; border: 1px dashed var(--color-line-strong); border-radius: 12px; font-size: 13px; color: var(--color-ink-muted); }
+ .reading-memory > div { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+ .reading-memory button { min-height: 44px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
+ .reading-memory button[aria-pressed="true"] { color: var(--color-ink-soft); }
+</style>

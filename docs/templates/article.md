@@ -3,7 +3,7 @@ title: 新文章标题
 description: 用一两句话说明问题、观点或读者将获得什么。
 pubDate: 2026-10-15
 tags: [研究思考]
-category: writing
+category: knowledge
 cover: /covers/post-paper.svg
 draft: true
 featured: false

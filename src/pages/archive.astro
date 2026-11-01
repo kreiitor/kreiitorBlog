@@ -1,42 +1,95 @@
 ---
+import { sections } from '../data/sections';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageIntro from '../components/PageIntro.astro';
 import { getArchiveGroups } from '../utils/content';
 import { withBase } from '../utils/url';
 const groups = getArchiveGroups(await getCollection('posts')).map(group => ({
  ...group,
  months: [...new Set(group.items.map(post => post.data.pubDate.getUTCMonth()))].map(month => ({
-  month: month + 1, items: group.items.filter(post => post.data.pubDate.getUTCMonth() === month),
+  month: month + 1, id: `m-${group.year}-${month + 1}`, items: group.items.filter(post => post.data.pubDate.getUTCMonth() === month),
  })),
 }));
+const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+const busiest = Math.max(1, ...groups.flatMap(group => group.months.map(month => month.items.length)));
+const labels = Object.fromEntries(Object.entries(sections).map(([key, item]) => [key, item.label])) as Record<keyof typeof sections, string>;
 ---
 <BaseLayout title="时间归档" description="沿着时间线浏览所有研究札记和学习记录。">
- <section class="page-shell archive-layout" data-pagefind-ignore>
-  <header class="archive-intro"><p class="eyebrow">写作归档</p><h1>时间，<br/>留下了这些。</h1><p>思考不是突然发生的。<br/>这里留着逐渐积累的痕迹。</p><a class="text-link" href={withBase('/blog/')}>按栏目浏览 →</a></header>
-  <div class="archive-list">{groups.map(group => <section class="archive-year" aria-label={`${group.year} 年札记`}>
-   <div class="archive-year-heading"><h2>{group.year}</h2><span>{group.items.length} 篇札记</span></div>
-   {group.months.map(month => <section class="archive-month"><h3>{month.month} 月 <span>{month.items.length} 篇</span></h3><div>{month.items.map(post => <a href={withBase(`/blog/${post.id}/`)} class="archive-row"><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.getUTCDate()} 日</time><h4>{post.data.title}</h4><span aria-hidden="true">→</span></a>)}</div></section>)}
-  </section>)}</div>
- </section>
+ <div data-pagefind-ignore>
+  <PageIntro eyebrow="写作归档" mark="timeline"><Fragment slot="title">时间，留下了这些。</Fragment><p>思考不是突然发生的，这里留着 {total} 篇逐渐积累的痕迹。也可以<a class="intro-inline-link" href={withBase('/blog/')}>按栏目浏览</a>。</p></PageIntro>
+  <section class="page-shell archive-layout">
+   <nav class="archive-nav" aria-label="按月份跳转" data-archive-nav>
+    {groups.map(group => <div class="archive-nav-year"><p>{group.year}</p><ol>{group.months.map(month => <li><a href={`#${month.id}`} data-month-link><span>{month.month} 月</span><span class="archive-nav-bar" aria-hidden="true" style={`--share:${month.items.length / busiest}`}></span><span class="archive-nav-count">{month.items.length}</span></a></li>)}</ol></div>)}
+   </nav>
+   <div class="archive-list">{groups.map(group => <section class="archive-year" aria-label={`${group.year} 年札记`}>
+    <div class="archive-year-heading"><h2>{group.year}</h2><span>{group.items.length} 篇札记</span></div>
+    {group.months.map(month => <section class="archive-month" id={month.id} data-archive-month><h3>{month.month} 月 <span>{month.items.length} 篇</span></h3><div>{month.items.map(post => <a href={withBase(`/blog/${post.id}/`)} class="archive-row"><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.getUTCDate()} 日</time><h4>{post.data.title}</h4><span class="archive-category" data-category={post.data.category}>{labels[post.data.category]}</span></a>)}</div></section>)}
+   </section>)}</div>
+  </section>
+ </div>
 </BaseLayout>
+<script>
+ import { enhanceAnchor } from '../utils/smooth-scroll';
+ const links = new Map(Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-month-link]'), link => [decodeURIComponent(link.hash.slice(1)), link]));
+ let current: HTMLAnchorElement | undefined;
+ links.forEach(link => enhanceAnchor(link));
+ if ('IntersectionObserver' in window) {
+  // 视口上方 30% 处的一条线：哪个月份跨过它，导航就高亮哪个月份。
+  const observer = new IntersectionObserver(entries => {
+   for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    const link = links.get(entry.target.id);
+    if (!link || link === current) continue;
+    current?.removeAttribute('aria-current');
+    link.setAttribute('aria-current', 'location');
+    current = link;
+   }
+  }, { rootMargin: '-30% 0px -69% 0px' });
+  document.querySelectorAll('[data-archive-month]').forEach(month => observer.observe(month));
+ }
+</script>
 <style>
- .archive-layout { display: grid; grid-template-columns: minmax(200px, .7fr) minmax(0,2fr); gap: 80px; padding-top: 56px; }
- .archive-intro { align-self: start; position: sticky; top: calc(var(--header-height) + 40px); }
- .archive-intro h1 { font-size: clamp(32px,3.5vw,44px); margin-block: 16px 24px; }
- .archive-intro > p:not(.eyebrow) { color: var(--color-ink-soft); font-size: 14px; line-height: 2; }
- .archive-intro > a { margin-top: 16px; }
+ .intro-inline-link { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-accent); text-underline-offset: 4px; }
+ .intro-inline-link:hover { color: var(--color-accent); }
+ .archive-layout { display: grid; grid-template-columns: 200px minmax(0,1fr); gap: 72px; margin-top: 48px; }
+ .archive-nav { position: sticky; top: calc(var(--header-height) + 32px); align-self: start; max-height: calc(100dvh - var(--header-height) - 64px); overflow-y: auto; scrollbar-width: thin; }
+ .archive-nav-year + .archive-nav-year { margin-top: 20px; }
+ .archive-nav-year > p { margin-bottom: 6px; color: var(--color-ink); font-family: var(--font-editorial); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+ .archive-nav ol { margin: 0; padding: 0; list-style: none; }
+ .archive-nav a { display: grid; grid-template-columns: 44px minmax(0,1fr) 24px; align-items: center; gap: 10px; min-height: 34px; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+ /* 柱长 = 当月篇数 / 最多一个月的篇数。 */
+ .archive-nav-bar { height: 4px; border-radius: 2px; background: var(--color-line-strong); transform: scaleX(max(var(--share),.06)); transform-origin: left; transition: background-color var(--dur-base) var(--ease-smooth); }
+ .archive-nav-count { text-align: right; }
+ .archive-nav a:hover { color: var(--color-ink); }
+ .archive-nav a[aria-current] { color: var(--color-ink); font-weight: 600; }
+ .archive-nav a[aria-current] .archive-nav-bar { background: var(--color-accent); }
  .archive-year + .archive-year { margin-top: 48px; }
- .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-blossom-line); }
+ .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-line); }
  .archive-year-heading h2 { font-family: var(--font-editorial); font-size: clamp(48px,6vw,76px); line-height: 1.1; font-weight: 500; color: transparent; -webkit-text-stroke: 1px var(--color-ink); font-variant-numeric: tabular-nums; }
  .archive-year-heading > span,.archive-month h3 span { font-family: var(--font-sans); font-size: 13px; font-weight: 400; color: var(--color-ink-soft); }
- .archive-month h3 { position: sticky; top: var(--header-height); z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-blossom-line); }
- .archive-row { display: grid; grid-template-columns: 45px minmax(0,1fr) 18px; gap: 16px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--color-blossom-line); }
+ /* 根元素的 scroll-padding-top 已含页头高度，这里抵掉多出的 32px，让月份标题落在吸顶位置。 */
+ .archive-month { scroll-margin-top: -32px; }
+ /* 最早的月份在页面末尾，留够高度它才能被滚到页头下方。 */
+ .archive-year:last-child .archive-month:last-child { min-height: calc(100svh - var(--header-height)); }
+ .archive-month h3 { position: sticky; top: var(--header-height); z-index: 1; display: flex; gap: 16px; align-items: baseline; padding-block: 18px; font-size: 20px; background: var(--color-paper); border-bottom: 1px solid var(--color-line); }
+ .archive-row { display: grid; grid-template-columns: 45px minmax(0,1fr) auto; gap: 16px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--color-line); }
  .archive-row time { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
  .archive-row h4 { font-family: var(--font-sans); font-size: 15px; line-height: 1.9; font-weight: 500; transition: color var(--dur-base),translate var(--dur-base) var(--ease-out-expo); }
- .archive-row:hover h4 { translate: 4px 0; }
- .archive-row:hover h4 { color: var(--color-accent); }
- .archive-row > span { color: var(--color-accent); opacity: 0; transition: opacity var(--dur-base); }
- .archive-row:is(:hover,:focus-visible) > span { opacity: 1; }
- @media (max-width: 900px) { .archive-layout { gap: 36px; grid-template-columns: 180px minmax(0,1fr); } }
- @media (max-width: 640px) { .archive-layout { grid-template-columns: 1fr; padding-top: 36px; gap: 32px; } .archive-intro { position: static; } .archive-intro h1 br { display: none; } .archive-intro h1 { margin-block: 12px 16px; } .archive-row { gap: 10px; } }
+ .archive-row:is(:hover,:focus-visible) h4 { translate: 4px 0; color: var(--color-accent); }
+ .archive-category { color: var(--color-ink-muted); font-size: 12.5px; white-space: nowrap; }
+ .archive-category[data-category="writing"] { color: var(--color-sage); }
+ @media (max-width: 900px) { .archive-layout { gap: 36px; grid-template-columns: 160px minmax(0,1fr); } .archive-nav a { grid-template-columns: 40px minmax(0,1fr) 20px; gap: 8px; } }
+ @media (max-width: 640px) {
+  .archive-layout { grid-template-columns: 1fr; margin-top: 28px; gap: 24px; }
+  /* 窄屏把月份导航摊成一条横向可滑的标签，不再吸附。 */
+  .archive-nav { position: static; max-height: none; overflow-x: auto; overscroll-behavior-x: contain; }
+  .archive-nav-year { display: flex; align-items: center; gap: 12px; }
+  .archive-nav-year > p { margin: 0; font-size: 16px; }
+  .archive-nav ol { display: flex; gap: 6px; }
+  .archive-nav a { display: inline-flex; gap: 6px; min-height: 40px; padding: 0 12px; border: 1px solid var(--color-line); border-radius: 999px; white-space: nowrap; }
+  .archive-nav-bar { display: none; }
+  .archive-row { gap: 10px; grid-template-columns: 40px minmax(0,1fr); }
+  .archive-category { display: none; }
+ }
 </style>

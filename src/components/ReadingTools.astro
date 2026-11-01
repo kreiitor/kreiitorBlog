@@ -1,11 +1,9 @@
 <div class="reading-progress" data-reading-progress role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 <span class="sr-only" data-copy-status role="status" aria-live="polite"></span>
-<div class="reading-memory" data-reading-memory data-pagefind-ignore hidden>
- <span data-memory-status role="status" aria-live="polite">在本机记录阅读位置</span>
- <div><button type="button" data-memory-toggle aria-pressed="false" disabled>开启记录</button><button type="button" data-memory-resume hidden>继续上次阅读 →</button><button type="button" data-memory-clear hidden>清除记录</button></div>
-</div>
-<noscript><style>.reading-memory { display: none !important; }</style></noscript>
+<div class="reading-resume" data-reading-resume data-pagefind-ignore hidden><span data-resume-text>上次读到这里</span><button type="button" data-memory-resume>继续上次阅读 →</button><button type="button" class="reading-resume-close" data-resume-dismiss aria-label="关闭提示">×</button></div>
 <script>
+ import { articleKey, readPreference, writePreference } from '../utils/reading-memory';
+ import { enhanceAnchor } from '../utils/smooth-scroll';
  const article = document.querySelector<HTMLElement>('[data-reading-article]');
  const body = article?.querySelector<HTMLElement>('.article-body');
  const progress = document.querySelector<HTMLElement>('[data-reading-progress]');
@@ -64,6 +62,7 @@
   if (current !== activeId) {
    for (const link of linksById.get(activeId ?? '') ?? []) link.removeAttribute('aria-current');
    for (const link of linksById.get(current ?? '') ?? []) link.setAttribute('aria-current', 'location');
+   syncContents(current);
    // Keep the highlighted entry inside the desktop TOC's own scroll area.
    // Adjusting the nav's scrollTop avoids scrolling the article itself.
    const activeLink = (linksById.get(current ?? '') ?? []).find(link => link.closest('.article-toc'));
@@ -78,6 +77,41 @@
   }
   activeId = current;
  }
+ // 桌面目录：小节多时只展开当前章的三级标题；一根共享竖条滑到当前项。
+ const desktopToc = document.querySelector<HTMLElement>('.article-toc');
+ const indicator = desktopToc?.querySelector<HTMLElement>('[data-toc-indicator]');
+ const desktopLinks = Array.from(desktopToc?.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]') ?? []);
+ const collapsible = desktopLinks.length > 14 && desktopLinks.some(link => link.dataset.tocParent);
+ if (desktopToc && collapsible) desktopToc.dataset.collapsible = 'true';
+ const mobileCurrent = document.querySelector<HTMLElement>('[data-toc-current]');
+ const mobileDefault = mobileCurrent?.textContent ?? '';
+ function placeIndicator(link?: HTMLAnchorElement) {
+  if (!indicator) return;
+  if (!link || link.offsetParent === null) { indicator.style.opacity = '0'; return; }
+  indicator.style.opacity = '1';
+  indicator.style.translate = `0 ${link.offsetTop + 6}px`;
+  indicator.style.height = `${Math.max(12, link.offsetHeight - 12)}px`;
+ }
+ function syncContents(id?: string) {
+  const link = desktopLinks.find(item => decodeURIComponent(item.hash.slice(1)) === id);
+  if (collapsible) {
+   const section = link?.dataset.tocParent ?? (link ? decodeURIComponent(link.hash.slice(1)) : '');
+   for (const item of desktopLinks) if (item.dataset.tocParent) item.toggleAttribute('data-collapsed', item.dataset.tocParent !== section);
+  }
+  placeIndicator(link);
+  if (mobileCurrent) {
+   const source = (linksById.get(id ?? '') ?? []).find(item => item.closest('.mobile-toc'));
+   if (source) {
+    // 复制一份标签放进折叠按钮；去掉 toc-math 类，目录里的公式清单仍只有两份。
+    const copy = Array.from(source.childNodes, node => node.cloneNode(true));
+    for (const node of copy) if (node instanceof HTMLElement) { node.classList.remove('toc-math'); node.querySelectorAll('.toc-math').forEach(item => item.classList.remove('toc-math')); }
+    mobileCurrent.replaceChildren(...copy);
+   }
+   else mobileCurrent.textContent = mobileDefault;
+  }
+ }
+ syncContents();
+ if (desktopToc && 'ResizeObserver' in window) new ResizeObserver(() => placeIndicator(desktopLinks.find(link => link.hasAttribute('aria-current')))).observe(desktopToc);
  function scheduleScroll() { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(update); } }
  function scheduleMeasure() { if (!measureQueued) { measureQueued = true; requestAnimationFrame(measure); } }
  window.addEventListener('scroll', scheduleScroll, { passive: true });
@@ -88,21 +122,26 @@
 
  const memory = document.querySelector<HTMLElement>('[data-reading-memory]');
  const toggle = memory?.querySelector<HTMLButtonElement>('[data-memory-toggle]');
- const resume = memory?.querySelector<HTMLButtonElement>('[data-memory-resume]');
  const clear = memory?.querySelector<HTMLButtonElement>('[data-memory-clear]');
  const memoryStatus = memory?.querySelector<HTMLElement>('[data-memory-status]');
- const memoryKey = `garden-reading:${import.meta.env.BASE_URL}:${article?.dataset.articleSlug}`;
- interface Position { id:string; fraction:number; progress:number; }
+ const resumeBar = document.querySelector<HTMLElement>('[data-reading-resume]');
+ const resume = resumeBar?.querySelector<HTMLButtonElement>('[data-memory-resume]');
+ const resumeText = resumeBar?.querySelector<HTMLElement>('[data-resume-text]');
+ const memoryKey = articleKey(article?.dataset.articleSlug ?? '');
+ interface Position { id:string; fraction:number; progress:number; updatedAt?:number; }
+ let dismissed = false;
  let enabled = false, saved:Position | undefined, saveTimer:ReturnType<typeof setTimeout>;
  function memoryUI() {
   if(!memory||!toggle||!resume||!clear||!memoryStatus)return;
   memory.hidden=false;toggle.disabled=false;toggle.setAttribute('aria-pressed',String(enabled));toggle.textContent=enabled?'关闭记录':'开启记录';
-  resume.hidden=!saved||Boolean(location.hash);clear.hidden=!saved;
-  memoryStatus.textContent=saved?`上次读到约 ${saved.progress}% · 仅保存在本机`:enabled?'已开启 · 仅在本机保存阅读位置':'在本机记录阅读位置';
+  if(resumeBar){resumeBar.hidden=!saved||dismissed||Boolean(location.hash)||saved.progress<3;if(resumeText&&saved)resumeText.textContent=`上次读到约 ${saved.progress}%`;}
+  clear.hidden=!saved;
+  memoryStatus.textContent=enabled?(saved?`已记录到约 ${saved.progress}% · 仅保存在本机`:'已开启 · 同一设备上的其他文章也会记录'):'可以在本机记录阅读位置，下次回来接着读';
  }
  try {
   const data=JSON.parse(localStorage.getItem(memoryKey)??'null');
-  enabled=data?.enabled===true;
+  // 没有单篇记录时沿用全站选择：在一篇里开启后，同一专题的其他章节不必再点一次。
+  enabled=data ? data.enabled===true : readPreference();
   if(enabled&&data.position&&typeof data.position.id==='string'&&Number.isFinite(data.position.fraction)&&Number.isFinite(data.position.progress))saved=data.position;
   memoryUI();
  } catch { memoryUI(); }
@@ -114,15 +153,16 @@
   if(!enabled||!body)return;
   const index=currentHeading(window.scrollY+120,memoryOffsets), heading=memoryOffsets[index];
   const top=heading?.y??start, end=memoryOffsets[index+1]?.y??start+height;
-  saved={id:heading?.id??'',fraction:Math.max(0,Math.min(1,(scrollY-top)/Math.max(1,end-top))),progress:Math.round(Math.max(0,Math.min(1,(scrollY-start)/height))*100)};
+  saved={id:heading?.id??'',fraction:Math.max(0,Math.min(1,(scrollY-top)/Math.max(1,end-top))),progress:Math.round(Math.max(0,Math.min(1,(scrollY+innerHeight-start)/height))*100),updatedAt:Date.now()};
   if(persist()&&clear)clear.hidden=false;
  }
- toggle?.addEventListener('click',()=>{enabled=!enabled;if(!enabled){clearTimeout(saveTimer);saved=undefined;}memoryUI();persist();if(enabled)save();});
+ toggle?.addEventListener('click',()=>{enabled=!enabled;writePreference(enabled);if(!enabled){clearTimeout(saveTimer);saved=undefined;}memoryUI();persist();if(enabled)save();});
  clear?.addEventListener('click',()=>{clearTimeout(saveTimer);saved=undefined;memoryUI();persist();});
  resume?.addEventListener('click',()=>{
   if(!saved)return;measure();const index=memoryOffsets.findIndex(h=>h.id===saved!.id);const top=index<0?start:memoryOffsets[index].y;const end=memoryOffsets[index+1]?.y??start+height;
-  scrollTo({top:top+saved.fraction*Math.max(1,end-top),behavior:'instant'});resume.hidden=true;
+  scrollTo({top:top+saved.fraction*Math.max(1,end-top),behavior:'instant'});dismissed=true;memoryUI();
  });
+ resumeBar?.querySelector('[data-resume-dismiss]')?.addEventListener('click',()=>{dismissed=true;memoryUI();});
  window.addEventListener('scroll',()=>{if(!enabled)return;clearTimeout(saveTimer);saveTimer=setTimeout(save,600);},{passive:true});
  window.addEventListener('pagehide',()=>{clearTimeout(saveTimer);if(enabled&&scrollY>start)save();});
  window.addEventListener('hashchange',memoryUI);
@@ -130,10 +170,9 @@
   const summary=toc.querySelector('summary');summary?.setAttribute('aria-expanded',String(toc.open));
   toc.addEventListener('toggle',()=>summary?.setAttribute('aria-expanded',String(toc.open)));
   toc.addEventListener('keydown',event=>{if(event.key==='Escape'&&toc.open){toc.open=false;summary?.focus();}});
-  toc.querySelectorAll<HTMLAnchorElement>('a').forEach(link=>link.addEventListener('click',()=>{
-   toc.open=false;try{const heading=document.getElementById(decodeURIComponent(link.hash.slice(1)));if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}catch{}
-  }));
+  toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]').forEach(link=>enhanceAnchor(link,()=>{toc.open=false;}));
  });
+ desktopLinks.forEach(link=>enhanceAnchor(link));
 
  const live = document.querySelector<HTMLElement>('[data-copy-status]');
  document.querySelectorAll('.rich-content pre').forEach(pre => {
@@ -217,11 +256,111 @@
  } else { regions.forEach(element => visible.add(element)); scheduleVisibleMath(); }
  document.fonts.ready.then(scheduleVisibleMath);
  window.addEventListener('resize', scheduleVisibleMath, { passive: true });
+
+ // 标题永久链接：点击时同时复制完整地址，并就地给出反馈。
+ document.querySelectorAll<HTMLAnchorElement>('.rich-content .heading-anchor').forEach(anchor => {
+  anchor.addEventListener('click', async () => {
+   const url = new URL(anchor.href, location.href).href;
+   try {
+    await navigator.clipboard.writeText(url);
+    anchor.dataset.copied = 'true';
+    if (live) { live.textContent = ''; live.textContent = '本节链接已复制'; }
+    setTimeout(() => { delete anchor.dataset.copied; }, 1600);
+   } catch { /* 剪贴板不可用时仍正常跳转到本节 */ }
+  });
+ });
+
+ // 脚注预览：悬停或聚焦脚注编号时，在旁边显示脚注内容；点击仍跳到文末。
+ const notePopover = document.createElement('div');
+ notePopover.className = 'footnote-preview'; notePopover.setAttribute('role','tooltip'); notePopover.id = 'footnote-preview'; notePopover.hidden = true;
+ let noteTimer: ReturnType<typeof setTimeout> | undefined;
+ function hideNote() { clearTimeout(noteTimer); noteTimer = setTimeout(() => { notePopover.hidden = true; }, 120); }
+ function showNote(link: HTMLAnchorElement) {
+  let target: HTMLElement | null = null;
+  try { target = document.getElementById(decodeURIComponent(link.hash.slice(1))); } catch { return; }
+  if (!target) return;
+  clearTimeout(noteTimer);
+  const copy = target.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll('[data-footnote-backref]').forEach(node => node.remove());
+  copy.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+  notePopover.replaceChildren(...Array.from(copy.childNodes));
+  if (!notePopover.isConnected) document.body.append(notePopover);
+  notePopover.hidden = false;
+  const rect = link.getBoundingClientRect();
+  const width = Math.min(360, innerWidth - 32);
+  notePopover.style.width = `${width}px`;
+  notePopover.style.left = `${Math.max(16, Math.min(rect.left + rect.width / 2 - width / 2, innerWidth - width - 16)) + scrollX}px`;
+  const below = rect.bottom + 10 + notePopover.offsetHeight < innerHeight;
+  notePopover.style.top = `${(below ? rect.bottom + 10 : rect.top - 10 - notePopover.offsetHeight) + scrollY}px`;
+ }
+ if (matchMedia('(hover: hover)').matches) {
+  body?.querySelectorAll<HTMLAnchorElement>('[data-footnote-ref] a, a[data-footnote-ref]').forEach(link => {
+   link.setAttribute('aria-describedby','footnote-preview');
+   link.addEventListener('pointerenter', () => showNote(link));
+   link.addEventListener('focus', () => showNote(link));
+   link.addEventListener('pointerleave', hideNote);
+   link.addEventListener('blur', hideNote);
+  });
+  notePopover.addEventListener('pointerenter', () => clearTimeout(noteTimer));
+  notePopover.addEventListener('pointerleave', hideNote);
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') notePopover.hidden = true; });
+ }
+
+ // 正文插图点击放大：复用一个原生 dialog，Esc 与点击背景都能关闭。
+ const figures = Array.from(body?.querySelectorAll<HTMLImageElement>('figure img, p > img') ?? []);
+ if (figures.length) {
+  const viewer = document.createElement('dialog');
+  viewer.className = 'figure-viewer'; viewer.setAttribute('aria-label','放大查看插图');
+  const large = document.createElement('img');
+  const close = document.createElement('button');
+  const note = document.createElement('p');
+  close.type = 'button'; close.className = 'figure-viewer-close'; close.textContent = '关闭 ×';
+  viewer.append(close, large, note); document.body.append(viewer);
+  let origin: HTMLElement | null = null;
+  close.addEventListener('click', () => viewer.close());
+  viewer.addEventListener('click', event => { if (event.target === viewer || event.target === large) viewer.close(); });
+  viewer.addEventListener('close', () => { document.documentElement.classList.remove('photo-is-open'); origin?.focus({ preventScroll: true }); });
+  for (const image of figures) {
+   const trigger = document.createElement('button');
+   trigger.type = 'button'; trigger.className = 'figure-zoom'; trigger.setAttribute('aria-label', `放大查看：${image.alt || '插图'}`);
+   image.replaceWith(trigger); trigger.append(image);
+   trigger.addEventListener('click', () => {
+    origin = trigger;
+    large.src = image.currentSrc || image.src; large.alt = image.alt;
+    note.textContent = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim() ?? '';
+    note.hidden = !note.textContent;
+    viewer.showModal(); document.documentElement.classList.add('photo-is-open');
+   });
+  }
+ }
 </script>
 <style is:global>
- .reading-memory { display: flex; flex-wrap: wrap; gap: 0 16px; align-items: center; padding: 6px 0; margin-bottom: 10px; font-size: 13px; color: var(--color-ink-muted); }
- .reading-memory > div { display: flex; flex-wrap: wrap; gap: 4px 12px; }
- .reading-memory button { min-height: 44px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
+ /* 「继续阅读」浮在视口底部居中，不占正文排版；跳转或关闭后不再出现。 */
+ .reading-resume { position: fixed; left: 50%; bottom: 24px; z-index: 35; display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 18px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-lift); color: var(--color-ink-soft); font-size: 13px; white-space: nowrap; translate: -50% 0; transition: opacity var(--dur-base) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo); }
+ @starting-style { .reading-resume { opacity: 0; translate: -50% 12px; } }
+ .reading-resume button { min-height: 40px; padding: 0 14px; border-radius: 999px; color: var(--color-ink); font-weight: 600; }
+ .reading-resume [data-memory-resume] { background: var(--color-primary); color: var(--color-on-primary); }
+ .reading-resume [data-memory-resume]:hover { background: var(--color-primary-strong); }
+ .reading-resume .reading-resume-close { min-width: 40px; padding: 0; color: var(--color-ink-muted); font-weight: 400; }
+ .reading-resume .reading-resume-close:hover { background: var(--color-surface-hover); }
+ @media (pointer: coarse) { .reading-resume button { min-height: 44px; } }
+ @media (max-width: 420px) { .reading-resume > span { display: none; } }
+ .heading-anchor[data-copied]::after { content: '已复制'; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--color-primary); color: var(--color-on-primary); font-family: var(--font-sans); font-size: 12px; font-weight: 500; }
+ .footnote-preview { position: absolute; z-index: 45; max-height: 40vh; overflow: auto; padding: 14px 16px; border: 1px solid var(--color-line-strong); border-radius: 12px; background: var(--color-surface); box-shadow: var(--shadow-lift); color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 13.5px; line-height: 1.8; }
+ .footnote-preview p + p { margin-top: .6em; }
+ .footnote-preview a { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-accent); text-underline-offset: 3px; }
+ .figure-zoom { display: block; width: 100%; padding: 0; border-radius: 12px; cursor: zoom-in; }
+ .figure-zoom img { display: block; transition: box-shadow var(--dur-base) var(--ease-smooth); }
+ @media (hover: hover) { .figure-zoom:hover img { box-shadow: var(--shadow-soft); } }
+ .figure-viewer { width: min(1200px,calc(100% - 32px)); max-height: 94dvh; padding: 16px; border: 1px solid var(--color-line); border-radius: 18px; background: var(--color-surface); color: var(--color-ink); opacity: 0; scale: .97; transition: opacity var(--dur-base) var(--ease-smooth),scale var(--dur-slow) var(--ease-out-expo),overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete; }
+ .figure-viewer[open] { display: flex; flex-direction: column; gap: 10px; opacity: 1; scale: 1; }
+ @starting-style { .figure-viewer[open] { opacity: 0; scale: .97; } }
+ .figure-viewer::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
+ .figure-viewer img { min-height: 0; max-width: 100%; max-height: calc(94dvh - 120px); margin: 0 auto; object-fit: contain; cursor: zoom-out; }
+ .figure-viewer p { color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 14px; line-height: 1.8; }
+ .figure-viewer-close { align-self: flex-end; min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 14px; }
+ .figure-viewer-close:hover { background: var(--color-accent-soft); }
+ :root.photo-is-open { overflow: hidden; }
  .rich-content .katex { font-size: 1.04em; overflow: visible; }
  .rich-content .katex-display { max-width: 100%; padding: 12px 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
  .rich-content .katex-display > .katex { white-space: nowrap; display: inline-block; width: max-content; max-width: none; overflow: visible; }

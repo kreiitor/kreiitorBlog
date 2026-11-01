@@ -3,19 +3,20 @@ import { navLinks, siteConfig } from '../data/site';
 import { withBase } from '../utils/url';
 import Icon from './Icon.astro';
 import brandSvg from '../../public/logo.svg?raw';
-interface Props { currentPath: string; }
-const { currentPath } = Astro.props;
-const active = (href: string) => href === '/' ? currentPath === '/' : currentPath.startsWith(href);
+interface Props { currentPath: string; section?: string; }
+const { currentPath, section } = Astro.props;
+// 三个栏目的文章都在 /blog/ 下，所以文章页靠 section 指明归属，列表页才按路径判断。
+const active = (item: { href: string; section?: string }) => section ? item.section === section : item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href);
 ---
 <header class="site-header" data-over-hero={currentPath === '/' ? 'true' : undefined}>
  <div class="page-shell header-inner">
   <a href={withBase('/')} class="brand" title="首页">
    <span class="brand-mark" aria-hidden="true" set:html={brandSvg}/>
-   <span class="brand-name">kreiitor<span class="brand-subtitle">研究札记</span></span>
+   <span class="brand-name">千羽<span class="brand-subtitle">senbazuru</span></span>
    <span class="sr-only">，首页</span>
   </a>
   <nav class="desktop-nav" aria-label="主导航">
-   {navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}
+   {navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item) ? 'page' : undefined}>{item.label}</a>)}
   </nav>
   <div class="header-actions">
    <a href={withBase('/search/')} class="header-search" aria-label="搜索文章" data-search-link>
@@ -31,7 +32,7 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
    </a>
    <details class="mobile-menu">
     <summary aria-label="展开导航"><span class="menu-icon menu-icon-open"><Icon name="menu"/></span><span class="menu-icon menu-icon-close"><Icon name="close"/></span></summary>
-    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>文章归档</a></nav>
+    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>归档</a></nav>
    </details>
   </div>
  </div>
@@ -87,11 +88,12 @@ const active = (href: string) => href === '/' ? currentPath === '/' : currentPat
  .brand { display: flex; gap: 12px; align-items: center; color: var(--color-ink); }
  .brand-mark { display: flex; align-items: center; transition: transform var(--dur-slow) var(--ease-out-expo); }
  .brand-mark :global(svg) { width: 32px; height: 32px; display: block; }
- .brand-mark :global(path) { fill: var(--color-ink); transition: fill var(--dur-base); }
- .brand-mark :global(circle) { fill: var(--color-accent); transform-origin: 52px 12px; transition: transform var(--dur-slow) var(--ease-out-expo); }
- .brand:is(:hover,:focus-visible) .brand-mark { transform: rotate(-4deg); }
- .brand:is(:hover,:focus-visible) .brand-mark :global(circle) { transform: scale(1.5); }
- .brand-name { display: flex; align-items: baseline; font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+ .brand-mark :global(.brand-ink) { fill: var(--color-ink); transition: fill var(--dur-base); }
+ .brand-mark :global(.brand-accent) { fill: var(--color-accent); }
+ .brand-mark :global(.brand-far-wing) { transition: fill-opacity var(--dur-base); }
+ .brand:is(:hover,:focus-visible) .brand-mark { transform: translateY(-2px) rotate(-4deg); }
+ .brand:is(:hover,:focus-visible) .brand-mark :global(.brand-far-wing) { fill-opacity: .75; }
+ .brand-name { display: flex; align-items: baseline; font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: .08em; line-height: 1.2; }
  .brand-subtitle { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--color-line-strong); color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; letter-spacing: .08em; white-space: nowrap; }
  .desktop-nav { display: flex; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--color-line); border-radius: 999px; background: color-mix(in srgb,var(--color-surface) 55%,transparent); }
  .desktop-nav a { position: relative; z-index: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px; color: var(--color-ink-soft); font-size: 14px; font-weight: 500; transition: color var(--dur-base) var(--ease-smooth); }

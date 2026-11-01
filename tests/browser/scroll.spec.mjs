@@ -47,6 +47,9 @@ for (const route of routes) {
    await page.evaluate(() => scrollTo({ top: 1600, behavior: 'instant' }));
    // The floating top link intentionally appears on upward scroll (and near
    // the end of the document), not while the reader is scrolling down.
+   // Wait a frame between the two jumps: pages with scroll-driven animations can
+   // coalesce both into one scroll event, which hides the upward direction.
+   await page.evaluate(() => new Promise(requestAnimationFrame));
    await page.evaluate(() => scrollTo({ top: 1400, behavior: 'instant' }));
    await expect(page.locator('[data-back-to-top]')).toBeVisible();
    if (method === 'wheel') {

@@ -14,14 +14,15 @@ test('Chinese title search, readable summaries, query-preserving shortcut and ke
  await page.keyboard.press('Escape');await expect(input).toBeFocused();await expect(input).toHaveValue('');
  await expect(page.locator('.search-result')).toHaveCount(0);
 });
-test('Blog categories and paging survive reload',async({page})=>{
+test('札记 lists only knowledge posts and keeps tag filter and paging across reload',async({page})=>{
  await page.goto('blog/');
- const category=page.getByRole('button',{name:/知识笔记/});
- const total=Number(await category.locator('span').textContent());
+ const all=page.getByRole('button',{name:/^全部/});
+ const total=Number(await all.locator('span').textContent());
  expect(total).toBeGreaterThan(12);
- const allCategoryLinks=await page.locator('[data-post-row][data-category="knowledge"]').evaluateAll(rows=>rows.map(row=>row.getAttribute('href')));
- expect(allCategoryLinks).toHaveLength(total);
- await category.click();
+ const categories=await page.locator('[data-post-row]').evaluateAll(rows=>[...new Set(rows.map(row=>row.dataset.category))]);
+ expect(categories).toEqual(['knowledge']);
+ const allLinks=await page.locator('[data-post-row]').evaluateAll(rows=>rows.map(row=>row.getAttribute('href')));
+ expect(allLinks).toHaveLength(total);
  const rows=page.locator('[data-post-row]:visible');
  await expect(rows).toHaveCount(12);
  const visited=new Set(await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href'))));
@@ -37,19 +38,44 @@ test('Blog categories and paging survive reload',async({page})=>{
    expect(visited.has(href),`Article ${href} must appear on only one page`).toBe(false);
    visited.add(href);
   }
-  await expect.poll(()=>new URL(page.url()).searchParams.get('category')).toBe('knowledge');
   await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(String(currentPage));
   await page.reload();
   await expect(rows).toHaveCount(links.length);
   expect(await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))).toEqual(links);
-  await expect(page.getByRole('button',{name:/知识笔记/})).toHaveAttribute('aria-pressed','true');
  }
- expect([...visited].sort()).toEqual([...allCategoryLinks].sort());
+ expect([...visited].sort()).toEqual([...allLinks].sort());
  await expect(next).toBeDisabled();
- await expect(page.locator('[data-blog-series]')).toBeHidden();
- await page.getByRole('button',{name:'← 上一页'}).click();
- await expect(rows).toHaveCount(12);
- await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(currentPage===2?null:String(currentPage-1));
+ // 标签筛选：只留带该标签的札记，刷新后保持。
+ const tagButton=page.locator('[data-tag-filter]:not([data-tag-filter="all"])').first();
+ const tag=await tagButton.getAttribute('data-tag-filter');
+ const tagged=Number(await tagButton.locator('span').textContent());
+ await tagButton.click();
+ await expect(rows).toHaveCount(Math.min(12,tagged));
+ await expect.poll(()=>new URL(page.url()).searchParams.get('tag')).toBe(tag);
+ expect(new URL(page.url()).searchParams.get('page')).toBeNull();
+ for(const tags of await rows.evaluateAll(nodes=>nodes.map(node=>node.dataset.tags.split('|')))) expect(tags).toContain(tag);
+ await page.reload();
+ await expect(page.locator(`[data-tag-filter="${tag}"]`)).toHaveAttribute('aria-pressed','true');
+ await expect(rows).toHaveCount(Math.min(12,tagged));
+});
+test('闲笔 lists only jottings, and the gallery stays a hidden page',async({page})=>{
+ await page.goto('jottings/');
+ await expect(page.getByRole('heading',{level:1,name:'闲笔'})).toBeVisible();
+ await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('闲笔');
+ await expect(page.locator('.jottings-list a')).not.toHaveCount(0);
+ await expect(page.locator('[data-photo]')).toHaveCount(0);
+ await expect(page.locator('.site-header a[href$="/gallery/"]')).toHaveCount(0);
+ await page.goto('gallery/#photo-2');
+ await expect(page.locator('[data-photo-dialog]')).toBeVisible();
+ await expect(page.locator('[data-photo-position]')).toHaveText(/^2 \//);
+});
+test('Article pages highlight the section they belong to',async({page})=>{
+ await page.goto('blog/life-cooking/');
+ await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('闲笔');
+ await page.goto('blog/ai-agent-ch01/');
+ await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('长卷');
+ await page.goto('blog/algorithm-time-complexity/');
+ await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('札记');
 });
 test('Full-text results still find phrases absent from the title catalog',async({page})=>{
  await page.goto('search/?q=Fischer');

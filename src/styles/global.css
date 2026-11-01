@@ -39,7 +39,7 @@
   --color-selection-bg: #f2d27a; --color-selection-ink: #1d2230;
   --color-overlay: rgb(18 21 30 / .42); --color-dialog-shadow: rgb(29 34 48 / .22);
   --color-hairline: rgb(29 34 48 / .12); --color-head-shadow: rgb(29 34 48 / .06);
-  --color-code-bg: #efe9de;
+  --color-code-bg: #e8e0d0;
   --color-grid-dot: rgb(29 34 48 / .14);
   --spot: rgb(178 58 31 / .07);
   --shadow-tint: rgb(52 42 28 / .1); --shadow-tint-strong: rgb(52 42 28 / .2);
@@ -128,13 +128,11 @@
 
  .zen-card,.zen-card-flat { position: relative; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-card); overflow: hidden; }
  .zen-card { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-out-expo),translate var(--dur-slow) var(--ease-out-expo); }
- /* 悬停时跟随指针的柔光：--mx/--my 由 Motion.astro 写入。 */
- .zen-card::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: radial-gradient(420px circle at var(--mx,50%) var(--my,0%),var(--spot),transparent 65%); opacity: 0; transition: opacity var(--dur-slow) var(--ease-smooth); pointer-events: none; }
+ /* 内容层单独成层，卡片里的描边数字才能压在底色上、正文下。 */
  .zen-card > * { position: relative; z-index: 2; }
  .zen-card:focus-within { border-color: var(--color-line-strong); }
  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .zen-card:hover { translate: 0 -4px; border-color: var(--color-line-strong); box-shadow: var(--shadow-lift); }
-  .zen-card:hover::after { opacity: 1; }
  }
 
  .zen-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 22px; border-radius: var(--radius-control); font-family: var(--font-sans); font-size: 14px; font-weight: 600; transition: background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth),transform var(--dur-base) var(--ease-out-expo),box-shadow var(--dur-base) var(--ease-smooth); }
@@ -173,6 +171,8 @@
  .page-intro { position: relative; z-index: 1; padding-block: 64px 48px; }
  .page-intro h1 { margin: 14px 0 18px; font-size: clamp(36px,1.6rem + 2.6vw,58px); line-height: 1.15; letter-spacing: -.02em; }
  .page-intro p:not(.eyebrow) { max-width: 40em; color: var(--color-ink-soft); font-size: 16px; line-height: 1.85; }
+ .page-intro .page-intro-back { margin: -12px 0 10px; color: var(--color-ink-soft); }
+ .page-intro .page-intro-back:hover { color: var(--color-accent); }
  .page-botanical { position: absolute; right: 0; bottom: 40px; width: 180px; height: auto; color: var(--color-ink-muted); opacity: .55; pointer-events: none; }
  @media (max-width: 760px) { .page-botanical { display: none; } }
 
@@ -242,11 +242,20 @@
  .article-toc { position: sticky; top: calc(var(--header-height) + 40px); max-height: calc(100vh - var(--header-height) - 72px); overflow-y: auto; padding-left: var(--space-m); border-left: 1px solid var(--color-line); scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
  .article-toc .eyebrow { margin-bottom: 10px; }
  .article-toc a { position: relative; display: block; padding: 6px 0 6px 14px; text-indent: -14px; color: var(--color-ink-muted); font-size: var(--text-caption); line-height: 1.7; transition: color var(--dur-base) var(--ease-smooth); }
- .article-toc a::before { content: ''; position: absolute; left: -25px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out-expo); }
+ /* 当前项指示条：一根共享竖条随滚动滑到当前项（ReadingTools 计算位置）。
+    没有脚本时退回到每个链接自己的 ::before。 */
+ .toc-links { position: relative; }
+ .toc-indicator { position: absolute; left: -25px; top: 0; width: 2px; height: 0; border-radius: 2px; background: var(--color-accent); opacity: 0; pointer-events: none; transition: translate var(--dur-slow) var(--ease-out-expo),height var(--dur-slow) var(--ease-out-expo),opacity var(--dur-base) var(--ease-smooth); }
  .article-toc a:hover { color: var(--color-ink); }
  .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; }
- .article-toc a[aria-current="location"]::before { transform: scaleY(1); }
+ .article-toc:not(:has(.toc-indicator)) a[aria-current="location"]::before { content: ''; position: absolute; left: -25px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); }
  .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
+ /* 小节多时只展开当前章的三级标题；用 grid 行高过渡，收起的项不可聚焦。 */
+ .article-toc[data-collapsible] .toc-h3 { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-slow) var(--ease-out-expo),padding var(--dur-slow) var(--ease-out-expo),opacity var(--dur-base) var(--ease-smooth); }
+ /* overflow:hidden 会裁掉负缩进，悬挂缩进改由内层承担。 */
+ .article-toc[data-collapsible] .toc-h3 { padding-left: 14px; text-indent: 0; }
+ .article-toc[data-collapsible] .toc-h3 > .toc-text { display: block; min-height: 0; overflow: hidden; padding-left: 12px; text-indent: -12px; }
+ .article-toc[data-collapsible] .toc-h3[data-collapsed] { grid-template-rows: 0fr; padding-block: 0; opacity: 0; visibility: hidden; }
  .reading-progress { position: fixed; top: 0; left: 0; z-index: 60; width: 100%; height: 2px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
  .mobile-toc { margin-bottom: 20px; padding: 6px 0; border-bottom: 1px solid var(--color-line); }
  .mobile-toc summary { min-height: 44px; align-content: center; cursor: pointer; font-size: 13px; font-weight: 600; }
@@ -335,10 +344,35 @@
  }
 }
 @media (max-width: 900px) { html.menu-is-open { overflow: hidden; } }
-.mobile-toc[open] nav { animation: reveal var(--dur-base) var(--ease-out-expo); }
+
+/* ===========================================================================
+   展开与退场：不支持的浏览器保持原来的硬切，不影响可用性。
+   =========================================================================== */
+:root { interpolate-size: allow-keywords; }
+/* <details> 的内容区高度过渡：::details-content 让 height:auto 也能插值。 */
+:is(.mobile-toc,.blog-series,.rich-content details)::details-content { block-size: 0; overflow: clip; transition: block-size var(--dur-slow) var(--ease-out-expo),content-visibility var(--dur-slow) allow-discrete; }
+:is(.mobile-toc,.blog-series,.rich-content details)[open]::details-content { block-size: auto; }
+@supports not selector(::details-content) { .mobile-toc[open] nav { animation: reveal var(--dur-base) var(--ease-out-expo); } }
+
+/* 对话框退场：overlay 与 display 用 allow-discrete 保留到动画结束，@starting-style 给出入场起点。 */
+:is(.search-dialog,.photo-dialog) { opacity: 0; translate: 0 10px; scale: .98; transition: opacity var(--dur-base) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo),scale var(--dur-slow) var(--ease-out-expo),overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete; }
+:is(.search-dialog,.photo-dialog)[open] { opacity: 1; translate: 0 0; scale: 1; }
+@starting-style { :is(.search-dialog,.photo-dialog)[open] { opacity: 0; translate: 0 10px; scale: .98; } }
+:is(.search-dialog,.photo-dialog)::backdrop { opacity: 0; transition: opacity var(--dur-base) var(--ease-smooth),overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete; }
+:is(.search-dialog,.photo-dialog)[open]::backdrop { opacity: 1; }
+@starting-style { :is(.search-dialog,.photo-dialog)[open]::backdrop { opacity: 0; } }
+
+/* 列表行随滚动淡入：只用于文章、章节、归档这类长列表；学习路径卡片保持一开始就完整可见。
+   只给 transform/opacity 做动画，不影响布局；不支持 scroll-driven animation 的浏览器直接显示。 */
+@supports (animation-timeline: view()) {
+ @media (prefers-reduced-motion: no-preference) {
+  :is(.post-list .post-row,.chapter-row,.archive-row,.topic-entry) { animation: row-enter linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+ }
+}
+@keyframes row-enter { from { opacity: .001; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
 @media print {
  html,body { background: white; color: black; }
- .site-header,.site-footer,.article-layout > aside,.back-link,.mobile-toc,.reading-memory,.reading-progress,.comments-panel,.back-to-top,.chapter-nav,.code-copy,.heading-anchor,.theme-toggle { display: none !important; }
+ .site-header,.site-footer,.article-layout > aside,.back-link,.mobile-toc,.reading-memory,.reading-resume,.footnote-preview,.figure-viewer,.reading-progress,.comments-panel,.back-to-top,.chapter-nav,.code-copy,.heading-anchor,.theme-toggle { display: none !important; }
  .page-shell { width: 100%; }
  .article-layout { display: block; }
  .rich-content .katex-display,.rich-content .katex.is-overflowing { overflow: visible !important; }

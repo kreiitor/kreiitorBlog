@@ -1,13 +1,40 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Botanical from '../components/Botanical.astro';
+import PageIntro from '../components/PageIntro.astro';
+import { getPublishedPosts } from '../utils/content';
+import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
+const recent = getPublishedPosts(await getCollection('posts')).slice(0, 3);
 ---
 <BaseLayout title="页面未找到" noIndex>
- <section class="page-shell page-intro not-found"><Botanical variant="corner" class="page-botanical"/><p class="eyebrow">404 / An unwritten page</p><h1>这一页，还没有写下。</h1><p>你访问的页面可能已移动，或者暂时未公开。<br/>从札记首页重新出发，也许会遇到一个新问题。</p><div class="flex gap-4 mt-8"><a href={withBase('/')} class="zen-btn zen-btn-primary">回到首页 →</a><a href={withBase('/search/')} class="zen-btn zen-btn-secondary">搜索札记</a></div></section>
+ <div data-pagefind-ignore>
+  <PageIntro eyebrow="404 / An unwritten page" title="这一页，还没有写下。" mark="detour"><p>你访问的页面可能已移动，或者暂时未公开。<br/>换个关键词找找，或者从最近写下的内容重新出发。</p></PageIntro>
+  <section class="page-shell not-found">
+   <form class="not-found-search" action={withBase('/search/')} method="get" role="search">
+    <label class="sr-only" for="not-found-query">搜索关键词</label>
+    <input id="not-found-query" type="search" name="q" class="zen-input" placeholder="线性模型、LLM、论文阅读…" autocomplete="off"/>
+    <button type="submit" class="zen-btn zen-btn-primary">搜索 →</button>
+   </form>
+   <div class="not-found-recent">
+    <h2 class="eyebrow">最近写下</h2>
+    <ul>{recent.map(post => <li><a href={withBase(`/blog/${post.id}/`)}><span>{post.data.title}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time></a></li>)}</ul>
+   </div>
+   <div class="not-found-actions"><a href={withBase('/')} class="zen-btn zen-btn-secondary">回到首页</a><a href={withBase('/archive/')} class="text-link">浏览时间归档 →</a></div>
+  </section>
+ </div>
 </BaseLayout>
 <style>
- .not-found { padding-top: 90px; padding-bottom: 60px; }
- .not-found h1 { max-width: 560px; }
- .not-found p { max-width: 520px; }
+ .not-found { max-width: 720px; margin-top: 40px; }
+ .not-found-search { display: flex; gap: 10px; }
+ .not-found-search button { flex-shrink: 0; }
+ .not-found-recent { margin-top: 40px; }
+ .not-found-recent .eyebrow { padding-bottom: 12px; border-bottom: 1px solid var(--color-line); }
+ .not-found-recent ul { margin: 0; padding: 0; list-style: none; }
+ .not-found-recent a { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--color-line); }
+ .not-found-recent span { font-family: var(--font-display); font-size: 17px; font-weight: 600; transition: color var(--dur-base) var(--ease-smooth); }
+ .not-found-recent time { flex-shrink: 0; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+ .not-found-recent a:is(:hover,:focus-visible) span { color: var(--color-accent-strong); }
+ .not-found-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-top: 32px; }
+ @media (max-width: 600px) { .not-found-recent a { flex-direction: column; gap: 4px; } }
 </style>

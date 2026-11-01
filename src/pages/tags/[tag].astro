@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import PostList from '../../components/PostList.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Botanical from '../../components/Botanical.astro';
+import PageIntro from '../../components/PageIntro.astro';
 import { getTagIndex } from '../../utils/content';
 import { tagAliases } from '../../utils/tags';
 import { withBase } from '../../utils/url';
@@ -16,5 +16,18 @@ export async function getStaticPaths() {
 const { tag, posts, projects } = Astro.props;
 ---
 <BaseLayout title={`话题：${tag}`} description={`关于 ${tag} 的研究札记、学习记录与项目。`} canonicalPath={withBase(`/tags/${encodeURIComponent(tag)}/`)}>
- <div data-pagefind-ignore><section class="page-shell page-intro"><Botanical variant="corner" class="page-botanical"/><a href={withBase('/tags/')} class="text-link mb-6">← 全部话题</a><p class="eyebrow">Follow a thread / Topic</p><h1>{tag}</h1><p>这个话题下，留下了 {posts.length} 篇札记、{projects.length} 个项目。</p></section><section class="page-shell mt-10 space-y-12">{posts.length > 0 && <PostList posts={posts}/>} {projects.length > 0 && <div><h2 class="text-xl mb-6">相关项目</h2><div class="grid gap-6 lg:grid-cols-2">{projects.map(project => <ProjectCard project={project}/>)}</div></div>}</section></div>
+ <div data-pagefind-ignore>
+  <PageIntro eyebrow="Follow a thread / Topic" title={tag} mark="network" back={{ href: withBase('/tags/'), label: '全部话题' }}><p>这个话题下，留下了 {posts.length} 篇札记{projects.length > 0 && `、${projects.length} 个项目`}。</p></PageIntro>
+  <section class="page-shell tag-body">
+   {posts.length > 0 && <PostList posts={posts}/>}
+   {projects.length > 0 && <div class="tag-projects"><h2 class="eyebrow">相关项目</h2><div class="tag-project-grid">{projects.map(project => <ProjectCard project={project}/>)}</div></div>}
+  </section>
+ </div>
 </BaseLayout>
+<style>
+ .tag-body { margin-top: 40px; }
+ .tag-projects { margin-top: 48px; }
+ .tag-projects .eyebrow { padding-bottom: 14px; border-bottom: 1px solid var(--color-line); }
+ .tag-project-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; margin-top: 24px; }
+ @media (max-width: 900px) { .tag-project-grid { grid-template-columns: 1fr; } }
+</style>

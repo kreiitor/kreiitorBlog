@@ -19,6 +19,8 @@ interface Props {
 	tags?: string[];
 	searchWeight?: number;
 	canonicalPath?: string;
+	compactFooter?: boolean;
+	section?: string;
 }
 
 const {
@@ -32,6 +34,8 @@ const {
 	tags = [],
 	searchWeight,
 	canonicalPath,
+	compactFooter = false,
+	section,
 } = Astro.props;
 
 const pageTitle = title === siteConfig.title ? title : `${title} — ${siteConfig.title}`;
@@ -98,6 +102,34 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 				window.__applyTheme();
 			})();
 		</script>
+		<!-- 跨页标题过渡：列表里的标题和文章页的 h1 共用一个 view-transition-name。
+		     名字只在换页那一刻挂到一对元素上：长列表若常驻名字，每次换页都要逐个截图。
+		     data-vt-key 是目标页路径；data-vt-self 是本页自己的标题。pagereveal 必须在首帧前注册，所以写在 head。 -->
+		<script is:inline>
+			(() => {
+				const NAME = 'vt-title';
+				const path = (url) => { try { return decodeURI(new URL(url, location.href).pathname); } catch { return ''; } };
+				const pick = (url) => {
+					const target = path(url);
+					for (const element of document.querySelectorAll('[data-vt-key]')) {
+						if (path(element.getAttribute('data-vt-key')) === target) return element;
+					}
+					return document.querySelector('[data-vt-self]');
+				};
+				const name = (event, url) => {
+					if (!event.viewTransition || !url) return;
+					const element = pick(url);
+					if (!element) return;
+					element.style.viewTransitionName = NAME;
+					event.viewTransition.finished.finally(() => { element.style.viewTransitionName = ''; });
+				};
+				addEventListener('pageswap', (event) => name(event, event.activation?.entry?.url));
+				addEventListener('pagereveal', (event) => name(event, self.navigation?.activation?.from?.url));
+				addEventListener('pageshow', (event) => {
+					if (event.persisted) document.querySelectorAll('[data-vt-key],[data-vt-self]').forEach((element) => { element.style.viewTransitionName = ''; });
+				});
+			})();
+		</script>
 		{tags.length > 0 && <meta name="keywords" content={tags.join(', ')} />}
 		{noIndex && <meta name="robots" content="noindex, nofollow" />}
 		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
@@ -123,11 +155,11 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 	<body id="top">
 		<a href="#main-content" class="skip-link">跳到主要内容</a>
 		<div class="relative">
-			<SiteHeader currentPath={currentPath} />
+			<SiteHeader currentPath={currentPath} section={section} />
 			<main id="main-content" tabindex="-1" {...(searchWeight !== undefined ? { 'data-pagefind-weight': searchWeight } : {})}>
 				<slot />
 			</main>
-			<SiteFooter />
+			<SiteFooter compact={compactFooter} />
 		</div>
 		<Motion />
 		{currentPath !== '/search/' && <SearchDialog/>}

@@ -1,28 +1,43 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageIntro from '../../components/PageIntro.astro';
 import { getTagSummaries } from '../../utils/content';
 import { withBase } from '../../utils/url';
 const tags = getTagSummaries(await getCollection('posts'),await getCollection('projects'));
+// 5 篇以上的话题是站点的主干，单独成栏；其余按出现频次排成紧凑的索引。
+const major = tags.filter(tag => tag.count >= 5);
+const minor = tags.filter(tag => tag.count < 5);
+const label = (tag: typeof tags[number]) => [tag.postCount > 0 && `${tag.postCount} 篇札记`,tag.projectCount > 0 && `${tag.projectCount} 个项目`].filter(Boolean).join(' · ');
 ---
 <BaseLayout title="话题索引" description="沿着研究、数学与工程实践的话题，找到下一篇值得读的札记。">
  <div data-pagefind-ignore>
-  <section class="page-shell topic-intro"><h1>话题索引</h1><p>从 {tags.length} 个话题中，找到下一条线索。</p></section>
-  <section class="page-shell topics-grid" aria-label="全部话题">{tags.map(tag => <a class="topic-entry" href={withBase(`/tags/${encodeURIComponent(tag.tag)}/`)}><h2>{tag.tag}</h2><p>{[tag.postCount > 0 && `${tag.postCount} 篇札记`,tag.projectCount > 0 && `${tag.projectCount} 个项目`].filter(Boolean).join(' · ')}</p><span aria-hidden="true">→</span></a>)}</section>
+  <PageIntro eyebrow="Follow a thread / Topics" title="话题索引" mark="network"><p>从 {tags.length} 个话题中，找到下一条线索。常写的话题在前，偶尔提到的收在后面。</p></PageIntro>
+  <section class="page-shell topics-major" aria-labelledby="major-topics">
+   <h2 id="major-topics" class="eyebrow topics-label">常写的话题 · {major.length}</h2>
+   <div class="topics-grid">{major.map(tag => <a class="topic-entry" href={withBase(`/tags/${encodeURIComponent(tag.tag)}/`)}><h3>{tag.tag}</h3><p>{label(tag)}</p><span class="topic-bar" aria-hidden="true" style={`--share:${Math.min(1,tag.count / major[0].count)}`}></span></a>)}</div>
+  </section>
+  {minor.length > 0 && <section class="page-shell topics-minor" aria-labelledby="minor-topics">
+   <h2 id="minor-topics" class="eyebrow topics-label">更多话题 · {minor.length}</h2>
+   <ul class="topic-cloud">{minor.map(tag => <li><a href={withBase(`/tags/${encodeURIComponent(tag.tag)}/`)}>{tag.tag}<span>{tag.count}</span></a></li>)}</ul>
+  </section>}
  </div>
 </BaseLayout>
 <style>
- .topic-intro { padding-block: 64px 36px; display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
- .topic-intro h1 { font-size: clamp(36px,1.6rem + 2.6vw,58px); letter-spacing: -.02em; }
- .topic-intro p { font-size: 14px; color: var(--color-ink-soft); }
- .topics-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); column-gap: 36px; }
- .topic-entry { position: relative; min-width: 0; border-top: 1px solid var(--color-blossom-line); padding: 24px 28px 24px 0; transition: color var(--dur-base); }
- .topic-entry:hover h2 { color: var(--color-accent-strong); }
- .topic-entry::before { content: ''; position: absolute; left: 0; top: -1px; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
- .topic-entry:hover::before { transform: scaleX(1); }
- .topic-entry > span { transition: transform var(--dur-base) var(--ease-out-expo); }
- .topic-entry:hover > span { transform: translateX(4px); }
- .topic-entry h2 { font-size: 23px; }
- .topic-entry p { font-size: 13px; color: var(--color-ink-soft); margin-top: 8px; }
- .topic-entry > span { position: absolute; right: 4px; top: 28px; color: var(--color-accent); }
+ .topics-major { margin-top: 48px; }
+ .topics-minor { margin-top: 56px; }
+ .topics-label { padding-bottom: 14px; border-bottom: 1px solid var(--color-line); }
+ .topics-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,240px),1fr)); column-gap: 36px; }
+ .topic-entry { position: relative; min-width: 0; padding: 22px 0 20px; border-bottom: 1px solid var(--color-line); }
+ .topic-entry h3 { font-size: 23px; transition: color var(--dur-base) var(--ease-smooth); }
+ .topic-entry p { margin-top: 6px; font-size: 13px; color: var(--color-ink-soft); }
+ /* 横条长度 = 该话题篇数 / 最常写话题的篇数：位置本身说明了权重。 */
+ .topic-bar { display: block; height: 2px; margin-top: 14px; border-radius: 2px; background: var(--color-line-strong); transform: scaleX(var(--share)); transform-origin: left; transition: background-color var(--dur-base) var(--ease-smooth); }
+ .topic-entry:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); }
+ .topic-entry:is(:hover,:focus-visible) .topic-bar { background: var(--color-accent); }
+ .topic-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; padding: 0; list-style: none; }
+ .topic-cloud a { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13.5px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base); }
+ .topic-cloud a span { color: var(--color-ink-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+ .topic-cloud a:is(:hover,:focus-visible) { color: var(--color-accent-strong); border-color: var(--color-accent); background: var(--color-accent-soft); }
+ @media (pointer: coarse) { .topic-cloud a { min-height: 44px; } }
 </style>

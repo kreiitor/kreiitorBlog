@@ -44,8 +44,6 @@ import { withBase } from '../utils/url';
  .search-dialog .search-status { margin-top: 16px; padding-top: 14px; }
  .search-dialog .search-result { padding-block: 16px; }
  .search-dialog .search-result h3 { font-size: 18px; }
- .search-dialog[open] { animation: dialog-in var(--dur-slow) var(--ease-out-expo); }
- @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
  .search-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
  .dialog-close { position: absolute; right: 16px; top: 14px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; }
  .dialog-close:hover { background: var(--color-paper-warm); }

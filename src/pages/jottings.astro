@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageIntro from '../components/PageIntro.astro';
+import { sections } from '../data/sections';
+import { getPublishedPosts } from '../utils/content';
+import { withBase } from '../utils/url';
+const jottings = getPublishedPosts(await getCollection('posts')).filter(post => post.data.category === 'writing');
+const day = (date: Date) => `${date.getUTCMonth() + 1} 月 ${date.getUTCDate()} 日`;
+---
+<BaseLayout title={sections.writing.label} description="日常的片刻：不成体系，随手写下的几句话。">
+ <div data-pagefind-ignore>
+  <PageIntro eyebrow="日常的片刻" title={sections.writing.label} mark="frame"><p>不成体系，也不求有用。日常里随手写下的几句话。</p></PageIntro>
+
+  <section class="page-shell jottings-section" aria-labelledby="jottings-words">
+   <header class="jottings-head"><h2 id="jottings-words">按时间</h2><span>{jottings.length} 篇</span></header>
+   {jottings.length > 0 ? <ol class="jottings-list">
+    {jottings.map(post => <li>
+     <a href={withBase(`/blog/${post.id}/`)}>
+      <time datetime={post.data.pubDate.toISOString()}><span>{post.data.pubDate.getUTCFullYear()}</span>{day(post.data.pubDate)}</time>
+      <span class="jotting-body"><span class="jotting-title">{post.data.title}</span><span class="jotting-text">{post.data.description}</span></span>
+     </a>
+    </li>)}
+   </ol> : <p class="jottings-empty">还没有写下什么。</p>}
+  </section>
+ </div>
+</BaseLayout>
+<style>
+ .jottings-section { margin-top: 56px; }
+ .jottings-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--color-line-strong); }
+ .jottings-head h2 { font-size: clamp(22px,1rem + .8vw,28px); }
+ .jottings-head span { color: var(--color-ink-muted); font-size: 13px; }
+ .jottings-list { margin: 0; padding: 0; list-style: none; }
+ .jottings-list a { display: grid; grid-template-columns: 112px minmax(0,1fr); gap: 24px; padding: 22px 0; border-bottom: 1px solid var(--color-line); }
+ .jottings-list time { color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1.7; }
+ .jottings-list time span { display: block; color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 12px; }
+ .jotting-body { display: grid; gap: 6px; min-width: 0; }
+ .jotting-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; line-height: 1.5; transition: color var(--dur-base); }
+ .jotting-text { color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; }
+ .jottings-list a:is(:hover,:focus-visible) .jotting-title { color: var(--color-accent-strong); }
+ .jottings-empty { padding: 28px 0; color: var(--color-ink-muted); font-size: 14px; }
+ @media (max-width: 600px) {
+  .jottings-section { margin-top: 36px; }
+  .jottings-list a { grid-template-columns: minmax(0,1fr); gap: 6px; padding: 18px 0; }
+  .jottings-list time span { display: inline; margin-right: 6px; }
+ }
+</style>

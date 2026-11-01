@@ -13,7 +13,7 @@ const href = withBase(`/blog/${post.id}/`);
  <div class="card-content">
   {featured && <p class="featured-label">{featuredLabel}</p>}
   <div class="card-meta"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span></div>
-  <h3><a href={href}>{post.data.title}</a></h3>
+  <h3><a href={href} data-vt-key={href}>{post.data.title}</a></h3>
   <p class="card-description zen-truncate">{post.data.description}</p>
   <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{post.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" tabindex="-1" aria-hidden="true"><Icon name="arrow"/></a></div>
  </div>

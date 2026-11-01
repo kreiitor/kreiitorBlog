@@ -1,0 +1,18 @@
+---
+import PageMark, { type PageMarkVariant } from './PageMark.astro';
+interface Props { eyebrow: string; title?: string; mark: PageMarkVariant; back?: { href: string; label: string }; }
+const { eyebrow, title, mark, back } = Astro.props;
+---
+<div class="page-intro-band">
+ <section class="page-shell page-intro">
+  <PageMark variant={mark} class="page-botanical"/>
+  {back && <a href={back.href} class="text-link page-intro-back">← {back.label}</a>}
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{Astro.slots.has('title') ? <slot name="title"/> : title}</h1>
+  <slot/>
+ </section>
+</div>
+<style>
+ @media (min-width: 761px) { .page-intro { padding-right: 220px; } }
+ .page-intro-back { display: inline-flex; margin-bottom: 12px; }
+</style>

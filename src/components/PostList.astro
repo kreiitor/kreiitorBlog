@@ -4,14 +4,15 @@ import { getReadingTime } from '../utils/content';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
 import Icon from './Icon.astro';
-interface Props { posts: PostEntry[]; interactive?: boolean; }
-const { posts, interactive = false } = Astro.props;
-const initial = new Set(posts.filter(post => !post.data.series).slice(0,12).map(post => post.id));
-const labels = { writing: '研究与思考', knowledge: '知识笔记', course: '系列学习' };
+import { sections } from '../data/sections';
+// label：混排多个栏目时标栏目名；同一栏目内标首个标签。
+interface Props { posts: PostEntry[]; interactive?: boolean; label?: 'section' | 'tag'; }
+const { posts, interactive = false, label = 'section' } = Astro.props;
+const initial = new Set(posts.slice(0,12).map(post => post.id));
 ---
 <div class="post-list" data-post-list>
- {posts.map(post => <a class="post-row" href={withBase(`/blog/${post.id}/`)} data-post-row data-category={post.data.category} data-series={post.data.series ?? ''} hidden={interactive && !initial.has(post.id)}>
-  <div><div class="row-meta"><span class="row-category">{labels[post.data.category]}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h2>{post.data.title}</h2><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true"><Icon name="arrow"/></span>
+ {posts.map(post => <a class="post-row" href={withBase(`/blog/${post.id}/`)} data-post-row data-category={post.data.category} data-tags={post.data.tags.join('|')} hidden={interactive && !initial.has(post.id)}>
+  <div><div class="row-meta"><span class="row-category">{label === 'tag' ? post.data.tags[0] : sections[post.data.category].label}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h2 data-vt-key={withBase(`/blog/${post.id}/`)}>{post.data.title}</h2><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true"><Icon name="arrow"/></span>
  </a>)}
 </div>
 <style>

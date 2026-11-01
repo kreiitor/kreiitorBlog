@@ -1,0 +1,150 @@
+---
+import { withBase } from '../utils/url';
+import { photos } from '../data/photos';
+const stem = (file: string) => file.replace(/\.jpe?g$/i, '');
+const variantWidths = (width: number) => [...new Set([480, 800, Math.min(1200, width)].filter(value => value > 0 && value <= width))].sort((a, b) => a - b);
+// 两栏瀑布流在服务端分栏：每张图放进当前更矮的一栏。CSS columns 会先填满左栏，
+// 视觉顺序和灯箱里「下一张」的顺序就对不上；这里两者都按 photos 的顺序。
+const columns: { photo: typeof photos[number]; index: number }[][] = [[], []];
+const heights = [0, 0];
+photos.forEach((photo, index) => {
+ const column = heights[0] <= heights[1] ? 0 : 1;
+ columns[column].push({ photo, index });
+ heights[column] += photo.height / photo.width;
+});
+const large = (photo: typeof photos[number]) => withBase(`/gallery/optimized/${stem(photo.file)}-${Math.min(1200, photo.width)}.webp`);
+const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
+ variantWidths(photo.width).map(width => `${withBase(`/gallery/optimized/${stem(photo.file)}-${width}.${format}`)} ${width}w`).join(', ');
+---
+<div class="gallery-grid">
+ {columns.map(column => <div class="gallery-column">{column.map(({ photo: p, index }) => <figure class="photo-card" style={`--order:${index}`}>
+  <a class="photo-frame" href={withBase(`/gallery/${p.file}`)} data-photo data-index={index} data-large={large(p)} aria-label={`放大查看：${p.title}`}>
+   <picture>
+    <source type="image/avif" srcset={srcset(p, 'avif')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
+    <source type="image/webp" srcset={srcset(p, 'webp')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
+    <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async" data-photo-thumb/>
+   </picture>
+  </a><figcaption>{p.title}</figcaption>
+ </figure>)}</div>)}
+</div>
+<dialog class="photo-dialog" data-photo-dialog aria-labelledby="photo-caption">
+ <div class="photo-toolbar"><p id="photo-caption"></p><button type="button" data-photo-close aria-label="关闭大图">关闭 ×</button></div>
+ <div class="photo-stage" data-photo-stage><img data-photo-large alt=""/></div>
+ <div class="photo-controls"><button type="button" data-photo-previous>← 上一张</button><span data-photo-position aria-live="polite"></span><button type="button" data-photo-next>下一张 →</button></div>
+</dialog>
+<script>
+ const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
+ const photos = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-photo]')).sort((a,b) => Number(a.dataset.index) - Number(b.dataset.index));
+ const image = dialog?.querySelector<HTMLImageElement>('[data-photo-large]');
+ const stage = dialog?.querySelector<HTMLElement>('[data-photo-stage]');
+ const caption = dialog?.querySelector<HTMLElement>('#photo-caption');
+ const position = dialog?.querySelector<HTMLElement>('[data-photo-position]');
+ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+ const preloaded = new Set<string>();
+ let current = 0;
+ let trigger: HTMLAnchorElement | undefined;
+ // 缩略图加载完成后再淡入；加载前露出相框底色，而不是一块白。
+ document.querySelectorAll<HTMLImageElement>('[data-photo-thumb]').forEach(thumb => {
+  const frame = thumb.closest('.photo-frame');
+  const done = () => frame?.classList.add('is-loaded');
+  if (thumb.complete && thumb.naturalWidth) done();
+  else { thumb.addEventListener('load',done,{once:true}); thumb.addEventListener('error',done,{once:true}); }
+ });
+ const largeOf = (index:number) => photos[(index + photos.length) % photos.length]?.dataset.large ?? '';
+ function preload(index:number) {
+  const src = largeOf(index);
+  if (!src || preloaded.has(src)) return;
+  preloaded.add(src);
+  const img = new Image(); img.decoding = 'async'; img.src = src;
+ }
+ function show(index: number, direction = 0) {
+  current = (index + photos.length) % photos.length;
+  const photo = photos[current].querySelector('img');
+  if (!image || !photo) return;
+  const apply = () => {
+   image.src = largeOf(current) || photos[current].href; image.alt = photo.alt;
+   if (caption) caption.textContent = photo.alt;
+   if (position) position.textContent = `${current + 1} / ${photos.length}`;
+  };
+  if (direction && !reduced.matches && image.getAttribute('src')) {
+   image.style.setProperty('--shift',`${direction * 24}px`);
+   image.classList.add('is-leaving');
+   setTimeout(() => { apply(); image.classList.remove('is-leaving'); },140);
+  } else apply();
+  preload(current + 1); preload(current - 1);
+  history.replaceState(null,'',`#photo-${current + 1}`);
+ }
+ function open(index:number, link?:HTMLAnchorElement) {
+  if (!dialog || !image) return;
+  trigger = link ?? photos[index];
+  show(index); dialog.showModal();
+  document.documentElement.classList.add('photo-is-open');
+ }
+ photos.forEach((link,index) => link.addEventListener('click',event => {
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault(); open(index,link);
+ }));
+ dialog?.querySelector('[data-photo-close]')?.addEventListener('click',()=>dialog.close());
+ dialog?.querySelector('[data-photo-previous]')?.addEventListener('click',()=>show(current-1,-1));
+ dialog?.querySelector('[data-photo-next]')?.addEventListener('click',()=>show(current+1,1));
+ dialog?.addEventListener('keydown',event=>{
+  if(event.key==='ArrowLeft'){event.preventDefault();show(current-1,-1);}
+  if(event.key==='ArrowRight'){event.preventDefault();show(current+1,1);}
+ });
+ // 触屏左右滑动切换；纵向滑动和轻点不算。
+ let startX = 0, startY = 0, tracking = false;
+ stage?.addEventListener('pointerdown',event => { if (event.pointerType === 'mouse') return; tracking = true; startX = event.clientX; startY = event.clientY; });
+ stage?.addEventListener('pointerup',event => {
+  if (!tracking) return;
+  tracking = false;
+  const dx = event.clientX - startX, dy = event.clientY - startY;
+  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) show(current + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+ });
+ stage?.addEventListener('pointercancel',() => { tracking = false; });
+ dialog?.addEventListener('click',event=>{
+  if(event.target!==dialog)return;
+  const r=dialog.getBoundingClientRect();
+  if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();
+ });
+ dialog?.addEventListener('close',()=>{
+  document.documentElement.classList.remove('photo-is-open');
+  if (/^#photo-\d+$/.test(location.hash)) history.replaceState(null,'',location.pathname + location.search);
+  trigger?.focus({preventScroll:true});
+ });
+ const linked = location.hash.match(/^#photo-(\d+)$/);
+ if (linked) { const index = Number(linked[1]) - 1; if (index >= 0 && index < photos.length) open(index); }
+</script>
+<style>
+ .gallery-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 32px; align-items: start; }
+ .photo-card { margin-bottom: 32px; }
+ .photo-frame { display: block; padding: 10px; background: var(--color-surface); border: 1px solid var(--color-blossom-line); border-radius: 18px; cursor: zoom-in; box-shadow: var(--shadow-whisper); }
+ .photo-frame picture { display: block; border-radius: 12px; background: var(--color-surface-soft); overflow: hidden; }
+ .photo-frame:hover { border-color: var(--color-blossom); box-shadow: var(--shadow-soft); }
+ .photo-frame { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-out-expo); }
+ .photo-frame img { width: 100%; height: auto; display: block; border-radius: 12px; opacity: 0; scale: 1.015; transition: opacity var(--dur-slower) var(--ease-smooth),scale var(--dur-slower) var(--ease-out-expo); }
+ .photo-frame.is-loaded img { opacity: 1; scale: 1; }
+ @media (hover: hover) { .photo-frame:hover img { scale: 1.012; } }
+ figcaption { padding: 12px 2px 0; color: var(--color-ink-soft); font-size: 14px; }
+ :global(html.photo-is-open) { overflow: hidden; }
+ .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-blossom-line); border-radius: 22px; background: var(--color-surface); color: var(--color-ink); }
+ .photo-dialog[open] { display: flex; flex-direction: column; }
+ .photo-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
+ .photo-toolbar,.photo-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; font-size: 14px; }
+ .photo-toolbar { padding-bottom: 8px; }
+ .photo-controls { padding-top: 8px; }
+ .photo-controls span { color: var(--color-ink-soft); font-variant-numeric: tabular-nums; }
+ .photo-dialog button { min-height: 44px; padding: 8px 16px; border-radius: 999px; }
+ .photo-dialog button:hover { background: var(--color-accent-soft); }
+ .photo-stage { min-height: 0; display: flex; justify-content: center; touch-action: pan-y; }
+ .photo-stage img { transition: opacity 140ms var(--ease-smooth),translate 140ms var(--ease-smooth); }
+ .photo-stage img.is-leaving { opacity: 0; translate: calc(var(--shift) * -1) 0; }
+ .photo-stage img { max-width: 100%; max-height: calc(94dvh - 144px); width: auto; height: auto; object-fit: contain; }
+ @media (max-width: 640px) {
+    /* 单栏时拆掉分栏容器，按原始顺序排。 */
+  .gallery-grid { display: flex; flex-direction: column; gap: 0; }
+  .gallery-column { display: contents; }
+  .photo-card { order: var(--order); }
+  .photo-card { margin-bottom: 24px; }
+  .photo-dialog { padding-inline: 10px; }
+ }
+</style>

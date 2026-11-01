@@ -1,8 +1,10 @@
-# kreiitor · 研究札记
+# 千羽 · senbazuru
 
-基于 Astro 7、Tailwind CSS 4、Pagefind、KaTeX 与 Giscus 的静态研究博客与作品集。文章、学习专题和项目分别由 `src/content/posts/`、`src/content/series/`、`src/content/projects/` 下的 Markdown 驱动，构建后是纯静态页面。
+基于 Astro 7、Tailwind CSS 4、Pagefind、KaTeX 与 Giscus 的静态研究博客与作品集。札记、长卷和项目分别由 `src/content/posts/`、`src/content/series/`、`src/content/projects/` 下的 Markdown 驱动，构建后是纯静态页面。
 
-站点以个人研究和写作为中心。配色取自宣纸、黛色与朱砂：浅色主题是暖白纸底配深黛文字，朱砂只用在按钮、当前项和少量焦点上，松石绿用于栏目标签；全站共用一张带细纸纹的底色，首页主视觉与页脚不另设色块，只用很淡的朱砂和松石绿光晕分层；主视觉中的「线索」画布与飘落的梅花由 `src/utils/threads.ts` 绘制，颜色读取当前主题令牌，只在可见时运行，减少动态效果时停在静止帧。文章阅读页保持低调：窄栏衬线正文、发丝线分隔、目录当前项用朱砂细线标记。标题使用 Lora / 思源宋体，界面使用 DM Sans 与系统中文无衬线字体，正文使用 Source Serif / 思源宋体，代码使用 JetBrains Mono；明暗两套主题的令牌集中在 `src/styles/global.css` 顶部。
+站名「千羽」取自川端康成的《千羽鹤》，Logo 是一只展翅的折纸鹤：身体和双翼用墨色，远侧翅膀半透明，鹤首用朱砂。Logo 的源文件是 `public/logo.svg`，修改后运行 `npm run brand:prepare`，会同步生成 favicon、头像和分享图。
+
+站点以个人研究和写作为中心。配色取自宣纸、黛色与朱砂：浅色主题是暖白纸底配深黛文字，朱砂用于当前项和少量焦点，松石绿用于栏目标签；全站共用一张带细纸纹的底色。首页按发布时间分别展示札记和长卷章节，再列出最近的闲笔，并汇总已发布文章数量、估算字数与近 12 个月的写作记录；字数按 Markdown 正文中的汉字和英文词估算。首页文字切换只播放一次，减少动态效果时保持静止。文章阅读页使用窄栏衬线正文和发丝线分隔，目录当前项以朱砂细线标记。标题使用 Lora / 思源宋体，界面使用 DM Sans 与系统中文无衬线字体，正文使用 Source Serif / 思源宋体，代码使用 JetBrains Mono；明暗两套主题的令牌集中在 `src/styles/global.css` 顶部。
 
 这份 README 是当前唯一需要维护的项目文档；提交前请先阅读根目录的 [AGENTS.md](AGENTS.md)。历史设计稿、审查报告和迭代记录已移除；需要追溯时查看 Git 历史。
 
@@ -55,10 +57,10 @@ npm run preview
 ## 项目结构
 
 ```text
-src/content/posts/      文章、学习章节
-src/content/series/     学习专题
+src/content/posts/      札记、长卷章节与闲笔
+src/content/series/     长卷（学习专题）
 src/content/projects/   项目
-src/data/site.ts        身份、首页精选配置
+src/data/site.ts        身份与导航配置
 src/data/cover-catalog.json  封面元数据
 src/pages/              页面路由
 src/components/         页面组件
@@ -66,7 +68,7 @@ src/styles/global.css   颜色、间距、字体层级与组件样式
 src/styles/fonts.css    自托管字体声明
 public/covers/          SVG 封面与同名分享 PNG
 public/figures/         正文自绘 SVG 插图
-public/gallery/         画廊原图与优化候选图
+public/gallery/         隐藏画廊的原图与优化候选图
 docs/templates/         文章、章节、专题、项目模板
 docs/cover-catalog.html 离线封面选图册
 scripts/                构建、资源生成与校验脚本
@@ -82,7 +84,7 @@ title: 文章标题
 description: 用一两句话说明文章讨论什么。
 pubDate: 2026-10-18
 tags: [研究思考]
-category: writing
+category: knowledge
 cover: /covers/post-paper.svg
 draft: true
 featured: false
@@ -91,15 +93,15 @@ featured: false
 
 必填字段是 `title`、`description`、`pubDate`、`tags`。其余字段：
 
-- `category`：`writing`（默认）、`knowledge` 或 `course`。
+- `category`：决定文章进入哪个栏目。`knowledge`（默认）是札记，`course` 是长卷章节，`writing` 是闲笔。
 - `series`：对应 `src/content/series/` 中的文件名；学习章节必须填写。
 - `order`：系列内阅读顺序；学习章节必须填写，同一系列已发布章节不能重复。
 - `draft: true`：不生成详情页，不进入博客列表、归档、标签、RSS 与搜索。
-- `featured: true`：进入首页精选候选。注意首页先使用 `src/data/site.ts` 的 `homeFeaturedPosts`；该列表当前有 3 项并且正好占满首页 3 个位置，因此在列表不变的情况下，单独设置 `featured` 不会改变首页。
+- `featured`：保留的精选标记；当前首页按发布日期展示内容，不依据此字段排序。
 - `updatedDate`：可选，更新日期。
 - `readingTime`：可选，整数分钟数；不填时按正文中文字符与英文词估算。
 
-`category: knowledge` 的独立笔记会进入学习页的“实践知识库”。`category: course` 必须同时填写 `series` 和 `order`，否则检查或构建会报错。
+三个栏目按文字形态划分：属于某个系列、有先后顺序的进长卷；不成系列但能学到可复用东西的进札记；其余日常片刻进闲笔。栏目名与地址集中在 `src/data/sections.ts`。三类文章的详情页都在 `/blog/<id>/`，页头按 `category` 高亮所属栏目。札记页 `/blog/` 只列 `knowledge`，按篇数最多的标签筛选；长卷页是 `/notes/`；闲笔页 `/jottings/` 只列出 `writing` 文章。`category: course` 必须同时填写 `series` 和 `order`，否则检查或构建会报错。
 
 ### 系列 frontmatter
 
@@ -133,7 +135,7 @@ cover: /covers/project-benchmark.svg
 ---
 ```
 
-必填字段是 `title`、`summary`、`pubDate`、`tags`、`status`、`featured`。`status` 取“规划中”“进行中”或“已完成”。`repoUrl`、`demoUrl`、`cover` 可选；没有公开地址时直接省略，不要写占位链接。首页展示最新的两个 `featured: true` 项目。
+必填字段是 `title`、`summary`、`pubDate`、`tags`、`status`、`featured`。`status` 取“规划中”“进行中”或“已完成”。`repoUrl`、`demoUrl`、`cover` 可选；没有公开地址时直接省略，不要写占位链接。`featured` 是保留的精选标记，当前首页不展示项目列表。
 
 项目没有草稿字段。未准备发布的 Markdown 文件可以放在内容目录中，但文件名必须以 `_` 开头；加载器会忽略这类文件。
 
@@ -166,20 +168,20 @@ cover: /covers/project-benchmark.svg
 
 ## 首页与阅读功能
 
-首页顺序为：首屏、站点概况、精选札记、学习专题、项目、最近写下与话题索引。精选、学习专题和项目分别由 `src/data/site.ts`、`src/content/series/` 和 `src/content/projects/` 配置。
+首页顺序为：首屏（含文章数、字数与写作天数）、札记与长卷两栏、闲笔（最近 3 篇）、近 12 个月写作柱状图、来信与话题。各块按发布日期自动生成，不需要单独配置。
 
 每篇文章完整渲染在同一页面，保留正文、MathML、原地址和章节锚点。文章页提供 h2/h3 目录、浏览器查找、复制、打印和阅读进度；阅读记录需要读者主动开启，只保存在本机 `localStorage`。顶部搜索或 `Ctrl/Cmd K` 打开快捷搜索，查询与完整搜索页共享；`Escape` 关闭并恢复焦点。
 
 标签通过 `src/utils/tags.ts` 的 `tagAliases` 归一化，例如 `cpp` → `C++`、`algorithms` → `算法`、`ai-infra` → `AI Infra`。
 
-## 画廊
+## 画廊（隐藏页）
 
-原图放在 `public/gallery/`。文件名可以使用中文，但应避免空格和特殊符号；**优化脚本只处理 `.jpg` / `.jpeg`**，新增照片请使用 JPEG。
+画廊 `/gallery/` 不进导航，只从关于页连点三次右侧标志进入；`#photo-N` 直接打开对应照片。原图放在 `public/gallery/`。文件名可以使用中文，但应避免空格和特殊符号；**优化脚本只处理 `.jpg` / `.jpeg`**，新增照片请使用 JPEG。
 
 新增一张照片：
 
 1. 把 JPEG 放入 `public/gallery/`。
-2. 在 `src/pages/gallery.astro` 的 `photos` 数组中增加一项，填写真实宽高：
+2. 在 `src/data/photos.ts` 的 `photos` 数组中增加一项，填写真实宽高：
 
    ```js
    { file: '新的图片.jpg', title: '显示在图片下方的标题', width: 1600, height: 1200 },
@@ -188,7 +190,7 @@ cover: /covers/project-benchmark.svg
 3. 运行 `npm run gallery:prepare`，在 `public/gallery/optimized/` 生成 WebP 与 AVIF 候选图。
 4. 在预览中确认图片、说明和放大弹窗，然后提交 `public/gallery/`（包含 `optimized/`）。
 
-画廊使用 CSS 多列瀑布流，点击照片打开大图弹窗，支持左右方向键、Esc 和关闭后恢复焦点。优化候选图的最长边为原图宽度与 1200px 中的较小值。
+照片按两栏瀑布流排列（服务端分栏，保证视觉顺序与灯箱顺序一致），点击照片打开大图弹窗，支持左右方向键、Esc 和关闭后恢复焦点。优化候选图的最长边为原图宽度与 1200px 中的较小值。
 
 ## 封面库
 
