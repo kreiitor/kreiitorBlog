@@ -4,7 +4,7 @@
 
 站名「千羽」取自川端康成的《千羽鹤》，Logo 是一只展翅的折纸鹤：身体和双翼用墨色，远侧翅膀半透明，鹤首用朱砂。Logo 的源文件是 `public/logo.svg`，修改后运行 `npm run brand:prepare`，会同步生成 favicon、头像和分享图。
 
-站点以个人研究和写作为中心。配色取自宣纸、黛色与朱砂：浅色主题是暖白纸底配深黛文字，朱砂用于当前项和少量焦点，松石绿用于栏目标签；全站共用一张带细纸纹的底色。首页按发布时间分别展示札记和长卷章节，再列出最近的闲笔，并汇总已发布文章数量、估算字数与近 12 个月的写作记录；字数按 Markdown 正文中的汉字和英文词估算。首页文字切换只播放一次，减少动态效果时保持静止。文章阅读页使用窄栏衬线正文和发丝线分隔，目录当前项以朱砂细线标记。标题使用 Lora / 思源宋体，界面使用 DM Sans 与系统中文无衬线字体，正文使用 Source Serif / 思源宋体，代码使用 JetBrains Mono；明暗两套主题的令牌集中在 `src/styles/global.css` 顶部。
+站点以个人研究和写作为中心。配色取自宣纸、黛色与朱砂：浅色主题是暖白纸底配深黛文字，朱砂只用于当前项和少量焦点，栏目标签用低饱和的松石绿；全站共用一张带细纸纹的底色，栏目页头也不另设底色。首页按发布时间分别展示札记和长卷章节，再列出最近的闲笔，并汇总已发布文章数量、估算字数与近 12 个月的写作记录；字数按 Markdown 正文中的汉字和英文词估算。首页没有常驻循环动画：入场只播一次，文字切换只打一遍，减少动态效果时保持静止。文章阅读页使用窄栏衬线正文和发丝线分隔，目录当前项以朱砂细线标记。标题使用 Lora / 思源宋体，界面使用 DM Sans 与系统中文无衬线字体，正文使用 Source Serif / 思源宋体，代码使用 JetBrains Mono；明暗两套主题的令牌集中在 `src/styles/global.css` 顶部。
 
 这份 README 是当前唯一需要维护的项目文档；提交前请先阅读根目录的 [AGENTS.md](AGENTS.md)。历史设计稿、审查报告和迭代记录已移除；需要追溯时查看 Git 历史。
 
@@ -66,7 +66,7 @@ src/pages/              页面路由
 src/components/         页面组件
 src/styles/global.css   颜色、间距、字体层级与组件样式
 src/styles/fonts.css    自托管字体声明
-public/covers/          SVG 封面与同名分享 PNG
+public/covers/research/ 主题封面 WebP 与同名分享 PNG
 public/figures/         正文自绘 SVG 插图
 public/gallery/         隐藏画廊的原图与优化候选图
 docs/templates/         文章、章节、专题、项目模板
@@ -85,7 +85,7 @@ description: 用一两句话说明文章讨论什么。
 pubDate: 2026-10-18
 tags: [研究思考]
 category: knowledge
-cover: /covers/post-paper.svg
+cover: /covers/research/reading.webp
 draft: true
 featured: false
 ---
@@ -110,7 +110,7 @@ featured: false
 title: 学习专题标题
 englishTitle: A Learning Path
 description: 说明这组笔记的主线、范围和阅读对象。
-cover: /covers/series-research.svg
+cover: /covers/research/reading.webp
 icon: book
 order: 10
 facts: 从概念到实践
@@ -131,7 +131,7 @@ pubDate: 2026-10-18
 tags: [实验工具]
 status: 规划中
 featured: false
-cover: /covers/project-benchmark.svg
+cover: /covers/research/research.webp
 ---
 ```
 
@@ -197,7 +197,8 @@ cover: /covers/project-benchmark.svg
 `public/covers/research/` 中有 5 张研究刊物风格的主题封面，覆盖研究评测、论文阅读、数学、系统和算法。封面为 2048×1152 的 WebP，同名分享 PNG 为 1200×630。
 
 - 文章、项目和专题都可以用 `cover` 指定封面。原有内置 SVG 路径会按主题映射到新封面；其他显式配置的封面保持不变。
-- 未指定时，文章按 `src/utils/content.ts` 的规则推断：文件名含 `infra`、阅读 / 论文类、算法 / 路线类、知识笔记分别使用对应默认图；其余文章使用通用论文封面。项目卡片未指定时使用 `/covers/project-benchmark.svg`。
+- 早期内置的 `/covers/*.svg` 路径已不存在对应文件，只作为主题别名由 `src/utils/covers.ts` 映射到上面 5 张封面；新文章直接写 `/covers/research/…webp`。
+- 未指定时，文章按 `src/utils/content.ts` 的规则推断：文件名含 `infra`、阅读 / 论文类、算法 / 路线类、知识笔记分别使用对应默认图；其余文章使用通用论文封面。
 - 学习专题的 `cover` 同时用于专题卡片、目录和分享预览；章节分享图优先使用自己的 `cover`，没有时继承专题封面。
 - 站点页面目前不显示任何封面：文章、学习专题和项目的卡片与详情页都只用文字排版，`cover` 只用于分享预览图。
 
@@ -211,7 +212,7 @@ npm run check
 npm run build
 ```
 
-`art:prepare` 会同步品牌标记、封面的同名分享 PNG、站点分享图与离线选图册，不会重新绘制或覆盖封面。只更新选图册时运行 `npm run covers:catalog`。
+`art:prepare` 会同步品牌标记、favicon、封面的同名分享 PNG、站点分享图与离线选图册，不会重新绘制或覆盖封面。只更新选图册时运行 `npm run covers:catalog`。
 
 ## 字体
 
@@ -224,7 +225,7 @@ npm run build
 | 界面文字 | DM Sans → 苹方 / 微软雅黑 |
 | 代码 | JetBrains Mono → IBM Plex Mono |
 
-中文子集按 `src/` 中的正文、标题和界面文字生成；常规字重 400 按使用频率分片，强调字重 600 单独分片。资产与 `src/styles/fonts.css` 已提交，普通构建不需要 Python，也不会下载外部字体。
+中文子集按 `src/` 中的正文、标题和界面文字生成；400 与 600 两个字重覆盖同一套字符，按使用频率切成 `unicode-range` 分片，浏览器只下载页面用到的分片。`tests/fonts.test.mjs` 检查站内汉字的字重覆盖，以及字体声明、文件大小和哈希是否与清单一致；改完文案后测试失败就重新运行 `npm run fonts:prepare`。资产与 `src/styles/fonts.css` 已提交，普通构建不需要 Python，也不会下载外部字体。
 
 更新字体子集：
 
@@ -235,7 +236,7 @@ npm run check
 npm run build
 ```
 
-脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 14 个字体文件合计 **1,309,928 字节**，覆盖 2,270 个语料字形、1,264 个展示字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
+脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 15 个字体文件合计 **1,214,944 字节**，覆盖 2,274 个语料字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
 
 所有字体使用 `font-display: swap`，不做全站预加载。KaTeX 与代码字体样式只在文章 / 项目阅读页引入。新增超出 400–600 的英文设计字重或新增中文字重时，需要同步修改生成脚本、CSS 声明和字体资产。
 

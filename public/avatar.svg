@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="logo-title">
  <title id="logo-title">千羽鹤标记</title>
+ <style>@media (prefers-color-scheme: dark) { .brand-ink { fill: #ece6da; } .brand-accent { fill: #f2896b; } }</style>
  <path class="brand-ink" d="M19 40 32 32 45 40 32 51z" fill="var(--color-ink, #1d2230)"/>
  <path class="brand-ink" d="M20.5 39 32 33 15 5z" fill="var(--color-ink, #1d2230)"/>
  <path class="brand-ink brand-far-wing" d="M32 33 43.5 39 49 5z" fill="var(--color-ink, #1d2230)" fill-opacity=".5"/>

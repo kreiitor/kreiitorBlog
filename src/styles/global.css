@@ -11,7 +11,6 @@
  --font-title: 'Lora Variable','Journal Serif SC','Songti SC','STSong','SimSun',Georgia,serif;
  --font-reading: 'Source Serif 4 Variable','Journal Serif SC','Songti SC','STSong','SimSun',Georgia,serif;
  --font-editorial: 'Lora Variable','Source Serif 4 Variable',Georgia,serif;
- --font-kai: 'Journal Kai SC','Kaiti SC','STKaiti','KaiTi',serif;
  --font-mono: 'JetBrains Mono Variable','IBM Plex Mono','SFMono-Regular',Consolas,'PingFang SC','Microsoft YaHei',monospace;
  --text-caption: 13px; --text-ui: 14px; --text-body: 15px; --text-reading: 18px;
  --space-3xs: .25rem; --space-2xs: .5rem; --space-xs: .75rem; --space-s: 1rem;
@@ -85,7 +84,7 @@
  --color-ink: #ece6da; --color-ink-soft: #c3bdb1; --color-ink-muted: #a29d93;
  --color-line: #2a3040; --color-line-strong: #4a5265; --color-control-line: #6f7789;
  --color-accent: #f2896b; --color-accent-strong: #f8ab93; --color-accent-soft: #3a2420;
- --color-sage: #94c4b0; --color-sage-soft: #1d2c28;
+ --color-sage: #a9bdb4; --color-sage-soft: #1e2826;
  --color-counterpoint: #e2bd6a; --color-counterpoint-ink: #ecc97e;
  --color-highlight: #e2bd6a; --color-highlight-soft: #2c2818; --color-on-highlight: #1d2230;
  --color-primary: #ece6da; --color-primary-strong: #ffffff; --color-on-primary: #12151c;
@@ -106,7 +105,7 @@
   --color-ink: #ece6da; --color-ink-soft: #c3bdb1; --color-ink-muted: #a29d93;
   --color-line: #2a3040; --color-line-strong: #4a5265; --color-control-line: #6f7789;
   --color-accent: #f2896b; --color-accent-strong: #f8ab93; --color-accent-soft: #3a2420;
-  --color-sage: #94c4b0; --color-sage-soft: #1d2c28;
+  --color-sage: #a9bdb4; --color-sage-soft: #1e2826;
   --color-counterpoint: #e2bd6a; --color-counterpoint-ink: #ecc97e;
   --color-highlight: #e2bd6a; --color-highlight-soft: #2c2818; --color-on-highlight: #1d2230;
   --color-primary: #ece6da; --color-primary-strong: #ffffff; --color-on-primary: #12151c;
@@ -164,11 +163,9 @@
  .editorial-section { margin-top: 72px; }
  .editorial-section .section-grid { margin-top: 28px; }
 
- /* 栏目页页头：点阵从右侧渐显，角落一团很淡的朱砂光晕。 */
- .page-intro-band { position: relative; overflow: hidden; background-color: var(--color-paper-warm); border-bottom: 1px solid var(--color-line); }
- .page-intro-band::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(var(--color-grid-dot) 1px,transparent 1.4px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(100deg,transparent 35%,#000 90%); mask-image: linear-gradient(100deg,transparent 35%,#000 90%); pointer-events: none; }
- .page-intro-band::after { content: ''; position: absolute; right: -140px; top: -180px; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle,var(--spot),transparent 70%); pointer-events: none; }
- .page-intro { position: relative; z-index: 1; padding-block: 64px 48px; }
+ /* 栏目页页头：和正文同一张纸，只用页面宽度内的一条发丝线收尾。 */
+ .page-intro-band { position: relative; }
+ .page-intro { position: relative; z-index: 1; padding-block: 64px 44px; border-bottom: 1px solid var(--color-line); }
  .page-intro h1 { margin: 14px 0 18px; font-size: clamp(36px,1.6rem + 2.6vw,58px); line-height: 1.15; letter-spacing: -.02em; }
  .page-intro p:not(.eyebrow) { max-width: 40em; color: var(--color-ink-soft); font-size: 16px; line-height: 1.85; }
  .page-intro .page-intro-back { margin: -12px 0 10px; color: var(--color-ink-soft); }
@@ -191,7 +188,10 @@
 
  /* 阅读正文：衬线、窄栏、低装饰；强调色只留给链接下划线和目录当前项。 */
  .rich-content { font-family: var(--font-reading); font-size: var(--text-reading); font-weight: 400; line-height: 1.95; color: var(--color-ink); overflow-wrap: break-word; line-break: strict; text-autospace: normal; }
+ /* 中文 600 在暗色下会糊成一团：暗色降到 500，靠更亮一档的墨色强调。 */
  .rich-content strong { font-weight: 600; }
+ :root[data-theme="dark"] .rich-content strong { font-weight: 500; color: #fbf7ef; }
+ @media (prefers-color-scheme: dark) { :root:not([data-theme]) .rich-content strong { font-weight: 500; color: #fbf7ef; } }
  .rich-content > * + * { margin-top: 1.4em; }
  .rich-content :is(h1,h2) { margin-top: 2.4em; font-size: 26px; line-height: 1.45; letter-spacing: -.01em; }
  .rich-content h2 { padding-bottom: 12px; border-bottom: 1px solid var(--color-line); }
@@ -272,7 +272,7 @@
  .zen-truncate { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
  .text-balance { text-wrap: balance; }
 }
-@keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-down { from { opacity: 0; transform: translateY(-6px); } }
 .skip-link { position: fixed; z-index: 100; top: 12px; left: 16px; padding: 10px 20px; border-radius: 999px; background: var(--color-ink); color: var(--color-skip-ink); transform: translateY(-150%); transition: transform var(--dur-base) var(--ease-out-expo); }
 .skip-link:focus { transform: translateY(0); }
 
@@ -344,6 +344,8 @@
  }
 }
 @media (max-width: 900px) { html.menu-is-open { overflow: hidden; } }
+/* 切换主题的那一帧关掉所有过渡：背景是瞬间换的，局部颜色若还在渐变就会拖出残影。 */
+html.theme-switching *,html.theme-switching *::before,html.theme-switching *::after { transition: none !important; }
 
 /* ===========================================================================
    展开与退场：不支持的浏览器保持原来的硬切，不影响可用性。
@@ -352,7 +354,7 @@
 /* <details> 的内容区高度过渡：::details-content 让 height:auto 也能插值。 */
 :is(.mobile-toc,.blog-series,.rich-content details)::details-content { block-size: 0; overflow: clip; transition: block-size var(--dur-slow) var(--ease-out-expo),content-visibility var(--dur-slow) allow-discrete; }
 :is(.mobile-toc,.blog-series,.rich-content details)[open]::details-content { block-size: auto; }
-@supports not selector(::details-content) { .mobile-toc[open] nav { animation: reveal var(--dur-base) var(--ease-out-expo); } }
+@supports not selector(::details-content) { .mobile-toc[open] nav { animation: fade-down var(--dur-base) var(--ease-out-expo); } }
 
 /* 对话框退场：overlay 与 display 用 allow-discrete 保留到动画结束，@starting-style 给出入场起点。 */
 :is(.search-dialog,.photo-dialog) { opacity: 0; translate: 0 10px; scale: .98; transition: opacity var(--dur-base) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo),scale var(--dur-slow) var(--ease-out-expo),overlay var(--dur-base) allow-discrete,display var(--dur-base) allow-discrete; }

@@ -72,8 +72,11 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
    const cur = btn.getAttribute('data-pref') === 'dark' ? 'dark' : 'light';
    const next = cur === 'dark' ? 'light' : 'dark';
    try { localStorage.setItem('theme', next); } catch { /* 隐私模式下存储不可用，仍就地切换生效 */ }
+   const root = document.documentElement;
+   root.classList.add('theme-switching');
    if (typeof window.__applyTheme === 'function') window.__applyTheme(next);
-   else document.documentElement.setAttribute('data-theme', next);
+   else root.setAttribute('data-theme', next);
+   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
   });
  });
  // 首帧同步按钮状态（head 内联脚本执行时按钮还不存在）

@@ -5,7 +5,7 @@ pubDate: 2026-10-18
 tags: [实验工具]
 status: 规划中
 featured: false
-cover: /covers/project-benchmark.svg
+cover: /covers/research/research.webp
 # repoUrl: https://github.com/kreiitor/your-repository
 # demoUrl: https://example.com/your-demo
 ---

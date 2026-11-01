@@ -2,7 +2,7 @@
 title: 新的学习专题
 englishTitle: A New Learning Path
 description: 说明这组笔记的主线、范围和阅读对象。
-cover: /covers/series-research.svg
+cover: /covers/research/reading.webp
 icon: book
 order: 10
 facts: 从概念到实践

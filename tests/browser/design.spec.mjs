@@ -14,7 +14,10 @@ test('Home presents 札记 and 长卷 in date order, then 闲笔', async ({ page
   const dates = await column.locator('time').evaluateAll(nodes => nodes.map(node => Date.parse(node.dateTime)));
   expect(dates).toEqual([...dates].sort((a, b) => b - a));
  }
- expect(await recent.evaluate(node => node.getBoundingClientRect().top - innerHeight)).toBeLessThan(150);
+ // 首屏只放欢迎：栏目从第二屏开始，紧接在首屏之后，不留整屏空白。
+ const recentTop = await recent.evaluate(node => node.getBoundingClientRect().top - innerHeight);
+ expect(recentTop).toBeGreaterThanOrEqual(-1);
+ expect(recentTop).toBeLessThan(150);
  await expect(page.locator('.timeline .months a')).toHaveCount(12);
  const jottings = page.locator('.jottings');
  await expect(jottings.getByRole('heading', { name: '闲笔' })).toBeVisible();

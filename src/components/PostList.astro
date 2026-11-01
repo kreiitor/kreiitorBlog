@@ -12,7 +12,7 @@ const initial = new Set(posts.slice(0,12).map(post => post.id));
 ---
 <div class="post-list" data-post-list>
  {posts.map(post => <a class="post-row" href={withBase(`/blog/${post.id}/`)} data-post-row data-category={post.data.category} data-tags={post.data.tags.join('|')} hidden={interactive && !initial.has(post.id)}>
-  <div><div class="row-meta"><span class="row-category">{label === 'tag' ? post.data.tags[0] : sections[post.data.category].label}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h2 data-vt-key={withBase(`/blog/${post.id}/`)}>{post.data.title}</h2><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true"><Icon name="arrow"/></span>
+  <div><div class="row-meta"><span class="row-category">{label === 'tag' ? post.data.tags[0] : sections[post.data.category].label}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{getReadingTime(post)} 分钟阅读</span></div><h2>{post.data.title}</h2><p class="row-description">{post.data.description}</p></div><span class="row-arrow" aria-hidden="true"><Icon name="arrow"/></span>
  </a>)}
 </div>
 <style>

@@ -1,5 +1,5 @@
 ---
-// 栏目页头右下角的线稿：每个栏目画一个和内容有关的关系，只给一个点上藤黄色。
+// 栏目页头右下角的线稿：每个栏目画一个和内容有关的关系，只给一个点上朱砂色。
 export type PageMarkVariant = 'writing' | 'path' | 'project' | 'person' | 'timeline' | 'network' | 'lens' | 'frame' | 'detour';
 interface Props { variant: PageMarkVariant; class?: string; }
 const { variant, class: className } = Astro.props;
@@ -8,50 +8,50 @@ const { variant, class: className } = Astro.props;
  {variant === 'writing' && <>
   <path d="M24 112h126M24 112V25M42 94l30-25 24 13 38-43"/>
   <circle cx="42" cy="94" r="3" fill="currentColor"/><circle cx="72" cy="69" r="3" fill="currentColor"/><circle cx="96" cy="82" r="3" fill="currentColor"/>
-  <circle cx="134" cy="39" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="134" cy="39" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'path' && <>
   <path d="M22 116h30V92h30V68h30V44h30V24"/>
   <path d="M22 116v-6M52 92v-6M82 68v-6M112 44v-6" opacity=".55"/>
-  <circle cx="142" cy="24" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="142" cy="24" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'project' && <>
   <path d="M30 30h52v38H30zM98 72h52v38H98z"/>
   <path d="M82 49h16v23" opacity=".7"/>
   <path d="M40 44h24M40 54h16M108 86h24M108 96h14" opacity=".55"/>
-  <circle cx="98" cy="49" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="98" cy="49" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'person' && <>
   <circle cx="72" cy="58" r="22"/><path d="M36 116c4-22 18-34 36-34s32 12 36 34"/>
   <path d="M118 40h34M118 54h24M118 68h30" opacity=".55"/>
-  <circle cx="112" cy="40" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="112" cy="40" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'timeline' && <>
   <path d="M20 78h142"/>
   <path d="M34 78V60M58 78V48M82 78V66M106 78V38M130 78V54" opacity=".7"/>
   <path d="M34 78v6M58 78v6M82 78v6M106 78v6M130 78v6M154 78v6" opacity=".45"/>
-  <circle cx="106" cy="38" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="106" cy="38" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'network' && <>
   <path d="M40 98 76 62l46 14 26-42M76 62 64 28M122 76l18 34M40 98l42 14" opacity=".7"/>
   <circle cx="40" cy="98" r="3" fill="currentColor"/><circle cx="64" cy="28" r="3" fill="currentColor"/>
   <circle cx="122" cy="76" r="3" fill="currentColor"/><circle cx="148" cy="34" r="3" fill="currentColor"/>
   <circle cx="140" cy="110" r="3" fill="currentColor"/><circle cx="82" cy="112" r="3" fill="currentColor"/>
-  <circle cx="76" cy="62" r="5" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="76" cy="62" r="5" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'lens' && <>
   <circle cx="76" cy="64" r="32"/><path d="m100 88 34 30"/>
   <path d="M60 58h32M60 70h20" opacity=".55"/>
-  <circle cx="92" cy="58" r="4" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="92" cy="58" r="4" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'frame' && <>
   <path d="M28 30h96v76H28z"/><path d="M48 50h96v76" opacity=".45"/>
   <path d="m36 98 28-30 20 18 14-12 18 24"/>
-  <circle cx="102" cy="48" r="5" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="102" cy="48" r="5" fill="var(--color-accent)" stroke="none"/>
  </>}
  {variant === 'detour' && <>
   <path d="M22 110h40c16 0 16-24 32-24s16 24 32 24h28" stroke-dasharray="4 6"/>
   <path d="M94 86V40"/>
-  <circle cx="94" cy="34" r="5" fill="var(--color-counterpoint)" stroke="none"/>
+  <circle cx="94" cy="34" r="5" fill="var(--color-accent)" stroke="none"/>
  </>}
 </svg>

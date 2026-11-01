@@ -42,19 +42,21 @@ const peak = Math.max(1, ...months.map(month => month.count));
 const yearCount = publishedPosts.filter(post => post.data.pubDate.getUTCFullYear() === now.getFullYear()).length;
 const latest = publishedPosts[0];
 // 头像内联而不是 <img>，鹤纹才能跟随主题取色；去掉 title 与 id，避免和页头标志重复。
-const avatarMark = avatarSvg.replace(/ role="img" aria-labelledby="logo-title"/, '').replace(/<title[^>]*>.*?<\/title>/s, '');
+const avatarMark = avatarSvg.replace(/ role="img" aria-labelledby="logo-title"/, '').replace(/<title[^>]*>.*?<\/title>/s, '').replace(/<style>.*?<\/style>/s, '');
 const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
+// 列表右栏只放「月-日」：等宽、短，同一列里不会一行「6 天前」一行完整日期。跨年的才带年份。
+const pad = (n: number) => String(n).padStart(2, '0');
+const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear() ? '' : `${date.getUTCFullYear()}-`}${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 ---
 <BaseLayout>
  <div class="home-page" data-pagefind-ignore>
-  <div class="wash" aria-hidden="true"></div>
   <section class="intro" data-home-hero>
    <div class="ambient" aria-hidden="true">
-    <span class="blob"></span><span class="spot"></span><span class="grid"></span>
+    <span class="blob"></span><span class="grid"></span>
    </div>
    <div class="hero-copy">
     <div class="avatar reveal" style="--d:0"><span class="avatar-disc" aria-hidden="true" set:html={avatarMark}/></div>
-    <h1 class="greeting reveal" style="--d:1">Hi，我是 <b class="name">kreiitor</b> <span class="wave" aria-hidden="true">👋</span></h1>
+    <h1 class="greeting reveal" style="--d:1">Hi, 我是 <b class="name">kreiitor</b></h1>
     <p class="claim reveal" style="--d:2">把读过的、试过的，写成<span class="typed" data-typed={JSON.stringify(typed)} aria-hidden="true"><span data-typed-text>{typed[0]}</span><span class="caret"></span></span><span class="sr-only">札记、长卷与闲笔</span></p>
     <p class="role reveal" style="--d:3"><span>{siteConfig.role}</span><span class="role-divider" aria-hidden="true"> · </span><span class="role-details">AI 工程 · 程序分析 · 实验复现</span></p>
     <p class="motto reveal" style="--d:4">「{siteConfig.tagline}。」</p>
@@ -78,7 +80,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
        <span class="feed-no">{String(index + 1).padStart(2, '0')}</span>
        <span class="feed-title">{post.data.title}</span>
        <span class="feed-meta">{post.data.tags.slice(0, 2).join(' · ')}</span>
-       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)} data-rel>{formatDate(post.data.pubDate)}</time>
+       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time>
       </a>
      </li>)}
     </ol>
@@ -91,7 +93,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
       <a href={withBase(`/blog/${post.id}/`)}>
        <span class="feed-title">{post.data.title}</span>
        <span class="feed-meta">{seriesTitle.get(post.data.series ?? '') ?? sections.course.label}</span>
-       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)} data-rel>{formatDate(post.data.pubDate)}</time>
+       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time>
       </a>
      </li>)}
     </ol>
@@ -141,12 +143,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
   const start = Date.parse(since.dataset.since);
   if (Number.isFinite(start)) since.textContent = String(Math.max(1, Math.ceil((Date.now() - start) / day)));
  }
- document.querySelectorAll<HTMLTimeElement>('time[data-rel]').forEach(time => {
-  const elapsed = Math.floor((Date.now() - Date.parse(time.dateTime)) / day);
-  if (elapsed >= 0 && elapsed < 7) time.textContent = elapsed === 0 ? '今天' : `${elapsed} 天前`;
- });
-
- // 指针光斑与色团视差：每帧最多写一次自定义属性，绘制交给 CSS 合成层。
+ // 指针显影：点阵只在指针附近出现。每帧最多写一次自定义属性。
  const hero = document.querySelector<HTMLElement>('[data-home-hero]');
  if (hero && matchMedia('(hover: hover) and (prefers-reduced-motion: no-preference)').matches) {
   let pending = false, x = 0, y = 0;
@@ -173,6 +170,8 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
   let length = words[0]?.length ?? 0;
   let deleting = true;
   let timer = 0;
+  // 只有真的在打字时才预留最长词的宽度；无脚本或减少动态时，这一行按实际文字居中。
+  typed.dataset.typing = '';
   const step = () => {
    if (reduced.matches) return;
    if (deleting) {
@@ -184,7 +183,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
     text.textContent = words[index].slice(0, length);
     if (length === words[index].length) {
      deleting = true;
-     if (index === words.length - 1) return;
+     if (index === words.length - 1) { typed.dataset.done = ''; return; }
      timer = window.setTimeout(step, 450);
      return;
     }
@@ -193,48 +192,46 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
   };
   timer = window.setTimeout(step, 650);
   reduced.addEventListener('change', event => {
-   if (event.matches) { window.clearTimeout(timer); text.textContent = words[0]; }
+   if (event.matches) { window.clearTimeout(timer); text.textContent = words[0]; delete typed.dataset.typing; }
   });
  }
 </script>
 <style>
  /* ===== 首页统一系统 =====
     节奏：区块间距 --gap；所有区块共用一个 .sec-head（编号 · 英文眉题 · 中文标题）。
-    色彩：朱砂是首页唯一的强调色，只给焦点；其余全部是墨色深浅。整页一层 .wash 从首屏的暖色缓降到纸色，区块间不画硬分隔。
-    动效：入场 .reveal（一次性）；常驻装饰只动 transform/opacity；滚动联动全部交给 animation-timeline。 */
+    色彩：朱砂只落在首屏的打字词、当月柱和来信的落款上；编号、分隔线、悬停都用墨色深浅。
+    动效：入场 .reveal 只播一次；首屏没有常驻循环，只有打字一遍和指针显影；滚动联动全部交给 animation-timeline。 */
  .home-page { --gap: 120px; --ease-spring: cubic-bezier(.34,1.56,.64,1); position: relative; isolation: isolate; overflow-x: clip; padding-bottom: 0; }
- .wash { position: absolute; inset: 0 0 auto; z-index: -2; height: 1900px; pointer-events: none; -webkit-mask-image: linear-gradient(#000 70%,transparent); mask-image: linear-gradient(#000 70%,transparent); background:
-   radial-gradient(1200px 700px at 50% -10%,color-mix(in srgb,var(--color-accent) 4%,transparent),transparent 70%); }
 
  /* ---------- 首屏 ---------- */
- .intro { position: relative; isolation: isolate; display: grid; place-items: center; min-height: min(720px,calc(100svh - var(--header-height) - 24px)); padding: 56px 24px 96px; text-align: center; }
- .ambient { --px: .5; --py: .4; position: absolute; inset: 0; z-index: -1; container-type: size; pointer-events: none; }
- /* 只留一团暖光，偏在标题左上方，边缘收得早一些，读作光而不是雾。 */
- .blob { position: absolute; left: 50%; top: -18vmax; width: 56vmax; height: 56vmax; margin-left: -34vmax; border-radius: 50%; background: radial-gradient(circle,color-mix(in srgb,var(--color-accent) 7%,transparent) 0%,color-mix(in srgb,var(--color-accent) 3%,transparent) 36%,transparent 60%); will-change: transform; translate: calc((var(--px) - .5) * -48px) calc((var(--py) - .5) * -36px); transition: translate 1.4s var(--ease-out-expo); animation: drift 24s ease-in-out infinite alternate; }
- .spot { position: absolute; left: 0; top: 0; width: 560px; height: 560px; margin: -280px 0 0 -280px; border-radius: 50%; background: radial-gradient(circle,color-mix(in srgb,var(--color-accent) 6%,transparent),transparent 62%); opacity: 0; translate: calc(var(--px) * 100cqw) calc(var(--py) * 100cqh); transition: opacity var(--dur-slow),translate .6s var(--ease-out-expo); }
- [data-lit] .spot { opacity: 1; }
+ /* 首屏只放欢迎：正好占满一屏视口（扣掉页头），栏目从第二屏开始。内容略高于正中，视觉重心更稳。 */
+ .intro { position: relative; isolation: isolate; display: grid; place-items: center; min-height: max(520px,calc(100svh - var(--header-height))); padding: 40px 24px 112px; text-align: center; }
+ .ambient { --px: .5; --py: .4; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+ /* 一层静止的暖光：单个径向渐变、两段色标，避免多层半透明叠出同心色环。 */
+ /* 用 blur 代替长距离渐变：8 位色深下大面积浅渐变会出现一圈圈色带，模糊后的实心椭圆过渡更平。 */
+ .blob { position: absolute; left: 50%; top: -18%; width: min(760px,90vw); aspect-ratio: 1.7; translate: -50% 0; border-radius: 50%; background: color-mix(in srgb,var(--color-accent) 5%,transparent); filter: blur(90px); }
  /* 细点阵只在指针附近显影，像手电照过纸面。 */
  .grid { position: absolute; inset: 0; background-image: radial-gradient(var(--color-grid-dot) 1px,transparent 1.4px); background-size: 24px 24px; opacity: .9; -webkit-mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); transition: opacity var(--dur-slow); }
  .intro:not([data-lit]) .grid { opacity: 0; }
 
  .hero-copy { width: min(100%,760px); }
  .avatar { position: relative; display: flex; justify-content: center; margin-bottom: 26px; }
- .avatar-disc { position: relative; z-index: 1; display: grid; place-items: center; width: 92px; height: 92px; border: 1px solid var(--color-line); border-radius: 50%; background: var(--color-surface); box-shadow: 0 10px 30px -14px var(--shadow-tint-strong); transition: transform var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow); }
- .avatar:hover .avatar-disc { transform: rotate(-10deg) scale(1.07); box-shadow: 0 0 0 7px color-mix(in srgb,var(--color-accent) 13%,transparent),0 16px 34px -14px var(--shadow-tint-strong); }
+ .avatar-disc { position: relative; z-index: 1; display: grid; place-items: center; width: 92px; height: 92px; border: 1px solid var(--color-line); border-radius: 50%; background: var(--color-surface); box-shadow: 0 10px 30px -14px var(--shadow-tint-strong); transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .avatar:hover .avatar-disc { transform: rotate(-6deg); }
  .avatar-disc :global(svg) { width: 64%; height: 64%; }
  .avatar-disc :global(.brand-ink) { fill: var(--color-ink); }
  .avatar-disc :global(.brand-accent) { fill: var(--color-accent); }
- /* 头像外的一圈渐变描边慢慢旋转，conic 只走 transform。 */
- .avatar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; border-radius: 50%; background: conic-gradient(from 0deg,var(--color-accent),transparent 55%,var(--color-line-strong) 80%,var(--color-accent)); -webkit-mask: radial-gradient(farthest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px)); mask: radial-gradient(farthest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px)); opacity: .8; animation: spin 14s linear infinite; }
- .avatar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; margin: -46px 0 0 -46px; border: 1px solid var(--color-accent); border-radius: 50%; opacity: 0; animation: halo 3.6s var(--ease-smooth) 1.4s infinite; pointer-events: none; }
+ /* 头像外一圈静止的发丝线，代替旋转描边和脉冲光环。 */
+ .avatar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 106px; height: 106px; margin: -53px 0 0 -53px; border: 1px solid var(--color-line); border-radius: 50%; }
  .greeting { font-size: clamp(34px,1.4rem + 2.4vw,52px); line-height: 1.22; letter-spacing: -.01em; }
  .greeting b { font-weight: 600; }
- .name { background: linear-gradient(100deg,var(--color-ink) 0 38%,var(--color-accent-strong) 50%,var(--color-ink) 62% 100%) 0 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sheen 7s var(--ease-smooth) 1.6s infinite; }
- .wave { display: inline-block; font-size: .6em; vertical-align: .1em; transform-origin: 70% 75%; animation: wave 2.6s var(--ease-smooth) 1.1s infinite; }
  .claim { margin-top: 18px; color: var(--color-ink-soft); font-size: clamp(17px,.9rem + .5vw,21px); line-height: 1.7; }
- .typed { position: relative; display: inline-block; min-width: 6.2em; color: var(--color-accent-strong); text-align: left; }
- .typed::after { content: ''; position: absolute; left: 0; right: .4em; bottom: .02em; height: .32em; z-index: -1; border-radius: 3px; background: color-mix(in srgb,var(--color-accent) 12%,transparent); transform-origin: left; animation: mark 1s var(--ease-out-expo) 1.1s both; }
+ /* 底色贴着字走（background 而不是固定宽度的伪元素），宽度留给最长的词，打字时行不跳。 */
+ .typed { display: inline-block; color: var(--color-accent-strong); text-align: left; }
+ .typed[data-typing] { min-width: 6.4em; }
+ .typed [data-typed-text] { padding-inline: .08em; background: linear-gradient(transparent 62%,color-mix(in srgb,var(--color-accent) 13%,transparent) 62% 92%,transparent 92%); }
  .caret { display: inline-block; width: 1.5px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
+ [data-done] .caret { opacity: 0; animation: none; transition: opacity var(--dur-slow); }
  .role { margin-top: 14px; color: var(--color-ink-soft); font-size: 14px; }
  .motto { margin-top: 16px; color: var(--color-ink-muted); font-family: var(--font-display); font-size: 15px; letter-spacing: .06em; }
  .stats { display: inline-flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 24px; padding: 8px 18px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); color: var(--color-ink-muted); font-size: 13px; }
@@ -246,35 +243,36 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
  .socials a :global(svg) { position: relative; }
  .socials a:is(:hover,:focus-visible) { color: var(--color-accent-strong); translate: 0 -3px; }
  .socials a:is(:hover,:focus-visible)::before { scale: 1; opacity: 1; }
- .scroll-cue { position: absolute; bottom: 18px; left: 50%; display: grid; place-items: center; width: 44px; height: 44px; translate: -50% 0; }
- .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-muted); border-bottom: 1.5px solid var(--color-ink-muted); rotate: 45deg; animation: nudge 2s var(--ease-smooth) 2.2s infinite; }
- .scroll-cue:hover span { border-color: var(--color-accent); }
+ .scroll-cue { position: absolute; bottom: 28px; left: 50%; display: grid; place-items: center; width: 44px; height: 44px; translate: -50% 0; }
+ .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-muted); border-bottom: 1.5px solid var(--color-ink-muted); rotate: 45deg; transition: translate var(--dur-slow) var(--ease-out-expo),border-color var(--dur-base); }
+ .scroll-cue:is(:hover,:focus-visible) span { border-color: var(--color-ink); translate: 0 3px; }
 
  /* ---------- 共用区块标题 ---------- */
  .sec-head { position: relative; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 16px; }
  .sec-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg,var(--color-ink) 0 64px,var(--color-line-strong) 64px); transform-origin: left; }
  .sec-head p { display: flex; align-items: baseline; gap: 10px; flex-basis: 100%; color: var(--color-ink-muted); font-size: 12.5px; letter-spacing: .08em; }
- .sec-head p span { color: var(--color-accent); font-family: var(--font-mono); font-size: 12px; font-style: normal; }
+ .sec-head p span { color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 12px; font-style: normal; }
  .sec-head h2 { font-size: clamp(22px,1rem + .8vw,28px); line-height: 1.25; }
  .sec-aside { margin-left: auto; color: var(--color-ink-muted); font-size: 13px; }
  .sec-aside b { color: var(--color-ink); font-family: var(--font-mono); font-size: 15px; }
  /* ---------- 近期 ---------- */
- .recent { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 72px; padding-top: 24px; scroll-margin-top: calc(var(--header-height) + 24px); }
+ .recent { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 72px; padding-top: 72px; scroll-margin-top: calc(var(--header-height) + 8px); }
  .column { min-width: 0; }
  .feed { margin: 6px 0 0; padding: 0; list-style: none; }
  .feed-item a { position: relative; isolation: isolate; display: grid; grid-template-columns: 28px minmax(0,1fr) auto; grid-template-areas: 'no title time' '. meta time'; gap: 3px 10px; align-items: baseline; min-height: 76px; padding: 15px 10px; margin-inline: -10px; border-radius: 10px; transition: translate var(--dur-slow) var(--ease-out-expo); }
  .feed-notes .feed-item a { grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'title time' 'meta time'; }
  .feed-item + .feed-item a::after { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: var(--color-line); transition: opacity var(--dur-base); }
- /* 悬停底色：一块柔光从左侧铺开，并带出朱砂竖线。 */
- .feed-item a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(90deg,color-mix(in srgb,var(--color-accent) 9%,transparent),color-mix(in srgb,var(--color-surface) 70%,transparent) 60%); box-shadow: inset 2px 0 0 var(--color-accent); opacity: 0; transform: scaleX(.96); transform-origin: left; transition: opacity var(--dur-base),transform var(--dur-slow) var(--ease-out-expo); }
+ /* 悬停底色：一块纸面略深的底，不再铺朱砂渐变。 */
+ .feed-item a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-soft); opacity: 0; transform: scaleX(.98); transform-origin: left; transition: opacity var(--dur-base),transform var(--dur-slow) var(--ease-out-expo); }
  .feed-item a:is(:hover,:focus-visible) { translate: 6px 0; }
  .feed-item a:is(:hover,:focus-visible)::before { opacity: 1; transform: none; }
  .feed-item:hover + .feed-item a::after,.feed-item a:hover::after { opacity: 0; }
  .feed-no { grid-area: no; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; transition: color var(--dur-base); }
  .feed-title { grid-area: title; min-width: 0; font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.55; overflow-wrap: anywhere; transition: color var(--dur-base); }
  .feed-meta { grid-area: meta; min-width: 0; color: var(--color-ink-muted); font-size: 12px; overflow-wrap: anywhere; }
- .feed-time { grid-area: time; color: var(--color-ink-muted); font-size: 12px; white-space: nowrap; }
- .feed-item a:is(:hover,:focus-visible) :is(.feed-no,.feed-title) { color: var(--color-accent-strong); }
+ .feed-time { grid-area: time; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .feed-item a:is(:hover,:focus-visible) .feed-no { color: var(--color-ink); }
+ .feed-item a:is(:hover,:focus-visible) .feed-title { color: var(--color-accent-strong); }
  .more { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 10px; color: var(--color-ink-soft); font-size: 13px; font-weight: 600; }
  .more::after { content: ''; position: absolute; left: 0; right: 24px; bottom: 10px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
  .more:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
@@ -300,7 +298,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
  .bar { position: relative; display: block; width: min(100%,34px); height: calc(var(--s) * 118px + 4px); border-radius: 6px 6px 2px 2px; background: color-mix(in srgb,var(--color-ink) 16%,transparent); transform-origin: bottom; transition: transform var(--dur-slow) var(--ease-spring),background-color var(--dur-base); }
  .is-empty .bar { height: 4px; background: var(--color-line-strong); }
  .is-now .bar { background: var(--color-accent); }
- .is-now .bar::after { content: ''; position: absolute; left: 50%; top: -12px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--color-accent); animation: beat 1.6s var(--ease-smooth) infinite; }
+ .is-now .bar::after { content: ''; position: absolute; left: 50%; top: -12px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--color-accent); }
  .count { position: absolute; left: 50%; bottom: calc(100% + 4px); translate: -50% 0; color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 11px; opacity: 0; transition: opacity var(--dur-base),translate var(--dur-slow) var(--ease-out-expo); }
  .is-now .count { bottom: calc(100% + 18px); }
  .month { position: absolute; bottom: 0; }
@@ -331,12 +329,12 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
  .greet span:last-child { color: var(--color-accent-strong); }
  .outro-links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
  .outro-links a { position: relative; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'title icon' 'text icon'; align-items: center; gap: 4px 12px; min-width: 0; padding: 18px 20px; border: 1px solid var(--color-line); border-radius: 14px; overflow: hidden; transition: border-color var(--dur-base),translate var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow); }
- .outro-links a::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(240px 120px at 0% 0%,color-mix(in srgb,var(--color-accent) 12%,transparent),transparent 70%); opacity: 0; transition: opacity var(--dur-slow); }
+ .outro-links a::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-surface-soft); opacity: 0; transition: opacity var(--dur-slow); }
  .outro-links a { isolation: isolate; }
  .outro-links b { grid-area: title; font-size: 15px; }
  .outro-links span { grid-area: text; color: var(--color-ink-muted); font-size: 12px; overflow-wrap: anywhere; }
  .outro-links :global(svg) { grid-area: icon; color: var(--color-ink-muted); }
- .outro-links a:is(:hover,:focus-visible) { border-color: color-mix(in srgb,var(--color-accent) 40%,var(--color-line)); translate: 0 -3px; box-shadow: var(--shadow-soft); }
+ .outro-links a:is(:hover,:focus-visible) { border-color: var(--color-line-strong); translate: 0 -2px; }
  .outro-links a:is(:hover,:focus-visible)::before { opacity: 1; }
  .outro-links a:is(:hover,:focus-visible) b,.outro-links a:is(:hover,:focus-visible) :global(svg) { color: var(--color-accent-strong); }
  .outro-links a:is(:hover,:focus-visible) :global(svg) { translate: 4px 0; }
@@ -345,7 +343,7 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
  .topic-row a:is(:hover,:focus-visible) { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); translate: 0 -2px; }
 
  /* ---------- 入场与滚动联动 ---------- */
- .reveal { animation: reveal 1s var(--ease-out-expo) both; animation-delay: calc(80ms + var(--d) * 90ms); }
+ .reveal { animation: hero-enter .8s var(--ease-out-expo) both; animation-delay: calc(60ms + var(--d) * 70ms); }
  @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
    .sec-head::after { animation: draw linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
@@ -353,25 +351,17 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
    .bar { animation: grow linear both; animation-timeline: view(); animation-range: entry calc(var(--i) * 4%) entry 100%; }
    .greet span { animation: slide linear both; animation-timeline: view(); animation-range: entry 0% entry 90%; }
    .greet span:last-child { animation-range: entry 15% entry 100%; }
-   /* 首屏滚走时轻轻后退，和下一屏形成景深。 */
-   .hero-copy { animation: recede linear both; animation-timeline: scroll(root); animation-range: 0 600px; }
+   /* 首屏滚走时轻轻淡出，幅度小到不影响往回滚时的阅读。 */
+   .hero-copy { animation: recede linear both; animation-timeline: scroll(root); animation-range: 0 520px; }
   }
  }
 
- @keyframes reveal { from { opacity: 0; translate: 0 18px; filter: blur(8px); } to { opacity: 1; translate: 0 0; filter: none; } }
- @keyframes drift { to { transform: translate(8vmax,6vmax) scale(1.08); } }
- @keyframes halo { from { opacity: .5; scale: 1; } to { opacity: 0; scale: 1.55; } }
- @keyframes spin { to { rotate: 360deg; } }
- @keyframes sheen { 0% { background-position: 100% 0; } 40%,100% { background-position: -60% 0; } }
- @keyframes wave { 0%,60%,100% { rotate: 0deg; } 10%,30% { rotate: 16deg; } 20% { rotate: -8deg; } 40% { rotate: -4deg; } 50% { rotate: 10deg; } }
- @keyframes mark { from { transform: scaleX(0); } }
+ @keyframes hero-enter { from { opacity: 0; translate: 0 12px; } }
  @keyframes blink { 50% { opacity: 0; } }
- @keyframes nudge { 0%,100% { translate: 0 0; } 50% { translate: 0 5px; } }
- @keyframes beat { 0%,100% { scale: 1; opacity: 1; } 50% { scale: 1.8; opacity: .4; } }
  @keyframes draw { from { transform: scaleX(0); } }
  @keyframes slide { from { opacity: .15; translate: 0 18px; } }
  @keyframes grow { from { transform: scaleY(.05); opacity: .3; } }
- @keyframes recede { to { opacity: .25; scale: .94; translate: 0 40px; } }
+ @keyframes recede { to { opacity: .6; translate: 0 24px; } }
 
  @media (max-width: 800px) {
   .home-page { --gap: 88px; }
@@ -380,10 +370,10 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
  }
  @media (max-width: 600px) {
   .home-page { --gap: 72px; }
-  .intro { min-height: min(640px,calc(100svh - var(--header-height) - 16px)); padding: 48px 20px 84px; }
+  .intro { min-height: max(480px,calc(100svh - var(--header-height))); padding: 32px 20px 96px; }
+  .recent { padding-top: 56px; }
   .avatar-disc { width: 78px; height: 78px; }
-  .avatar::before { width: 90px; height: 90px; margin: -45px 0 0 -45px; }
-  .avatar::after { width: 78px; height: 78px; margin: -39px 0 0 -39px; }
+  .avatar::before { width: 92px; height: 92px; margin: -46px 0 0 -46px; }
   .role { max-width: 28em; margin-inline: auto; }
   .role-divider { display: none; }
   .role-details { display: block; }
@@ -396,10 +386,5 @@ const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
   .outro-links { grid-template-columns: minmax(0,1fr); }
   .jotting-feed a { grid-template-columns: 84px minmax(0,1fr); gap: 12px; }
  }
- @media (prefers-reduced-motion: reduce) {
-  .avatar::after,.is-now .bar::after { display: none; }
-  .avatar::before { animation: none; }
-  .name { color: var(--color-ink); background: none; }
-  .caret { display: none; }
- }
+ @media (prefers-reduced-motion: reduce) { .caret { display: none; } }
 </style>

@@ -8,8 +8,7 @@ async function writeAsset(target, data) {
 }
 const sources = ['public/social-card.svg', ...(await readdir('public/covers')).filter(file => file.endsWith('.svg')).map(file => `public/covers/${file}`)];
 for (const source of sources) {
- // librsvg does not resolve SVG custom properties. Bake the light palette into
- // sharing PNGs; browser SVGs retain their adaptive light/dark media query.
+ // librsvg does not resolve SVG custom properties, so bake the light palette.
  const svg = await readFile(source, 'utf8');
  const declarations = svg.match(/<style>:root\{([^}]+)\}/)?.[1];
  const colors = new Map((declarations ?? '').split(';').filter(Boolean).map(entry => entry.split(':')));

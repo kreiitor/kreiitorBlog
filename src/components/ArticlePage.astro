@@ -47,9 +47,9 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
     <header class="article-header">
      <span data-pagefind-meta="type" class="sr-only">{section.label}</span>
      <p class="eyebrow">{group ? `${group.entry.data.title} · 第 ${chapterIndex + 1} 篇` : section.label}</p>
-     <h1 data-pagefind-meta="title" data-pagefind-weight="8" data-vt-self>{post.data.title}</h1>
+     <h1 data-pagefind-meta="title" data-pagefind-weight="8">{post.data.title}</h1>
      <p class="article-summary" data-pagefind-meta="description">{post.data.description}</p>
-     <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>· {getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <span>· 更新于 {formatDate(post.data.updatedDate)}</span>}</div>
+     <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <><span aria-hidden="true">·</span><span>更新于 {formatDate(post.data.updatedDate)}</span></>}</div>
      <div class="article-tags">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
     </header>
     <ReadingTools/>

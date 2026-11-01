@@ -8,7 +8,7 @@ const { entry, chapters } = series;
 const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 ---
 <a href={withBase(`/notes/${entry.id}/`)} class:list={['zen-card','series-card',{'series-compact':compact,'series-index':presentation === 'index' && !compact}]} data-series={entry.id}>
- <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'Structured learning'}</p><Heading data-vt-key={withBase(`/notes/${entry.id}/`)}>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
+ <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'Structured learning'}</p><Heading>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
  <p class="series-description">{entry.data.description}</p>
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>

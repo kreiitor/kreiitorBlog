@@ -10,7 +10,7 @@ const href = withBase(`/projects/${project.id}/`);
 <article class:list={['zen-card','project-card',{'project-showcase':showcase}]}>
  <div class="card-content">
   <div class="card-meta"><span class:list={['project-status', {'is-complete':project.data.status === '已完成', 'is-planned':project.data.status === '规划中'}]}><span aria-hidden="true"></span>{project.data.status}</span></div>
-  <Heading><a href={href} data-vt-key={href}>{project.data.title}</a></Heading>
+  <Heading><a href={href}>{project.data.title}</a></Heading>
   <p class="card-description zen-truncate">{project.data.summary}</p>
   <div class="card-bottom"><div class="flex flex-wrap gap-1.5">{project.data.tags.slice(0,2).map(tag => <TagLink tag={tag}/>)}</div><a href={href} class="card-arrow" tabindex="-1" aria-hidden="true"><Icon name="arrow"/></a></div>
  </div>

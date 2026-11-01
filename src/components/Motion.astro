@@ -64,9 +64,8 @@ import Icon from './Icon.astro';
  .back-to-top:is(:hover,:focus-visible) { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
  .back-to-top:active { translate: 0 1px; }
  @view-transition { navigation: auto; }
+ /* 换页只做整页淡入淡出。列表标题与文章 h1 字号、行数都不同，共享元素过渡会把快照缩放后再硬切，看起来像标题瞬移。 */
  ::view-transition-old(root),::view-transition-new(root) { animation-duration: var(--dur-base); }
- /* 标题从列表里的位置移到新页面的位置，两张快照各按自身宽高比缩放，不会拉伸。 */
- ::view-transition-group(vt-title) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-out-expo); }
- ::view-transition-old(vt-title),::view-transition-new(vt-title) { animation-duration: var(--dur-base); } @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
+ @media (max-width: 600px) { .back-to-top { width: 44px; height: 44px; right: 16px; bottom: 18px; } }
  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 </style>
