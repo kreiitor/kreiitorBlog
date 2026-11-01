@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import HeroScenery from '../components/HeroScenery.astro';
 import { siteConfig } from '../data/site';
 import { getPublishedPosts, getTagSummaries } from '../utils/content';
 import { getLearningSeries } from '../utils/series';
@@ -63,6 +64,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
   <section class="intro" data-home-hero>
    <div class="ambient" aria-hidden="true">
     <span class="blob blob-warm"></span><span class="blob blob-ink"></span><span class="grid"></span>
+    <HeroScenery/>
     <div class="flock">
      <svg width="0" height="0" class="flock-defs"><symbol id="crane" viewBox="0 0 64 64"><path d="M19 40 32 32 45 40 32 51zM20.5 39 32 33 15 5zM17 39.5 29 49 8 20zM47 39.5 35 49 59 22z" fill="currentColor"/><path d="M32 33 43.5 39 49 5z" fill="currentColor" fill-opacity=".5"/><path d="M8 20 12.5 22.5 4 30z" fill="var(--color-accent)"/></symbol></svg>
      {cranes.map(crane => <span class="crane" style={`--y:${crane.y}%;--s:${crane.size}px;--dur:${crane.dur}s;--delay:${crane.delay}s;--rise:${crane.rise}vh;--o:${crane.opacity};--bob:${crane.bob}s`}><svg viewBox="0 0 64 64"><use href="#crane"/></svg></span>)}
