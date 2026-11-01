@@ -27,7 +27,7 @@ decoder-only在架构上实现简洁,并且获得了最好的通用能力,且对
 几个值得注意的细节：
 
 - **RMSNorm 而非 LayerNorm**。LLaMA 系列及后续大多数模型使用 RMSNorm（Root Mean Square Normalization），省去了减均值的步骤，只保留除以均方根的操作。计算更简单，效果相当。
-- **RoPE 只作用于 Q 和 K**。旋转位置编码的作用是让 Q 和 K 的内积包含相对位置信息，V 不需要旋转，因为 V 承载的是”内容信息”而非”位置匹配信号”。
+- **RoPE 只作用于 Q 和 K**。旋转位置编码的作用是让 Q 和 K 的内积包含相对位置信息，V 不需要旋转，因为 V 承载的是“内容信息”而非“位置匹配信号”。
 - **Pre-Norm 的残差路径是干净的**。两条残差路径都从 Add 节点直接接过来，中间没有经过任何变换。这保证了梯度可以无损地沿残差路径回传，是深层模型训练稳定的关键。
 
 ## 2. 完整pytorch实现decoder block
@@ -157,19 +157,19 @@ token -> id:一个词表,参数量为$V\times d_{model}$
 
 #### 两个RMSNorm
 
-两个缩放可学习参数:参数量为$2\times d_{model}$
+两个缩放可学习参数：参数量为$2\times d_{model}$
 
 #### 多头自注意力
 
-四个投影矩阵:参数量为$4\times d_{model}^2$
+四个投影矩阵：参数量为$4\times d_{model}^2$
 
 #### SwiGLUFFN
 
-升维降维和门控矩阵:参数量为$3\times d_{model}\cdot d_{ff}$
+升维降维和门控矩阵：参数量为$3\times d_{model}\cdot d_{ff}$
 
 #### 最后的RMSNorm和LM头
 
-参数量为:$d_{model}+V\times d_{model}$
+参数量为：$d_{model}+V\times d_{model}$
 
 ## 4. 计算量(FLOPS)手撕
 
@@ -208,9 +208,9 @@ $FLOPS = 2\times 2\times d_{model}\times s^2 \times h=4hd_{model}s^2$
 - 梯度(形状与权重一致,BF16)
 	- $2N$
 - 优化器状态(随优化器改变),以Adam\AdamW为例
-	- Fp32参数副本: 防止梯度太小BF16捕获不到. 4N
-	- 一阶梯度动量: 梯度的指数移动平均. 4N
-	- 二阶梯度动量:梯度平方的指数移动平均. 4N
+	- Fp32参数副本： 防止梯度太小BF16捕获不到. 4N
+	- 一阶梯度动量： 梯度的指数移动平均. 4N
+	- 二阶梯度动量：梯度平方的指数移动平均. 4N
 - 激活值(动态部分)
 	- 在反向传播时仍要重复利用的部分,在前向传播的时候计算之后就保存下来复用.
 	- 大概$kBsdL$,其中k是个常数,和是否开启activation checkpoint,模型架构,是否并行等有关

@@ -48,7 +48,7 @@ Codex 的 session 文件里本来就会写出类似字段：
 - `reasoning_output_tokens`
 - `model_context_window`
 
-所以这个方案本质上是"外部读事件，外部显示"，不是去改 Codex 内部 UI。
+所以这个方案本质上是“外部读事件，外部显示”，不是去改 Codex 内部 UI。
 
 ---
 

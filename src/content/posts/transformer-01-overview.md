@@ -88,7 +88,7 @@ LLM 的自回归生成每一步只输出一个 token，但 Attention 计算需�
 
 #### **2.PagedAttention 与 KV Cache 的显存碎片**
 
-不同请求的序列长度不同，KV Cache 的大小也不一样。传统的预分配方式会造成大量的显存碎片——短请求分配了过多空间浪费，长请求可能因为找不到足够的连续空间而被拒绝。PagedAttention 借鉴操作系统的虚拟内存分页机制，将 KV Cache 切成固定大小的”页”按需分配，彻底解决碎片问题。这个优化的根源在于 KV Cache 的动态增长特性——每生成一个新 token，KV Cache 就增加一”行”。
+不同请求的序列长度不同，KV Cache 的大小也不一样。传统的预分配方式会造成大量的显存碎片——短请求分配了过多空间浪费，长请求可能因为找不到足够的连续空间而被拒绝。PagedAttention 借鉴操作系统的虚拟内存分页机制，将 KV Cache 切成固定大小的“页”按需分配，彻底解决碎片问题。这个优化的根源在于 KV Cache 的动态增长特性——每生成一个新 token，KV Cache 就增加一“行”。
 
 #### **3.量化与所有权重矩阵 / KV Cache**
 
@@ -96,7 +96,7 @@ LLM 的自回归生成每一步只输出一个 token，但 Attention 计算需�
 
 #### **4.Speculative Decoding 与自回归生成的串行瓶颈**
 
-自回归生成的根本瓶颈在于每次只能生成一个 token，GPU 的大量算力被浪费。Speculative Decoding 的思路是用一个小而快的 Draft 模型先”猜”出多个 token，再由大模型一次性验证——猜对的直接用，猜错的重新采样。这项优化直接针对 Transformer Decoder 自回归生成的串行特性，用并行验证来加速串行生成。
+自回归生成的根本瓶颈在于每次只能生成一个 token，GPU 的大量算力被浪费。Speculative Decoding 的思路是用一个小而快的 Draft 模型先“猜”出多个 token，再由大模型一次性验证——猜对的直接用，猜错的重新采样。这项优化直接针对 Transformer Decoder 自回归生成的串行特性，用并行验证来加速串行生成。
 
 ## 4. 端到端案例：一次LLM推理请求的完整旅程
 **理论到实践：**
@@ -157,7 +157,7 @@ AI Infra 优化：FlashAttention 将 $QK^T$、Scale、Mask、Softmax、$PV$ 全�
 
 **缓存 K 和 V**：将本层的 K 和 V 存入 KV Cache。
 
-AI Infra 优化：vLLM 的 PagedAttention 以”页”为单位分配 KV Cache 存储空间。这 10 个 token 的 KV 被写入预分配的物理页中。
+AI Infra 优化：vLLM 的 PagedAttention 以“页”为单位分配 KV Cache 存储空间。这 10 个 token 的 KV 被写入预分配的物理页中。
 
 **残差连接 + LayerNorm + FFN**：
 
@@ -224,7 +224,7 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 | KV Cache | Prefill 写入各层的 K、V，Decode 每一步读取并追加一组新的 K、V | PagedAttention、KV Cache 量化     |
 | Decode  | 以上一步的输出 token 为输入，逐 token 生成直到结束      | Continuous Batching、Prefill/Decode 解耦部署 |
 
-从这个端到端案例中可以清楚看到：推理请求经过的每一个环节——从 Embedding 到 Attention 到 FFN 到自回归生成——都是某项 AI Infra 优化技术的”着力点”。如果你不理解 Transformer 的内部结构，就无法定位性能瓶颈出在哪个模块，也无法评估优化方案的效果。
+从这个端到端案例中可以清楚看到：推理请求经过的每一个环节——从 Embedding 到 Attention 到 FFN 到自回归生成——都是某项 AI Infra 优化技术的“着力点”。如果你不理解 Transformer 的内部结构，就无法定位性能瓶颈出在哪个模块，也无法评估优化方案的效果。
 
 ***关键疑问：*** 嗯，我还有一个疑问，为什每次都是要用上一次的KV？难道是上一次的KV保留了上下文信息？用新的Q是因为每个token的询问方式（query）都有差别？
 
@@ -241,7 +241,7 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 - 能列出至少 3 项推理优化技术及其对应的 Transformer 模块，并解释对应关系
 - 给定一个 LLM 推理请求，能追踪数据流经 Transformer 各模块的过程，并指出每个环节对应哪些 AI Infra 优化
 	<details> <summary>👉 点击查看答案</summary> 大阶段分为prefill和decode </details>
-- 能回答”为什么 AI Infra 工程师必须懂 Transformer”这个问题，给出至少两个具体理由（而不是空泛的”因为很重要”）
+- 能回答“为什么 AI Infra 工程师必须懂 Transformer”这个问题，给出至少两个具体理由（而不是空泛的“因为很重要”）
 
 ## 📚 参考资料
 

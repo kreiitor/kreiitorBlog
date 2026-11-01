@@ -49,19 +49,19 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 **编程语言**
 
-- **Python** ：AI 生态的通用语言，需要熟练使用而非仅仅”会写”。重点掌握：面向对象、装饰器、生成器、多进程/多线程、性能 profiling
+- **Python** ：AI 生态的通用语言，需要熟练使用而非仅仅“会写”。重点掌握：面向对象、装饰器、生成器、多进程/多线程、性能 profiling
 - **C/C++** ：CUDA 编程的宿主语言。不要求精通模板元编程，但需要理解指针、内存管理、编译链接过程。能读懂 C++ 项目代码、写简单的 C++ 函数并编译运行即可
 - **Linux 基础** ：命令行操作、Shell 脚本、进程管理、环境变量配置。AI Infra 的开发和部署几乎全部在 Linux 上进行
 
 **数学基础**
 
-- **线性代数**：矩阵乘法、转置、分块矩阵运算、特征值分解的基本概念。理解”为什么 Transformer 的核心计算都是矩阵乘法”需要这个基础。不需要证明定理，但需要对矩阵维度变换有直觉——看到 (B, S, H) x (H, V) 能立刻知道结果是 (B, S, V)
+- **线性代数**：矩阵乘法、转置、分块矩阵运算、特征值分解的基本概念。理解“为什么 Transformer 的核心计算都是矩阵乘法”需要这个基础。不需要证明定理，但需要对矩阵维度变换有直觉——看到 (B, S, H) x (H, V) 能立刻知道结果是 (B, S, V)
 - **基础概率论与统计**：概率分布、期望、方差、Softmax 的概率解释、交叉熵损失的含义。量化和 Speculative Decoding 的正确性证明都依赖概率论
 - **微积分**（了解即可）：链式法则、梯度的含义。理解反向传播为什么能工作、混合精度训练中梯度为什么会溢出，需要这个基础
 
 **Transformer 架构**
 
-这是大模型时代的”通用底座”，后续每一层都在围绕它做优化——CUDA 层优化它的算子、分布式层切分它的参数、推理层加速它的生成。必须理解：
+这是大模型时代的“通用底座”，后续每一层都在围绕它做优化——CUDA 层优化它的算子、分布式层切分它的参数、推理层加速它的生成。必须理解：
 
 - **Self-Attention 机制**：Q、K、V 的含义与计算过程（QK^T → scale → softmax → PV），理解为什么 Attention 的计算复杂度是 O(N^2)，这是后续理解 FlashAttention 优化的前提
 - **前馈网络（FFN）**：两层线性变换 + 激活函数，模型参数的大头所在
@@ -78,7 +78,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 **通信拓扑**
 
-分布式训练和多卡推理都离不开高效的卡间、机间通信。这部分知识是后续理解分布式并行策略的前提——如果不知道 NVLink 和 PCIe 的带宽差了一个数量级，就无法理解”为什么张量并行不能跨机”。
+分布式训练和多卡推理都离不开高效的卡间、机间通信。这部分知识是后续理解分布式并行策略的前提——如果不知道 NVLink 和 PCIe 的带宽差了一个数量级，就无法理解“为什么张量并行不能跨机”。
 
 - **单机内部通信**：NVLink / NVSwitch 的带宽与拓扑。NVLink 是同一机箱内 GPU 之间的专用高速通道，可以把它想象成工厂园区内的专用传送带
 - **多机间通信**：InfiniBand（IB）网络、RoCE 协议。IB 则是跨城市的高速铁路，带宽比 NVLink 低但能连接远距离节点
@@ -101,7 +101,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 ### [0.3 检验标准](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#03-%E6%A3%80%E9%AA%8C%E6%A0%87%E5%87%86)
 
-这一层不需要深入钻研，但必须达到以下”够用”门槛：
+这一层不需要深入钻研，但必须达到以下“够用”门槛：
 
 - **Transformer 白板默写**：不看资料，能画出一个 Transformer Decoder Block 的完整结构（Masked Self-Attention → Add & Norm → FFN → Add & Norm），标注每一步的输入输出维度（如 (B, S, D) → (B, S, D)），并解释 Attention 中 Q、K、V 矩阵是怎么从输入通过线性投影得到的
 - **维度推导**：给定一个 7B 模型的配置（hidden_dim=4096, num_heads=32, num_layers=32, vocab_size=32000），能手算出总参数量的近似值（Attention 权重 + FFN 权重 + Embedding），误差不超过 20%
@@ -132,7 +132,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 - 编程模型：Grid / Block / Thread 层级，线程索引计算
 - 内存模型：全局内存、共享内存、寄存器、常量内存的特性与用法
-- 关键概念：Warp（32 个线程组成的最小调度单位，GPU 每次下达指令都是以 Warp 为单位，就像军队里以”班”为单位行动）、Bank Conflict、Coalesced Access、Occupancy
+- 关键概念：Warp（32 个线程组成的最小调度单位，GPU 每次下达指令都是以 Warp 为单位，就像军队里以“班”为单位行动）、Bank Conflict、Coalesced Access、Occupancy
 - 核心直觉：“内存访问模式决定运行速度”
 
 **常见算子实现与优化**
@@ -185,7 +185,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 动手是检验这一层的主要标准，纸上谈兵不算数：
 
-- **硬件参数直觉**：拿到一块 H100，不查资料能说出 HBM 容量（80GB）、HBM 带宽（~3.35TB/s）、L2 大小（50MB）、共享内存上限（228KB/SM）的量级，并解释为什么”显存带宽”往往比”算力”先成为瓶颈
+- **硬件参数直觉**：拿到一块 H100，不查资料能说出 HBM 容量（80GB）、HBM 带宽（~3.35TB/s）、L2 大小（50MB）、共享内存上限（228KB/SM）的量级，并解释为什么“显存带宽”往往比“算力”先成为瓶颈
 
 - **带宽估算**：给定一个 AllReduce 操作的数据量（比如 2GB 梯度），能估算在 NVLink（900GB/s per GPU）vs PCIe Gen5（64GB/s）下的理论耗时差异
 
@@ -193,7 +193,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 - **Bank Conflict 直觉**：手动构造一个 32x32 矩阵转置 kernel，先写一个有 32-way bank conflict 的版本，再加一列 padding 消除冲突，用 Nsight Compute 的 Shared Memory 面板验证 conflict 数从几十降到 0
 
-- **GEMM 分块**：实现一个基于 Shared Memory Tiling 的 GEMM kernel，在 1024x1024 矩阵上与 cuBLAS 对比，达到其 50% 以上的性能即为合格——这个过程中你会真正理解”为什么访存模式决定一切”
+- **GEMM 分块**：实现一个基于 Shared Memory Tiling 的 GEMM kernel，在 1024x1024 矩阵上与 cuBLAS 对比，达到其 50% 以上的性能即为合格——这个过程中你会真正理解“为什么访存模式决定一切”
 
 - **FlashAttention 白板推导**：不看论文，能在白板上画出 FlashAttention 的 tiling 过程——外层循环遍历 KV 的 block，内层循环遍历 Q 的 block，每个 tile 在 SRAM 中完成 QK^T → scale → mask → softmax → PV，用 online softmax 避免两次遍历，关键是说清楚为什么 HBM 读写从 O(N^2) 降到了 O(N)
 
@@ -214,15 +214,15 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 第零层已经介绍了标准 Transformer 的结构，这里关注的是那些直接影响分布式切分策略和通信开销的架构变种：
 
 - Attention 变种：MHA → MQA → GQA → MLA 的演进。MQA/GQA 通过共享 KV Head 减少 KV Cache 大小，MLA（DeepSeek V2）用低秩压缩进一步降低 KV 显存——这些变种直接影响 TP 切分方式和推理显存规划
-- FFN 变种：混合专家模型 MoE（DeepSeekMoE）。MoE 的稀疏激活特性让并行策略从”切矩阵”变成”分专家”，引入 Expert Parallelism 这一新维度
+- FFN 变种：混合专家模型 MoE（DeepSeekMoE）。MoE 的稀疏激活特性让并行策略从“切矩阵”变成“分专家”，引入 Expert Parallelism 这一新维度
 
 **优化器**
 
-优化器是训练的”舵手”——模型算出梯度之后，怎么更新参数全靠它。理解优化器的内部状态是理解后续 ZeRO 显存优化和混合精度训练的直接前提：ZeRO-1 切的就是优化器状态，混合精度训练中 FP32 主权重也存在优化器里。
+优化器是训练的“舵手”——模型算出梯度之后，怎么更新参数全靠它。理解优化器的内部状态是理解后续 ZeRO 显存优化和混合精度训练的直接前提：ZeRO-1 切的就是优化器状态，混合精度训练中 FP32 主权重也存在优化器里。
 
 - **SGD**：最朴素的优化器，每个参数只需存一份梯度，无额外状态。好比沿着当前最陡的方向迈一步，简单直接但容易在山谷里来回震荡
 - **Momentum SGD**：在 SGD 基础上引入动量（一阶动量），每个参数多存一个动量缓冲区。好比给下山的球加了惯性，不容易被小坑绊住
-- **Adam / AdamW**：大模型训练的事实标准。每个参数维护**两个状态**——一阶动量（梯度的指数移动平均）和二阶动量（梯度平方的指数移动平均），相当于同时记住”往哪走”和”路有多颠”。AdamW 修正了 Adam 的权重衰减实现，是目前最主流的选择
+- **Adam / AdamW**：大模型训练的事实标准。每个参数维护**两个状态**——一阶动量（梯度的指数移动平均）和二阶动量（梯度平方的指数移动平均），相当于同时记住“往哪走”和“路有多颠”。AdamW 修正了 Adam 的权重衰减实现，是目前最主流的选择
 - **优化器状态的显存开销**：这是理解 ZeRO 的关键。以 AdamW + 混合精度训练为例，每个参数需要额外存储：FP32 参数副本（4B）+ FP32 一阶动量（4B）+ FP32 二阶动量（4B）= 12 字节/参数。一个 7B 模型的优化器状态就要占 ~84GB，远超 FP16 参数本身的 ~14GB——这就是为什么 ZeRO 首先拿优化器状态开刀
 - **大 Batch 优化器（LAMB / LARS）**：分布式训练中，数据并行会线性放大有效 Batch Size。当 Batch Size 从几百增长到几万时，普通 Adam 的学习率难以调节，训练容易发散。LAMB（Layer-wise Adaptive Moments）通过对每层参数独立计算信赖域缩放，让大 Batch 训练保持稳定收敛
 
@@ -272,23 +272,23 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 这一层的检验核心是**算得清账、跑得通代码**：
 
 - **显存账本**：拿到一个 7B 参数的模型（如 LLaMA-2-7B），不查资料能口算出 FP16 下参数占 ~14GB、Adam 优化器状态占 ~56GB（FP32 参数副本 + 一阶/二阶动量各 14GB），进而判断单卡 80GB 能否放下完整训练状态、是否必须上 ZeRO
-- **ZeRO 拆解**：有人问你”ZeRO-2 和 ZeRO-3 到底差在哪”，你能一句话讲清：ZeRO-2 只在 backward 时按需 AllReduce 梯度，参数每卡各存一份；ZeRO-3 连参数也切了，forward/backward 都要 AllGather 拿参数、用完即弃，通信量约翻倍但每卡显存降到 1/N
+- **ZeRO 拆解**：有人问你“ZeRO-2 和 ZeRO-3 到底差在哪”，你能一句话讲清：ZeRO-2 只在 backward 时按需 AllReduce 梯度，参数每卡各存一份；ZeRO-3 连参数也切了，forward/backward 都要 AllGather 拿参数、用完即弃，通信量约翻倍但每卡显存降到 1/N
 - **DDP 改造**：拿到一个单卡 PyTorch 训练脚本，30 分钟内改成 DDP 多卡版本并跑通——包括 `init_process_group`、`DistributedSampler`、模型 wrap、梯度同步，不需要查太多文档就能搞定
 - **3D 并行拓扑**：给一个 64 卡集群（8 节点 x 8 卡），能设计出 TP=8（机内）、PP=4（跨机）、DP=2 的并行方案，画出拓扑图标注哪些通信走 NVLink、哪些走 IB，并解释为什么 TP 不能跨机（带宽不够）
-- **混合精度原理**：能回答”BF16 和 FP16 都是 16 位，为什么大模型训练更偏爱 BF16”——因为 BF16 的指数位更宽（8 位 vs 5 位），动态范围接近 FP32，不容易 overflow/underflow，大多数情况下可以不做 Loss Scaling
+- **混合精度原理**：能回答“BF16 和 FP16 都是 16 位，为什么大模型训练更偏爱 BF16”——因为 BF16 的指数位更宽（8 位 vs 5 位），动态范围接近 FP32，不容易 overflow/underflow，大多数情况下可以不做 Loss Scaling
 
 ---
 
 ## [第三层：推理与部署](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#-%E7%AC%AC%E4%B8%89%E5%B1%82%E6%8E%A8%E7%90%86%E4%B8%8E%E9%83%A8%E7%BD%B2)
 
-训练只是万里长征第一步。如何让模型快速、低成本地服务用户，是工业界最关心的问题。如果说训练是”教会模型知识”，那么推理就是”让模型上考场答题”——考场上最重要的是**答题速度**和**同时服务多少考生**，而且考试时把已算过的中间结果记在草稿纸上（KV Cache）能避免重复计算，大幅提速。
+训练只是万里长征第一步。如何让模型快速、低成本地服务用户，是工业界最关心的问题。如果说训练是“教会模型知识”，那么推理就是“让模型上考场答题”——考场上最重要的是**答题速度**和**同时服务多少考生**，而且考试时把已算过的中间结果记在草稿纸上（KV Cache）能避免重复计算，大幅提速。
 
 ### [3.1 LLM 推理基础](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#31-llm-%E6%8E%A8%E7%90%86%E5%9F%BA%E7%A1%80)
 
 **知识点**
 
 - LLM 推理的两阶段：Prefill（处理输入）与 Decode（逐 token 生成）
-- KV Cache：自回归生成中的”显存刺客”，理解其生命周期和碎片问题。KV Cache 就像考试时的草稿纸——把已经算过的中间结果记下来，后续生成每个新 token 时就不用从头算起，但草稿纸用多了也会占满整张桌子
+- KV Cache：自回归生成中的“显存刺客”，理解其生命周期和碎片问题。KV Cache 就像考试时的草稿纸——把已经算过的中间结果记下来，后续生成每个新 token 时就不用从头算起，但草稿纸用多了也会占满整张桌子
 - 关键性能指标：TTFT（首 token 延迟）、TPOT（每 token 延迟）、吞吐量（token/s）、P50/P95 尾延迟
 
 **推荐资料**
@@ -302,7 +302,7 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 把自己当成一个刚拿到推理需求的工程师，回答以下问题：
 
-- **两阶段直觉**：同事问你”为什么 Prefill 快但 Decode 慢”，你能秒答：Prefill 一次处理整个 prompt，矩阵大、算力利用率高（compute bound）；Decode 每步只生成一个 token，矩阵退化成向量，大部分时间在等显存搬运 KV Cache（memory bound）
+- **两阶段直觉**：同事问你“为什么 Prefill 快但 Decode 慢”，你能秒答：Prefill 一次处理整个 prompt，矩阵大、算力利用率高（compute bound）；Decode 每步只生成一个 token，矩阵退化成向量，大部分时间在等显存搬运 KV Cache（memory bound）
 - **KV Cache 算账**：给定 LLaMA-2-7B（32 层、32 头、head_dim=128），上下文长度 4096，batch_size=16，FP16 存储，能手算 KV Cache 总量 = 2 × 32 × 32 × 128 × 4096 × 16 × 2B ≈ 32GB，进而判断 80GB 显卡还剩多少空间给模型参数和临时 buffer
 - **链路拆解**：把一次推理请求从头到尾拆成 tokenize → prefill（GEMM 密集）→ decode loop（逐 token 生成，memory bound）→ sampling（Top-p/Top-k）→ detokenize，能指出在高并发场景下哪个环节最容易成为瓶颈（通常是 decode 阶段的 KV Cache 带宽）
 
@@ -340,12 +340,12 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 **检验标准**
 
-推理引擎是工程落地的核心，检验标准偏重”会用、会选、会排查”：
+推理引擎是工程落地的核心，检验标准偏重“会用、会选、会排查”：
 
 - **端到端部署**：拿到一个 7B 模型，分别用 vLLM 和 SGLang 部署成 OpenAI 兼容 API，用相同的压测脚本（固定并发、输入输出长度）跑出 TTFT、TPOT、throughput 三个指标的对比表
 - **Continuous Batching 原理**：能向非技术同事解释清楚——传统 Static Batching 必须等一批请求全部生成完才能接新请求，短请求被长请求拖累；Continuous Batching 允许已完成的请求随时退出、新请求随时插入，GPU 利用率可以从 30% 拉到 80%+
 - **KV Cache 管理全链路**：从 KV Cache 的分配、使用、碎片化，到 PagedAttention 的虚拟页/物理页映射，再到 Prefix Cache 如何通过 hash 匹配复用已有的 KV 块，能画出完整的数据流
-- **选型决策**：老板问”我们该用哪个推理框架”，你能给出结构化的回答——追求吞吐和社区生态选 vLLM；多轮对话 / Agent / 结构化输出选 SGLang（RadixAttention + cFSM）；追求极限延迟且愿意投入适配工作选 TensorRT-LLM
+- **选型决策**：老板问“我们该用哪个推理框架”，你能给出结构化的回答——追求吞吐和社区生态选 vLLM；多轮对话 / Agent / 结构化输出选 SGLang（RadixAttention + cFSM）；追求极限延迟且愿意投入适配工作选 TensorRT-LLM
 
 ### [3.3 量化](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#33-%E9%87%8F%E5%8C%96)
 
@@ -378,18 +378,18 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 **检验标准**
 
-量化是”看起来简单、调起来玄学”的领域，检验重点在于理解 trade-off 而非死记方案：
+量化是“看起来简单、调起来玄学”的领域，检验重点在于理解 trade-off 而非死记方案：
 
 - **方案选择**：团队要上线一个 70B 模型但只有 2 张 A100 80GB，你能快速判断：FP16 参数就要 140GB 放不下，必须量化；W8A8 可以压到 ~70GB 但两卡还是紧张；INT4 weight-only 可以压到 ~35GB 单卡就能放下，但要评估精度损失和 kernel 效率
 - **动手验证**：用 vLLM 或 TensorRT-LLM 分别加载同一模型的 FP16 和 AWQ-INT4 版本，跑同一组 benchmark prompt，输出 throughput 对比 + 几组生成结果的人工比对，能写成一个可复用的评测报告
-- **反直觉理解**：别人说”量化位数越低越快”，你能解释为什么某些场景下 INT4 反而比 INT8 慢——INT4 kernel 需要额外的 unpack/dequant 计算，在小 batch size 下这个开销可能超过带宽节省；或者 INT4 的 Tensor Core 利用率不如 INT8 的 native 支持
+- **反直觉理解**：别人说“量化位数越低越快”，你能解释为什么某些场景下 INT4 反而比 INT8 慢——INT4 kernel 需要额外的 unpack/dequant 计算，在小 batch size 下这个开销可能超过带宽节省；或者 INT4 的 Tensor Core 利用率不如 INT8 的 native 支持
 - **故障排查**：量化后模型输出质量明显下降，你能列出排查清单——某些层的 activation outlier 特别大（需要 per-channel 或 SmoothQuant 处理）、量化校准数据不具代表性、某些特殊结构（如 MoE 的 gate）不适合低 bit 量化
 
 ### [3.4 Speculative Decoding](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#34-speculative-decoding)
 
 **知识点**
 
-- Speculative Sampling：经典框架——用小模型（Draft）批量”猜测”多个 token，大模型（Target）一次性验证，保证分布无偏。好比让实习生先快速起草一段文字，再让资深主编一次性审阅：猜对的直接用，猜错的当场改，比主编逐字逐句从头写快得多
+- Speculative Sampling：经典框架——用小模型（Draft）批量“猜测”多个 token，大模型（Target）一次性验证，保证分布无偏。好比让实习生先快速起草一段文字，再让资深主编一次性审阅：猜对的直接用，猜错的当场改，比主编逐字逐句从头写快得多
 - Medusa：不用外部 Draft 模型，通过多个 Decoding Heads 预测多 token 再并行验证
 - EAGLE-2：动态 Draft Tree，靠校准置信度更激进地产生可接受 token
 - Block Verification：将 token 级验证升级为 block 级联合验证，进一步提速
@@ -407,9 +407,9 @@ AI Infra 不是从零开始学的领域——它建立在编程能力、数学�
 
 **检验标准**
 
-Speculative Decoding 的精髓在于”用空间换时间、用并行换串行”，检验时重点考察对正确性和收益边界的理解：
+Speculative Decoding 的精髓在于“用空间换时间、用并行换串行”，检验时重点考察对正确性和收益边界的理解：
 
-- **正确性保证**：面试官问”Speculative Decoding 会不会改变模型的输出分布”，你能回答：不会，因为 rejection sampling 机制保证了接受的 token 严格服从 target model 的分布——Draft model 猜对了直接用，猜错了按照 target 与 draft 的概率差做修正采样，数学上等价于直接从 target model 采样
+- **正确性保证**：面试官问“Speculative Decoding 会不会改变模型的输出分布”，你能回答：不会，因为 rejection sampling 机制保证了接受的 token 严格服从 target model 的分布——Draft model 猜对了直接用，猜错了按照 target 与 draft 的概率差做修正采样，数学上等价于直接从 target model 采样
 - **收益实测**：用 vLLM 的 speculative decoding 功能，分别在代码生成（高接受率场景）和开放对话（低接受率场景）上跑 benchmark，能解释为什么前者加速明显（代码 token 可预测性强，Draft 猜中率高）而后者收益有限甚至为负
 - **不赚的边界**：能列出至少 3 种 speculative decoding 效果不佳的情况——高温度采样时 Draft 命中率骤降、batch size 已经很大时额外的 Draft forward pass 抢占计算资源、Draft model 与 Target model 能力差距过大导致 acceptance rate < 50%
 - **工程耦合风险**：能指出 speculative decoding 与其他优化技术的冲突点——比如与量化叠加时 Draft model 的精度下降可能进一步降低接受率；与 Continuous Batching 叠加时不同请求的 speculative 长度不同，调度复杂度上升
@@ -436,10 +436,10 @@ Speculative Decoding 的精髓在于”用空间换时间、用并行换串行�
 
 **检验标准**
 
-Prefill/Decode 解耦是系统架构层面的优化，检验重点在于理解”为什么要拆”以及”拆了之后新的问题是什么”：
+Prefill/Decode 解耦是系统架构层面的优化，检验重点在于理解“为什么要拆”以及“拆了之后新的问题是什么”：
 
 - **互扰定量分析**：在一个混合 batching 的推理服务上，构造一个场景——几个超长 prompt 的 prefill 请求和大量短 decode 请求同时到达，用指标证明 decode 的 P95 TPOT 被 prefill 拖慢了 3-5 倍，这就是解耦的动机
-- **Goodput 概念**：老板问”我们系统 QPS 很高啊为什么用户还在抱怨慢”，你能解释 goodput 的含义——满足 SLO（比如 TTFT < 500ms 且 TPOT < 50ms）的有效请求占比才是衡量服务质量的核心指标，raw QPS 不等于用户体验
+- **Goodput 概念**：老板问“我们系统 QPS 很高啊为什么用户还在抱怨慢”，你能解释 goodput 的含义——满足 SLO（比如 TTFT < 500ms 且 TPOT < 50ms）的有效请求占比才是衡量服务质量的核心指标，raw QPS 不等于用户体验
 - **资源配比推导**：给定一个工作负载特征（平均 prompt 长度 2000 token、平均输出 500 token），能估算 prefill 和 decode 的计算量比例，进而推导出 Prefill GPU 池和 Decode GPU 池的合理配比（比如 1:3 或 1:4）
 - **风险清单**：能列出解耦架构引入的新问题——KV Cache 从 Prefill 节点迁移到 Decode 节点的网络带宽压力（一个 7B 模型 2048 长度的 KV 约 4GB，IB 200Gb/s 也需要 ~160ms）、调度器的队列管理复杂度、Prefill/Decode 负载不均时某一池空转浪费资源
 
@@ -468,12 +468,12 @@ Prefill/Decode 解耦是系统架构层面的优化，检验重点在于理解�
 
 **检验标准**
 
-性能分析不是”会用工具”就行，重点是建立**可重复、可对比、可追溯**的工程体系：
+性能分析不是“会用工具”就行，重点是建立**可重复、可对比、可追溯**的工程体系：
 
 - **指标全集**：每次性能评测输出的报告至少包含 6 个指标——QPS、TTFT（P50/P95）、TPOT（P50/P95）、端到端 throughput（token/s）、GPU 显存占用峰值、GPU 利用率，缺任何一个都可能遗漏瓶颈
 - **Benchmark 可复现**：你的 benchmark 配置（模型、batch size、输入输出长度、并发数、硬件型号、驱动版本）全部写在一个 config 文件里，任何人拿到这个文件都能复现你的结果，两次测试之间只改一个变量
 - **回归定位**：某次代码提交后 TPOT P95 退化了 15%，你能用 `git bisect` 缩小到具体 commit，再用 Nsight Systems 对比退化前后的 trace 差异——是某个 kernel 变慢了、新增了一次不必要的 sync、还是 batch 调度策略变了
-- **上线门禁**：能给团队制定一套简单可执行的性能门禁规则——比如”TPOT P95 退化超过 5% 则 block merge”、“显存占用增长超过 10% 需要附上分析报告”，并集成到 CI 流程中自动执行
+- **上线门禁**：能给团队制定一套简单可执行的性能门禁规则——比如“TPOT P95 退化超过 5% 则 block merge”、“显存占用增长超过 10% 需要附上分析报告”，并集成到 CI 流程中自动执行
 
 ### [3.7 优化选型决策树](https://caomaolufei.github.io/AIInfraGuide/guides/ai-infra%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/#37-%E4%BC%98%E5%8C%96%E9%80%89%E5%9E%8B%E5%86%B3%E7%AD%96%E6%A0%91)
 
@@ -509,7 +509,7 @@ Decode 阶段每步只生成一个 token，矩阵退化成向量运算，是典�
 |子症状|诊断方法|推荐方案|
 |---|---|---|
 |KV Cache 搬运成为带宽瓶颈|Nsight Compute 查看 Attention kernel 的 memory throughput 是否接近 HBM 带宽上限|使用 FlashAttention / FlashInfer 减少无效显存访问；优化 KV Cache 布局|
-|逐 token 串行生成的限制|单请求 TPOT 已逼近理论下限，但用户仍嫌慢|Speculative Decoding（Medusa / EAGLE-2），用”猜测+验证”打破串行瓶颈|
+|逐 token 串行生成的限制|单请求 TPOT 已逼近理论下限，但用户仍嫌慢|Speculative Decoding（Medusa / EAGLE-2），用“猜测+验证”打破串行瓶颈|
 |并发不足，GPU 算力没喂饱|GPU 利用率低于 60%，每个 batch 只有少量请求|开启 Continuous Batching + 提高并发请求数，把 batch 做大以提升计算密度|
 
 **[C] 显存不够——OOM 或并发上不去**

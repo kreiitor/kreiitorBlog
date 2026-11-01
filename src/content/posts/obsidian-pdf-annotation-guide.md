@@ -14,7 +14,7 @@ category: knowledge
 
 这篇文档主要回答一个实际需求：
 
-在 Obsidian 里阅读和批注 PDF，怎样才能做到不依赖外部软件（如 Zotero、MarginNote、Acrobat），直接在 Obsidian 内完成"阅读 → 标注 → 整理笔记 → 回顾"的完整闭环。
+在 Obsidian 里阅读和批注 PDF，怎样才能做到不依赖外部软件（如 Zotero、MarginNote、Acrobat），直接在 Obsidian 内完成“阅读 → 标注 → 整理笔记 → 回顾”的完整闭环。
 
 这里的最佳实践以 **PDF++** 插件为核心，覆盖以下场景：
 
@@ -29,7 +29,7 @@ category: knowledge
 
 ## 为什么选 PDF++ 而不是其他方案
 
-在 Obsidian 生态中，PDF 批注有多个可选方案，但 PDF++ 的架构设计是最"Obsidian 原生"的：
+在 Obsidian 生态中，PDF 批注有多个可选方案，但 PDF++ 的架构设计是最“Obsidian 原生”的：
 
 | 方案 | 标注存储 | 离开插件后的可读性 |
 |------|----------|-------------------|

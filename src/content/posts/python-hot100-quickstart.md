@@ -411,7 +411,7 @@ def dfs(i: int, j: int) -> int:
     ...
 ```
 
-很多"DP 题"可以先用递归 + lru_cache 写出记忆化搜索版本，想清楚状态后再改递推。**注意：被装饰的参数必须可哈希**（list 不行，传 tuple 或下标）。
+很多“DP 题”可以先用递归 + lru_cache 写出记忆化搜索版本，想清楚状态后再改递推。**注意：被装饰的参数必须可哈希**（list 不行，传 tuple 或下标）。
 
 ### 3.12 DP 初始化
 
@@ -561,7 +561,7 @@ class DSU:
         return True
 ```
 
-Python 版特意写成**迭代 find**——递归版要担心 recursion limit，迭代版没这个烦恼，而且"路径减半"效果和路径压缩一样是近似 O(1)。
+Python 版特意写成**迭代 find**——递归版要担心 recursion limit，迭代版没这个烦恼，而且“路径减半”效果和路径压缩一样是近似 O(1)。
 
 ### 6.3 例题：岛屿数量
 
@@ -684,7 +684,7 @@ def longestConsecutive(nums: list[int]) -> int:
 
 ## 10. 学习节奏建议
 
-- **第 1~2 天**：第 1、2 章过一遍，重点确认 defaultdict / Counter / deque / heapq / bisect 这几个"刷题五件套"的 API 手感。
+- **第 1~2 天**：第 1、2 章过一遍，重点确认 defaultdict / Counter / deque / heapq / bisect 这几个“刷题五件套”的 API 手感。
 - **第 1 周**：按第 8 章刷前 6 类。每道题做完写一句话：这题的本质模板是什么、用了哪个库函数省了多少行。
 - **第 2 周**：树、图、回溯 + 三个专项。单调栈 / 单调队列 / 并查集模板默写到不思考。
 - **第 3 周起**：贪心、DP 收尾，二刷错题（标准：不看题解独立 AC）。

@@ -147,7 +147,7 @@ $$
 
 这里对这段结构的说明：这个请求只包含两条消息，一条 `system`（开发者写的规则）和一条 `user`（用户的输入）；模型返回一条 `assistant` 消息作为回复。这就是大模型 API 最基本的交互模式，每次调用都是无状态的，所有模型需要的信息必须在请求的消息列表中完整提供。
 
-逐段读这个请求体：`"model": "Qwen3-0.6B"` 是路由信息，告诉服务端用哪个模型，它不进入「上下文」本身，但决定了后续会用哪套 Chat Template（2.3.1）。`"messages"` 是上下文本体，这里是两条消息，顺序即语义：`system` 在最前，`user` 在其后。`system` 的 `content` 是开发者写的规则，这里这版是 "You are a helpful coding assistant. Follow user instructions."，注意它已经包含了「遵循用户指令」这条约束；`user` 的 `content` 是用户原话，没有任何加工。再看响应体，API 返回的是一个 `choices` 数组（通常取第一个），里面 `message.role` 是 `assistant`、`message.content` 是模型生成的文本。本节没有 `tool_calls` 字段，而这正是 2.2.3 里「模型判断不需要工具」和 2.2.4 中 `if not assistant_message.tool_calls` 就退出循环所依赖的判断依据。
+逐段读这个请求体：`"model": "Qwen3-0.6B"` 是路由信息，告诉服务端用哪个模型，它不进入「上下文」本身，但决定了后续会用哪套 Chat Template（2.3.1）。`"messages"` 是上下文本体，这里是两条消息，顺序即语义：`system` 在最前，`user` 在其后。`system` 的 `content` 是开发者写的规则，这里这版是 “You are a helpful coding assistant. Follow user instructions.”，注意它已经包含了「遵循用户指令」这条约束；`user` 的 `content` 是用户原话，没有任何加工。再看响应体，API 返回的是一个 `choices` 数组（通常取第一个），里面 `message.role` 是 `assistant`、`message.content` 是模型生成的文本。本节没有 `tool_calls` 字段，而这正是 2.2.3 里「模型判断不需要工具」和 2.2.4 中 `if not assistant_message.tool_calls` 就退出循环所依赖的判断依据。
 
 「无状态」三个字是本节最重要的一句话。它的实际含义是：服务端不会为你的会话保存任何记忆，两次调用之间它只认识你这次发来的字节。这直接推出两个工程后果。Agent 框架必须自己保存并重发历史，这是「轨迹」这个概念的由来；任何「模型不记得刚才说过什么」的 bug，根因几乎都在框架侧漏发了消息，而不在模型侧。
 
@@ -1377,7 +1377,7 @@ Skill 与状态栏为什么是更危险的注入面？因为它们的信息在�
 
 > 图 2-11：自左向右、自上而下的三层结构图，展示 Skills 的渐进式披露
 >
-> 一张自左向右、自上而下的三层结构图，展示 Skills 的渐进式披露。第一层：元数据（启动时加载，约 300 tokens），形如 `skills: [{name: "PPTX", desc: "Create PowerPoint presentations from content"}, {name: "PDF", desc: "Extract and analyze PDF documents"}, ...]` 的清单；图注给出触发条件「任务触发：『从论文生成 PPT』」。第二层：SKILL.md 核心流程（按需加载，约 2K tokens），给出 PPTX Skill 的核心流程「1. markitdown 提取文本 → 2. 解压 PPTX 访问 XML → 3. 修改 slide{N}.xml 内容 → 4. 重新打包为 .pptx」，并列出它引用的子文档「引用: → html2pptx.md | → reference.md | → scripts/」；触发条件是「需要详细方法：『用 HTML 模板创建 PPT』」。第三层：子文档（选择性深入，按需加载），包括 html2pptx.md（HTML 模板 → PPT 的完整工作流）、reference.md（XML 格式规范和技术细节）、scripts/*.py（可执行工具：thumbnail.py 等）。图的最下方一行是全图结论：「元数据固定 → KV Cache 友好 | 动态内容追加 → 不破坏缓存」。也就是说：越往上越常驻、越轻；越往下越按需、越重，且只有被选中时才进入上下文。
+> 一张自左向右、自上而下的三层结构图，展示 Skills 的渐进式披露。第一层：元数据（启动时加载，约 300 tokens），形如 `skills: [{name: "PPTX", desc: "Create PowerPoint presentations from content"}, {name: "PDF", desc: "Extract and analyze PDF documents"}, ...]` 的清单；图注给出触发条件「任务触发：『从论文生成 PPT』」。第二层：SKILL.md 核心流程（按需加载，约 2K tokens），给出 PPTX Skill 的核心流程「1. markitdown 提取文本 → 2. 解压 PPTX 访问 XML → 3. 修改 slide{N}.xml 内容 → 4. 重新打包为 .pptx」，并列出它引用的子文档「引用： → html2pptx.md | → reference.md | → scripts/」；触发条件是「需要详细方法：『用 HTML 模板创建 PPT』」。第三层：子文档（选择性深入，按需加载），包括 html2pptx.md（HTML 模板 → PPT 的完整工作流）、reference.md（XML 格式规范和技术细节）、scripts/*.py（可执行工具：thumbnail.py 等）。图的最下方一行是全图结论：「元数据固定 → KV Cache 友好 | 动态内容追加 → 不破坏缓存」。也就是说：越往上越常驻、越轻；越往下越按需、越重，且只有被选中时才进入上下文。
 
 两个问题的性质不同，却会互相放大。浪费 token 是成本与延迟问题，注意力被稀释是质量问题。麻烦在于后者会被前者加重：上下文里无关内容越多，模型在真正关键的那几行上分到的注意力就越少。把后者命名为「上下文腐化」（2.7.2），所以这里可以先把 Skills 看成对上下文腐化的预防：不等它腐化了再压缩，而是根本不让无关内容进来。
 
@@ -1393,13 +1393,13 @@ Skill 与状态栏为什么是更危险的注入面？因为它们的信息在�
 
 ### 2.5.1 Skills：领域能力的可组合单元
 
-Agent Skills 的核心思想是把 Agent 的能力模块化为独立的、可按需加载的知识包（脚注 7：Anthropic, "Equipping Agents for the Real World with Agent Skills", 2025；Claude Code Docs, "How Claude Code uses prompt caching"、"Invoking skills and commands"；Agent Skills, "How to add skills support to your agent"、"Where to place the catalog"）。每个 Skill 是一套包含专业领域指导的提示词集合，就像为新员工准备的某个专项任务的操作手册。
+Agent Skills 的核心思想是把 Agent 的能力模块化为独立的、可按需加载的知识包（脚注 7：Anthropic, "Equipping Agents for the Real World with Agent Skills", 2025；Claude Code Docs, “How Claude Code uses prompt caching”、“Invoking skills and commands”；Agent Skills, “How to add skills support to your agent”、“Where to place the catalog”）。每个 Skill 是一套包含专业领域指导的提示词集合，就像为新员工准备的某个专项任务的操作手册。
 
 与「把所有指令塞入单一系统提示词」的做法不同，Skills 采用渐进式披露（Progressive Disclosure）的设计哲学：先给 Agent 看一份目录摘要，需要时再加载完整内容。这里的类比是，你不会把公司所有部门的操作手册都堆到新员工桌上，而是先给一份总目录，需要哪本再去取。
 
 第一层是元数据。每个 Skill 必须包含一个 `SKILL.md` 文件，开头是 YAML frontmatter（这里解释：文件顶部用 `---` 分隔的元数据块，类似书籍的版权页），包含 `name` 和 `description` 两个字段。目录应在主体这里加载前对 Agent 可见，使它能够先判断当前任务是否需要某项能力，不必为所有能力支付完整的上下文成本。不同运行时可以把目录放在不同的上下文层，目录的共同作用是提供可发现性，并不承载完整的领域流程。`description` 字段是路由决策的关键，它应当足够短，控制常驻的 token 量，但写法要像路由条件而不是功能介绍。可以明确写出「何时使用」和「何时不使用」的边界，并给出几条典型反例，以减少宽泛匹配带来的误触发。这里强调这是路由提示的写作建议，不是额外的格式字段。描述太宽泛，比如「help with backend」，等于任何后端相关的工作都能触发，路由就会失准。那句总结很值得背下来：「何时该用我」比「我能做什么」重要得多。
 
-第二层是核心流程。当 Agent 判断某个任务需要特定的 Skill 时，运行时才加载完整的 `SKILL.md`。触发加载有两种方式：用户显式输入斜杠命令（如 `/pptx`）时，由客户端在本地拦截并展开，模型不必先发起一次工具调用；模型读过元数据目录后自己判断需要某个 Skill 时，则调用专用的 Skill 工具，比前者多一次 ReAct 往返。两条路径的落点相同，Claude Code 都在调用位置把 Skill 这里作为 user message 加入会话。模型自主触发时返回的那条 tool result 只是一句「正在启动 Skill」的占位符，并不承载这里（脚注 8：Claude Code Docs 这里为「Skills and commands inject their instructions as user messages at the point of invocation.」；两种触发方式的分工见 Agent Skills, "How to add skills support to your agent", "User-explicit activation"：斜杠命令由 Harness 拦截并注入，模型无需自己发起激活动作）。没有专用激活工具的运行时，则用通用文件读取工具去读 `SKILL.md`，这里以 tool result 的形式进入上下文。
+第二层是核心流程。当 Agent 判断某个任务需要特定的 Skill 时，运行时才加载完整的 `SKILL.md`。触发加载有两种方式：用户显式输入斜杠命令（如 `/pptx`）时，由客户端在本地拦截并展开，模型不必先发起一次工具调用；模型读过元数据目录后自己判断需要某个 Skill 时，则调用专用的 Skill 工具，比前者多一次 ReAct 往返。两条路径的落点相同，Claude Code 都在调用位置把 Skill 这里作为 user message 加入会话。模型自主触发时返回的那条 tool result 只是一句「正在启动 Skill」的占位符，并不承载这里（脚注 8：Claude Code Docs 这里为「Skills and commands inject their instructions as user messages at the point of invocation.」；两种触发方式的分工见 Agent Skills, "How to add skills support to your agent", “User-explicit activation”：斜杠命令由 Harness 拦截并注入，模型无需自己发起激活动作）。没有专用激活工具的运行时，则用通用文件读取工具去读 `SKILL.md`，这里以 tool result 的形式进入上下文。
 
 以 PPTX Skill 为例（脚注 9：Anthropic, "PPTX Skill", 2025, https://github.com/anthropics/skills/），其中包含处理 PowerPoint 文件的核心流程：如何通过 markitdown（Microsoft 开源的文档转 Markdown 工具）提取文本，如何解压 PPTX 文件访问原始的 XML 结构，以及关键文件的路径约定。
 
@@ -1459,7 +1459,7 @@ pip／npm 那个类比值得展开（笔记补的）。包管理系统的威力�
 
 Claude Code 的实现采用渐进式目录与调用时追加内容的方式：目录作为运行时上下文消息提供，完整指令则在 Skill 被调用的位置作为 user message 注入。特别提醒，「system prompt」可以用来描述逻辑上的稳定指令层，但不应被理解为所有客户端都使用 API 的 `role: "system"`。图 2-12 画的是模型自主触发的情形，轨迹里能看到完整的一次往返：`Skill(skill: "pptx")` 的 tool_use、一条占位符 tool_result，随后作为独立的 user 消息追加。如果用户直接输入 `/pptx`，客户端在本地完成展开，轨迹里就没有这一对工具调用，只剩下最后那条 user 消息。
 
-OpenAI Codex 的实现不同：Codex 在每轮上下文构造阶段重新渲染 Skills catalog，并将其作为 developer 上下文片段提供；显式选中的 Skill 这里则以带 `<skill>` 标记的 user 片段注入。其他来源的 Skill 也可以通过专用工具按需读取（脚注 11：OpenAI, "Build skills"、"How ChatGPT and Codex use skills"；OpenAI Codex 公开仓库中的 Skills extension 实现）。
+OpenAI Codex 的实现不同：Codex 在每轮上下文构造阶段重新渲染 Skills catalog，并将其作为 developer 上下文片段提供；显式选中的 Skill 这里则以带 `<skill>` 标记的 user 片段注入。其他来源的 Skill 也可以通过专用工具按需读取（脚注 11：OpenAI, “Build skills”、“How ChatGPT and Codex use skills”；OpenAI Codex 公开仓库中的 Skills extension 实现）。
 
 这一点上还有一个免责与共性判断：目前 Agent Harness 发展非常快，你读到这里时，它们的实现可能已经改变。尽管不同 Agent Harness 的实现方式不同，但都遵循「少量目录常驻、完整下面按需加载」的设计原则，这是 Skills 兼顾动态加载能力与上下文开销的关键。
 

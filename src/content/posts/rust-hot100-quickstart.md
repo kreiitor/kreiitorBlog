@@ -88,7 +88,7 @@ fn g(nums: &mut Vec<i32>) {}   // 可变借用
 fn h(nums: Vec<i32>) {}        // 拿走所有权
 ```
 
-函数内同时需要"读数组 + 写另一个数组"完全没问题；麻烦的是**同一容器一边遍历一边改**：
+函数内同时需要“读数组 + 写另一个数组”完全没问题；麻烦的是**同一容器一边遍历一边改**：
 
 ```rust
 // 编译不过：遍历借用 nums，循环内又 mut 借用
@@ -181,7 +181,7 @@ n.count_ones()                     // 内置 popcount
 
 `i32` 溢出在 debug 下 panic、release 下回绕。累加/乘法换 `i64`（LeetCode 的签名多是 i32，内部计算用 i64 再 `as i32` 转回）。
 
-### 1.9 迭代器：Rust 的"推导式"
+### 1.9 迭代器：Rust 的“推导式”
 
 ```rust
 let squares: Vec<i32> = nums.iter().map(|x| x * x).collect();
@@ -224,7 +224,7 @@ let mut seen = HashSet::new();
 seen.insert(x); seen.contains(&x); seen.remove(&x);
 ```
 
-`entry().or_insert()` 是 HashMap 的精髓，一行完成"没有就插默认，再拿可变引用"。
+`entry().or_insert()` 是 HashMap 的精髓，一行完成“没有就插默认，再拿可变引用”。
 
 有序需求用 `BTreeMap` / `BTreeSet`（O(log n)，有 `range(..)`）。
 
@@ -301,7 +301,7 @@ pub fn reverse_list(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
 }
 ```
 
-**核心技巧是 `.take()`**：`Option::take(&mut self)` 交出值、留下 None，完美解决"要移动字段但结构体还被借用"的冲突。链表题十之八九靠它。
+**核心技巧是 `.take()`**：`Option::take(&mut self)` 交出值、留下 None，完美解决“要移动字段但结构体还被借用”的冲突。链表题十之八九靠它。
 
 dummy 节点：
 
@@ -357,7 +357,7 @@ while !q.is_empty() {
 
 Rust 刷链表/树的困难题（LRU、反转 k 组、二叉树 Morris）借用冲突会非常痛苦。实用主义策略：
 
-- **下标模拟指针**：图/树的节点存 `Vec`，"指针"用 `usize` 下标——这是 Rust 竞赛社区的标配（邻接表本来就这么写）。
+- **下标模拟指针**：图/树的节点存 `Vec`，“指针”用 `usize` 下标——这是 Rust 竞赛社区的标配（邻接表本来就这么写）。
 - 双向链表/LRU 用下标 + `Vec<Node>` 实现，别硬刚 `Rc<RefCell>`。
 
 ```rust
@@ -618,7 +618,7 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 ## 9. 避坑清单（按出错频率排序）
 
 1. **遍历中修改同一容器** → 借用冲突。改下标循环、先收集后改、或 `split_at_mut`。
-2. **链表忘了 `.take()`** → "cannot move out of borrowed content"。
+2. **链表忘了 `.take()`** → “cannot move out of borrowed content”。
 3. **`borrow_mut` 生命周期过长** → 运行时 "already borrowed" panic。借用绑定到变量、用完立即结束作用域。
 4. **`usize` 下溢**：`i - 1` 在 0 处 panic。先判界或转 isize。
 5. **递归 clone 子树忘了 Rc 语义**：`node.left.clone()` 是 O(1) 的引用计数，放心用；但没有它所有权过不去。
@@ -637,7 +637,7 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 - **第 1~2 天**：只过第 1、2 节 + 4.1/4.2，在简单题上找回 HashMap entry API、Vec 当栈、sort_by 的手感。
 - **第 1 周**：数组/字符串类刷完，刻意用迭代器改写一遍命令式循环，体会零成本抽象。
 - **第 2 周**：集中攻克链表与二叉树——这是 Rust 刷题的真正分水岭，把 `take()`、`borrow()`、`clone()` 三件套练成条件反射。
-- **第 3 周起**：三个专项 + DP/贪心。写不出来的题先想"能不能用下标代替指针"。
+- **第 3 周起**：三个专项 + DP/贪心。写不出来的题先想“能不能用下标代替指针”。
 - 心态：和编译器搏斗是学费。每解决一个借用冲突，你对所有权的理解就深一层——**这才是用 Rust 刷题的真正收益**。
 
 ---
