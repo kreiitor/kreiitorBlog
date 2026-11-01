@@ -53,7 +53,7 @@
 
 ## 验证节奏
 
-- 完整验证（`npm run check && npm run test:unit && npm run build`）默认只在批次收尾时运行一次。不要每改一个文件就跑一遍。
+- 完整验证用 `npm run verify`：类型检查、单元测试与构建并行执行，等价于 `npm run check && npm run test:unit && npm run build`。默认只在批次收尾时运行一次。不要每改一个文件就跑一遍。
 - 迭代期间优先使用轻量反馈：`npm run dev` 人工查看页面，`npm run check:watch` 跟踪类型错误，单个测试文件用 `node --test tests/<name>.test.mjs` 运行，提交前用 `git diff --check` 检查空白问题。
 - 把一批相关改动做完再验证：先改完内容、样式、组件和脚本，再统一跑完整验证；验证失败时集中修复，修完重跑一次，不要在单点上来回全量验证。
 - 只有以下情况需要立即验证，且尽量只跑相关子集：修改 `astro.config.*`、`package.json`、内容 schema、构建脚本或全局样式入口，错误会污染后续所有改动；用户明确要求立即验证。

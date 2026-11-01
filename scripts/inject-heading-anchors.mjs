@@ -31,6 +31,8 @@ function inject(html) {
 	let out = '';
 	let last = 0;
 	let count = 0;
+	// 小写副本只算一次：长文有上百个标题，每个标题都对整页 toLowerCase 会让耗时随篇幅平方增长。
+	const lower = html.toLowerCase();
 	HEAD_OPEN.lastIndex = 0;
 	let m;
 	while ((m = HEAD_OPEN.exec(html))) {
@@ -40,7 +42,7 @@ function inject(html) {
 		const id = idMatch[1] ?? idMatch[2] ?? idMatch[3];
 		if (!id) continue;
 		const closeTag = `</${tag}>`;
-		const closeAt = html.toLowerCase().indexOf(closeTag, m.index + m[0].length);
+		const closeAt = lower.indexOf(closeTag, m.index + m[0].length);
 		if (closeAt === -1) continue;
 		// 幂等：已注入过就跳过（标题内不可能嵌套标题，所以首个闭合标签即本标题终点）
 		if (html.slice(m.index + m[0].length, closeAt).includes('heading-anchor')) {

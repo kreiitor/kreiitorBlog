@@ -25,6 +25,7 @@
     "links:check": "node scripts/check-external-links.mjs",
     "preview": "astro preview",
     "check": "astro check",
+    "verify": "node scripts/verify.mjs",
     "astro": "astro",
     "style:check": "node scripts/check-style.mjs"
   },
