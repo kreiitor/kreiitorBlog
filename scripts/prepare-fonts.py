@@ -7,7 +7,6 @@ import copy
 import hashlib
 import io
 import json
-import re
 import urllib.request
 from collections import Counter
 from pathlib import Path
@@ -57,33 +56,16 @@ def main():
     previous = json.loads(MANIFEST.read_text(encoding="utf-8"))
     revision = previous["googleFontsRevision"]
     frequency = Counter()
-    headings = set()
-    display = chinese(PUNCTUATION)
     for source in (ROOT / "src").rglob("*"):
-        if source.suffix not in {".md", ".astro", ".ts"}:
+        if source.suffix not in {".md", ".mdx", ".astro", ".ts", ".json"}:
             continue
-        text = source.read_text(encoding="utf-8")
-        for char in text:
+        for char in source.read_text(encoding="utf-8"):
             if ord(char) in chinese(char):
                 frequency[ord(char)] += 1
-        if source.suffix == ".md":
-            for title in re.findall(r"^title:\s*(.+)$", text, re.M):
-                display.update(chinese(title))
-            for title in re.findall(r"^#{1,6}\s+(.+)$", text, re.M):
-                headings.update(chinese(title))
-                display.update(chinese(title))
-            for strong in re.findall(r"\*\*(.+?)\*\*", text):
-                headings.update(chinese(strong))
-        else:
-            display.update(chinese(text))
-    corpus = set(frequency) | display | headings
-    headings |= display
+    corpus = set(frequency) | chinese(PUNCTUATION)
     font_path = CACHE / "noto-serif-sc.ttf"
     if not font_path.exists():
         urllib.request.urlretrieve(f"https://raw.githubusercontent.com/google/fonts/{revision}/ofl/notoserifsc/NotoSerifSC%5Bwght%5D.ttf", font_path)
-    kai_path = CACHE / "lxgw-wenkai-regular.ttf"
-    if not kai_path.exists():
-        urllib.request.urlretrieve("https://github.com/lxgw/LxgwWenKai/releases/download/v1.522/LXGWWenKai-Regular.ttf", kai_path)
     source_font = subset_font(TTFont(font_path, recalcTimestamp=False), corpus)
     faces = []
     files = {}
@@ -103,7 +85,13 @@ def main():
         if not target.exists() or target.read_bytes() != data:
             temporary = target.with_suffix(".woff2.tmp")
             temporary.write_bytes(data)
-            temporary.replace(target)
+            try:
+                temporary.replace(target)
+            except PermissionError:
+                # Windows refuses to replace a file another process has open;
+                # overwriting in place still works while the dev server holds it.
+                target.write_bytes(data)
+                temporary.unlink()
         files[name] = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
         rule = f"@font-face {{\n font-family: '{family}'; font-style: {style}; font-weight: {weight}; font-display: swap;\n src: url('../assets/fonts/{name}') format('woff2');"
         if chars:
@@ -113,22 +101,17 @@ def main():
 
     for weight in (400, 600):
         instance = instantiateVariableFont(copy.deepcopy(source_font), {"wght": weight}, inplace=True)
-        if weight == 400:
-            ordered = sorted(corpus, key=lambda cp: (-frequency[cp], cp))
-            chunks = [set(ordered[i:i + 750]) for i in range(0, len(ordered), 750)]
-        else:
-            chunks = [display, headings - display]
+        # Both weights cover the whole corpus: table headers, bold UI labels and
+        # headings all use 600, and unicode-range chunks keep each download small.
+        ordered = sorted(corpus, key=lambda cp: (-frequency[cp], cp))
+        chunks = [set(ordered[i:i + 750]) for i in range(0, len(ordered), 750)]
         for index, chars in enumerate(chunks):
             if not chars:
                 continue
             font = subset_font(copy.deepcopy(instance), chars)
-            save(font, f"journal-serif-sc-{weight}-{index}.woff2", "Journal Serif SC", str(weight), chars)
+            save(font, f"journal-serif-sc-{weight}-{index}.woff2", "Journal Serif SC", str(weight))
         instance.close()
     source_font.close()
-
-    # Display headings include article headings as well as frontmatter titles.
-    kai = subset_font(TTFont(kai_path, recalcTimestamp=False), display)
-    save(kai, "journal-kai-sc-400.woff2", "Journal Kai SC", "400", display)
 
     for style, filename in (("normal", "source-serif-4-latin-standard-normal.woff2"), ("italic", "source-serif-4-latin-standard-italic.woff2")):
         path = ROOT / "node_modules/@fontsource-variable/source-serif-4/files" / filename
@@ -140,9 +123,7 @@ def main():
     instantiateVariableFont(font, {"wght": (400, 600)}, inplace=True)
     save(font, "journal-sans-latin.woff2", "DM Sans Variable", "400 600")
 
-    # Editorial display face: Lora, a well-balanced serif with sturdy strokes,
-    # covers latin display/editorial text (replaces Fraunces whose thin strokes
-    # read poorly at heading sizes).
+    # Editorial display face for Latin headings.
     for style, filename in (("normal", "lora-latin-wght-normal.woff2"), ("italic", "lora-latin-wght-italic.woff2")):
         path = ROOT / "node_modules/@fontsource-variable/lora/files" / filename
         font = TTFont(path, recalcTimestamp=False)
@@ -157,12 +138,12 @@ def main():
         save(font, f"journal-mono-latin-{style}.woff2", "JetBrains Mono Variable", "400 600", style=style)
 
     (ROOT / "src/styles/fonts.css").write_text("/* Generated from the journal's text by scripts/prepare-fonts.py. */\n" + "\n\n".join(faces) + "\n", encoding="utf-8")
-    MANIFEST.write_text(json.dumps({"googleFontsRevision": revision, "weightRange": [400, 600], "corpusGlyphCount": len(corpus), "displayGlyphCount": len(display), "headingGlyphCount": len(headings), "files": files}, indent=2) + "\n", encoding="utf-8")
+    MANIFEST.write_text(json.dumps({"googleFontsRevision": revision, "weightRange": [400, 600], "corpusGlyphCount": len(corpus), "files": files}, indent=2) + "\n", encoding="utf-8")
     for name in previous.get("files", {}):
         stale = ASSETS / name
         if name not in files and stale.parent == ASSETS and stale.is_file():
             stale.unlink()
-    print(json.dumps({"corpusGlyphs": len(corpus), "displayGlyphs": len(display), "files": files, "totalBytes": sum(item["bytes"] for item in files.values())}, indent=2), flush=True)
+    print(json.dumps({"corpusGlyphs": len(corpus), "files": files, "totalBytes": sum(item["bytes"] for item in files.values())}, indent=2), flush=True)
 
 
 if __name__ == "__main__":

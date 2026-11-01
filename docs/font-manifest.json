@@ -4,37 +4,39 @@
     400,
     600
   ],
-  "corpusGlyphCount": 2270,
-  "displayGlyphCount": 1264,
-  "headingGlyphCount": 1422,
+  "corpusGlyphCount": 2274,
   "files": {
     "journal-serif-sc-400-0.woff2": {
-      "bytes": 129736,
-      "sha256": "033161ddce3ffe9e3109a0b101fbef58ca09f64706324c3db78be83fd69c596f"
+      "bytes": 129816,
+      "sha256": "7aa19ca1bced975772d839671001eeef64a4ae8800c099a10699b698f3715679"
     },
     "journal-serif-sc-400-1.woff2": {
-      "bytes": 146552,
-      "sha256": "296ea87965491d4964a00b81bf1e653af4bddbfc745daf4af02250e89671828a"
+      "bytes": 146576,
+      "sha256": "9eb53e66a8b4708bca5de755ed4aebb10066ecce09631e28bcbd74d701f64396"
     },
     "journal-serif-sc-400-2.woff2": {
-      "bytes": 152016,
-      "sha256": "9f64bb2af92713910155941579b128863e3150343413d7275840f087a3d0bc9b"
+      "bytes": 152148,
+      "sha256": "9bc66f3236e4eb16e629f6ab56258f28f4bda54470ebff1f81a36b1f6f13f68e"
     },
     "journal-serif-sc-400-3.woff2": {
-      "bytes": 6532,
-      "sha256": "abec7a17b38e98964c2811ecc88ca4413a17747308a1e0d22c49229810edf8c8"
+      "bytes": 7560,
+      "sha256": "8a9ef489c56ef16fb7e89c004fad7604338c99bab62ddbcf54b5c264bf8b4b6f"
     },
     "journal-serif-sc-600-0.woff2": {
-      "bytes": 225088,
-      "sha256": "774b57c776b5386d48ff73c333627c09f6ae0748a5c3c9e9213ebb1d1dbc53df"
+      "bytes": 131736,
+      "sha256": "e5c4b869514386d327676df2c90ed63e1fcad1a35ad7c07554c03e69a03685ee"
     },
     "journal-serif-sc-600-1.woff2": {
-      "bytes": 35264,
-      "sha256": "12864a05bf2fea514d1bdae5871d809469a643cf20a3ea864a244ead6d04074b"
+      "bytes": 148956,
+      "sha256": "efef9288d2815af3a6b0122ff5957c3589d4eab6f656e2bec1400a5cd3ee63e9"
     },
-    "journal-kai-sc-400.woff2": {
-      "bytes": 278736,
-      "sha256": "48a2b97ba9aac1c53f8037fc8a129a5c08fbcade5725e036edeba3630a764620"
+    "journal-serif-sc-600-2.woff2": {
+      "bytes": 154464,
+      "sha256": "fe6384b23a05fb5751a49cfd58911ac3c81e05147b3b0d773ab3e9e3019fa86a"
+    },
+    "journal-serif-sc-600-3.woff2": {
+      "bytes": 7684,
+      "sha256": "7e097977a1e6d41f08f1abd559d8e875f6347ddc8ec16b47fa1fffae2746e586"
     },
     "journal-serif-latin-normal.woff2": {
       "bytes": 79452,
