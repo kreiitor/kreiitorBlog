@@ -1,42 +1,67 @@
 ---
-// 首屏四周的折纸山水。画法与站标纸鹤一致：直线折面，受光面实色，背光面同色压暗；
-// 在此之上叠一层线性图案：背光面排线、山脊轮廓、日轮同心环、祥云卷、青海波、线描纸鹤。
-// 整幅画用同一个 1440×900 画布，xMidYMax slice 铺满首屏：中间留给文字，窄屏只露出中下部的山水。
+// 首屏四周的折纸山水。整幅画按 1440×900 的设计画布构图，以 xMidYMax slice 铺满首屏：中间留给文字，窄屏只露出中下部。
+// 静止的部分（四层山、雾、海面）画在一张底图上，只栅格化一次。会动的部分（日、云、线描鹤、浪、船、竹、梅）
+// 各自是一个裁到自身包围盒的小图层，由合成器平移、旋转，不会让底图逐帧重绘。
+// 包围盒用画布坐标写成 --x/--y/--w/--h，样式里按与 slice 相同的比例 --u 换算成像素。
 type P = [number, number];
+type Box = { x: number; y: number; w: number; h: number };
 const BASE = 900;
 const f = (n: number) => Math.round(n * 10) / 10;
 const pt = ([x, y]: P) => `${f(x)} ${f(y)}`;
 const poly = (...ps: P[]) => `M${ps.map(pt).join('L')}Z`;
 const rad = (deg: number) => deg * Math.PI / 180;
+const boxVars = ({ x, y, w, h }: Box) => `--x:${f(x)};--y:${f(y)};--w:${f(w)};--h:${f(h)}`;
+const viewBox = ({ x, y, w, h }: Box) => `${f(x)} ${f(y)} ${f(w)} ${f(h)}`;
 
-// 山脊：每个峰向右下折出背光面，再补两条折痕，读起来像一张折过的纸。
-function ridge(points: P[]) {
- const top = `M${points.map(pt).join('L')}`;
+// 山脊：关键点之间插两个带抖动的细节点，再用 Catmull-Rom 样条连成曲线。远山抖得多、显得嶙峋，近山抖得少、显得圆缓。
+// 抖动用固定种子，每次构建结果一致。每座主峰向右下折出背光面：上沿就是山脊曲线，下沿是一道微弯的折痕。
+function seeded(seed: number) {
+ let s = seed;
+ return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+}
+function ridge(keys: P[], { rough, seed }: { rough: number; seed: number }) {
+ const rand = seeded(seed);
+ const pts: P[] = [], keyAt: number[] = [];
+ keys.forEach((key, i) => {
+  keyAt.push(pts.length);
+  pts.push(key);
+  const next = keys[i + 1];
+  if (!next) return;
+  for (const t of [.34, .68]) pts.push([key[0] + (next[0] - key[0]) * t + (rand() - .5) * 14, key[1] + (next[1] - key[1]) * t + (rand() - .5) * rough]);
+ });
+ const seg = (i: number) => {
+  const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
+  return `C${pt([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6])} ${pt([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6])} ${pt(p2)}`;
+ };
+ const span = (from: number, to: number) => Array.from({ length: to - from }, (_, k) => seg(from + k)).join('');
+ const top = `M${pt(pts[0])}${span(0, pts.length - 1)}`;
  const shade: string[] = [], crease: string[] = [];
- points.forEach(([x, y], i) => {
-  const prev = points[i - 1], next = points[i + 1];
+ keys.forEach(([x, y], k) => {
+  const prev = keys[k - 1], next = keys[k + 1];
   if (!prev || !next || y >= prev[1] || y >= next[1]) return;
-  const foot = x + (next[0] - x) * .2;
-  shade.push(poly([x, y], next, [next[0], BASE], [foot, BASE]));
-  crease.push(`M${pt([x, y])}L${pt([foot, BASE])}`);
-  const half: P = [prev[0] + (x - prev[0]) * .5, prev[1] + (y - prev[1]) * .5];
-  crease.push(`M${pt(half)}L${pt([x - (x - prev[0]) * .15, BASE])}`);
+  const foot: P = [x + (next[0] - x) * .22, BASE];
+  const bend: P = [x + (foot[0] - x) * .5 + 10, y + (BASE - y) * .5];
+  shade.push(`M${pt([x, y])}${span(keyAt[k], keyAt[k + 1])}L${pt([next[0], BASE])}L${pt(foot)}Q${pt(bend)} ${pt([x, y])}Z`);
+  crease.push(`M${pt([x, y])}Q${pt(bend)} ${pt(foot)}`);
  });
  return { fill: `${top}L1460 ${BASE}L-20 ${BASE}Z`, top, shade: shade.join(''), crease: crease.join('') };
 }
-// 中间 470–970 的峰都压在 y≥736 以下，保证不碰到文字。
-const far = ridge([[-20, 760], [90, 646], [200, 704], [330, 606], [452, 708], [560, 748], [680, 736], [780, 754], [880, 742], [990, 712], [1100, 618], [1210, 682], [1320, 596], [1460, 700]]);
-const mid = ridge([[-20, 806], [120, 716], [262, 784], [400, 702], [540, 800], [660, 772], [760, 808], [900, 776], [1020, 806], [1150, 720], [1280, 782], [1380, 728], [1460, 792]]);
-const near = ridge([[-20, 852], [160, 796], [330, 848], [520, 812], [700, 858], [880, 816], [1060, 860], [1240, 802], [1460, 852]]);
+// 中间 470–970 的峰都压在 y≥736 以下，保证不碰到文字；最远一层只在两侧露出山头。
+const distant = ridge([[-20, 662], [110, 590], [230, 640], [300, 626], [420, 700], [700, 772], [1000, 724], [1120, 652], [1240, 586], [1360, 632], [1460, 602]], { rough: 12, seed: 7 });
+const far = ridge([[-20, 760], [90, 646], [200, 704], [330, 606], [452, 708], [560, 748], [680, 736], [780, 754], [880, 742], [990, 712], [1100, 618], [1210, 682], [1320, 596], [1460, 700]], { rough: 22, seed: 11 });
+const mid = ridge([[-20, 806], [120, 716], [262, 784], [400, 702], [540, 800], [660, 772], [760, 808], [900, 776], [1020, 806], [1150, 720], [1280, 782], [1380, 728], [1460, 792]], { rough: 14, seed: 23 });
+const near = ridge([[-20, 852], [160, 796], [330, 848], [520, 812], [700, 858], [880, 816], [1060, 860], [1240, 802], [1460, 852]], { rough: 6, seed: 41 });
 
-// 日轮：圆面分八片折面，隔一片压暗；外面一圈圈细环向外变淡。
+// 日轮：圆面分八片折面，隔一片压暗；外面一圈圈细环向外变淡，奇偶环分两层反向慢转。
 const sun = { x: 250, y: 236, r: 60 };
+const sunBox: Box = { x: 30, y: 16, w: 440, h: 440 };
 const onSun = (deg: number): P => [sun.x + sun.r * Math.cos(rad(deg)), sun.y + sun.r * Math.sin(rad(deg))];
 const sunShade = Array.from({ length: 4 }, (_, k) => poly([sun.x, sun.y], onSun(k * 90 - 45), onSun(k * 90))).join('');
 const sunRays = Array.from({ length: 8 }, (_, k) => `M${pt([sun.x, sun.y])}L${pt(onSun(k * 45 - 45))}`).join('');
-const rings = [82, 100, 122, 148, 178, 212];
+const rings = [82, 100, 122, 148, 178, 212].map((r, i) => ({ r, i }));
 
 // 竹：三竿，竿上有节；叶子沿主脉分成受光与背光两半，主脉单独描一道线。
+const bambooBox: Box = { x: -20, y: 240, w: 320, h: 660 };
 const stalks: { from: P; to: P; w: number }[] = [
  { from: [92, 900], to: [128, 300], w: 8 },
  { from: [168, 900], to: [190, 410], w: 6 },
@@ -62,6 +87,7 @@ const leaves = [
 ].map(leaf);
 
 // 梅：主枝从右上角斜伸进来，越往梢越细；花是五瓣折纸梅，花心一圈线描花蕊。
+const plumBox: Box = { x: 1030, y: 40, w: 440, h: 330 };
 const branches = [
  { d: 'M1470 70C1400 96 1352 132 1300 150S1196 196 1150 224 1080 270 1040 304', w: 7 },
  { d: 'M1300 150C1310 196 1286 248 1250 280S1228 330 1236 352', w: 4.6 },
@@ -78,21 +104,27 @@ const blossoms = [
 ];
 const buds: P[] = [[1090, 284], [1178, 150], [1288, 300], [1356, 128], [1214, 210], [1128, 196]];
 
-// 祥云：卷云头加一道拖尾，只用线条和一层很淡的底色。
-const clouds = [
- { x: 360, y: 120, s: 1, dur: 44 },
- { x: 1000, y: 70, s: .78, dur: 52 },
- { x: 70, y: 420, s: .62, dur: 38 },
-];
+// 祥云：卷云头加一道拖尾，只用线条和一层很淡的底色。云的局部坐标覆盖 (-24,-54)–(108,28)。
+// 三朵都放在页头下沿以下，往复时也碰不到梅枝和文字。
 const cloudPath = 'M0 0c-18 0-26-20-12-30 4-16 26-20 34-6 8-14 32-10 34 8 16-2 24 18 10 28Z';
 const cloudCurl = 'M10-12a9 9 0 1 1 14 6M40-8a7 7 0 1 1 10 6M-6-4c-10 0-14 10-6 16h60c20 0 34 6 50 2';
+const clouds = [{ x: 360, y: 120, s: 1, dur: 44 }, { x: 960, y: 150, s: .78, dur: 52 }, { x: 70, y: 420, s: .62, dur: 38 }]
+ .map(c => ({ ...c, box: { x: c.x - 24 * c.s, y: c.y - 54 * c.s, w: 132 * c.s, h: 82 * c.s } }));
 
-// 青海波：五排鳞片，奇数排错开半个，横移一个周期（48）正好无缝。
+// 青海波：五排鳞片，奇数排错开半个，横移一个周期（48）正好无缝；图层两侧各多铺一片。
+const waveBox: Box = { x: -72, y: 840, w: 1608, h: 60 };
 const waveRows = Array.from({ length: 5 }, (_, row) => ({ y: 864 + row * 9, xs: Array.from({ length: 33 }, (_, i) => -48 + i * 48 + (row % 2 ? 24 : 0)) }));
 
-// 线描纸鹤：用站标的折面，只描边不填色，远远飞在山顶上方。
+// 船：图层原点在船底中线，航行时整层横移；底下的 svg 再单独摇晃。
+const boats = [
+ { name: 'a', s: 1, y: 858, dur: 80, delay: -22, rest: 980 },
+ { name: 'b', s: .7, y: 846, dur: 110, delay: -70, rest: 380 },
+].map(b => ({ ...b, box: { x: -26 * b.s, y: b.y - 34 * b.s, w: 52 * b.s, h: 46 * b.s } }));
+
+// 线描纸鹤：用站标的折面，只描边不填色。放在文字栏两侧，远离统计条和社交图标。
 const craneOutline = 'M19 40 32 32 45 40 32 51ZM20.5 39 32 33 15 5ZM17 39.5 29 49 8 20ZM47 39.5 35 49 59 22ZM32 33 43.5 39 49 5Z';
-const lineCranes = [{ x: 470, y: 520, s: .62, d: 0 }, { x: 900, y: 560, s: .48, d: -3 }, { x: 1300, y: 470, s: .56, d: -1.5 }];
+const lineCranes = [{ x: 400, y: 560, s: .62, d: 0 }, { x: 1010, y: 600, s: .48, d: -3 }, { x: 1300, y: 470, s: .56, d: -1.5 }]
+ .map(c => ({ ...c, box: { x: c.x, y: c.y, w: 64 * c.s, h: 56 * c.s } }));
 
 // 落英与星点：位置、大小、速度各不相同，负延迟让它们首帧就散落在半空。
 const petals = [
@@ -107,7 +139,20 @@ const stars = [
 ];
 ---
 <div class="scenery">
- <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice">
+ <!-- 日轮：两层反向慢转的同心细环 + 八片折面；暗色下变成月亮。整组一起缓慢浮沉。 -->
+ <div class="layer sun" style={boxVars(sunBox)}>
+  {[0, 1].map(odd => <svg class={`rings rings-${odd ? 'b' : 'a'}`} viewBox={viewBox(sunBox)}>{rings.filter(({ i }) => i % 2 === odd).map(({ r, i }) => <circle cx={sun.x} cy={sun.y} r={r} style={`--i:${i}`}/>)}</svg>)}
+  <svg class="sun-disc" viewBox={viewBox(sunBox)}>
+   <circle class="sun-face" cx={sun.x} cy={sun.y} r={sun.r}/><path class="sun-shade" d={sunShade}/><path class="sun-fold" d={sunRays}/><circle class="sun-edge" cx={sun.x} cy={sun.y} r={sun.r}/>
+  </svg>
+ </div>
+
+ <!-- 祥云与线描纸鹤：各自一个小图层，在山的后面缓慢往复。 -->
+ {clouds.map(c => <svg class="layer cloud" style={`${boxVars(c.box)};--dur:${c.dur}s`} viewBox="-24 -54 132 82"><path class="cloud-fill" d={cloudPath}/><path class="cloud-line" d={cloudPath}/><path class="cloud-line" d={cloudCurl}/></svg>)}
+ {lineCranes.map(c => <svg class="layer line-crane" style={`${boxVars(c.box)};--d:${c.d}s`} viewBox="0 0 64 56"><path d={craneOutline}/></svg>)}
+
+ <!-- 底图：远山、远山、中山、近山（受光面 + 背光面实色与排线 + 折痕 + 山脊线），层间夹雾，最下是海面。 -->
+ <svg class="scene-base" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice">
   <defs>
    <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><path class="hatch-line" d="M0 0v7"/></pattern>
    <pattern id="hatch-wide" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(-24)"><path class="hatch-line" d="M0 0v11"/></pattern>
@@ -126,24 +171,8 @@ const stars = [
     <path class="boat-mast" d="M1 0V-32"/><path class="boat-sail" d="M3-30V-3L20-4Z"/><path class="boat-jib" d="M-1-26V-4L-15-5Z"/>
    </symbol>
   </defs>
-
-  <!-- 日轮：同心细环 + 八片折面 + 放射折痕；暗色下变成月亮。 -->
-  <g class="sun">
-   <g class="sun-rings">{rings.map((r, i) => <circle cx={sun.x} cy={sun.y} r={r} style={`--i:${i}`}/>)}</g>
-   <circle class="sun-face" cx={sun.x} cy={sun.y} r={sun.r}/>
-   <path class="sun-shade" d={sunShade}/>
-   <path class="sun-fold" d={sunRays}/>
-   <circle class="sun-edge" cx={sun.x} cy={sun.y} r={sun.r}/>
-  </g>
-
-  <!-- 祥云：线描卷云，三朵在不同高度缓慢往复。 -->
-  {clouds.map(c => <g class="cloud" style={`--dur:${c.dur}s`} transform={`translate(${c.x} ${c.y}) scale(${c.s})`}><path class="cloud-fill" d={cloudPath}/><path class="cloud-line" d={cloudPath}/><path class="cloud-line" d={cloudCurl}/></g>)}
-
-  <!-- 线描纸鹤：只描边，在远山上方起伏。 -->
-  {lineCranes.map(c => <g class="line-crane" style={`--d:${c.d}s`} transform={`translate(${c.x} ${c.y}) scale(${c.s})`}><path d={craneOutline}/></g>)}
-
-  <!-- 远山、中山、近山：受光面 + 背光面（实色加排线）+ 折痕 + 山脊线；层间夹一道雾。 -->
   <g class="hills">
+   <path class="hill distant" d={distant.fill}/><path class="hill-ridge distant" d={distant.top}/>
    <path class="hill far" d={far.fill}/><path class="hill-shade far" d={far.shade}/><path class="hill-hatch" d={far.shade}/>
    <path class="hill-crease" d={far.crease}/><path class="hill-ridge" d={far.top}/>
    <rect class="mist" x="0" y="690" width="1440" height="90" fill="url(#mist)"/>
@@ -153,28 +182,24 @@ const stars = [
    <path class="hill near" d={near.fill}/><path class="hill-shade near" d={near.shade}/><path class="hill-hatch" d={near.shade}/>
    <path class="hill-crease" d={near.crease}/><path class="hill-ridge" d={near.top}/>
   </g>
+  <rect class="sea-ground" x="0" y="852" width="1440" height="60"/>
+ </svg>
 
-  <!-- 青海波：五排鳞纹铺满水面，整体缓慢横移。 -->
-  <g class="sea">
-   <rect class="sea-ground" x="0" y="852" width="1440" height="60"/>
-   <g class="waves">{waveRows.map(row => row.xs.map(x => <use href="#scale" x={x - 24} y={row.y - 24} width="48" height="24"/>))}</g>
-  </g>
-  <g class="boat boat-a"><use href="#boat" x="-26" y="-34" width="52" height="46"/></g>
-  <g class="boat boat-b"><use href="#boat" x="-26" y="-34" width="52" height="46"/></g>
+ <!-- 青海波：五排鳞纹，整层缓慢横移。船：外层航行，内层摇晃。 -->
+ <svg class="layer waves" style={boxVars(waveBox)} viewBox={viewBox(waveBox)}>{waveRows.map(row => row.xs.map(x => <use href="#scale" x={x - 24} y={row.y - 24} width="48" height="24"/>))}</svg>
+ {boats.map(b => <div class={`layer boat boat-${b.name}`} style={`${boxVars(b.box)};--sail:${b.dur}s;--sail-delay:${b.delay}s;--rest:${b.rest}`}><svg viewBox="-26 -34 52 46"><use href="#boat" x="-26" y="-34" width="52" height="46"/></svg></div>)}
 
-  <!-- 竹：三竿竹，竿上画节，叶子分两半并描主脉。 -->
-  <g class="bamboo">
-   {stalks.map(s => <path class="stalk" d={`M${pt(s.from)}L${pt(s.to)}`} style={`--w:${s.w}`}/>)}
-   <path class="stalk-node" d={nodes}/>
-   {leaves.map(l => <><path class="leaf-lit" d={l.lit}/><path class="leaf-shade" d={l.shade}/><path class="leaf-rib" d={l.rib}/></>)}
-  </g>
-
-  <!-- 梅：枝干由粗到细，花开在枝上，花苞点缀其间。 -->
-  <g class="plum">
-   {branches.map(b => <path class="bough" d={b.d} style={`--w:${b.w}`}/>)}
-   {buds.map(([x, y]) => <circle class="bud" cx={x} cy={y} r="4.2"/>)}
-   {blossoms.map((b, i) => <g class={`blossom ${b.hue}`} style={`--b:${i}`} transform={`translate(${b.x} ${b.y}) rotate(${b.r}) scale(${b.s})`}><use href="#blossom" x="-16" y="-16" width="32" height="32"/></g>)}
-  </g>
+ <!-- 竹与梅：各自整丛摇曳；梅花在梅枝图层内轻轻开合。 -->
+ <svg class="layer bamboo" style={boxVars(bambooBox)} viewBox={viewBox(bambooBox)}>
+  {stalks.map(s => <path class="stalk" d={`M${pt(s.from)}L${pt(s.to)}`} style={`--w:${s.w}`}/>)}
+  <path class="stalk-node" d={nodes}/>
+  {leaves.map(l => <><path class="leaf-lit" d={l.lit}/><path class="leaf-shade" d={l.shade}/><path class="leaf-rib" d={l.rib}/></>)}
+ </svg>
+ <!-- 梅花不单独开合，随整枝摇曳即可，图层内部没有逐帧重绘。 -->
+ <svg class="layer plum-tree" style={boxVars(plumBox)} viewBox={viewBox(plumBox)}>
+  {branches.map(b => <path class="bough" d={b.d} style={`--w:${b.w}`}/>)}
+  {buds.map(([x, y]) => <circle class="bud" cx={x} cy={y} r="4.2"/>)}
+  {blossoms.map(b => <g class={`blossom ${b.hue}`} transform={`translate(${b.x} ${b.y}) rotate(${b.r}) scale(${b.s})`}><use href="#blossom" x="-16" y="-16" width="32" height="32"/></g>)}
  </svg>
 
  <div class="petals">{petals.map(p => <span class={`petal ${p.hue}`} style={`--x:${p.x}%;--s:${p.size}px;--dur:${p.dur}s;--delay:${p.delay}s;--drift:${p.drift}px`}></span>)}</div>
@@ -188,7 +213,7 @@ const stars = [
   --scene-pine: #a3bfa9; --scene-teal: #9cbcbc; --scene-ink: #7d8aa0; --scene-sun: #ebc29f;
   --scene-bough: #8c7867; --scene-line: #6d7c92; --scene-paper: var(--color-paper);
   --scene-alpha: .62; --line-alpha: .5;
-  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none; container-type: size;
  }
  :global(:root[data-theme="dark"]) .scenery {
   --scene-plum: #9f6f76; --scene-peach: #a7836c; --scene-gold: #a08a5c; --scene-azure: #4d6074;
@@ -202,31 +227,38 @@ const stars = [
    --scene-bough: #7a6a5c; --scene-line: #8c9ab0; --scene-alpha: .62; --line-alpha: .38;
   }
  }
- .scene { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
- .scene :is(path,circle,rect,use) { vector-effect: non-scaling-stroke; }
+ /* --u：一个画布单位对应的像素，和底图 slice 的缩放一致；画布水平居中、底边对齐。 */
+ .scenery > * { --u: max(100cqw / 1440, 100cqh / 900); }
+ .scene-base { position: absolute; inset: 0; width: 100%; height: 100%; }
+ .layer { position: absolute; left: calc(50% + (var(--x) - 720) * var(--u)); top: calc(100% - (900 - var(--y)) * var(--u)); width: calc(var(--w) * var(--u)); height: calc(var(--h) * var(--u)); overflow: visible; }
+ /* 只选直接子元素：<use> 引用 <symbol> 时会生成内部 svg，后代选择器会把它也拉成 100% 宽高。 */
+ .layer > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+ .scenery :is(path,circle,rect,use) { vector-effect: non-scaling-stroke; }
  .hatch-line { stroke: var(--scene-line); stroke-width: .8; opacity: .55; }
 
  /* 日轮 */
- .sun { opacity: var(--scene-alpha); transform-box: fill-box; transform-origin: center; animation: drift-y 16s ease-in-out infinite alternate; }
- .sun-rings circle { fill: none; stroke: var(--scene-sun); stroke-width: 1; opacity: calc(.7 - var(--i) * .1); stroke-dasharray: calc(4 + var(--i) * 3) 6; animation: ring-spin calc(60s + var(--i) * 20s) linear infinite; transform-box: fill-box; transform-origin: center; }
- .sun-rings circle:nth-child(even) { animation-direction: reverse; }
+ .sun { opacity: var(--scene-alpha); animation: drift-y 16s ease-in-out infinite alternate; }
+ .rings { animation: ring-spin 140s linear infinite; }
+ .rings-b { animation-duration: 180s; animation-direction: reverse; }
+ .rings circle { fill: none; stroke: var(--scene-sun); stroke-width: 1; opacity: calc(.7 - var(--i) * .1); stroke-dasharray: calc(4 + var(--i) * 3) 6; }
  .sun-face { fill: var(--scene-sun); }
  .sun-shade { fill: var(--scene-ink); opacity: .14; }
  .sun-fold { fill: none; stroke: var(--scene-paper); stroke-width: .9; opacity: .55; }
  .sun-edge { fill: none; stroke: var(--scene-line); stroke-width: 1; opacity: var(--line-alpha); }
 
  /* 祥云 */
- .cloud { opacity: var(--scene-alpha); }
- .cloud > * { animation: cloud-drift var(--dur) ease-in-out infinite alternate; }
+ .cloud { opacity: var(--scene-alpha); animation: cloud-drift var(--dur) ease-in-out infinite alternate; }
  .cloud-fill { fill: var(--scene-azure); opacity: .3; }
  .cloud-line { fill: none; stroke: var(--scene-line); stroke-width: 1.2; stroke-linecap: round; opacity: var(--line-alpha); }
 
  /* 线描纸鹤 */
- .line-crane { opacity: .55; }
- .line-crane path { fill: none; stroke: var(--scene-line); stroke-width: 1.1; stroke-linejoin: round; animation: glide 6s ease-in-out var(--d) infinite alternate; }
+ .line-crane { opacity: .55; animation: glide 6s ease-in-out var(--d) infinite alternate; }
+ .line-crane path { fill: none; stroke: var(--scene-line); stroke-width: 1.1; stroke-linejoin: round; }
 
- /* 山 */
+ /* 山：最远一层只有一抹淡色和山脊线，用来拉开纵深。 */
  .hills { opacity: var(--scene-alpha); }
+ .hill.distant { fill: var(--scene-azure); opacity: .32; }
+ .hill-ridge.distant { opacity: calc(var(--line-alpha) * .5); }
  .hill.far { fill: var(--scene-azure); opacity: .65; }
  .hill.mid { fill: var(--scene-teal); opacity: .75; }
  .hill.near { fill: var(--scene-pine); }
@@ -237,38 +269,31 @@ const stars = [
  .hill-crease { fill: none; stroke: var(--scene-paper); stroke-width: .9; opacity: .5; }
  .hill-ridge { fill: none; stroke: var(--scene-line); stroke-width: 1.2; stroke-linejoin: round; opacity: var(--line-alpha); }
  .mist-stop { stop-color: var(--scene-paper); }
- .mist { animation: mist 18s ease-in-out infinite alternate; }
 
  /* 海与船 */
- .sea { opacity: var(--scene-alpha); }
- .sea-ground { fill: var(--scene-teal); opacity: .55; }
- .waves { animation: waves 14s linear infinite; }
+ .sea-ground { fill: var(--scene-teal); opacity: calc(var(--scene-alpha) * .55); }
+ .waves { opacity: var(--scene-alpha); animation: waves 14s linear infinite; }
  .scale-fill { fill: var(--scene-teal); }
  .scale-line { fill: none; stroke: var(--scene-paper); stroke-width: 1; opacity: .8; }
- .boat { opacity: calc(var(--scene-alpha) + .15); }
- .boat use { animation: rock 3.6s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 80%; }
- .boat-a { --sea-y: 858px; animation: sail 80s linear -22s infinite; }
- .boat-b { --sea-y: 846px; animation: sail 110s linear -70s infinite; scale: .7; }
+ .boat { opacity: calc(var(--scene-alpha) + .15); animation: sail var(--sail) linear var(--sail-delay) infinite; }
+ .boat svg { transform-origin: 50% 80%; animation: rock 3.6s ease-in-out infinite alternate; }
  .boat-hull { fill: var(--scene-peach); } .boat-fold { fill: var(--scene-ink); opacity: .22; }
  .boat-mast { stroke: var(--scene-bough); stroke-width: 1.4; }
  .boat-sail { fill: var(--scene-plum); } .boat-jib { fill: var(--scene-plum); opacity: .6; }
  .boat-hull,.boat-sail,.boat-jib { stroke: var(--scene-line); stroke-width: .8; stroke-opacity: var(--line-alpha); }
 
- /* 竹 */
- .bamboo { opacity: var(--scene-alpha); transform-box: fill-box; transform-origin: 30% 100%; animation: sway 11s ease-in-out infinite alternate; }
+ /* 竹：绕竿根摇；梅：绕右上角的枝根摇。 */
+ .bamboo { opacity: var(--scene-alpha); transform-origin: 30% 100%; animation: sway 11s ease-in-out infinite alternate; }
  .stalk { fill: none; stroke: var(--scene-pine); stroke-width: var(--w); stroke-linecap: round; }
  .stalk-node { fill: none; stroke: var(--scene-line); stroke-width: 1.2; opacity: var(--line-alpha); }
  .leaf-lit { fill: var(--scene-pine); }
  .leaf-shade { fill: var(--scene-ink); opacity: .26; }
  .leaf-rib { fill: none; stroke: var(--scene-line); stroke-width: .9; opacity: var(--line-alpha); }
-
- /* 梅 */
- .plum { opacity: var(--scene-alpha); transform-box: fill-box; transform-origin: 100% 0; animation: sway 9s ease-in-out infinite alternate-reverse; }
+ .plum-tree { opacity: var(--scene-alpha); transform-origin: 100% 0; animation: sway 9s ease-in-out infinite alternate-reverse; }
  .bough { fill: none; stroke: var(--scene-bough); stroke-width: var(--w); stroke-linecap: round; }
  .bud { fill: var(--scene-plum); stroke: var(--scene-line); stroke-width: .8; stroke-opacity: var(--line-alpha); }
  .blossom { color: var(--scene-plum); }
  .blossom.peach { color: var(--scene-peach); } .blossom.gold { color: var(--scene-gold); }
- .blossom use { transform-box: fill-box; transform-origin: center; animation: bloom 5s ease-in-out infinite alternate; animation-delay: calc(var(--b) * -1.1s); }
  .pt-lit { fill: currentColor; } .pt-shade { fill: currentColor; opacity: .62; }
  .pt-lit,.pt-shade { stroke: var(--scene-line); stroke-width: .5; stroke-opacity: var(--line-alpha); }
  .stamen { stroke: var(--scene-gold); stroke-width: .7; } .anther { fill: var(--scene-gold); }
@@ -283,16 +308,15 @@ const stars = [
  @media (prefers-color-scheme: dark) { :global(:root:not([data-theme])) .stars { display: block; } }
  .star { position: absolute; left: var(--x); top: var(--y); width: var(--s); aspect-ratio: 1; border-radius: 50%; background: var(--scene-sun); opacity: .35; animation: twinkle 4.5s ease-in-out var(--d) infinite alternate; }
 
- @keyframes drift-y { to { translate: 0 10px; } }
+ @keyframes drift-y { to { translate: 0 calc(10 * var(--u)); } }
  @keyframes ring-spin { to { rotate: 360deg; } }
- @keyframes cloud-drift { to { translate: 40px 4px; } }
- @keyframes glide { from { translate: 0 -5px; } to { translate: 10px 5px; } }
- @keyframes mist { to { translate: -60px 0; opacity: .6; } }
- @keyframes waves { to { translate: -48px 0; } }
- @keyframes sail { from { translate: -60px var(--sea-y,858px); } to { translate: 1500px var(--sea-y,858px); } }
+ @keyframes cloud-drift { to { translate: calc(40 * var(--u)) calc(4 * var(--u)); } }
+ @keyframes glide { from { translate: 0 calc(-5 * var(--u)); } to { translate: calc(10 * var(--u)) calc(5 * var(--u)); } }
+ /* 一个鳞片周期 48，占图层宽 1608 的 2.9851%。 */
+ @keyframes waves { to { translate: -2.9851% 0; } }
+ @keyframes sail { from { translate: calc(-60 * var(--u)) 0; } to { translate: calc(1500 * var(--u)) 0; } }
  @keyframes rock { from { rotate: -4deg; } to { rotate: 4deg; } }
  @keyframes sway { from { rotate: -1.2deg; } to { rotate: 1.4deg; } }
- @keyframes bloom { to { scale: 1.1; rotate: 12deg; } }
  @keyframes fall {
   0% { opacity: 0; transform: translate(0,0) rotate(0); }
   8% { opacity: .65; } 85% { opacity: .5; }
@@ -304,12 +328,11 @@ const stars = [
  @media (prefers-reduced-motion: reduce) {
   .scenery *,.scenery *::before { animation: none !important; }
   .petals { display: none; }
-  .boat-a { translate: 980px 858px; }
-  .boat-b { translate: 380px 846px; }
+  .boat { translate: calc(var(--rest) * var(--u)) 0; }
  }
  /* 窄屏：画布按底部对齐裁切，只露中下部；收起梅枝、竹、云、日轮和线描鹤，避免压到文字。 */
  @media (max-width: 760px) {
-  .plum,.bamboo,.cloud,.line-crane,.sun { display: none; }
+  .plum-tree,.bamboo,.cloud,.line-crane,.sun { display: none; }
   .petal:nth-child(n+5) { display: none; }
  }
 </style>

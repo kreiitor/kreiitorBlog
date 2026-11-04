@@ -40,7 +40,8 @@ const months = Array.from({ length: 12 }, (_, i) => {
  return { label: `${date.getMonth() + 1}月`, year: date.getFullYear(), anchor: items.length ? `#m-${date.getFullYear()}-${date.getMonth() + 1}` : '', count: items.length, latest: items[0] };
 });
 const peak = Math.max(1, ...months.map(month => month.count));
-const yearCount = publishedPosts.filter(post => post.data.pubDate.getUTCFullYear() === now.getFullYear()).length;
+// 和柱状图同一个窗口：最近 12 个月，而不是自然年。
+const yearCount = months.reduce((sum, month) => sum + month.count, 0);
 const latest = publishedPosts[0];
 // 头像内联而不是 <img>，鹤纹才能跟随主题取色；去掉 title 与 id，避免和页头标志重复。
 const avatarMark = avatarSvg.replace(/ role="img" aria-labelledby="logo-title"/, '').replace(/<title[^>]*>.*?<\/title>/s, '').replace(/<style>.*?<\/style>/s, '');
@@ -60,6 +61,13 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear() ? '' : `${date.getUTCFullYear()}-`}${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 ---
 <BaseLayout>
+ <!-- 必须在首屏解析前同步执行：同一会话第二次进首页时，入场动画在首帧之前就关掉。 -->
+ <script is:inline>
+  try {
+   if (sessionStorage.getItem('welcomed')) document.documentElement.dataset.welcomed = '';
+   else sessionStorage.setItem('welcomed', '1');
+  } catch {}
+ </script>
  <div class="home-page" data-pagefind-ignore>
   <section class="intro" data-home-hero>
    <div class="ambient" aria-hidden="true">
@@ -120,19 +128,19 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
   <section class="page-shell jottings" aria-labelledby="home-jottings">
    <header class="sec-head"><p><span>03</span>日常的片刻</p><h2 id="home-jottings">{sections.writing.label}</h2></header>
    <ol class="jotting-feed">
-     {jottings.map(post => <li><a href={withBase(`/blog/${post.id}/`)}><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{post.data.title}</span></a></li>)}
+     {jottings.map(post => <li><a href={withBase(`/blog/${post.id}/`)}><time datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time><span>{post.data.title}</span></a></li>)}
      {jottings.length === 0 && <li class="jotting-empty">还没有写下什么。</li>}
    </ol>
    <a class="more" href={withBase(sections.writing.href)}>全部闲笔 <Icon name="arrow" size={15}/></a>
   </section>
 
   <section class="page-shell timeline" data-timeline>
-   <header class="sec-head"><p><span>04</span>时间</p><h2>笔耕不辍</h2><span class="sec-aside">今年 <b>{yearCount}</b> 篇</span></header>
+   <header class="sec-head"><p><span>04</span>时间</p><h2>笔耕不辍</h2><span class="sec-aside">近一年 <b>{yearCount}</b> 篇</span></header>
    <ol class="months">
     {months.map((month, index) => <li style={`--s:${month.count ? (.18 + Math.sqrt(month.count / peak) * .82).toFixed(3) : 0};--i:${index}`} class:list={{ 'is-empty': !month.count, 'is-now': index === months.length - 1 }}>
      <a href={`${withBase('/archive/')}${month.anchor}`} aria-label={`${month.year} 年 ${month.label}：${month.count} 篇`}>
       <span class="bar" aria-hidden="true"><span class="count">{month.count || ''}</span></span>
-      <span class="month" aria-hidden="true">{index === months.length - 1 ? '今' : month.label}</span>
+      <span class="month" aria-hidden="true">{month.label}</span>
       {month.count > 0 && <span class="tip" aria-hidden="true">{month.count} 篇{month.latest && ` · ${month.latest.data.title}`}</span>}
      </a>
     </li>)}
@@ -159,16 +167,24 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
   const start = Date.parse(since.dataset.since);
   if (Number.isFinite(start)) since.textContent = String(Math.max(1, Math.ceil((Date.now() - start) / day)));
  }
+ import { enhanceAnchor } from '../utils/smooth-scroll';
+
  const hero = document.querySelector<HTMLElement>('[data-home-hero]');
  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const welcomed = 'welcomed' in document.documentElement.dataset;
+ const stagger = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stagger')) || 80;
+
+ const cue = document.querySelector<HTMLAnchorElement>('.scroll-cue');
+ if (cue) enhanceAnchor(cue);
 
  // 统计数字从 0 数到目标值，用 ease-out 收尾；先按最终位数锁住宽度，数字跳动时统计条不变宽。
- if (!still) {
+ // 和统计条自己的入场（第 5 拍）对齐开始。
+ if (!still && !welcomed) {
   document.querySelectorAll<HTMLElement>('.stats b[data-count]').forEach((node, index) => {
    const target = Number(node.textContent);
    if (!Number.isFinite(target) || target <= 0) return;
    node.style.setProperty('--digits', `${String(target).length}ch`);
-   const begin = performance.now() + 520 + index * 120, length = 1400;
+   const begin = performance.now() + stagger * (5 + index * 1.5), length = 1400;
    node.textContent = '0';
    const tick = (now: number) => {
     const t = Math.min(1, Math.max(0, (now - begin) / length));
@@ -207,14 +223,16 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  const typed = document.querySelector<HTMLElement>('[data-typed]');
  const text = typed?.querySelector<HTMLElement>('[data-typed-text]');
  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
- if (typed?.dataset.typed && text && !reduced.matches) {
+ if (typed?.dataset.typed && text && !reduced.matches && welcomed) {
+  const words: string[] = JSON.parse(typed.dataset.typed);
+  text.textContent = words.at(-1) ?? '';
+  typed.dataset.done = '';
+ } else if (typed?.dataset.typed && text && !reduced.matches) {
   const words: string[] = JSON.parse(typed.dataset.typed);
   let index = 0;
   let length = words[0]?.length ?? 0;
   let deleting = true;
   let timer = 0;
-  // 只有真的在打字时才预留最长词的宽度；无脚本或减少动态时，这一行按实际文字居中。
-  typed.dataset.typing = '';
   const step = () => {
    if (reduced.matches) return;
    if (deleting) {
@@ -233,9 +251,9 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
    }
    timer = window.setTimeout(step, deleting ? 35 : 65);
   };
-  timer = window.setTimeout(step, 650);
+  timer = window.setTimeout(step, stagger * 8);
   reduced.addEventListener('change', event => {
-   if (event.matches) { window.clearTimeout(timer); text.textContent = words[0]; delete typed.dataset.typing; }
+   if (event.matches) { window.clearTimeout(timer); text.textContent = words[0]; }
   });
  }
 </script>
@@ -244,28 +262,30 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
     节奏：区块间距 --gap；所有区块共用一个 .sec-head（编号 · 英文眉题 · 中文标题）。
     色彩：朱砂只落在首屏的打字词、当月柱和来信的落款上；编号、分隔线、悬停都用墨色深浅。
     动效：入场 .reveal 只播一次；首屏占满一屏，所以背景有慢速常驻层（纸鹤、光团、头像绕行点），离开视口即暂停；滚动联动全部交给 animation-timeline。 */
- .home-page { --gap: 120px; --ease-spring: cubic-bezier(.34,1.56,.64,1); position: relative; isolation: isolate; overflow-x: clip; padding-bottom: 0; }
+ .home-page { --gap: 120px; position: relative; isolation: isolate; overflow-x: clip; padding-bottom: 0; }
 
  /* ---------- 首屏 ---------- */
  /* 首屏只放欢迎：正好占满一屏视口（扣掉页头），栏目从第二屏开始。内容略高于正中，视觉重心更稳。 */
- .intro { position: relative; isolation: isolate; display: grid; place-items: center; min-height: max(520px,calc(100svh - var(--header-height))); padding: 40px 24px 112px; text-align: center; }
- .ambient { --px: .5; --py: .4; position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+ /* --px/--py 由脚本写在 .intro 上，后代只读不声明，否则会被子元素的默认值盖住。 */
+ .intro { --px: .5; --py: .4; position: relative; isolation: isolate; display: grid; place-items: center; min-height: max(520px,calc(100svh - var(--header-height))); padding: 40px 24px 112px; text-align: center; }
+ .ambient { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
  /* 两团光：暖的朱砂偏左上，冷的墨色偏右下，各自慢慢游走，像纸面上移动的天光。
     用 blur 代替长距离渐变：8 位色深下大面积浅渐变会出现色带，模糊后的实心椭圆过渡更平。
     只动 transform，模糊层由合成器搬运，不重新栅格化。 */
- .blob { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
+ .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
  .blob-warm { left: 18%; top: -12%; width: min(640px,80vw); aspect-ratio: 1.6; background: color-mix(in srgb,var(--color-accent) 7%,transparent); animation: wander-a 26s ease-in-out infinite alternate; }
  .blob-ink { right: 8%; bottom: -6%; width: min(520px,70vw); aspect-ratio: 1.4; background: color-mix(in srgb,var(--color-counterpoint) 7%,transparent); animation: wander-b 32s ease-in-out infinite alternate; }
 
  /* 千羽：几只纸鹤在背景里从左往右慢慢飞过，一边轻轻起伏。外层管横向位移，内层管起伏和振翅，互不干扰。 */
- .flock { position: absolute; inset: 0; color: var(--color-ink); }
+ /* 鹤群在文字栏背后淡出：遮罩挖掉首屏正中，鹤从两侧飞过，不会压在字上。 */
+ .flock { position: absolute; inset: 0; color: var(--color-ink); -webkit-mask-image: radial-gradient(min(400px,46vw) 230px at 50% 46%,transparent 62%,#000); mask-image: radial-gradient(min(400px,46vw) 230px at 50% 46%,transparent 62%,#000); }
  .flock-defs { position: absolute; }
- .crane { position: absolute; left: 0; top: var(--y); width: var(--s); opacity: var(--o); translate: -10vw 0; animation: fly var(--dur) linear var(--delay) infinite; will-change: translate; }
+ .crane { position: absolute; left: 0; top: var(--y); width: var(--s); opacity: var(--o); translate: -10vw 0; animation: fly var(--dur) linear var(--delay) infinite; }
  .crane svg { display: block; width: 100%; height: auto; animation: bob var(--bob) ease-in-out infinite alternate; transform-origin: 50% 60%; }
  .crane:nth-child(odd) svg { animation-direction: alternate-reverse; }
  /* 视差：越大的鹤越近，随指针移动得越多；光团最远，几乎不动。 */
- .flock { translate: calc((var(--px) - .5) * -28px) calc((var(--py) - .5) * -18px); transition: translate 1.2s var(--ease-out-expo); }
- .blob-warm,.blob-ink { translate: calc((var(--px) - .5) * 14px) calc((var(--py) - .5) * 10px); transition: translate 1.6s var(--ease-out-expo); }
+ .flock { translate: calc((var(--px) - .5) * -28px) calc((var(--py) - .5) * -18px); transition: translate calc(var(--dur-slower) * 1.6) var(--ease-out-expo); }
+ .blob-warm,.blob-ink { translate: calc((var(--px) - .5) * 14px) calc((var(--py) - .5) * 10px); transition: translate calc(var(--dur-slower) * 2.2) var(--ease-out-expo); }
  [data-paused] :is(.blob,.crane,.crane svg),[data-paused] .avatar::after { animation-play-state: paused; }
  /* 细点阵只在指针附近显影，像手电照过纸面。 */
  .grid { position: absolute; inset: 0; background-image: radial-gradient(var(--color-grid-dot) 1px,transparent 1.4px); background-size: 24px 24px; opacity: .9; -webkit-mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); transition: opacity var(--dur-slow); }
@@ -281,17 +301,21 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  /* 头像外一圈发丝线，上面一颗朱砂小点沿着圆慢慢绕行。旋转的是整圈，圆本身没有可见的转动。 */
  .avatar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 106px; height: 106px; margin: -53px 0 0 -53px; border: 1px solid var(--color-line); border-radius: 50%; }
  .avatar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 106px; height: 106px; margin: -53px 0 0 -53px; border-radius: 50%; background: radial-gradient(circle at 50% 0,var(--color-accent) 0 2.5px,transparent 3px); animation: orbit 18s linear infinite; }
- .greeting { font-size: clamp(34px,1.4rem + 2.4vw,52px); line-height: 1.22; letter-spacing: -.01em; }
- .greeting b { font-weight: 600; }
- /* 标题逐词浮现：整行 .reveal 先给出位置，词再依次从下方升起，名字最后落下并带出一笔朱砂。 */
- .word { display: inline-block; animation: word-rise .9s var(--ease-out-expo) both; animation-delay: calc(240ms + var(--w) * 140ms); }
+ /* 汉字是全角字面，不收字距；只有拉丁名字略收紧。 */
+ .greeting { font-size: clamp(34px,1.4rem + 2.4vw,52px); line-height: 1.22; letter-spacing: 0; }
+ .greeting b { font-weight: 600; letter-spacing: -.01em; }
+ /* 标题逐词浮现：标题是首屏最大的元素（LCP），所以不从全透明、不加模糊起步，只让词依次从下方升起；
+    名字最后落下并带出一笔朱砂。 */
+ .greeting.reveal { animation: none; }
+ .word { display: inline-block; animation: word-rise var(--dur-enter) var(--ease-out-expo) both; animation-delay: calc(var(--stagger) * (1 + var(--w))); }
  .name { position: relative; }
  .brush { position: absolute; left: -2%; right: -2%; bottom: -.08em; width: 104%; height: .26em; overflow: visible; pointer-events: none; }
- .brush path { fill: none; stroke: var(--color-accent); stroke-width: 3.2; stroke-linecap: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; animation: brush 1.1s cubic-bezier(.65,0,.35,1) 1.05s forwards; vector-effect: non-scaling-stroke; }
+ .brush path { fill: none; stroke: var(--color-accent); stroke-width: 3.2; stroke-linecap: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; animation: brush var(--dur-slower) var(--ease-smooth) calc(var(--stagger) * 5) forwards; vector-effect: non-scaling-stroke; }
  .claim { margin-top: 18px; color: var(--color-ink-soft); font-size: clamp(17px,.9rem + .5vw,21px); line-height: 1.7; }
- /* 底色贴着字走（background 而不是固定宽度的伪元素），宽度留给最长的词，打字时行不跳。 */
+ /* 底色贴着字走（background 而不是固定宽度的伪元素），宽度留给最长的词，打字时行不跳。
+    预留宽度写在 CSS 里而不是等脚本加上，首帧就定好，避免这一行横移一次。 */
  .typed { display: inline-block; color: var(--color-accent-strong); text-align: left; }
- .typed[data-typing] { min-width: 6.4em; }
+ @media (scripting: enabled) and (prefers-reduced-motion: no-preference) { :root:not([data-welcomed]) .typed { min-width: 6.4em; } }
  .typed [data-typed-text] { padding-inline: .08em; background: linear-gradient(transparent 62%,color-mix(in srgb,var(--color-accent) 13%,transparent) 62% 92%,transparent 92%); }
  .caret { display: inline-block; width: 1.5px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
  [data-done] .caret { opacity: 0; animation: none; transition: opacity var(--dur-slow); }
@@ -304,12 +328,13 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .socials a { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--color-ink-soft); transition: color var(--dur-base),translate var(--dur-slow) var(--ease-spring); }
  .socials a::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--color-surface-hover); scale: .4; opacity: 0; transition: scale var(--dur-slow) var(--ease-spring),opacity var(--dur-base); }
  .socials a :global(svg) { position: relative; }
- .socials a:is(:hover,:focus-visible) { color: var(--color-accent-strong); translate: 0 -3px; }
+ .socials a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
+ .socials a:focus-visible { translate: 0 -3px; }
  .socials a:is(:hover,:focus-visible)::before { scale: 1; opacity: 1; }
  .scroll-cue { position: absolute; bottom: 28px; left: 50%; display: grid; place-items: center; width: 44px; height: 44px; translate: -50% 0; }
  /* 欢迎屏占满一屏，下方内容看不见，箭头需要轻轻招手；入场结束后才开始。 */
- .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-muted); border-bottom: 1.5px solid var(--color-ink-muted); rotate: 45deg; animation: cue 2.4s var(--ease-smooth) 2.4s infinite; transition: border-color var(--dur-base); }
- .scroll-cue:is(:hover,:focus-visible) span { border-color: var(--color-ink); translate: 0 3px; }
+ .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-muted); border-bottom: 1.5px solid var(--color-ink-muted); rotate: 45deg; animation: cue 2.4s var(--ease-smooth) calc(var(--stagger) * 12) infinite; transition: border-color var(--dur-base); }
+ .scroll-cue:is(:hover,:focus-visible) span { border-color: var(--color-ink); }
 
  /* ---------- 共用区块标题 ---------- */
  .sec-head { position: relative; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 16px; }
@@ -320,7 +345,8 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .sec-aside { margin-left: auto; color: var(--color-ink-muted); font-size: 13px; }
  .sec-aside b { color: var(--color-ink); font-family: var(--font-mono); font-size: 15px; }
  /* ---------- 近期 ---------- */
- .recent { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 72px; padding-top: 72px; scroll-margin-top: calc(var(--header-height) + 8px); }
+ /* 根元素已有 scroll-padding-top（页头 + 32px）；区块自带 72px 上内边距，再往回收 32px，栏目标题正好落在页头下方。 */
+ .recent { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 72px; padding-top: 72px; scroll-margin-top: -32px; }
  .column { min-width: 0; }
  .feed { margin: 6px 0 0; padding: 0; list-style: none; }
  .feed-item a { position: relative; isolation: isolate; display: grid; grid-template-columns: 28px minmax(0,1fr) auto; grid-template-areas: 'no title time' '. meta time'; gap: 3px 10px; align-items: baseline; min-height: 76px; padding: 15px 10px; margin-inline: -10px; border-radius: 10px; transition: translate var(--dur-slow) var(--ease-out-expo); }
@@ -328,7 +354,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .feed-item + .feed-item a::after { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: var(--color-line); transition: opacity var(--dur-base); }
  /* 悬停底色：一块纸面略深的底，不再铺朱砂渐变。 */
  .feed-item a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-soft); opacity: 0; transform: scaleX(.98); transform-origin: left; transition: opacity var(--dur-base),transform var(--dur-slow) var(--ease-out-expo); }
- .feed-item a:is(:hover,:focus-visible) { translate: 6px 0; }
+ .feed-item a:focus-visible { translate: 6px 0; }
  .feed-item a:is(:hover,:focus-visible)::before { opacity: 1; transform: none; }
  .feed-item:hover + .feed-item a::after,.feed-item a:hover::after { opacity: 0; }
  .feed-no { grid-area: no; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; transition: color var(--dur-base); }
@@ -342,7 +368,18 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .more:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
  .more:is(:hover,:focus-visible)::after { transform: none; }
  .more :global(svg),.year :global(svg),.outro-links :global(svg) { transition: translate var(--dur-slow) var(--ease-spring); }
- .more:hover :global(svg),.year a:hover :global(svg) { translate: 4px 0; }
+ /* 位移类悬停只给真有指针悬停的设备；触屏轻点后从 bfcache 返回，元素不会停在偏移状态。 */
+ @media (hover: hover) {
+  .socials a:hover { translate: 0 -3px; }
+  .feed-item a:hover { translate: 6px 0; }
+  .more:hover :global(svg),.year a:hover :global(svg) { translate: 4px 0; }
+  .outro-links a:hover { translate: 0 -2px; }
+  .outro-links a:hover :global(svg) { translate: 4px 0; }
+  .topic-row a:hover { translate: 0 -2px; }
+  .months a:hover .bar { scale: 1.08 1.06; }
+  .months:hover .bar { filter: opacity(.55); }
+  .months a:hover .bar { filter: none; }
+ }
 
  /* ---------- 闲笔：几行短句 ---------- */
  .jottings { margin-top: var(--gap); }
@@ -359,7 +396,8 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .months li { position: relative; min-width: 0; }
  .months a { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; padding-bottom: 26px; color: var(--color-ink-muted); font-size: 12px; }
  .months a::before { content: ''; position: absolute; left: 0; right: 0; bottom: 26px; height: 1px; background: var(--color-line-strong); }
- .bar { position: relative; display: block; width: min(100%,34px); height: calc(var(--s) * 118px + 4px); border-radius: 6px 6px 2px 2px; background: color-mix(in srgb,var(--color-ink) 16%,transparent); transform-origin: bottom; transition: transform var(--dur-slow) var(--ease-spring),background-color var(--dur-base); }
+ /* 滚动入场动画占用 transform 和 opacity；悬停改用独立的 scale 与 filter，两者叠加而不互相覆盖。 */
+ .bar { position: relative; display: block; width: min(100%,34px); height: calc(var(--s) * 118px + 4px); border-radius: 6px 6px 2px 2px; background: color-mix(in srgb,var(--color-ink) 16%,transparent); transform-origin: bottom; transition: scale var(--dur-slow) var(--ease-spring),filter var(--dur-base),background-color var(--dur-base); }
  .is-empty .bar { height: 4px; background: var(--color-line-strong); }
  .is-now .bar { background: var(--color-accent); }
  .is-now .bar::after { content: ''; position: absolute; left: 50%; top: -12px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--color-accent); }
@@ -367,9 +405,8 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .is-now .count { bottom: calc(100% + 18px); }
  .month { position: absolute; bottom: 0; }
  .is-now .month { color: var(--color-accent-strong); font-weight: 600; }
- .months a:is(:hover,:focus-visible) .bar { transform: scaleY(1.06) scaleX(1.08); }
- .months:hover .bar { opacity: .55; }
- .months a:is(:hover,:focus-visible) .bar { opacity: 1; background: color-mix(in srgb,var(--color-ink) 32%,transparent); }
+ .months a:focus-visible .bar { scale: 1.08 1.06; }
+ .months a:is(:hover,:focus-visible) .bar { background: color-mix(in srgb,var(--color-ink) 32%,transparent); }
  .is-now a:is(:hover,:focus-visible) .bar { background: var(--color-accent); }
  .months a:is(:hover,:focus-visible) .count { opacity: 1; translate: -50% -3px; }
  .tip { position: absolute; z-index: 3; bottom: calc(100% + 8px); left: 50%; width: max-content; max-width: 230px; padding: 7px 11px; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-soft); font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; translate: -50% 6px; opacity: 0; visibility: hidden; transition: opacity var(--dur-base),translate var(--dur-slow) var(--ease-out-expo),visibility var(--dur-base); }
@@ -398,16 +435,21 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .outro-links b { grid-area: title; font-size: 15px; }
  .outro-links span { grid-area: text; color: var(--color-ink-muted); font-size: 12px; overflow-wrap: anywhere; }
  .outro-links :global(svg) { grid-area: icon; color: var(--color-ink-muted); }
- .outro-links a:is(:hover,:focus-visible) { border-color: var(--color-line-strong); translate: 0 -2px; }
+ .outro-links a:is(:hover,:focus-visible) { border-color: var(--color-line-strong); }
+ .outro-links a:focus-visible { translate: 0 -2px; }
  .outro-links a:is(:hover,:focus-visible)::before { opacity: 1; }
  .outro-links a:is(:hover,:focus-visible) b,.outro-links a:is(:hover,:focus-visible) :global(svg) { color: var(--color-accent-strong); }
- .outro-links a:is(:hover,:focus-visible) :global(svg) { translate: 4px 0; }
+ .outro-links a:focus-visible :global(svg) { translate: 4px 0; }
  .topic-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
  .topic-row a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base),translate var(--dur-slow) var(--ease-spring); }
- .topic-row a:is(:hover,:focus-visible) { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); translate: 0 -2px; }
+ .topic-row a:is(:hover,:focus-visible) { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); }
+ .topic-row a:focus-visible { translate: 0 -2px; }
 
  /* ---------- 入场与滚动联动 ---------- */
- .reveal { animation: hero-enter .8s var(--ease-out-expo) both; animation-delay: calc(60ms + var(--d) * 70ms); }
+ .reveal { animation: hero-enter var(--dur-enter) var(--ease-out-expo) both; animation-delay: calc(var(--d) * var(--stagger)); }
+ /* 同一会话里再回首页（从文章返回、刷新）时直接显示最终状态：不重播入场、不再打字、不重数数字。 */
+ :global(:root[data-welcomed]) :is(.reveal,.word) { animation: none; }
+ :global(:root[data-welcomed]) .brush path { animation: none; stroke-dashoffset: 0; }
  @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
    .sec-head::after { animation: draw linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
@@ -426,7 +468,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  @keyframes slide { from { opacity: .15; translate: 0 18px; } }
  @keyframes grow { from { transform: scaleY(.05); opacity: .3; } }
  @keyframes recede { to { opacity: .6; translate: 0 24px; } }
- @keyframes word-rise { from { opacity: 0; translate: 0 .45em; filter: blur(3px); } }
+ @keyframes word-rise { from { opacity: .3; translate: 0 .35em; } }
  @keyframes brush { to { stroke-dashoffset: 0; } }
  @keyframes wander-a { to { transform: translate(14vw,8vh) scale(1.12); } }
  @keyframes wander-b { to { transform: translate(-12vw,-10vh) scale(.92); } }

@@ -17,10 +17,13 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT = path.resolve('dist');
-// 页面标题是 h1（由 frontmatter 提供，不加锚点），正文用 h2-h4
+// 只处理正文页（文章与项目），且只处理正文容器之后的标题；页面标题是 h1（由 frontmatter 提供，不加锚点），正文用 h2-h4。
+const CONTENT_PAGES = new RegExp(`^(blog|projects)\\${path.sep}[^\\${path.sep}]+\\${path.sep}index\\.html$`);
+const CONTENT_START = 'class="rich-content';
 const HEAD_OPEN = /<h([234])\b([^>]*)>/gi;
 const ID_ATTR = /\bid\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i;
 
+// 链接放在标题外面、包进同一个容器：放在标题里面会让读屏把每个标题读成「标题文字 链接到本节」。
 const anchorFor = id =>
 	`<a class="heading-anchor" href="#${id}" aria-label="链接到本节" title="链接到本节">` +
 	`<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">` +
@@ -33,7 +36,9 @@ function inject(html) {
 	let count = 0;
 	// 小写副本只算一次：长文有上百个标题，每个标题都对整页 toLowerCase 会让耗时随篇幅平方增长。
 	const lower = html.toLowerCase();
-	HEAD_OPEN.lastIndex = 0;
+	const start = html.indexOf(CONTENT_START);
+	if (start === -1) return { html, count };
+	HEAD_OPEN.lastIndex = start;
 	let m;
 	while ((m = HEAD_OPEN.exec(html))) {
 		const tag = `h${m[1]}`;
@@ -44,15 +49,16 @@ function inject(html) {
 		const closeTag = `</${tag}>`;
 		const closeAt = lower.indexOf(closeTag, m.index + m[0].length);
 		if (closeAt === -1) continue;
-		// 幂等：已注入过就跳过（标题内不可能嵌套标题，所以首个闭合标签即本标题终点）
-		if (html.slice(m.index + m[0].length, closeAt).includes('heading-anchor')) {
-			HEAD_OPEN.lastIndex = closeAt + closeTag.length;
+		const end = closeAt + closeTag.length;
+		// 幂等：已包过容器就跳过
+		if (html.slice(Math.max(0, m.index - 40), m.index).includes('class="heading-wrap"')) {
+			HEAD_OPEN.lastIndex = end;
 			continue;
 		}
-		out += html.slice(last, closeAt) + anchorFor(id);
-		last = closeAt;
+		out += html.slice(last, m.index) + `<div class="heading-wrap heading-wrap-${tag}">` + html.slice(m.index, end) + anchorFor(id) + '</div>';
+		last = end;
 		count++;
-		HEAD_OPEN.lastIndex = closeAt + closeTag.length;
+		HEAD_OPEN.lastIndex = end;
 	}
 	if (!count) return { html, count };
 	return { html: out + html.slice(last), count };
@@ -67,13 +73,14 @@ async function walk(dir, files = []) {
 	return files;
 }
 
-const files = await walk(ROOT);
+const files = (await walk(ROOT)).filter(file => CONTENT_PAGES.test(path.relative(ROOT, file)));
 let changedFiles = 0;
 let totalAnchors = 0;
 let headingsWithId = 0;
 for (const file of files) {
 	const html = await readFile(file, 'utf8');
-	headingsWithId += [...html.matchAll(HEAD_OPEN)].filter(h => ID_ATTR.test(h[2])).length;
+	const start = html.indexOf(CONTENT_START);
+	if (start !== -1) headingsWithId += [...html.slice(start).matchAll(HEAD_OPEN)].filter(h => ID_ATTR.test(h[2])).length;
 	const { html: next, count } = inject(html);
 	if (count > 0) {
 		await writeFile(file, next, 'utf8');

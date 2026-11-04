@@ -3,6 +3,7 @@
 const easeInOutCubic = (t: number) => (t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 let cancelCurrent: (() => void) | undefined;
+const scrollKeys = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' ']);
 
 // 与浏览器原生 hash 跳转一致：落点 = 根元素 scroll-padding-top + 目标自身 scroll-margin-top。
 function scrollOffset(target: HTMLElement) {
@@ -14,19 +15,24 @@ function scrollOffset(target: HTMLElement) {
 export function scrollToElement(target: HTMLElement, { onDone }: { onDone?: () => void } = {}) {
  cancelCurrent?.();
  const startY = scrollY;
- // 目标位置每帧重新测量：折叠目录、图片加载等布局变化不会让落点偏掉。
- const endOf = () => Math.max(0, Math.min(document.documentElement.scrollHeight - innerHeight, target.getBoundingClientRect().top + scrollY - scrollOffset(target)));
+ // 偏移量在开始时算一次；目标位置每帧重新测量，折叠目录、图片加载等布局变化不会让落点偏掉。
+ const offset = scrollOffset(target);
+ const endOf = () => Math.max(0, Math.min(document.documentElement.scrollHeight - innerHeight, target.getBoundingClientRect().top + scrollY - offset));
  const distance = endOf() - startY;
  if (reduced.matches || Math.abs(distance) < 2) { scrollTo({ top: endOf(), behavior: 'instant' }); onDone?.(); return; }
  const duration = Math.min(900, Math.max(360, 260 + Math.sqrt(Math.abs(distance)) * 12));
  const startTime = performance.now();
  let frame = 0;
+ // 只有会滚动页面的键才打断动画；Tab、Shift 这类按键不算读者接管。
+ const onKey = (event: KeyboardEvent) => { if (scrollKeys.has(event.key)) stop(); };
  const stop = () => {
   cancelAnimationFrame(frame);
-  for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const) removeEventListener(type, stop);
+  for (const type of ['wheel', 'touchstart', 'pointerdown'] as const) removeEventListener(type, stop);
+  removeEventListener('keydown', onKey);
   if (cancelCurrent === stop) cancelCurrent = undefined;
  };
- for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const) addEventListener(type, stop, { passive: true });
+ for (const type of ['wheel', 'touchstart', 'pointerdown'] as const) addEventListener(type, stop, { passive: true });
+ addEventListener('keydown', onKey, { passive: true });
  cancelCurrent = stop;
  const step = (now: number) => {
   const progress = Math.min(1, (now - startTime) / duration);
