@@ -5,7 +5,6 @@ pubDate: 2026-10-10
 updatedDate: 2026-10-26
 tags:
   - "AI Infra"
-  - "学习笔记"
   - "系统设计"
 category: course
 series: ai-infra

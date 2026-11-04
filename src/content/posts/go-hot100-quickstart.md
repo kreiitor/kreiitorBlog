@@ -1,23 +1,22 @@
 ---
-title: "Go 刷 Hot100 速拾手册"
-description: "用 Go 刷题的最小工作集：slice 三件套、map 零值、heap 接口模板、链表/树的 GC 舒适度，以及单调栈/单调队列/并查集专项与避坑清单。"
+title: "Go 刷 Hot100 速查手册"
+description: "用 Go 刷题的最小工作集：slice 三件套、map 零值、heap 接口模板、链表/树不用手动管理内存，以及单调栈/单调队列/并查集专项与避坑清单。"
 pubDate: 2026-10-14
 updatedDate: 2026-10-26
 tags:
   - "算法"
-  - "学习笔记"
   - "Go"
 category: knowledge
 cover: /covers/post-code-go.svg
 featured: true
 ---
 
-这份手册给两类人：
+读者大致分两类：
 
 - 没写过 Go，但要用 Go 刷题；
 - 学过 Go 语法，但手生。
 
-没写过 Go 的，先看第 0 节。它只讲刷题够用的部分，目标是让你看懂后面的模板，而不是系统学完 Go。写过 Go 的，可以直接从第 1 节开始。
+没写过 Go 的，先看第 0 节。它只讲刷题够用的部分，看懂后面的模板就够了，不必系统学完 Go。写过 Go 的，直接跳到第 1 节。
 
 ## 0. 零基础 Go 速成
 
@@ -72,7 +71,7 @@ const MOD = 1_000_000_007
 | `byte` | `uint8` 的别名，处理 ASCII/字节 |
 | `rune` | `int32` 的别名，表示一个 Unicode 字符 |
 
-零值不是“未初始化”的随机值：
+零值是确定值，不是随机内存：
 
 ```go
 var i int       // 0
@@ -91,7 +90,7 @@ z := byte('a')
 s := string([]byte{65, 66}) // "AB"
 ```
 
-Go 编译器会报“声明了但没使用”的变量和 import。刷题时用 `_` 丢弃不需要的返回值。
+Go 编译器会报「声明了但没使用」的变量和 import。刷题时用 `_` 丢弃不需要的返回值。
 
 ### 0.3 条件与循环
 
@@ -202,7 +201,7 @@ append(xs, 4)    // 必须接返回值
 copy(dst, src)   // 返回拷贝的元素个数
 ```
 
-`append` 可能重新分配底层数组，所以必须写：
+`append` 可能重新分配底层数组，返回值要接住：
 
 ```go
 xs = append(xs, 4)
@@ -210,7 +209,7 @@ xs = append(xs, 4)
 
 只写 `append(xs, 4)` 不会改变 `xs`，这是 Go 新手最常见的错误。
 
-slice 是“指针 + 长度 + 容量”，切片和传参都共享底层数组：
+slice 是「指针 + 长度 + 容量」，切片和传参都共享底层数组：
 
 ```go
 a := []int{1, 2, 3}
@@ -250,7 +249,7 @@ if _, ok := cnt[3]; !ok {
 }
 ```
 
-`cnt[x]` 读不存在的 key 会返回零值，不会报错。计数题可以直接 `cnt[x]++`；需要区分“不存在”和“值就是零”时用 comma-ok。
+`cnt[x]` 读不存在的 key 会返回零值，不会报错。计数题可以直接 `cnt[x]++`；需要区分「不存在」和「值就是零」时用 comma-ok。
 
 map 的遍历顺序是随机的，不要依赖顺序：
 
@@ -309,7 +308,7 @@ func (p *ListNode) Len() int {
 }
 ```
 
-刷题时链表题通常用指针接收者，因为要修改节点指针。树题的值接收者/指针接收者都可以，按需选择。
+链表题通常用指针接收者，因为要改节点指针。树题的值接收者/指针接收者都可以，按需选择。
 
 ### 0.8 接口与 any
 
@@ -609,7 +608,7 @@ slices.SortFunc(intervals, func(a, b []int) int {
 })
 ```
 
-`sort.Slice` 的 less 语义是“i 是否应该排在 j 前面”。
+`sort.Slice` 的 less 语义是「i 是否应该排在 j 前面」。
 
 ### 1.7 多返回值
 
@@ -619,7 +618,7 @@ v, ok := mp[key]
 _, _ = v, ok
 ```
 
-刷题里很少需要 `error`，但要知道多返回值的写法。
+刷题里很少需要 `error`，多返回值的写法还是要会。
 
 ## 2. 容器
 
@@ -653,7 +652,7 @@ len(st) == 0             // 判空
 
 ### 2.3 slice 模拟 deque
 
-Go 标准库没有刷题友好的 deque。`container/list` 是双向链表，接口和性能都不适合刷题。用 slice 写一个：
+Go 标准库没有现成的 deque。`container/list` 是双向链表，接口和性能都不合适。用 slice 写一个：
 
 ```go
 type Deque struct {
@@ -776,7 +775,7 @@ for right := 0; right < n; right++ {
 }
 ```
 
-`valid()` 是占位，按题目替换成具体条件。比如“窗口内没有重复字符”：
+`valid()` 是占位，按题目替换成具体条件。比如「窗口内没有重复字符」：
 
 ```go
 cnt := make(map[byte]int)
@@ -1038,7 +1037,7 @@ func largestRectangleArea(heights []int) int {
 }
 ```
 
-`heights = append(heights, 0)` 在容量够时可能修改调用方的底层数组，刷题里通常无所谓，但要知道这一点。
+`heights = append(heights, 0)` 在容量够时可能修改调用方的底层数组，刷题里通常无所谓。
 
 ## 5. 单调队列
 
@@ -1157,7 +1156,7 @@ func numIslands(grid [][]byte) int {
 4. 递归闭包先 `var dfs func(...)` 再赋值。
 5. `make([]int, n)` 全是 0，需要 1 的地方要显式初始化。
 6. heap 的 `Push` / `Pop` 用指针接收者。
-7. `sort.Slice` 的 less 是“i 是否排在 j 前面”。
+7. `sort.Slice` 的 less 是「i 是否排在 j 前面」。
 8. `len(s)` 是字节数，处理中文先想 `[]rune`。
 9. Go 1.21 之前没有内置 `max` / `min`。
 10. LeetCode 里不要起 goroutine，判题按函数调用，不值得引入并发。

@@ -12,14 +12,14 @@ order: 2
 cover: /covers/series-ai-infra.svg
 ---
 
-## 0.分词器大观
+## 0. 分词器大观
 
 分词器的几个要求：
-- 要能保证tokens2ids和ids2tokens可逆，不能是单向的
-- 要保证压缩比，这样才能用相对少的token，毕竟注意力机制是$O(N^2)$
+- 要能保证 tokens2ids 和 ids2tokens 可逆，不能是单向的
+- 要保证压缩比，这样才能用相对少的 token，毕竟注意力机制是 $O(N^2)$
 - 虽然扩展词表可以保证压缩比，但是词表太大又会产生稀疏性问题
 
-## 1.Character Tokenizer
+## 1. Character Tokenizer
 
 构建一个字符分词器：
 ```python
@@ -65,7 +65,7 @@ class ByteTokenizer:
     def is_reversible(self) -> bool:
         return True  # UTF-8 encode/decode 严格可逆
 ```
-- 可以用python中字符串的encode，decode方法进行编解码
+- 可以用 Python 中字符串的 `encode`、`decode` 方法进行编解码
 - 词表大小固定为 **256**，彻底消除稀疏性问题，每个 byte embedding 都能被充分训练
 - 完美可逆，支持任意二进制数据（代码、图片 base64、多语言混合）
 - **压缩比仍然低**：
@@ -73,34 +73,33 @@ class ByteTokenizer:
     - 中文：BPT ≈ 3.0（CJK 每字符 3 bytes → 3 tokens），TPC ≈ 3.0
     - 相比 BPE 仍有 3–5× 的序列长度劣势
 
-## 3.Word Tokenizer
+## 3. Word Tokenizer
 
-- 类似NLP任务的做法，使用空格或者某些正则表达式将一个句子切分成块
-- 这样可以保证每个token有意义，毕竟是人类发明的词语
-- 但是词表的大小不可预测，随语料可能变化剧烈
-- 这样的方法，压缩率很高
-- 并且遇到了训练时没被见过的token就很糟糕
+- 类似 NLP 任务的做法，使用空格或者某些正则表达式将一个句子切分成块
+- 这样可以保证每个 token 有意义，因为词是人类发明的
+- 但是词表大小不可预测，随语料可能变化剧烈
+- 这类方法的压缩率很高
+- 训练时遇到没见过的 token 会很糟糕
 
-## 4.BPE Tokenizer
+## 4. BPE Tokenizer
 
 **关键思想：**
-首先训练数据中的每个字节作为一个token，然后使用贪心策略将出现频率最高的相邻字节对合并。
+首先把训练数据中的每个字节作为一个 token，然后使用贪心策略将出现频率最高的相邻字节对合并。
 
 若干问题：
 
-- 会一直迭代合并下去吗？
-	- 不会，会有最大词表大小限制，或者最小合并频率和最大token长度限制
-- 没有意义的中间token如何处理？（例如学习low过程中的lo）
-	- 不会丢弃，因为中间过程的这些“无意义”的token是对没见过的词或者乱码防止OOV的关键所在
-	- 并且“意义”是模型考虑的，分词器只负责压缩，模型负责“理解”
+- 合并不会无限迭代：有最大词表大小限制，或者最小合并频率和最大 token 长度限制。
+- 中间产生的「无意义」token 不会丢弃，例如学习 low 过程中的 lo；它们是对没见过的词或乱码防止 OOV 的关键。
+- 「意义」是模型考虑的：分词器只负责压缩，模型负责「理解」。
 
 > **关键结论**
 >
 > - Char Tokenizer 和 Byte Tokenizer **都不适合单独作为 LLM 分词器**，核心价值在于作为**评估基准**和**BPE/Unigram 的兜底机制**。
-> - Byte Tokenizer 优于 Char Tokenizer：词表极小、无稀疏、跨语言公平、二进制安全。这也是为什么现代分词器（GPT-2+, Llama, Qwen）全部采用 **Byte-level BPE** 而非 Char-level BPE。
-> - BPE是现在大模型较多使用的分词方法，除此以外还有wordpiece方法
+> - Byte Tokenizer 优于 Char Tokenizer：词表极小、无稀疏、跨语言公平、二进制安全。现代分词器（GPT-2+, Llama, Qwen）因此全部采用 **Byte-level BPE** 而非 Char-level BPE。
+> - BPE 是现在大模型较多使用的分词方法，除此以外还有 wordpiece 方法。
+
 ## 附录
-### A.压缩比公式
+### A. 压缩比公式
 #### 1. 每字符 Token 数（Tokens Per Character, TPC）
 
 $$

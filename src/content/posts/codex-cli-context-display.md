@@ -48,7 +48,7 @@ Codex 的 session 文件里本来就会写出类似字段：
 - `reasoning_output_tokens`
 - `model_context_window`
 
-所以这个方案本质上是“外部读事件，外部显示”，不是去改 Codex 内部 UI。
+所以它是从外部读事件、在外部显示，Codex 内部 UI 保持原状。
 
 ---
 
@@ -74,14 +74,14 @@ Codex 的 session 文件里本来就会写出类似字段：
 tmux split-window -v -l 18%
 ```
 
-这里使用 `-l 18%` 更直观。  
-`size missing` 通常是因为没有提供尺寸或百分比参数，而不是 `-p` 被移除：
+这里用 `-l 18%` 更直观。  
+`size missing` 通常是因为没给尺寸或百分比参数，而不是 `-p` 被移除：
 
 ```text
 size missing
 ```
 
-使用 `-l 18%` 更兼容。
+`-l 18%` 的兼容性也更好。
 
 ### 2. 读取 session 文件
 
@@ -193,7 +193,7 @@ alias codex='codex-usage'
 
 ### 方式三：不改任何现有 Codex 配置
 
-这个方案本身不会改：
+它不会改：
 
 - `~/.codex/auth.json`
 - `~/.codex/config.toml`
@@ -230,8 +230,8 @@ tmux kill-session -t "$s"
 ## 注意事项
 
 - 这个实现依赖 `tmux`，没有 `tmux` 时会退回普通 Codex
-- 它读取的是 session 日志，不是 Codex 内部实时 API
-- 它显示的是当前会话的使用情况，不是全局账号配额
+- 数据来自 session 日志，不走 Codex 内部的实时 API
+- 只覆盖当前会话的使用情况，不含全局账号配额
 - 如果看到 `size missing`，优先检查脚本里是否还在使用 `tmux split-window -p 18`
 - 如果以后 Codex CLI 原生加了状态栏，这个方案可以直接废弃
 
@@ -245,5 +245,4 @@ tmux kill-session -t "$s"
 - 不想动 Codex 本体配置
 - 需要明确可回滚
 
-那这个方案是合适的。  
-它够轻，也够独立，后续要删掉不会留下配置债。
+那这个方案是合适的。

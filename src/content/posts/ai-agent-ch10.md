@@ -5,7 +5,6 @@ pubDate: 2026-10-05
 updatedDate: 2026-10-26
 tags:
   - AI Agent
-  - 学习笔记
   - LLM
 category: course
 series: ai-agent

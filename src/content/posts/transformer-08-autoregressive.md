@@ -5,7 +5,6 @@ pubDate: 2026-10-26
 tags:
   - "Transformer"
   - "自回归"
-  - "学习笔记"
 category: course
 series: transformer
 order: 8
@@ -16,7 +15,7 @@ cover: /covers/series-deep-learning.svg
 
 ### 核心循环
 
-每一步用已有的token序列做一次前向传播,取最后一个位置的输出预测下一个token,然后把新token追加到序列中循环进行
+每一步用已有的 token 序列做一次前向传播，取最后一个位置的输出预测下一个 token，然后把新 token 追加到序列中循环进行。
 
 ### 停止条件
 
@@ -46,13 +45,13 @@ next_token = torch.argmax(probs)
 probs = softmax(logits / T)
 ```
 
-温度的作用像一个“旋钮”，控制概率分布的“尖锐程度”：
+温度像一个「旋钮」，控制概率分布的「尖锐程度」：
 
 | 温度值        | 效果                  | 类比                    |
 | ---------- | ------------------- | --------------------- |
 | T<1（如 0.3） | 分布变尖锐，高概率 token 更突出 | 谨慎保守的作者，倾向选最安全的词      |
 | T=1        | 原始分布，不做调整           | 正常发挥                  |
-| T>1（如 1.5） | 分布变平坦，低概率 token 被拉高 | 天马行空的创作者，更愿意冒险选“意外”的词 |
+| T>1（如 1.5） | 分布变平坦，低概率 token 被拉高 | 天马行空的创作者，更愿意冒险选「意外」的词 |
 | T→0        | 退化为 greedy decoding | 只选最确定的那个              |
 | T→∞        | 退化为均匀分布             | 完全随机                  |
 
@@ -66,11 +65,11 @@ topk_probs = topk_probs / topk_probs.sum()  # 重新归一化
 next_token = topk_indices[torch.multinomial(topk_probs, 1)]
 ```
 
-Top-K 的问题在于 K 是固定的。有时候概率分布很集中（只有 2-3 个合理选项），K=50 就引入了太多噪声；有时候分布很分散（很多 token 都合理），K=50又太限制了。
+Top-K 的问题在于 K 是固定的。有时候概率分布很集中（只有 2-3 个合理选项），K=50 就引入了太多噪声；有时候分布很分散（很多 token 都合理），K=50 又太限制了。
 
 ### 2.4 Top-P 采样（Nucleus Sampling）
 
-一种自适应的方案：按概率从大到小排列 token，累加概率直到超过阈值 P（如 0.9），只在这个“核”内采样：
+一种自适应的方案：按概率从大到小排列 token，累加概率直到超过阈值 P（如 0.9），只在这个「核」内采样：
 
 ```
 sorted_probs, sorted_indices = torch.sort(probs, descending=True)
@@ -121,8 +120,8 @@ Prefill 阶段的耗时决定了 **TTFT（Time To First Token，首 Token 延迟
 
 对于长 prompt（如上传一篇论文让模型总结），TTFT 可能达到数秒甚至十几秒。优化 TTFT 的思路包括：
 
-- **Chunked Prefill**：将长 prompt 分成多个 chunk 分批处理，而不是一次性吃下。这样可以在处理 prompt 的同时穿插其他请求的 Decode 步骤，提升整体系统吞吐。但注意，Chunked Prefill 不会让单个请求的 TTFT 更快——它更多是系统级的调度优化
-- **Prefix Cache / Prompt Cache**：如果多个请求共享相同的 system prompt（如“你是一个有帮助的助手”），可以预计算并缓存这部分的 KV，后续请求直接复用，跳过这段 prompt 的 Prefill 计算
+- **Chunked Prefill**：将长 prompt 分成多个 chunk 分批处理，而不是一次性吃下。这样可以在处理 prompt 的同时穿插其他请求的 Decode 步骤，提升整体系统吞吐。不过，Chunked Prefill 不会让单个请求的 TTFT 更快——它更多是系统级的调度优化。
+- **Prefix Cache / Prompt Cache**：如果多个请求共享相同的 system prompt（如「你是一个有帮助的助手」），可以预计算并缓存这部分的 KV，后续请求直接复用，跳过这段 prompt 的 Prefill 计算。
 
 ## 4. Decode 阶段：逐字蹦出答案
 
@@ -151,13 +150,13 @@ Decode:  Q (1, 128)    × K^T (128, 1001) = 向量 × 矩阵 → GPU 空转
 
 打个比方，Prefill 阶段像一条高速运转的流水线，原材料（数据）源源不断地到来，工人（计算核心）忙个不停；Decode 阶段像只有一件零件需要加工，工人只干了一下就得等下一件零件从仓库搬过来，大部分时间在等待。
 
-这就是为什么 Decode 的瓶颈在**显存带宽（Memory Bandwidth）** 而非算力——我们称之为 **Memory Bound**。
+Decode 的瓶颈因此落在**显存带宽（Memory Bandwidth）** 而非算力，即 **Memory Bound**。
 
 ### 4.3 TPOT：决定用户体验的流畅度
 
-Decode 阶段每一步的耗时决定了 **TPOT（Time Per Output Token，每 Token 延迟）**——用户看到输出文字“蹦出来”的速度。
+Decode 阶段每一步的耗时决定了 **TPOT（Time Per Output Token，每 Token 延迟）**——用户看到输出文字「蹦出来」的速度。
 
-人类的阅读速度大约是每秒 5-10 个词（约 7-15 个 token），因此 TPOT 在 50-100ms 以内就能给用户“实时输出”的流畅感。如果 TPOT 超过 200ms，用户会明显感到卡顿。
+人类的阅读速度大约是每秒 5-10 个词（约 7-15 个 token），因此 TPOT 在 50-100ms 以内就能给用户「实时输出」的流畅感。如果 TPOT 超过 200ms，用户会明显感到卡顿。
 
 ### 4.4 Continuous Batching
 
@@ -175,7 +174,7 @@ Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、Tens
 
 ### 5.1 为什么需要 KV Cache
 
-回顾自回归生成的过程：每一步 Decode，新 token 的 Q 需要和所有历史 token 的 K 做内积来计算 Attention 权重。如果不做任何缓存，每一步都需要重新对所有历史 token 做 QKV 线性投影——但这些投影在之前的步骤中已经算过了。
+每一步 Decode，新 token 的 Q 需要和所有历史 token 的 K 做内积来计算 Attention 权重。如果不做任何缓存，每一步都要重新对所有历史 token 做 QKV 线性投影——但这些投影在之前的步骤中已经算过了。
 
 打个比方，你在银行办理业务，每换一个窗口都要重新排队、重新提交所有材料。KV Cache 的做法是：你第一次提交的材料都存了档，之后换窗口只需报个编号就能调档，不必重新准备。
 
@@ -183,11 +182,11 @@ Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、Tens
 
 ### 5.2 有无 KV Cache 的计算量对比
 
-用一个简单的数学对比来说明 KV Cache 的价值。设当前已生成序列长度为 nn，每个 token 经过 QKV 投影的单 token 计算量为 3dmodel^2（三个矩阵乘法），单个 Query 与所有缓存 Key/Value 交互的 Attention 计算量为 O(n⋅dmodel)。下面对比生成 NN 个 token 的累计代价（忽略层数 LL 这个公共因子）。
+设当前已生成序列长度为 nn，每个 token 经过 QKV 投影的单 token 计算量为 3dmodel^2（三个矩阵乘法），单个 Query 与所有缓存 Key/Value 交互的 Attention 计算量为 O(n⋅dmodel)。下面对比生成 NN 个 token 的累计代价（忽略层数 LL 这个公共因子）。
 
 **❌ 无 KV Cache——每步把整个前缀（n 个 token）重新喂入模型**：
 
->没有KVcache,第i个token的第l层的kv要重新算,那么就需要第l-1层的输出结果,那么第l-1层的全部计算走一遍
+> 没有 KV cache，第 i 个 token 第 l 层的 kv 要重新算，那么就需要第 l-1 层的输出结果，那么第 l-1 层的全部计算走一遍
 
 每步有 n 个 Query，每个 Query 又要对 n 个 Key 做注意力，因此 Attention 计算量是 n2⋅d。
 
@@ -207,7 +206,7 @@ Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、Tens
 | Step n  | 1⋅3d2        | n⋅d（仍需和所有缓存 K 做内积） |
 | 总计（N 步） | N⋅3d2=O(Nd2) | O(N2d)             |
 
-KV Cache 将 QKV 投影的总计算量从 O(N2d2) 降到了 O(Nd2)，节省 N 倍；Attention 总计算量从 O(N3d)降到了O(N2d)，同样节省 N 倍。在长序列下这是数量级的差异。
+KV Cache 将 QKV 投影的总计算量从 O(N2d2) 降到了 O(Nd2)，节省 N 倍；Attention 总计算量从 O(N3d) 降到了 O(N2d)，同样节省 N 倍。在长序列下这是数量级的差异。
 
 ### 5.3 KV Cache 的数据结构
 
@@ -276,7 +275,7 @@ KV Cache 显存=2×L×n_kv×d_h×N×B×be
 
 KV Cache 有一个棘手的工程问题：**动态增长导致的显存碎片化**。
 
-不同请求的序列长度不同，KV Cache 大小不一。随着请求不断到来和完成，显存中会出现大量“空洞”——总空闲显存足够，但没有一块连续区域能放下新请求的 KV Cache。这就像停车场里车位很多，但都是零散的单个车位，无法停进一辆需要两个连续车位的大车。
+不同请求的序列长度不同，KV Cache 大小不一。随着请求不断到来和完成，显存中会出现大量「空洞」——总空闲显存足够，但没有一块连续区域能放下新请求的 KV Cache。这就像停车场里车位很多，但都是零散的单个车位，无法停进一辆需要两个连续车位的大车。
 
 传统做法是为每个请求预分配最大序列长度的 KV Cache 空间，但这会造成极大的浪费——大多数请求远远用不满最大长度。这正是 PagedAttention 要解决的核心问题。
 
@@ -286,7 +285,7 @@ KV Cache 有一个棘手的工程问题：**动态增长导致的显存碎片化
 
 PagedAttention 是 vLLM 推理引擎的核心创新，其思想直接来源于操作系统的**虚拟内存分页机制**。
 
-操作系统面对的问题和 KV Cache 管理几乎一模一样：不同进程需要不同大小的内存，随着进程的创建和销毁，物理内存中出现碎片。操作系统的解决方案是：不再给每个进程分配连续的物理内存，而是把物理内存划分为固定大小的“页”（page），通过页表将虚拟地址映射到不连续的物理页。
+操作系统面对的问题和 KV Cache 管理几乎一模一样：不同进程需要不同大小的内存，随着进程的创建和销毁，物理内存中出现碎片。操作系统的解决方案是：不再给每个进程分配连续的物理内存，而是把物理内存划分为固定大小的「页」（page），通过页表将虚拟地址映射到不连续的物理页。
 
 PagedAttention 做的是同一件事：
 
@@ -310,7 +309,7 @@ PagedAttention 的效果非常显著：实验表明它可以将 KV Cache 的显�
 
 ### 6.2 Prefix Cache / Prompt Cache
 
-很多场景下，多个请求共享相同的前缀——比如相同的 system prompt（“你是一个有帮助的 AI 助手，请…”）。为每个请求都重新计算这段前缀的 KV 是浪费的。
+很多场景下，多个请求共享相同的前缀——比如相同的 system prompt（「你是一个有帮助的 AI 助手，请…」）。为每个请求都重新计算这段前缀的 KV 是浪费的。
 
 Prefix Cache 的做法是：将公共前缀的 KV Cache 计算一次并缓存，后续有相同前缀的请求直接复用这份缓存，只需要对各自不同的后缀部分做 Prefill。
 
@@ -347,13 +346,13 @@ KV Cache 从 O(N) 变为 O(W)，对超长序列的显存节省巨大。但代价
 
 ### 6.6 Token Eviction / Token Dropping
 
-更激进的策略：在 KV Cache 达到容量上限时，主动丢弃一些“不重要”的 token 的 KV。
+更激进的策略：在 KV Cache 达到容量上限时，主动丢弃一些「不重要」的 token 的 KV。
 
 判断 token 重要性的方法包括：
 
-- **基于 Attention 分数**：累积 Attention 权重较低的 token 可能不太重要（H2O: Heavy-Hitter Oracle）
-- **基于位置**：保留开头的 token（通常是 system prompt，有”attention sink”现象）和最近的 token，丢弃中间的
-- **基于语义**：保留关键的实体、数字等 token
+- **基于 Attention 分数**：累积 Attention 权重较低的 token 可能不太重要（H2O: Heavy-Hitter Oracle）。
+- **基于位置**：保留开头的 token（通常是 system prompt，有「attention sink」现象）和最近的 token，丢弃中间的。
+- **基于语义**：保留关键的实体、数字等 token。
 
 ---
 
@@ -361,7 +360,7 @@ KV Cache 从 O(N) 变为 O(W)，对超长序列的显存节省巨大。但代价
 
 ### 7.1 Prefill/Decode 解耦
 
-前面分析过，Prefill 是 Compute Bound，Decode 是 Memory Bound——两者对硬件的需求截然不同。把它们放在同一组 GPU 上运行，意味着硬件配置只能“折中”，两边都不是最优。
+Prefill 是 Compute Bound，Decode 是 Memory Bound，两者对硬件的需求截然不同。把它们放在同一组 GPU 上运行，意味着硬件配置只能「折中」，两边都不是最优。
 
 **Prefill/Decode 解耦**的思想（DistServe、Splitwise 等提出）是：将 Prefill 和 Decode 分别部署在不同的 GPU 池上：
 
@@ -424,9 +423,7 @@ Prefill 完成后，将 KV Cache 传输到 Decode 池继续生成。这样两个
 
 延迟和吞吐往往存在权衡（trade-off）：增大 batch_size 能提升吞吐（更多请求并行处理），但会增加单请求的 TPOT（每步需要处理更多 token 的 KV Cache）。推理系统的调优是在延迟 SLA 约束下最大化吞吐。
 
-## 📝 总结
-
-本文从语言模型的数学本质出发，完整剖析了 LLM 自回归生成的全链路：
+## 总结
 
 1. **语言模型本质**：建模条件概率分布 P(xt∣x1,…,xt−1)
 2. **自回归循环**：逐步预测 + 采样 + 追加，直到停止条件
@@ -436,8 +433,6 @@ Prefill 完成后，将 KV Cache 传输到 Decode 池继续生成。这样两个
 6. **KV Cache**：避免重复计算 K/V，以空间换时间
 7. **KV Cache 优化**：PagedAttention（分页管理）、Prefix Cache（前缀复用）、量化（低精度存储）、GQA（减少头数）
 8. **系统级优化**：Continuous Batching、Prefill/Decode 解耦、Speculative Decoding
-
-对于 AI Infra 工程师来说，理解这些推理机制是设计和优化推理系统的基础。每一项优化技术都源于对推理过程某个环节的深入分析——Prefill 的 Compute Bound 催生了 Chunked Prefill，Decode 的 Memory Bound 催生了 Speculative Decoding，KV Cache 的显存压力催生了 PagedAttention 和量化技术。
 
 ---
 

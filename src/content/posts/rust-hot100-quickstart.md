@@ -5,20 +5,19 @@ pubDate: 2026-10-14
 updatedDate: 2026-10-26
 tags:
   - "算法"
-  - "学习笔记"
   - "Rust"
 category: knowledge
 cover: /covers/post-code-rust.svg
 featured: true
 ---
 
-这份笔记给“学过 Rust 语法但手生”的人用，目标是用 Rust 刷完 Hot100。Rust 在链表、树、图题上会碰到所有权和借用的摩擦，这份笔记的重点就是把常见摩擦处理掉。没写过 Rust 的，先看第 0 节和第 1.2 节。
+学过 Rust 语法但手生的人，可以直接用 Rust 刷 Hot100。链表、树、图题上会碰到所有权和借用的摩擦，处理办法集中在第 1 节和第 3 节。没写过 Rust 的，先看第 0 节和第 1.2 节。
 
 ---
 
 ## 0. 完全没写过 Rust
 
-Rust 的门槛主要在所有权和借用，不在语法。先看这段，能理解“`&nums` 是借用、`nums` 是移动”，再进第 1 节。
+Rust 的门槛主要在所有权和借用，不在语法。看懂下面这段，就能分清「`&nums` 是借用、`nums` 是移动」，再进第 1 节。
 
 ```rust
 use std::collections::HashMap;
@@ -74,7 +73,7 @@ impl Solution {
 }
 ```
 
-LeetCode 已导入常见类型。注意函数签名是**值传递的 `Vec<i32>`**——你拥有它，可以直接消费（`into_iter`）或就地修改。
+LeetCode 已导入常见类型。函数签名是**值传递的 `Vec<i32>`**，你拥有它，可以直接消费（`into_iter`）或就地修改。
 
 ### 1.2 所有权与借用：刷题只需要三条规则
 
@@ -88,7 +87,7 @@ fn g(nums: &mut Vec<i32>) {}   // 可变借用
 fn h(nums: Vec<i32>) {}        // 拿走所有权
 ```
 
-函数内同时需要“读数组 + 写另一个数组”完全没问题；麻烦的是**同一容器一边遍历一边改**：
+函数内同时需要「读数组 + 写另一个数组」完全没问题；麻烦的是**同一容器一边遍历一边改**：
 
 ```rust
 // 编译不过：遍历借用 nums，循环内又 mut 借用
@@ -129,7 +128,7 @@ let mut dp = vec![vec![0; n]; m];
 let mut vis = vec![vec![false; n]; m];
 ```
 
-`vec![x; n]` 要求元素 `Clone`，基本类型都没问题。越界 `v[i]` 会 panic（不是 UB）——Rust 的越界是显式崩溃，比 C++ 好调试。
+`vec![x; n]` 要求元素 `Clone`，基本类型都没问题。越界 `v[i]` 会 panic，不是 UB；显式崩溃比 C++ 好调试。
 
 ### 1.5 字符串
 
@@ -170,7 +169,7 @@ arr.sort_by(|a, b| b[1].cmp(&a[1]).then(a[0].cmp(&b[0])));  // 多关键字
 nums.sort_unstable();              // 更快，不保证相等元素顺序
 ```
 
-比较器返回 `Ordering`：`a.cmp(&b)` 升序、`b.cmp(&a)` 降序——**用 `cmp` 而不用 `<`，不会写出 C++ 那种 `<=` UB**。
+比较器返回 `Ordering`：`a.cmp(&b)` 升序、`b.cmp(&a)` 降序。**用 `cmp` 而不用 `<`，不会写出 C++ 那种 `<=` UB**。
 
 ### 1.8 整数与位运算
 
@@ -181,7 +180,7 @@ n.count_ones()                     // 内置 popcount
 
 `i32` 溢出在 debug 下 panic、release 下回绕。累加/乘法换 `i64`（LeetCode 的签名多是 i32，内部计算用 i64 再 `as i32` 转回）。
 
-### 1.9 迭代器：Rust 的“推导式”
+### 1.9 迭代器：Rust 的「推导式」
 
 ```rust
 let squares: Vec<i32> = nums.iter().map(|x| x * x).collect();
@@ -194,7 +193,7 @@ nums.chunks(k)                   // 按块切
 nums.iter().zip(other.iter())
 ```
 
-迭代器是惰性且零成本的，放心链式写。
+迭代器是惰性且零成本的，链式写法没有额外开销。
 
 ---
 
@@ -208,7 +207,7 @@ st.push(x); st.pop();            // pop 返回 Option<i32>
 st.last()                        // 栈顶 Option<&i32>
 ```
 
-**Rust 没有单独 stack 类型，Vec 就是栈**——单调栈直接 `Vec::new()`。
+**Rust 没有单独的 stack 类型，`Vec` 就是栈**，单调栈直接 `Vec::new()`。
 
 ### 2.2 HashMap / HashSet
 
@@ -224,7 +223,7 @@ let mut seen = HashSet::new();
 seen.insert(x); seen.contains(&x); seen.remove(&x);
 ```
 
-`entry().or_insert()` 是 HashMap 的精髓，一行完成“没有就插默认，再拿可变引用”。
+`entry().or_insert()` 一行完成「没有就插入默认值，再拿可变引用」。
 
 有序需求用 `BTreeMap` / `BTreeSet`（O(log n)，有 `range(..)`）。
 
@@ -256,7 +255,7 @@ min_h.pop().map(|Reverse(v)| v);
 h.push((priority, item));        // 元组按字典序比，大的在堆顶
 ```
 
-和 Python 正好相反：**Rust 默认大根堆，小根堆用 `Reverse<T>`**。元组比较要求整个元组 Ord——item 不可比时就只放 `(priority, index)`。
+和 Python 正好相反：**Rust 默认大根堆，小根堆用 `Reverse<T>`**。元组比较要求整个元组 Ord；item 不可比时只放 `(priority, index)`。
 
 ### 2.5 常用 slice/Vec 方法
 
@@ -301,7 +300,7 @@ pub fn reverse_list(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
 }
 ```
 
-**核心技巧是 `.take()`**：`Option::take(&mut self)` 交出值、留下 None，完美解决“要移动字段但结构体还被借用”的冲突。链表题十之八九靠它。
+**核心技巧是 `.take()`**：`Option::take(&mut self)` 交出值、留下 None，解决「要移动字段但结构体还被借用」的冲突。链表题十之八九靠它。
 
 dummy 节点：
 
@@ -331,8 +330,8 @@ pub fn max_depth(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
 
 三个固定动作：
 
-1. **`node.borrow()`**（只读）/ **`node.borrow_mut()`**（可改）——RefCell 的运行时借用检查，同一时刻只能一个 mut 或多个读。
-2. **`node.left.clone()`**——clone 的是 `Rc`（引用计数 +1，O(1)，不是深拷贝），因为子树的所有权要和父节点共享。
+1. **`node.borrow()`**（只读）/ **`node.borrow_mut()`**（可改）：RefCell 的运行时借用检查，同一时刻只能一个 mut 或多个读。
+2. **`node.left.clone()`**：clone 的是 `Rc`（引用计数 +1，O(1)，不是深拷贝），因为子树的所有权要和父节点共享。
 3. 递归签名不变，一路 `Option<Rc<RefCell<TreeNode>>>` 传下去。
 
 层序遍历：
@@ -351,13 +350,13 @@ while !q.is_empty() {
 }
 ```
 
-**borrow 的作用域注意**：`node.borrow()` 的临时值如果在 `if let Some(x) = node.borrow_mut().left` 这种写法里会活到整个语句结束，容易 "already mutably borrowed" panic。安全写法是先把 `borrow_mut()` 绑定到变量、操作完再进下一步，或借用前先把需要的数据读出来。
+**borrow 的作用域注意**：`node.borrow()` 的临时值如果在 `if let Some(x) = node.borrow_mut().left` 这种写法里会活到整个语句结束，容易触发「already mutably borrowed」panic。安全写法是先把 `borrow_mut()` 绑定到变量、操作完再进下一步，或借用前先把需要的数据读出来。
 
 ### 3.3 什么时候认输换写法
 
 Rust 刷链表/树的困难题（LRU、反转 k 组、二叉树 Morris）借用冲突会非常痛苦。实用主义策略：
 
-- **下标模拟指针**：图/树的节点存 `Vec`，“指针”用 `usize` 下标——这是 Rust 竞赛社区的标配（邻接表本来就这么写）。
+- **下标模拟指针**：图/树的节点存 `Vec`，「指针」用 `usize` 下标，这是 Rust 竞赛社区的标配（邻接表本来就这么写）。
 - 双向链表/LRU 用下标 + `Vec<Node>` 实现，别硬刚 `Rc<RefCell>`。
 
 ```rust
@@ -446,7 +445,7 @@ fn dfs(start: usize, nums: &Vec<i32>, path: &mut Vec<i32>, ans: &mut Vec<Vec<i32
 }
 ```
 
-Rust 回溯天然没有 Python 的引用坑——`path.clone()` 是显式的，想忘都忘不了（类型不匹配直接编译错）。
+Rust 回溯没有 Python 的引用坑：`path.clone()` 是显式的，想忘都忘不了（类型不匹配直接编译错）。
 
 ### 4.6 网格 DFS
 
@@ -464,7 +463,7 @@ fn dfs(grid: &mut Vec<Vec<char>>, i: usize, j: usize) {
 }
 ```
 
-**usize 没有负数**——`i - 1` 在 i=0 时下溢 panic。要么先判界，要么转 isize 算完再转回。递归深度大时 Rust 默认栈 8MB，岛屿这种深度没问题。
+**usize 没有负数**：`i - 1` 在 `i = 0` 时下溢 panic。要么先判界，要么转 isize 算完再转回。递归深度大时 Rust 默认栈 8MB，岛屿这种深度没问题。
 
 ### 4.7 Trie
 
@@ -591,7 +590,7 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 }
 ```
 
-`find(&mut self)` 意味着并查集必须 `let mut dsu`——路径压缩是写操作。Rust 的所有权在这里反而帮你标清了哪些操作会改结构。
+`find(&mut self)` 意味着并查集必须 `let mut dsu`，因为路径压缩是写操作。Rust 的所有权在这里反而帮你标清了哪些操作会改结构。
 
 ---
 
@@ -618,8 +617,8 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 ## 9. 避坑清单（按出错频率排序）
 
 1. **遍历中修改同一容器** → 借用冲突。改下标循环、先收集后改、或 `split_at_mut`。
-2. **链表忘了 `.take()`** → “cannot move out of borrowed content”。
-3. **`borrow_mut` 生命周期过长** → 运行时 "already borrowed" panic。借用绑定到变量、用完立即结束作用域。
+2. **链表忘了 `.take()`** → 「cannot move out of borrowed content」。
+3. **`borrow_mut` 生命周期过长** → 运行时「already borrowed」panic。借用绑定到变量、用完立即结束作用域。
 4. **`usize` 下溢**：`i - 1` 在 0 处 panic。先判界或转 isize。
 5. **递归 clone 子树忘了 Rc 语义**：`node.left.clone()` 是 O(1) 的引用计数，放心用；但没有它所有权过不去。
 6. **`BinaryHeap` 默认大根堆**，要小根堆包 `Reverse`。
@@ -628,17 +627,16 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 9. **`sort_by` 里写 `a.partial_cmp(b)`**：f64 没有 Ord，整数用 `cmp`。
 10. **i32 溢出**：累加换 i64，返回前 `as i32`。
 11. **`vec![None; n]` 编译错**（Option<Box<T>> 不是 Copy），用 `vec![(); n].map(|_| None)` 或 `Default::default()`。
-12. **`map.get(&x)` 返回 `Option<&V>`**——数字要 `.copied()` 才能脱离借用。
+12. **`map.get(&x)` 返回 `Option<&V>`**：数字要 `.copied()` 才能脱离借用。
 
 ---
 
 ## 10. 学习节奏建议
 
-- **第 1~2 天**：只过第 1、2 节 + 4.1/4.2，在简单题上找回 HashMap entry API、Vec 当栈、sort_by 的手感。
+- **第 1~2 天**：只过第 1、2 节和第 4.1、4.2 节，在简单题上找回 HashMap entry API、Vec 当栈、sort_by 的手感。
 - **第 1 周**：数组/字符串类刷完，刻意用迭代器改写一遍命令式循环，体会零成本抽象。
-- **第 2 周**：集中攻克链表与二叉树——这是 Rust 刷题的真正分水岭，把 `take()`、`borrow()`、`clone()` 三件套练成条件反射。
-- **第 3 周起**：三个专项 + DP/贪心。写不出来的题先想“能不能用下标代替指针”。
-- 心态：和编译器搏斗是学费。每解决一个借用冲突，你对所有权的理解就深一层——**这才是用 Rust 刷题的真正收益**。
+- **第 2 周**：集中攻克链表与二叉树，把 `take()`、`borrow()`、`clone()` 练成条件反射。
+- **第 3 周起**：三个专项 + DP/贪心。写不出来的题先想「能不能用下标代替指针」。
 
 ---
 

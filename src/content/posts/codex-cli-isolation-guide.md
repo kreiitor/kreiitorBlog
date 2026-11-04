@@ -13,7 +13,7 @@ cover: /covers/post-cli-terminal.svg
 
 ## 适用场景
 
-在共享服务器上使用 Codex CLI 时，默认的 `~/.codex` 会和同门或全局配置混在一起。常见问题是读到别人的配置、想用中转服务但启动时仍弹登录、`codex login status` 显示未登录但实际能对话。
+在共享服务器上使用 Codex CLI 时，默认的 `~/.codex` 会和同门或全局配置混在一起。常见问题是读到别人的配置。想用中转服务时启动仍会弹登录，`codex login status` 显示未登录，但实际能对话。
 
 做法是给项目单独一个 `CODEX_HOME`，把配置、认证、日志和会话都放进去。项目目录下的 `.codex/config.toml` 只是覆盖层，不是完整的用户目录。
 
@@ -110,7 +110,7 @@ chmod 600 .codex-home/config.toml
 | `env_key = "OPENAI_API_KEY"` | 从环境变量 `OPENAI_API_KEY` 读取 API key |
 | `wire_api = "responses"` | 使用 Responses API 格式 |
 
-注意：`env_key = "OPENAI_API_KEY"` 的作用是让 Codex 去环境变量 `OPENAI_API_KEY` 读取密钥，不是把 API key 写进配置。
+`env_key = "OPENAI_API_KEY"` 让 Codex 从环境变量 `OPENAI_API_KEY` 读取密钥。配置里只写变量名。
 
 ---
 
@@ -371,7 +371,7 @@ rm -rf .codex
 
 如果里面有项目说明、指令、skills 或其他人工维护文件，先不要删除。
 
-再次强调：
+两个目录不要混淆：
 
 ```text
 .codex       项目级说明或覆盖配置，可选
@@ -382,7 +382,7 @@ rm -rf .codex
 
 ## 十、完整可复制版本
 
-下面是一套从零开始的完整命令。执行前把 API key 占位符替换成自己的密钥。
+从零开始的完整命令如下。执行前把 API key 占位符换成自己的密钥。
 
 ```bash
 cd /nasdata/cn/decompile

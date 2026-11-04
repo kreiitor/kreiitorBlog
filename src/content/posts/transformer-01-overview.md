@@ -5,36 +5,38 @@ pubDate: 2026-10-26
 tags:
   - "Transformer"
   - "AI Infra"
-  - "学习笔记"
 category: course
 series: transformer
 order: 1
 cover: /covers/series-deep-learning.svg
 ---
 
-Transformer 是大模型时代的核心架构，也是 AI Infra 工程师必须深入理解的对象——你优化的每一个算子、设计的每一种并行策略，最终都作用在 Transformer 的某个组件上。
+Transformer 是大模型时代的核心架构。AI Infra 的每一项优化，无论是一个算子还是一种并行策略，最终都作用在 Transformer 的某个组件上。
 
-## 1. 为什么是Transformer
-在Transformer时代之前，序列处理的模型是RNN及其改进版本LSTM，关键是：
-1. 按顺序处理序列，下一步的记忆是之前记忆的传递，训练阶段是串行的，不能并行训练，模型训练效率低；
-2. 并且，长序列信息衰减问题仍然很难处理。
+## 1. 为什么是 Transformer
 
-Transformer带来了self-attention机制，一方面一个token直接去和所有token进行交互，然后根据权重聚合信息。这带来了解决方案：
-1. 所有token之间的注意力可以同时计算，本质就是$QK^T$的矩阵计算
-2. 一个token可以和所有token交互，不存在长距离衰减问题
-3. 注意力机制可以让模型自主控制应该关注哪些信息
-	- 例如：time flies like an arrow，这个flies就应该更多看向time和arrow
-	- 而fruit flies like a banana中的flies更多看向fruit和banana
+在 Transformer 之前，序列模型主要是 RNN 及其改进版本 LSTM，关键问题是：
+1. 按顺序处理序列，下一步的记忆来自之前记忆的传递，训练阶段串行，不能并行训练，效率低；
+2. 长序列的信息衰减仍然很难处理。
 
-## 2. 从原始Transformer到LLM家族
-原始的Transformer是encoder-decoder架构，适合seq2seq任务，用于machine translation。但是研究者对结构的研究得到了很多变体：
-1. BERT（2018）：典型的encoder-only架构，通过双向注意力（一个token可以看到它前后的所有token）和掩码语言模型预训练，在自然语言理解上取得了重大进步。并且验证了大规模预训练+下游任务微调这个范式
-2. GPT（2018-2023）：典型的decoder-only架构，通过单向注意力（一个token只能看到它前面的token）和自回归预训练在文本生成任务上不断突破。GPT-2证明LLM的文本生成能力，GPT-3证明了scaling law（更多参数+更多数据=更好效果），GPT-4证明了LLM在多模态和复杂推理上的能力提升
-3. LLaMA（2023）：依旧沿用decoder-only，架构上采用pre-norm、SwiGlu激活函数，RoPE旋转位置编码等当时最佳实践。LLaMA 的开源让整个社区能够在统一的架构基础上进行研究和优化，极大地推动了 AI Infra 工具链的发展——vLLM、SGLang、Megatron-LM 等框架的默认支持对象首先就是 LLaMA 架构。
-4. 后续演进（Mistral、Qwen、DeepSeek 等）：这些模型在 LLaMA 的基础上引入了 GQA（Grouped-Query Attention）、MoE（混合专家模型）、MLA（Multi-head Latent Attention）等架构变种，但它们的核心骨架始终是 Transformer Decoder。
+Transformer 引入了 self-attention 机制：一个 token 直接和所有 token 交互，再按权重聚合信息。这改变了序列建模的方式：
+1. 所有 token 之间的注意力可以同时计算，也就是 $QK^T$ 的矩阵运算
+2. 一个 token 可以和所有 token 交互，不存在长距离衰减问题
+3. 模型可以通过注意力自主决定关注哪些信息
+	- 例如：time flies like an arrow，这里 flies 应该更多看向 time 和 arrow
+	- 而 fruit flies like a banana 中的 flies 更多看向 fruit 和 banana
 
-## 3. AiInfra和Transformer之间的关联
-AiInfra的优化对应Transformer上的哪个结构：
+## 2. 从原始 Transformer 到 LLM 家族
+
+原始的 Transformer 是 encoder-decoder 架构，适合 seq2seq 任务，用于 machine translation。后续研究衍生出许多结构变体：
+1. BERT（2018）：典型的 encoder-only 架构，通过双向注意力（一个 token 可以看到它前后的所有 token）和掩码语言模型预训练，在自然语言理解上取得了重大进步，也验证了大规模预训练 + 下游任务微调这一范式
+2. GPT（2018-2023）：典型的 decoder-only 架构，通过单向注意力（一个 token 只能看到它前面的 token）和自回归预训练在文本生成任务上不断突破。GPT-2 展示了 LLM 的文本生成能力。GPT-3 验证了 scaling law（更多参数 + 更多数据 = 更好效果）。到 GPT-4，能力扩展到多模态和复杂推理
+3. LLaMA（2023）：依旧沿用 decoder-only，架构上采用 pre-norm、SwiGlu 激活函数、RoPE 旋转位置编码等当时的最佳实践。LLaMA 开源后，社区得以在统一的架构基础上做研究和优化，显著推动了 AI Infra 工具链的发展——vLLM、SGLang、Megatron-LM 等框架默认支持的对象首先就是 LLaMA 架构。
+4. 后续演进（Mistral、Qwen、DeepSeek 等）：这些模型在 LLaMA 的基础上引入了 GQA（Grouped-Query Attention）、MoE（混合专家模型）、MLA（Multi-head Latent Attention）等架构变种，核心骨架始终是 Transformer Decoder。
+
+## 3. AI Infra 和 Transformer 之间的关联
+
+AI Infra 的各项优化对应 Transformer 中的具体结构：
 
 | AI Infra 层级 | 优化技术                           | 对应的 Transformer 模块                 |
 | ----------- | ------------------------------ | ---------------------------------- |
@@ -51,58 +53,68 @@ AiInfra的优化对应Transformer上的哪个结构：
 | 推理部署        | 量化（INT4/INT8/FP8）              | 所有权重矩阵和 KV Cache                   |
 | 推理部署        | Speculative Decoding           | 自回归生成的串行瓶颈                         |
 
-### 3.1 CUDA算子优化层
-#### **1.FlashAttention 与 Self-Attention 的 $QK^T$ / $PV$ 计算**
+### 3.1 CUDA 算子优化层
+#### **1. FlashAttention 与 Self-Attention 的 $QK^T$ / $PV$ 计算**
 
-Self-Attention 需要计算一个 $N×N$ 的注意力矩阵（$N$ 为序列长度），标准实现会把这个完整的矩阵写入 GPU 的高带宽显存（HBM），显存占用为 $O(N^2)$。当序列长度从 2K 增长到 128K 时，显存需求增长 4096 倍。FlashAttention 的核心贡献是将这个巨大的矩阵分块（tiling），每个小块在 GPU 的片上缓存（SRAM）中完成 $QK^T$、Softmax、$PV$ 的全部计算，避免将完整的 $N×N$ 矩阵写入 HBM。这项优化直接作用于 Self-Attention 的两次核心矩阵乘法，因此要理解 FlashAttention 就必须先理解 Attention 的计算流程。
+Self-Attention 需要计算一个 $N×N$ 的注意力矩阵（$N$ 为序列长度），标准实现会把这个完整的矩阵写入 GPU 的高带宽显存（HBM），显存占用为 $O(N^2)$。当序列长度从 2K 增长到 128K 时，显存需求增长 4096 倍。
 
-#### **2.Fused Softmax 与 Attention 的归一化步骤**
+FlashAttention 把这个巨大的矩阵分块（tiling），每个小块在 GPU 的片上缓存（SRAM）中完成 $QK^T$、Softmax、$PV$ 的全部计算，避免将完整的 $N×N$ 矩阵写入 HBM。这项优化直接作用在 Self-Attention 的两次核心矩阵乘法上。
 
-Softmax 操作需要对注意力分数矩阵的每一行先求最大值、再求指数和、最后归一化——标准实现需要三遍扫描（第一遍求 max，第二遍求 exp 之和，第三遍归一化）。Online Softmax 算法将前两遍合并，只需两遍扫描即可完成，这个优化被集成到 FlashAttention 中，并结合 tiling 技术进一步实现了分块意义上的单次 pass。Softmax 是 Attention 计算管线中的一个关键步骤，把它与前后的矩阵乘法融合在一起可以大幅减少中间结果的显存读写。
+#### **2. Fused Softmax 与 Attention 的归一化步骤**
 
-#### **3.LayerNorm kernel 融合**
+Softmax 要对注意力分数矩阵的每一行求最大值、指数和，再归一化。标准实现需要三遍扫描（第一遍求 max，第二遍求 exp 之和，第三遍归一化）。Online Softmax 把前两遍合并，扫描次数降到两遍，这个优化被集成到 FlashAttention 中，并结合 tiling 在分块意义上实现了单次 pass。把 Softmax 与前后的矩阵乘法融合，可以大幅减少中间结果的显存读写。
 
-每个 Transformer Decoder Block 包含两个 LayerNorm 操作（Pre-Norm 架构下分别在 Attention 和 FFN 之前）。LayerNorm 本身计算量不大，但需要对整个特征向量做两遍扫描（算均值/方差和归一化），是典型的 Memory Bound 操作。CUDA 优化中通常将 Residual Add + LayerNorm 融合为一个 kernel，减少一次完整的 HBM 读写——理解这个融合的前提是知道残差连接和 LayerNorm 在 Transformer Block 中的具体位置。
+#### **3. LayerNorm kernel 融合**
 
-#### **4.RoPE 融合到 Attention kernel**
+每个 Transformer Decoder Block 包含两个 LayerNorm 操作（Pre-Norm 架构下分别在 Attention 和 FFN 之前）。LayerNorm 本身计算量不大，但需要对整个特征向量做两遍扫描（算均值/方差和归一化），是典型的 Memory Bound 操作。CUDA 优化中通常将 Residual Add + LayerNorm 融合为一个 kernel，减少一次完整的 HBM 读写。
 
-旋转位置编码（RoPE）的计算本质是对 Q 和 K 向量的每对相邻维度做旋转变换，计算量不大但调用频繁。将它融合到 Attention kernel 中可以避免为这个小操作单独启动一个 GPU kernel 的开销。这项优化的前提是理解 RoPE 在 Attention 计算流程中的位置——它作用于 Q 和 K 的线性投影之后、$QK^T$ 矩阵乘法之前。
+#### **4. RoPE 融合到 Attention kernel**
+
+旋转位置编码（RoPE）对 Q 和 K 向量的每对相邻维度做旋转变换，计算量不大但调用频繁。将它融合到 Attention kernel 中，可以避免为这个小操作单独启动一个 GPU kernel。RoPE 作用于 Q 和 K 的线性投影之后、$QK^T$ 矩阵乘法之前。
 
 ### 3.2 分布式训练层
-#### **1.张量并行（TP）与 Attention 多头 / FFN 矩阵**
+#### **1. 张量并行（TP）与 Attention 多头 / FFN 矩阵**
 
-张量并行的核心思想是将一个大矩阵乘法切分到多张 GPU 上并行计算。Transformer 中有两个天然的切分点。第一个是 Multi-Head Attention：比如 32 个 Attention 头可以均匀分配到 4 张 GPU 上，每张卡处理 8 个头，这种切分不需要卡间通信直到最后一步的输出投影。第二个是 FFN：Megatron-LM 将 FFN 的升维矩阵 $W_{up}$ 按列切分、降维矩阵 $W_{down}$​ 按行切分，使得中间的激活值不需要跨卡通信。这两种切分策略都直接依赖于你对 Attention 多头结构和 FFN 升维-降维结构的理解。
+张量并行将一个大矩阵乘法切分到多张 GPU 上并行计算。Transformer 中有两个天然的切分点。
 
-#### **2.流水线并行（PP）与 Decoder Block 堆叠**
+第一个是 Multi-Head Attention：比如 32 个 Attention 头可以均匀分配到 4 张 GPU 上，每张卡处理 8 个头，卡间不需要通信，直到最后一步的输出投影。第二个是 FFN：Megatron-LM 将 FFN 的升维矩阵 $W_{up}$ 按列切分、降维矩阵 $W_{down}$​ 按行切分，中间的激活值不需要跨卡通信。
 
-一个大模型通常由几十层 Decoder Block 堆叠而成（如 LLaMA-2-7B 有 32 层）。流水线并行将这些层分成若干段，分配到不同的 GPU 上——比如前 8 层在 GPU 0，第 9-16 层在 GPU 1，以此类推。数据像流水线一样依次流过每段。这种策略之所以可行，根本原因在于每个 Decoder Block 的输入输出维度完全相同（都是 $(N,d_{model})$），前一个 Block 的输出可以直接作为下一个 Block 的输入，天然支持分段。
+#### **2. 流水线并行（PP）与 Decoder Block 堆叠**
 
-#### **3.ZeRO 显存优化与所有参数矩阵**
+一个大模型通常由几十层 Decoder Block 堆叠而成（如 LLaMA-2-7B 有 32 层）。流水线并行将这些层分成若干段，分配到不同的 GPU 上——比如前 8 层在 GPU 0，第 9-16 层在 GPU 1，以此类推。数据像流水线一样依次流过每段。
 
-ZeRO 的策略是将训练过程中的“重复存储”消除——标准数据并行中，每张 GPU 都保存完整的模型参数、梯度和优化器状态，而 ZeRO 将这些按切片分摊到各卡上。这项优化作用于模型的所有参数矩阵——包括 Attention 的 $W_Q/W_K/W_V/W_O$​ 和 FFN 的 $W_{gate}​/W_{up}​/W_{down}​$。理解模型的参数量分布（FFN 约占 2/3，Attention 约占 1/3）对于评估 ZeRO 的显存节省效果和通信开销至关重要。
+每个 Decoder Block 的输入输出维度相同（都是 $(N,d_{model})$），前一个 Block 的输出可以直接作为下一个 Block 的输入。这正是流水线并行可行的原因，分段也因此是天然的。
+
+#### **3. ZeRO 显存优化与所有参数矩阵**
+
+ZeRO 消除训练过程中的「重复存储」。标准数据并行中，每张 GPU 都保存完整的模型参数、梯度和优化器状态，ZeRO 把这些状态按切片分摊到各卡上。
+
+这项优化作用于模型的所有参数矩阵：Attention 的 $W_Q/W_K/W_V/W_O$​ 和 FFN 的 $W_{gate}​/W_{up}​/W_{down}​$。FFN 约占参数量的 2/3，Attention 约占 1/3，这个分布是评估 ZeRO 显存节省和通信开销的依据。
 
 ### 3.3 推理部署层
-#### **1.KV Cache 与 Self-Attention 的 K/V 矩阵**
+#### **1. KV Cache 与 Self-Attention 的 K/V 矩阵**
 
-LLM 的自回归生成每一步只输出一个 token，但 Attention 计算需要用新 token 的 Query 去和所有历史 token 的 Key 做内积。如果不缓存，每一步都要重新计算所有历史 token 的 K 和 V——纯粹的浪费。KV Cache 将每层、每步的 K 和 V 存储在显存中复用。这项优化直接作用于 Self-Attention 模块中 K 和 V 的生命周期管理。
+LLM 的自回归生成每一步只输出一个 token，但 Attention 计算需要用新 token 的 Query 和所有历史 token 的 Key 做内积。如果不缓存，每一步都要重新计算所有历史 token 的 K 和 V，这是纯粹的浪费。KV Cache 把每层、每步的 K 和 V 存在显存中复用。这项优化直接作用于 Self-Attention 中 K 和 V 的生命周期管理。
 
-#### **2.PagedAttention 与 KV Cache 的显存碎片**
+#### **2. PagedAttention 与 KV Cache 的显存碎片**
 
-不同请求的序列长度不同，KV Cache 的大小也不一样。传统的预分配方式会造成大量的显存碎片——短请求分配了过多空间浪费，长请求可能因为找不到足够的连续空间而被拒绝。PagedAttention 借鉴操作系统的虚拟内存分页机制，将 KV Cache 切成固定大小的“页”按需分配，彻底解决碎片问题。这个优化的根源在于 KV Cache 的动态增长特性——每生成一个新 token，KV Cache 就增加一“行”。
+不同请求的序列长度不同，KV Cache 的大小也不一样。传统的预分配方式会造成大量的显存碎片：短请求分配了过多空间，长请求可能因为找不到足够的连续空间而被拒绝。PagedAttention 借鉴操作系统的虚拟内存分页机制，将 KV Cache 切成固定大小的「页」按需分配，彻底解决碎片问题。KV Cache 的动态增长是这项优化的根源：每生成一个新 token，KV Cache 就增加一「行」。
 
-#### **3.量化与所有权重矩阵 / KV Cache**
+#### **3. 量化与所有权重矩阵 / KV Cache**
 
-量化的本质是用更少的比特位表示数值——比如从 FP16（16 位）压缩到 INT4（4 位），权重占用的显存直接降为 1/4。这项技术作用于 Transformer 中所有的权重矩阵（$W_Q,W_K,W_V,W_O,W_{gate},W_{up},W_{down}$​）以及 KV Cache。理解每个矩阵的数值分布特征（比如 FFN 的某些层是否有异常大的 activation outlier）对于选择合适的量化策略至关重要。
+量化用更少的比特位表示数值。比如从 FP16（16 位）压缩到 INT4（4 位），权重占用的显存降为 1/4。
 
-#### **4.Speculative Decoding 与自回归生成的串行瓶颈**
+这项技术作用于 Transformer 中所有的权重矩阵（$W_Q,W_K,W_V,W_O,W_{gate},W_{up},W_{down}$​）以及 KV Cache。每个矩阵的数值分布（比如 FFN 的某些层是否有异常大的 activation outlier）是选择量化策略的依据。
 
-自回归生成的根本瓶颈在于每次只能生成一个 token，GPU 的大量算力被浪费。Speculative Decoding 的思路是用一个小而快的 Draft 模型先“猜”出多个 token，再由大模型一次性验证——猜对的直接用，猜错的重新采样。这项优化直接针对 Transformer Decoder 自回归生成的串行特性，用并行验证来加速串行生成。
+#### **4. Speculative Decoding 与自回归生成的串行瓶颈**
 
-## 4. 端到端案例：一次LLM推理请求的完整旅程
-**理论到实践：**
-从用户发出提问到收到回答，看数据如何流经 Transformer 的每个模块，以及每个环节对应哪些 AI Infra 优化。
+自回归生成的根本瓶颈是每次只能生成一个 token，GPU 的大量算力被浪费。Speculative Decoding 用一个小而快的 Draft 模型先「猜」出多个 token，再由大模型一次性验证：猜对的直接用，猜错的重新采样。这项优化直接针对 Transformer Decoder 自回归生成的串行特性，用并行验证加速串行生成。
 
-假设部署了一个 LLaMA-2-7B 模型（32 层 Decoder Block，hidden_dim=4096，32 个 Attention 头），使用 vLLM 推理引擎，用户发送了请求：“请用一句话解释什么是 Transformer”。
+## 4. 端到端案例：一次 LLM 推理请求的完整旅程
+
+从用户发出提问到收到回答，数据依次流经 Transformer 的各个模块，每个环节都有对应的 AI Infra 优化。
+
+假设部署了一个 LLaMA-2-7B 模型（32 层 Decoder Block，hidden_dim=4096，32 个 Attention 头），使用 vLLM 推理引擎。用户发送请求：「请用一句话解释什么是 Transformer」。
 
 #### 4.1 Tokenize 与 Embedding
 
@@ -157,7 +169,7 @@ AI Infra 优化：FlashAttention 将 $QK^T$、Scale、Mask、Softmax、$PV$ 全�
 
 **缓存 K 和 V**：将本层的 K 和 V 存入 KV Cache。
 
-AI Infra 优化：vLLM 的 PagedAttention 以“页”为单位分配 KV Cache 存储空间。这 10 个 token 的 KV 被写入预分配的物理页中。
+AI Infra 优化：vLLM 的 PagedAttention 以「页」为单位分配 KV Cache 存储空间。这 10 个 token 的 KV 被写入预分配的物理页中。
 
 **残差连接 + LayerNorm + FFN**：
 
@@ -176,7 +188,7 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 
 **经过全部 32 层后**：最终输出 + Final LayerNorm + LM Head → 词表概率分布 → 采样得到第一个输出 token。
 
->其中LM head是语言模型头，经过final_layernorm之后，取出最后一个token，过一遍LM head，得到(vocab_size,)。实际上就是过一遍线性投影
+> 其中 LM head 是语言模型头。经过 final_layernorm 之后取出最后一个 token，过一遍 LM head，得到 (vocab_size,)，也就是一次线性投影。
 
 至此，Prefill 阶段完成。用户从发出请求到看到第一个字的时间就是 **TTFT（Time To First Token）**。
 
@@ -202,6 +214,8 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 - 大部分时间花在从 HBM 搬运 KV Cache 数据，属于 **Memory Bound** 操作
 - 每步完成后 KV Cache 增长一行
 
+Decode 每一步复用之前所有 token 的 K 和 V，因为这些 K、V 保留了上下文信息；新 token 只用新的 Q 去查询，因为每个 token 的询问方式（query）不同。
+
 **这一阶段对应的 AI Infra 优化最为密集**：
 
 | 环节                  | 瓶颈           | 对应优化技术                                |
@@ -215,7 +229,7 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 
 #### 4.4 全链路示意
 
-整次请求的完整数据流与 AI Infra 优化的对应关系汇总如下：
+整次请求的数据流与对应的优化：
 
 | 阶段      | 输入与产出                                | 对应优化                          |
 | ------- | ------------------------------------ | ----------------------------- |
@@ -224,15 +238,11 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 | KV Cache | Prefill 写入各层的 K、V，Decode 每一步读取并追加一组新的 K、V | PagedAttention、KV Cache 量化     |
 | Decode  | 以上一步的输出 token 为输入，逐 token 生成直到结束      | Continuous Batching、Prefill/Decode 解耦部署 |
 
-从这个端到端案例中可以清楚看到：推理请求经过的每一个环节——从 Embedding 到 Attention 到 FFN 到自回归生成——都是某项 AI Infra 优化技术的“着力点”。如果你不理解 Transformer 的内部结构，就无法定位性能瓶颈出在哪个模块，也无法评估优化方案的效果。
-
-***关键疑问：*** 嗯，我还有一个疑问，为什每次都是要用上一次的KV？难道是上一次的KV保留了上下文信息？用新的Q是因为每个token的询问方式（query）都有差别？
-
-***解答：*** 问题中带的回答是正确的
+推理请求的每个环节——从 Embedding 到 Attention 到 FFN 到自回归生成——都对应一项或多项 AI Infra 优化。定位性能瓶颈和评估优化效果，都要以 Transformer 的结构为前提。
 
 ### 自我检验清单
 
-完成本文学习后，检验自己是否真正理解了 AI Infra 与 Transformer 的关系：
+检验自己是否真正理解了 AI Infra 与 Transformer 的关系：
 
 - 能用自己的语言解释什么是 AI Infra，它在 AI 技术栈中处于什么位置，上下游分别是什么
 - 能说清 RNN/LSTM 的两个核心弱点（串行、遗忘），以及 Transformer 如何用 Self-Attention 解决它们
@@ -240,8 +250,8 @@ AI Infra 优化：FFN 的三个大矩阵（$W_{gate}, W_{up}, W_{down}$​）是
 - 能列出至少 3 项分布式训练技术及其对应的 Transformer 模块，并解释对应关系
 - 能列出至少 3 项推理优化技术及其对应的 Transformer 模块，并解释对应关系
 - 给定一个 LLM 推理请求，能追踪数据流经 Transformer 各模块的过程，并指出每个环节对应哪些 AI Infra 优化
-	<details> <summary>👉 点击查看答案</summary> 大阶段分为prefill和decode </details>
-- 能回答“为什么 AI Infra 工程师必须懂 Transformer”这个问题，给出至少两个具体理由（而不是空泛的“因为很重要”）
+	<details> <summary>👉 点击查看答案</summary> 大阶段分为 prefill 和 decode </details>
+- 能回答「为什么 AI Infra 工程师必须懂 Transformer」，给出至少两个具体理由，而不是空泛的「因为很重要」
 
 ## 📚 参考资料
 

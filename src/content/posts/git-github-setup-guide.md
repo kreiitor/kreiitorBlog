@@ -1,6 +1,6 @@
 ---
 title: "Git 仓库初始化与 GitHub 连接教程"
-description: "从本地初始化 Git 仓库，到连接 GitHub 并完成日常提交、拉取、分支管理和问题排查的一份实用教程。"
+description: "从初始化本地仓库到连接 GitHub，覆盖提交、拉取、分支管理和常见问题排查。"
 pubDate: 2026-05-25
 updatedDate: 2026-10-26
 tags:
@@ -19,8 +19,7 @@ cover: /covers/post-git-graph.svg
 
 ## 什么是 Git 仓库
 
-Git 是一个版本控制工具，用来记录项目文件的历史变化。
-当一个文件夹被初始化为 Git 仓库后，里面会出现一个隐藏目录 `.git`，Git 会用它保存版本历史、分支信息和远程仓库配置。
+Git 是一个版本控制工具，用来记录项目文件的历史变化。当一个文件夹被初始化为 Git 仓库后，里面会出现一个隐藏目录 `.git`，Git 会用它保存版本历史、分支信息和远程仓库配置。
 
 如果当前目录没有 `.git`，很多工具和 AI 助手就会提示：
 
@@ -51,7 +50,7 @@ cd E:\Code\your-project
 git init
 ```
 
-执行后，当前目录就会生成 `.git` 目录，说明它已经变成 Git 仓库。
+执行后，当前目录里会生成 `.git`，说明它已经变成 Git 仓库。
 
 ### 3. 检查状态
 
@@ -92,8 +91,7 @@ git config --global --list
 
 ## 建议创建 `.gitignore`
 
-`.gitignore` 用来告诉 Git 哪些文件不要纳入版本控制。
-这一步很重要，尤其是和 AI 协作时，避免把缓存、依赖、日志、密钥文件一起提交。
+`.gitignore` 用来告诉 Git 哪些文件不要纳入版本控制。和 AI 协作时尤其要写，避免把缓存、依赖、日志、密钥文件一起提交。
 
 常见示例：
 
@@ -127,7 +125,7 @@ Thumbs.db
 git add .
 ```
 
-这个命令表示把当前目录下的变更全部加入本次准备提交的内容。
+把当前目录下的变更全部加入暂存区。
 
 如果你只想提交某个文件，也可以：
 
@@ -213,7 +211,7 @@ git push -u origin main
 - `main` 是你要推送的本地主分支
 - `-u` 会建立本地分支和远程分支的跟踪关系，之后可以直接用 `git push` 和 `git pull`
 
-如果你使用 `HTTPS`，GitHub 现在通常不再接受账号密码直接推送，而是使用以下方式之一：
+如果你使用 `HTTPS`，GitHub 现在通常不接受账号密码直接推送，需要改用以下方式之一：
 
 - Personal Access Token
 - Git Credential Manager
@@ -492,7 +490,7 @@ git push origin main
 - 使用 Personal Access Token
 - 或改用 SSH
 
-### 6. AI 工具总说“当前仓库不是 git 仓库”
+### 6. AI 工具总说「当前仓库不是 git 仓库」
 
 通常是这几类原因：
 
@@ -515,7 +513,7 @@ git status
 
 ### 1. 让 AI 在仓库根目录工作
 
-最简单的判断方式就是先执行：
+先执行：
 
 ```powershell
 git status
@@ -525,7 +523,7 @@ git status
 
 ### 2. 在让 AI 大改代码前先提交一次
 
-建议在大改前先做一个基线提交：
+先做一个基线提交：
 
 ```powershell
 git add .
@@ -548,17 +546,16 @@ git switch -c experiment/ai-refactor
 
 ### 5. 让 AI 先看 `git status`
 
-如果你让 AI 修改项目，最好先让它检查当前仓库状态，这样它更容易理解：
+如果你让 AI 修改项目，先让它检查当前仓库状态：
 
-- 哪些文件已经改过
-- 哪些变更还没提交
+- 哪些文件已经改过、哪些变更还没提交
 - 当前所在分支是什么
 
 ---
 
 ## 最短可用流程
 
-如果你只想要一套最短命令，可以直接照着执行：
+最短的一套命令：
 
 ```powershell
 cd E:\Code\your-project
@@ -571,21 +568,3 @@ git branch -M main
 git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
 ```
-
----
-
-## 总结
-
-把一个普通文件夹变成 Git 仓库，核心只有三步：
-
-1. `git init`
-2. `git add .` 和 `git commit`
-3. `git remote add origin ...` 再 `git push -u origin main`
-
-如果你的目标是和 AI 稳定协作，那么最重要的是：
-
-- 保证 AI 工作目录就是仓库根目录
-- 保证目录里存在 `.git`
-- 保证关键改动前后都有清晰的提交记录
-
-这样不管是人工开发还是 AI 协作，都会稳定很多。

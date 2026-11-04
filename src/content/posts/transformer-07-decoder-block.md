@@ -5,14 +5,13 @@ pubDate: 2026-10-26
 tags:
   - "Transformer"
   - "Decoder"
-  - "学习笔记"
 category: course
 series: transformer
 order: 7
 cover: /covers/series-deep-learning.svg
 ---
 
-decoder-only在架构上实现简洁,并且获得了最好的通用能力,且对工程友好,成为绝对主流
+decoder-only 在架构上实现简洁，对工程友好，通用能力也最好，成了绝对主流。
 
 ## 1. Decoder Block 完整数据流
 
@@ -24,13 +23,13 @@ decoder-only在架构上实现简洁,并且获得了最好的通用能力,且对
 4. 相加结果再次分成两路：一路进入 RMSNorm 和 SwiGLU FFN，另一路作为第二条残差。
 5. FFN 输出与残差相加，得到该 Block 的输出 hidden states。
 
-几个值得注意的细节：
+几个细节：
 
 - **RMSNorm 而非 LayerNorm**。LLaMA 系列及后续大多数模型使用 RMSNorm（Root Mean Square Normalization），省去了减均值的步骤，只保留除以均方根的操作。计算更简单，效果相当。
-- **RoPE 只作用于 Q 和 K**。旋转位置编码的作用是让 Q 和 K 的内积包含相对位置信息，V 不需要旋转，因为 V 承载的是“内容信息”而非“位置匹配信号”。
+- **RoPE 只作用于 Q 和 K**。旋转位置编码的作用是让 Q 和 K 的内积包含相对位置信息，V 不需要旋转，因为 V 承载的是「内容信息」，不承载位置匹配信号。
 - **Pre-Norm 的残差路径是干净的**。两条残差路径都从 Add 节点直接接过来，中间没有经过任何变换。这保证了梯度可以无损地沿残差路径回传，是深层模型训练稳定的关键。
 
-## 2. 完整pytorch实现decoder block
+## 2. 完整 PyTorch 实现 Decoder Block
 
 ```python
 import torch
@@ -148,91 +147,89 @@ class SwiGLUFFN(nn.Module):
 
 ## 3. 参数量手撕
 
-token embedding -> decoder block -> 最后的RMSNorm和LM头
+token embedding -> decoder block -> 最后的 RMSNorm 和 LM 头
 ### token embedding
 
-token -> id:一个词表,参数量为$V\times d_{model}$
+token -> id：一个词表，参数量为 $V\times d_{model}$
 
-### 单个decoder block
+### 单个 Decoder Block
 
-#### 两个RMSNorm
+#### 两个 RMSNorm
 
-两个缩放可学习参数：参数量为$2\times d_{model}$
+两个缩放可学习参数：参数量为 $2\times d_{model}$
 
 #### 多头自注意力
 
-四个投影矩阵：参数量为$4\times d_{model}^2$
+四个投影矩阵：参数量为 $4\times d_{model}^2$
 
-#### SwiGLUFFN
+#### SwiGLU FFN
 
-升维降维和门控矩阵：参数量为$3\times d_{model}\cdot d_{ff}$
+升维降维和门控矩阵：参数量为 $3\times d_{model}\cdot d_{ff}$
 
-#### 最后的RMSNorm和LM头
+#### 最后的 RMSNorm 和 LM 头
 
-参数量为：$d_{model}+V\times d_{model}$
+参数量为 $d_{model}+V\times d_{model}$
 
-## 4. 计算量(FLOPS)手撕
+## 4. 计算量（FLOPS）手撕
 
 ### 线性层
 
->其中线性层和FFN中的N分别是四次投影中投影矩阵的参数量和FFN中三个矩阵的参数量
+> 其中线性层和 FFN 中的 N 分别是四次投影中投影矩阵的参数量和 FFN 中三个矩阵的参数量
 
 #### 四次投影
 
 $4\times 2\times d_{model}^2\times s =  2Ns$
 
-#### FFN层
+#### FFN 层
 
 $3\times 2\times s\times d_{model}\times d_{ff}=2Ns$
 
 ### 注意力层
 
->注意力层是$QK^T$和$AV$,其中$A=softmax\left(\frac{QK^T}{d_k}\right)$
+> 注意力层是 $QK^T$ 和 $AV$，其中 $A=softmax\left(\frac{QK^T}{d_k}\right)$
 
 $FLOPS = 2\times 2\times d_{model}\times s^2 \times h=4hd_{model}s^2$
 
-==🟣可以看到,当序列长度较低的时候,线性层计算量占主导,2Ns足够估计计算量,但是当序列长度增大时,注意力部分的计算量逐渐变为主导,不可忽视==
+==🟣序列长度较低时，线性层计算量占主导，用 2Ns 估计就够了；序列长度增大后，注意力部分的计算量逐渐成为主导，不能忽略==
 
 ## 5. 显存规划
 
 ### 模型权重显存
 
-模型权重显存取决于模型参数多少和存储的数据类型,显存=参数量\*数据类型字节数
+模型权重显存取决于参数多少和存储的数据类型：显存 = 参数量 \* 数据类型字节数
 
 ### 训练状态下的显存
 
->以混合精度训练为例:BF16权重+FP32优化器,共有四大组成
+> 以混合精度训练为例：BF16 权重加 FP32 优化器，显存分四部分
 
-- 模型权重(BF16)
+- 模型权重（BF16）
 	- $2N$
-- 梯度(形状与权重一致,BF16)
+- 梯度（形状与权重一致，BF16）
 	- $2N$
-- 优化器状态(随优化器改变),以Adam\AdamW为例
-	- Fp32参数副本： 防止梯度太小BF16捕获不到. 4N
-	- 一阶梯度动量： 梯度的指数移动平均. 4N
-	- 二阶梯度动量：梯度平方的指数移动平均. 4N
-- 激活值(动态部分)
-	- 在反向传播时仍要重复利用的部分,在前向传播的时候计算之后就保存下来复用.
-	- 大概$kBsdL$,其中k是个常数,和是否开启activation checkpoint,模型架构,是否并行等有关
-	- 在计算过程中,张量大多是含有(B,s,d)的,参数量就是$Bsd$,然后乘以层数,并且存多少个对象等凝结为一个经验常数
+- 优化器状态（随优化器改变），以 Adam\AdamW 为例
+	- FP32 参数副本：防止梯度太小、BF16 捕获不到，4N
+	- 一阶梯度动量：梯度的指数移动平均，4N
+	- 二阶梯度动量：梯度平方的指数移动平均，4N
+- 激活值（动态部分）
+	- 在反向传播时仍要重复利用的部分，前向传播时算完就保存下来复用。
+	- 大概是 $kBsdL$，其中 k 是常数，跟模型架构、是否并行有关，也与是否开启 activation checkpoint 等相关
+	- 计算过程中张量大多是 (B,s,d) 形状的，参数量就是 $Bsd$，再乘层数、乘需要同时保留的份数，收成一个经验常数
 
 ### 推理状态下的显存
 
-推理不需要梯度和优化器状态,但是要考虑KV cache
+推理不需要梯度和优化器状态，但要考虑 KV cache。
 
 - 模型权重
-- KV cache:每个token在每一次需要缓存K,V各一个张量
+- KV cache：每个 token 每次要缓存 K、V 各一个张量
 	- $2\times h_{kv} \times L \times Bsd \times bytes\_per\_ele$
 
 ### 自我检验清单
-
-学完本文后，检验以下能力：
 
 - 能解释 Decoder-only 架构为什么在大模型时代胜出，至少说出三个理由
 - 能在白板上画出完整的 Decoder Block 数据流图，标注 RMSNorm、Masked MHA、SwiGLU FFN、残差连接的位置和顺序
 - 能画出因果掩码矩阵（给定序列长度 N），解释上三角 −∞ 的作用
 - 能手算 LLaMA-2-7B 和 13B 的参数量（误差不超过 5%），说清 FFN 和 Attention 的参数比例
-- 能用 "6Ns" 公式估算训练 FLOPs，用 "2Ns" 估算推理 FLOPs
+- 能用「6Ns」公式估算训练 FLOPs，用「2Ns」估算推理 FLOPs
 - 能计算给定模型在 FP16、INT8、INT4 下的权重显存
 - 能算出 Adam 优化器需要多少显存，并解释为什么需要 FP32 Master Weights
 - 给定一个模型配置和 GPU 型号，能完成完整的显存规划（权重 + KV Cache 或 权重 + 梯度 + 优化器 + Activation），判断是否能装下

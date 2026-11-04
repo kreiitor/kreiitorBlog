@@ -5,14 +5,13 @@ pubDate: 2026-10-14
 updatedDate: 2026-10-26
 tags:
   - "算法"
-  - "学习笔记"
   - "Python"
 category: knowledge
 cover: /covers/post-code-python.svg
 featured: true
 ---
 
-这份手册给“学过 Python 基础但手生”的人用，目标是把刷题需要的那部分 Python 捡回来。没写过 Python 的，先看第 0 节；写过但很久没用的，直接从第 1 节开始。Python 的代码量少，但常数慢，所以要知道哪些写法既短又不拖性能。
+这份手册给「学过 Python 基础但手生」的人用，目标是把刷题需要的那部分 Python 捡回来。没写过 Python 的，先看第 0 节；写过但很久没用的，直接从第 1 节开始。Python 的代码量少，但常数慢，所以要知道哪些写法既短又不拖性能。
 
 ---
 
@@ -84,7 +83,7 @@ for i, x in enumerate(nums): ...         # 要下标就 enumerate，别写 range
 for k, v in mp.items(): ...              # 遍历字典
 ```
 
-**`enumerate` 优先于 `range(len())`**——更短、更不易错，这是 Pythonic 的第一课。
+**`enumerate` 优先于 `range(len())`**：更短，也不容易把下标写错。
 
 切片是刷题天天用的：
 
@@ -95,7 +94,7 @@ nums[:k] nums[k:] # 切两半（轮转数组题）
 s[1:-1]           # 去掉首尾
 ```
 
-注意：**切片产生新列表，O(k) 时间与空间**。大数组上反复切片是 TLE 的常见原因——能传下标就别切片。
+**切片产生新列表，O(k) 时间与空间**。大数组上反复切片是 TLE 的常见原因——能传下标就别切片。
 
 ### 1.3 推导式：一行顶三行
 
@@ -173,7 +172,7 @@ c.most_common(k)              # 前 K 高频——「前 K 个高频元素」直
 s = "abcabc"; Counter(s)
 ```
 
-Counter 本质是 dict，支持 `c1 + c2`、`c1 & c2`（交集，取较小计数）等运算，字母异位词类题目特别好用。
+Counter 是 dict 的子类，支持 `c1 + c2`、`c1 & c2`（交集，取较小计数）等运算，字母异位词类题目特别好用。
 
 注意：普通 dict 用 `d[key]` 访问不存在的 key 会 `KeyError`；要么 `d.get(key, default)`，要么换 defaultdict。
 
@@ -225,7 +224,7 @@ s.startswith(p) s.endswith(p)
 s.isdigit() s.isalpha() s.lower() s.upper()
 ```
 
-**字符串不可变**：`s += c` 在循环里是 O(n²)（每次新建字符串）。拼字符串用列表收集，最后 `''.join(parts)`——这是 Python 刷题最值得记住的性能习惯。
+**字符串不可变**：`s += c` 在循环里是 O(n²)（每次新建字符串）。拼字符串用列表收集，最后 `''.join(parts)`，这是 Python 刷题最值得记住的性能习惯。
 
 ### 2.6 常用数学
 
@@ -388,7 +387,7 @@ def maxDepth(root):
     return 1 + max(maxDepth(root.left), maxDepth(root.right))
 ```
 
-层序遍历用 3.7 的逐层模式。BST 中序 = 升序。
+层序遍历用第 3.7 节的逐层模式。BST 中序 = 升序。
 
 ### 3.10 Trie
 
@@ -411,7 +410,7 @@ def dfs(i: int, j: int) -> int:
     ...
 ```
 
-很多“DP 题”可以先用递归 + lru_cache 写出记忆化搜索版本，想清楚状态后再改递推。**注意：被装饰的参数必须可哈希**（list 不行，传 tuple 或下标）。
+很多「DP 题」可以先用递归 + lru_cache 写出记忆化搜索版本，想清楚状态后再改递推。**被装饰的参数必须可哈希**（list 不行，传 tuple 或下标）。
 
 ### 3.12 DP 初始化
 
@@ -430,7 +429,7 @@ dp = [[inf] * n for _ in range(m)]
 
 ### 4.1 什么时候想到它
 
-> 「每个元素 左边/右边 第一个 比它大/小」。
+> 每个元素左边或右边第一个比它大或小的数。
 
 ### 4.2 方向表（与 C++ 版完全一致）
 
