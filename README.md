@@ -150,7 +150,7 @@ cover: /covers/research/research.webp
 
   ```html
   <figure class="diagram">
-    <img src="../../figures/ai-agent/agent-environment-loop.svg" alt="用文字描述图的内容" width="800" height="384" loading="lazy" decoding="async">
+    <img src="/figures/path-to-svg.svg" alt="用文字描述图的内容" width="800" height="384" loading="lazy" decoding="async">
     <figcaption>短句说明。</figcaption>
   </figure>
   ```
@@ -172,7 +172,7 @@ cover: /covers/research/research.webp
 
 每篇文章完整渲染在同一页面，保留正文、MathML、原地址和章节锚点。文章页提供 h2/h3 目录、浏览器查找、复制、打印和阅读进度；阅读记录需要读者主动开启，只保存在本机 `localStorage`。顶部搜索或 `Ctrl/Cmd K` 打开快捷搜索，查询与完整搜索页共享；`Escape` 关闭并恢复焦点。
 
-标签通过 `src/utils/tags.ts` 的 `tagAliases` 归一化，例如 `cpp` → `C++`、`algorithms` → `算法`、`ai-infra` → `AI Infra`。
+标签通过 `src/utils/tags.ts` 的 `tagAliases` 归一化，例如 `cpp` → `C++`、`algorithms` → `算法`。
 
 ## 画廊（隐藏页）
 

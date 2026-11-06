@@ -17,7 +17,6 @@ cover: /covers/post-learning-path.svg
 相关文档：
 
 - [就业方向规划与学习路线](/blog/career-planning-learning-roadmap/)
-- [AI Infra、算法、Agent 与后端学习资源推荐](/blog/ai-infra-learning-resources/)
 
 ## 岗位在做什么
 
