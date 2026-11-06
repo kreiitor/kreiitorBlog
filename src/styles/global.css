@@ -241,7 +241,7 @@
  .rich-content section[data-footnotes] li + li { margin-top: .6em; }
  .rich-content [data-footnote-backref] { margin-left: .35em; color: var(--color-accent); text-decoration: none; }
 
- .article-layout { display: grid; grid-template-columns: minmax(0,720px) minmax(200px,250px); justify-content: center; gap: clamp(48px,7vw,104px); }
+ .article-layout { display: grid; grid-template-columns: minmax(0,780px) minmax(200px,250px); justify-content: center; gap: clamp(48px,7vw,104px); }
  .article-layout > :is(article,aside) { min-width: 0; }
  /* 分区色晕:只用于页脚这类分区边界。方向固定 to bottom,色标经 --wash-color 注入。 */
  .wash { background: linear-gradient(to bottom, var(--wash-color, var(--color-surface-soft)) 0%, transparent 100%); }
@@ -252,6 +252,8 @@
  .article-toc { position: sticky; top: calc(var(--header-height) + 40px); max-height: calc(100vh - var(--header-height) - 72px); overflow-y: auto; padding-left: var(--space-m); border-left: 1px solid var(--color-line); scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
  .article-toc .eyebrow { margin-bottom: 10px; }
  .article-toc a { position: relative; display: block; padding: 6px 14px 6px 14px; color: var(--color-ink-muted); font-size: var(--text-caption); line-height: 1.7; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth); }
+ /* 二级是章节骨架，三级退后一档：缩进、字色、字重同时分层，避免读成同级。 */
+ .article-toc a:not(.toc-h3) { color: var(--color-ink-soft); font-weight: 500; }
  /* 当前项指示条：一根共享竖条随滚动滑到当前项（ReadingTools 计算位置）。
     没有脚本时退回到每个链接自己的 ::before。 */
  .toc-links { position: relative; }
@@ -259,12 +261,11 @@
  .article-toc a:hover { color: var(--color-ink); background-color: var(--color-accent-soft); border-radius: 6px; }
  .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; background-color: var(--color-accent-soft); border-radius: 6px; }
  .article-toc:not(:has(.toc-indicator)) a[aria-current="location"]::before { content: ''; position: absolute; left: -25px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); }
- .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
+ .article-toc .toc-h3 { padding-left: 30px; }
  /* 小节多时只展开当前章的三级标题；用 grid 行高过渡，收起的项不可聚焦。 */
  .article-toc[data-collapsible] .toc-h3 { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-slow) var(--ease-out-expo),padding var(--dur-slow) var(--ease-out-expo),opacity var(--dur-base) var(--ease-smooth); }
- /* overflow:hidden 会裁掉负缩进，悬挂缩进改由内层承担。 */
- .article-toc[data-collapsible] .toc-h3 { padding-left: 14px; text-indent: 0; }
- .article-toc[data-collapsible] .toc-h3 > .toc-text { display: block; min-height: 0; overflow: hidden; padding-left: 12px; text-indent: -12px; }
+ /* 行高过渡要求子元素承担 overflow:hidden，缩进留在链接本身上。 */
+ .article-toc[data-collapsible] .toc-h3 > .toc-text { display: block; min-height: 0; overflow: hidden; }
  .article-toc[data-collapsible] .toc-h3[data-collapsed] { grid-template-rows: 0fr; padding-block: 0; opacity: 0; visibility: hidden; }
  .reading-progress { position: fixed; top: 0; left: 0; z-index: 60; width: 100%; height: 2px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
  .mobile-toc { margin-bottom: 20px; padding: 6px 0; border-bottom: 1px solid var(--color-line); }
@@ -288,7 +289,7 @@
 
 @media (max-width: 1100px) {
  .article-layout { grid-template-columns: minmax(0,1fr); }
- .article-layout > article { width: 100%; max-width: 760px; margin-inline: auto; }
+ .article-layout > article { width: 100%; max-width: 780px; margin-inline: auto; }
  .article-layout > aside { display: none; }
  .section-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
  .series-grid { grid-template-columns: minmax(0,1fr); }

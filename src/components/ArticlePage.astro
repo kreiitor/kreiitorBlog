@@ -89,7 +89,8 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .chapter-progress-track > .is-past { background: var(--color-line-strong); }
  .chapter-progress-track > .is-current { background: var(--color-accent); }
  .mobile-toc nav a { display: flex; align-items: center; min-width: 0; min-height: 44px; padding-block: 4px; overflow-wrap: anywhere; }
- .mobile-toc .toc-h3 { padding-left: 16px; }
+ .mobile-toc a:not(.toc-h3) { color: var(--color-ink); font-weight: 500; }
+ .mobile-toc .toc-h3 { padding-left: 24px; }
  .mobile-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; }
  .related-posts { margin-bottom: 40px; }
  .related-posts h2 { padding-bottom: 12px; border-bottom: 1px solid var(--color-line); color: var(--color-sage); font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; letter-spacing: .06em; }
