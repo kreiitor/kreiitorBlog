@@ -124,7 +124,7 @@ test('Dark theme is applied during head parsing, before body paint',async({page}
 
 test('Dark theme keeps body text and code blocks readable',async({page})=>{
  await page.emulateMedia({colorScheme:'dark'});
- await page.goto('blog/ai-agent-ch01/');
+ await page.goto('blog/cpp-01-basics/');
  const m=await page.evaluate(()=>{
   const bodyBg=getComputedStyle(document.documentElement).backgroundColor;
   const text=getComputedStyle(document.querySelector('.rich-content')).color;

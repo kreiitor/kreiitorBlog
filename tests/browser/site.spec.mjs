@@ -72,7 +72,7 @@ test('闲笔 lists only jottings, and the gallery stays a hidden page',async({pa
 test('Article pages highlight the section they belong to',async({page})=>{
  await page.goto('blog/life-cooking/');
  await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('闲笔');
- await page.goto('blog/ai-agent-ch01/');
+ await page.goto('blog/cpp-01-basics/');
  await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('长卷');
  await page.goto('blog/algorithm-time-complexity/');
  await expect(page.locator('.site-header [aria-current="page"]').first()).toHaveText('札记');
@@ -155,7 +155,7 @@ test('Heading permalinks resolve to real ids and are keyboard reachable',async({
  await expect.poll(()=>page.evaluate(()=>decodeURIComponent(location.hash))).toBe(target);
 });
 test('Related posts link to same-site articles and follow the shared-tag signal',async({page})=>{
- await page.goto('blog/ai-agent-ch01/');
+ await page.goto('blog/cpp-01-basics/');
  const section=page.locator('.related-posts');
  await expect(section).toBeVisible();
  const items=section.locator('li a');
@@ -166,8 +166,8 @@ test('Related posts link to same-site articles and follow the shared-tag signal'
  const hrefs=await items.evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
  for(const href of hrefs){
   expect(href).toMatch(/^\/blog\/[^/]+\/$/);
-  expect(href).not.toBe('/blog/ai-agent-ch01/');
+  expect(href).not.toBe('/blog/cpp-01-basics/');
  }
- // 同系列的第 2 章应出现在首位（同系列权重高于普通共享标签）
- expect(decodeURIComponent(hrefs[0])).toContain('ai-agent-ch02');
+ // 同系列文章应排在普通共享标签之前
+ expect(decodeURIComponent(hrefs[0])).toMatch(/^\/blog\/cpp-/);
 });
