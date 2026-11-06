@@ -20,10 +20,16 @@ const notes = publishedPosts.filter(post => post.data.category === 'course').sli
 const jottings = publishedPosts.filter(post => post.data.category === 'writing').slice(0, 3);
 const tags = getTagSummaries(posts, await getCollection('projects')).slice(0, 6);
 
-// 字数：汉字逐字计，拉丁按词计。
+// 字数：汉字逐字计，拉丁字母按词计。去掉代码块和标记，只统计内容。
 const words = publishedPosts.reduce((sum, post) => {
- const body = post.body ?? '';
- return sum + (body.match(/\p{Script=Han}/gu)?.length ?? 0) + (body.match(/[A-Za-z0-9]+/g)?.length ?? 0);
+ let body = post.body ?? '';
+ // 去掉代码块内容（<code>...</code> 和 <pre>...</pre>）
+ body = body.replace(/<(code|pre)[^>]*>[\s\S]*?<\/\1>/g, '');
+ // 去掉 HTML 标签
+ body = body.replace(/<[^>]+>/g, '');
+ const han = (body.match(/\p{Script=Han}/gu)?.length ?? 0);
+ const eng = (body.match(/\b[a-zA-Z]+\b/g)?.length ?? 0);
+ return sum + han + eng;
 }, 0);
 const firstDate = publishedPosts.at(-1)?.data.pubDate;
 const stats: { value: number; unit: string; prefix?: string; since?: string }[] = [
