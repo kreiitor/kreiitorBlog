@@ -205,7 +205,7 @@
  .rich-content h2 { padding-bottom: 12px; border-bottom: 1px solid var(--color-line); }
  .rich-content h3 { margin-top: 1.9em; font-size: 21px; line-height: 1.5; }
  .rich-content :is(h4,h5,h6) { margin-top: 1.5em; font-size: 18px; line-height: 1.7; }
- .rich-content a { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-accent); text-decoration-thickness: 1px; text-underline-offset: 4px; transition: text-decoration-color var(--dur-base),color var(--dur-base); }
+ .rich-content a { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-accent); text-decoration-thickness: 1px; text-underline-offset: 4px; transition: text-decoration-color var(--dur-base),color var(--dur-base),text-decoration-thickness var(--dur-base); }
  .rich-content a:hover { color: var(--color-accent); text-decoration-thickness: 2px; }
  .rich-content ul { list-style: disc; padding-left: 1.6em; }
  .rich-content ol { list-style: decimal; padding-left: 1.6em; }
@@ -214,7 +214,7 @@
  .rich-content li::marker { color: var(--color-ink-muted); }
  .rich-content blockquote { padding: var(--space-s) var(--space-m); border-left: 2px solid var(--color-line-strong); border-radius: 0 12px 12px 0; background: var(--color-surface-soft); color: var(--color-ink-soft); }
  .rich-content code { padding: 2px 6px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-paper-warm); color: var(--color-ink); font-family: var(--font-mono); font-size: .82em; letter-spacing: 0; }
- .rich-content pre { position: relative; max-width: 100%; overflow: auto; padding: 52px var(--space-m) 22px; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-code-bg); color: var(--color-ink); font-family: var(--font-mono); font-size: 13px; line-height: 1.85; letter-spacing: 0; tab-size: 2; scrollbar-color: var(--color-line-strong) var(--color-code-bg); scrollbar-width: thin; overflow-wrap: anywhere; }
+ .rich-content pre { position: relative; max-width: 100%; overflow: auto; padding: 52px var(--space-m) 22px; border: 1px solid var(--color-line); border-left: 3px solid var(--color-accent); border-radius: 14px; background: var(--color-code-bg); color: var(--color-ink); font-family: var(--font-mono); font-size: 13px; line-height: 1.85; letter-spacing: 0; tab-size: 2; scrollbar-color: var(--color-line-strong) var(--color-code-bg); scrollbar-width: thin; overflow-wrap: anywhere; }
  .rich-content pre[data-language]::before { content: attr(data-language); position: absolute; top: 15px; left: var(--space-m); color: var(--color-ink-muted); font-family: var(--font-sans); font-size: 10.5px; font-weight: 600; line-height: 24px; letter-spacing: .08em; text-transform: uppercase; }
  .rich-content pre code { padding: 0; border: 0; background: transparent; color: inherit; font-size: inherit; }
  .rich-content table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-family: var(--font-sans); font-size: var(--text-ui); scrollbar-width: thin; }
@@ -249,13 +249,13 @@
  .article-body { margin-block: 40px; }
  .article-toc { position: sticky; top: calc(var(--header-height) + 40px); max-height: calc(100vh - var(--header-height) - 72px); overflow-y: auto; padding-left: var(--space-m); border-left: 1px solid var(--color-line); scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
  .article-toc .eyebrow { margin-bottom: 10px; }
- .article-toc a { position: relative; display: block; padding: 6px 0 6px 14px; text-indent: -14px; color: var(--color-ink-muted); font-size: var(--text-caption); line-height: 1.7; transition: color var(--dur-base) var(--ease-smooth); }
+ .article-toc a { position: relative; display: block; padding: 6px 14px 6px 14px; color: var(--color-ink-muted); font-size: var(--text-caption); line-height: 1.7; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth); }
  /* 当前项指示条：一根共享竖条随滚动滑到当前项（ReadingTools 计算位置）。
     没有脚本时退回到每个链接自己的 ::before。 */
  .toc-links { position: relative; }
  .toc-indicator { position: absolute; left: -25px; top: 0; width: 2px; height: 0; border-radius: 2px; background: var(--color-accent); opacity: 0; pointer-events: none; transition: translate var(--dur-slow) var(--ease-out-expo),height var(--dur-slow) var(--ease-out-expo),opacity var(--dur-base) var(--ease-smooth); }
- .article-toc a:hover { color: var(--color-ink); }
- .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; }
+ .article-toc a:hover { color: var(--color-ink); background-color: var(--color-accent-soft); border-radius: 6px; }
+ .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; background-color: rgb(255 255 255 / .06); border-radius: 6px; }
  .article-toc:not(:has(.toc-indicator)) a[aria-current="location"]::before { content: ''; position: absolute; left: -25px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); }
  .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
  /* 小节多时只展开当前章的三级标题；用 grid 行高过渡，收起的项不可聚焦。 */
@@ -301,7 +301,8 @@
  .section-heading h2 { font-size: 24px; }
  .section-heading > div { width: 100%; }
  .editorial-section { margin-top: 54px; }
- .page-intro { padding-block: 40px 32px; }
+ .page-intro { padding-block: 40px 32px; padding-inline: 16px; }
+ .page-shell { width: calc(100% - 32px); }
  .rich-content { font-size: 17px; }
  .rich-content h2 { font-size: 23px; }
  .rich-content h3 { font-size: 19px; }

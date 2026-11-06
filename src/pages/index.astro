@@ -245,11 +245,11 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
     if (length === words[index].length) {
      deleting = true;
      if (index === words.length - 1) { typed.dataset.done = ''; return; }
-     timer = window.setTimeout(step, 450);
+     timer = window.setTimeout(step, 800);
      return;
     }
    }
-   timer = window.setTimeout(step, deleting ? 35 : 65);
+   timer = window.setTimeout(step, deleting ? 50 : 80);
   };
   timer = window.setTimeout(step, stagger * 8);
   reduced.addEventListener('change', event => {

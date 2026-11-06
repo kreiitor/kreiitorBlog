@@ -13,7 +13,7 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>
 <style>
- .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; }
+ .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; border-radius: 18px !important; background: var(--color-surface-soft) !important; }
  .series-card:not(.series-index) > * { margin-inline: 24px; }
  .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; margin-top: 20px; }
  .series-heading > div { min-width: 0; }
