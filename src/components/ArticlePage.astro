@@ -44,7 +44,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
   <a href={withBase(seriesHref)} class="text-link back-link">← {group ? group.entry.data.title : section.label}</a>
   <div class="article-layout">
    <article data-pagefind-body data-reading-article data-article-slug={post.id} data-article-title={post.data.title} data-article-description={post.data.description} data-article-type={section.label} data-pagefind-meta="slug[data-article-slug], title[data-article-title], description[data-article-description], type[data-article-type]">
-    <header class="article-header wash">
+    <header class="article-header">
      <span data-pagefind-meta="type" class="sr-only">{section.label}</span>
      <p class="eyebrow">{group ? `${group.entry.data.title} · 第 ${chapterIndex + 1} 篇` : section.label}</p>
      <h1 data-pagefind-meta="title" data-pagefind-weight="8">{post.data.title}</h1>
@@ -66,7 +66,7 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  </section>
 </BaseLayout>
 <style>
- .reading-shell { --shell-pad-top: 36px; padding-top: var(--shell-pad-top); }
+ .reading-shell { padding-top: 36px; }
  .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
  .article-tags :global(.zen-tag) { padding: 2px 10px; font-size: 12px; }
  .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 40px; }
@@ -98,5 +98,5 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
  .related-posts li a:hover .related-title { color: var(--color-accent-strong); }
  .related-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.6; transition: color var(--dur-base); }
  .related-desc { color: var(--color-ink-soft); font-size: 13.5px; line-height: 1.8; }
- @media (max-width: 600px) { .reading-shell { --shell-pad-top: 24px; } .chapter-nav { grid-template-columns: 1fr; } .chapter-nav > div:last-child { text-align: left; } }
+ @media (max-width: 600px) { .reading-shell { padding-top: 24px; } .chapter-nav { grid-template-columns: 1fr; } .chapter-nav > div:last-child { text-align: left; } }
 </style>
