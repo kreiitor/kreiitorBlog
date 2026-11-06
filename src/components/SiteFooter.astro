@@ -11,7 +11,7 @@ const groups: { title: string; links: FooterLink[] }[] = [
 ];
 const built = new Date().toISOString().slice(0, 10);
 ---
-<footer class:list={['site-footer', { 'site-footer-compact': compact }]}>
+<footer class:list={['site-footer','wash', { 'site-footer-compact': compact }]}>
  <div class="page-shell">
   <div class="footer-panel">
    <div class="footer-brand">
@@ -33,7 +33,7 @@ const built = new Date().toISOString().slice(0, 10);
  </div>
 </footer>
 <style>
- .site-footer { margin-top: 120px; padding: 48px 0 24px; background: linear-gradient(to bottom, var(--color-surface-soft) 0%, transparent 100%); }
+ .site-footer { margin-top: 120px; padding: 48px 0 24px; }
  :global(.home-page) + .site-footer,:global(main:has(.home-page)) + .site-footer { margin-top: 72px; }
  .footer-panel { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 40px 64px; padding: 36px 0 28px; border-top: 1px solid var(--color-line-strong); }
  .footer-name { display: inline-flex; align-items: baseline; gap: 4px; color: var(--color-ink); font-family: var(--font-display); font-size: 24px; font-weight: 600; line-height: 1.2; }

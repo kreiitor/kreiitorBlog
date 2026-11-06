@@ -13,7 +13,8 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
 </a>
 <style>
- .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; border-radius: 18px !important; background: var(--color-surface-soft) !important; }
+ .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; }
+ .series-card:not(.series-index) { border-radius: var(--radius-card); background: var(--color-surface-soft); }
  .series-card:not(.series-index) > * { margin-inline: 24px; }
  .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; margin-top: 20px; }
  .series-heading > div { min-width: 0; }
@@ -54,6 +55,7 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-index .series-bottom > span:last-child { white-space: nowrap; }
  .series-index:is(:hover,:focus-visible) { translate: none; box-shadow: none; border-color: var(--color-line-strong); }
  .series-index:is(:hover,:focus-visible) :is(h2,h3),.series-index:is(:hover,:focus-visible) .series-bottom > span:last-child { color: var(--color-accent); }
+ @media (min-width: 1201px) { .series-index { grid-template-columns: minmax(200px,280px) minmax(0,1fr) 160px; } }
  @media (min-width: 601px) and (max-width: 900px) {
   .series-index { grid-template-columns: minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
   .series-index .series-heading { grid-column: 1; grid-row: 1; }

@@ -243,7 +243,9 @@
 
  .article-layout { display: grid; grid-template-columns: minmax(0,720px) minmax(200px,250px); justify-content: center; gap: clamp(48px,7vw,104px); }
  .article-layout > :is(article,aside) { min-width: 0; }
- .article-header { padding-bottom: 28px; border-bottom: 1px solid var(--color-line); }
+ /* 分区色晕:只用于「分区边界」——页脚与文章页头。方向固定 to bottom,色标经 --wash-color 注入。 */
+ .wash { background: linear-gradient(to bottom, var(--wash-color, var(--color-surface-soft)) 0%, transparent 100%); }
+ .article-header { --wash-color: var(--color-accent-soft); padding: var(--shell-pad-top, 36px) 0 28px; margin-top: calc(-1 * var(--shell-pad-top, 36px)); border-bottom: 1px solid var(--color-line); }
  .article-header h1 { margin: 16px 0; font-size: clamp(30px,1.25rem + 2vw,46px); line-height: 1.3; text-wrap: balance; }
  .article-summary { margin-bottom: 22px; color: var(--color-ink-soft); font-family: var(--font-reading); font-size: 17px; line-height: 1.8; }
  .article-body { margin-block: 40px; }
@@ -255,7 +257,7 @@
  .toc-links { position: relative; }
  .toc-indicator { position: absolute; left: -25px; top: 0; width: 2px; height: 0; border-radius: 2px; background: var(--color-accent); opacity: 0; pointer-events: none; transition: translate var(--dur-slow) var(--ease-out-expo),height var(--dur-slow) var(--ease-out-expo),opacity var(--dur-base) var(--ease-smooth); }
  .article-toc a:hover { color: var(--color-ink); background-color: var(--color-accent-soft); border-radius: 6px; }
- .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; background-color: rgb(255 255 255 / .06); border-radius: 6px; }
+ .article-toc a[aria-current="location"] { color: var(--color-ink); font-weight: 600; background-color: var(--color-accent-soft); border-radius: 6px; }
  .article-toc:not(:has(.toc-indicator)) a[aria-current="location"]::before { content: ''; position: absolute; left: -25px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); }
  .article-toc .toc-h3 { padding-left: 26px; text-indent: -12px; }
  /* 小节多时只展开当前章的三级标题；用 grid 行高过渡，收起的项不可聚焦。 */
@@ -301,7 +303,7 @@
  .section-heading h2 { font-size: 24px; }
  .section-heading > div { width: 100%; }
  .editorial-section { margin-top: 54px; }
- .page-intro { padding-block: 40px 32px; padding-inline: 16px; }
+ .page-intro { padding-block: 40px 32px; }
  .page-shell { width: calc(100% - 32px); }
  .rich-content { font-size: 17px; }
  .rich-content h2 { font-size: 23px; }
