@@ -236,7 +236,7 @@ npm run check
 npm run build
 ```
 
-脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 15 个字体文件合计 **1,220,992 字节**，覆盖 2,285 个语料字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
+脚本会扫描源文件、更新 `src/assets/fonts/`、`src/styles/fonts.css` 与 `docs/font-manifest.json`。当前 13 个字体文件合计 **1,009,692 字节**，覆盖 1,756 个语料字形；文件大小与 SHA-256 记录在 `docs/font-manifest.json`。字体许可证保留在 `public/fonts/licenses/`。
 
 所有字体使用 `font-display: swap`，不做全站预加载。KaTeX 与代码字体样式只在文章 / 项目阅读页引入。新增超出 400–600 的英文设计字重或新增中文字重时，需要同步修改生成脚本、CSS 声明和字体资产。
 

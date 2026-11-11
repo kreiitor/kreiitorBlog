@@ -1,6 +1,6 @@
 ---
-title: "Hot 100 算法题解：哈希、数组与链表"
-description: "通过 23 道题掌握哈希、双指针、滑动窗口、数组、矩阵与链表，附 C++ 和 Python 实现。"
+title: "Hot 100 算法题解：哈希、数组、链表、树与图"
+description: "通过 53 道题掌握哈希、双指针、滑动窗口、数组、链表、树与图，附 C++ 和 Python 实现。"
 pubDate: 2026-11-05
 tags:
   - "算法"
@@ -10,7 +10,7 @@ category: knowledge
 cover: /covers/research/algorithm.webp
 ---
 
-这 23 道题覆盖哈希、双指针、滑动窗口、数组、矩阵和链表。每道题给出解题思路、复杂度分析，以及 C++ 和 Python 实现。部分 C++ 实现使用 C++20；独立运行时需要按代码补充头文件或 Python 导入。
+这 53 道题覆盖哈希、双指针、滑动窗口、数组、矩阵、链表、二叉树和图。每道题给出解题思路、复杂度分析，以及 C++ 和 Python 实现。部分 C++ 实现使用 C++20；独立运行时需要按代码补充头文件或 Python 导入。
 
 ## 两数之和
 
@@ -1760,3 +1760,1825 @@ class Solution:
 ```
 
 **代码经验：** `None` 表示空节点；`ListNode | None` 标注需要 Python 3.10 或更高版本，独立运行时还需提供节点类型。
+
+## 回文链表
+
+### 题目描述
+
+判断单链表从头到尾的节点值是否构成回文序列。空链表和单节点链表都是回文。
+
+### 思路
+
+1. 用快慢指针找到链表中点；奇数长度时跳过正中间节点。
+2. 原地反转后半段链表，再从头节点和反转后的后半段同时比较。
+3. 任意一对值不同就不是回文；全部匹配则是回文。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。该方法会反转后半段，题目不要求恢复链表。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        if (fast) slow = slow->next;
+
+        ListNode* prev = nullptr;
+        while (slow) {
+            ListNode* next = slow->next;
+            slow->next = prev;
+            prev = slow;
+            slow = next;
+        }
+        while (prev) {
+            if (head->val != prev->val) return false;
+            head = head->next;
+            prev = prev->next;
+        }
+        return true;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+        if fast:
+            slow = slow.next
+
+        prev = None
+        while slow:
+            nxt = slow.next
+            slow.next = prev
+            prev, slow = slow, nxt
+        while prev:
+            if head.val != prev.val:
+                return False
+            head, prev = head.next, prev.next
+        return True
+```
+
+**代码经验：** 快指针是否为空区分奇偶长度；奇数长度时慢指针正好停在中点，需从中点的下一个节点开始比较。
+
+## 环形链表
+
+### 题目描述
+
+判断单链表中是否存在环。若某个节点的 `next` 指向此前访问过的节点，链表就会形成环。
+
+### 思路
+
+1. 慢指针每轮走一步，快指针每轮走两步。
+2. 若链表有环，快指针会在环内追上慢指针；若无环，快指针会先到达空指针。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    bool hasCycle(ListNode* head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+            if (slow == fast) return true;
+        }
+        return false;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:
+                return True
+        return False
+```
+
+**代码经验：** 比较指针身份，不比较节点值；值重复并不意味着链表成环。
+
+## 环形链表 II
+
+### 题目描述
+
+若链表有环，返回环的入口节点；若没有环，返回空指针。
+
+### 思路
+
+1. 用快慢指针相遇来确认有环，并记录相遇点。
+2. 一个指针回到头节点，另一个留在相遇点；之后两者每次都走一步。
+3. 两指针再次相遇的位置就是环的入口。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* detectCycle(ListNode* head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        do {
+            if (!fast || !fast->next) return nullptr;
+            slow = slow->next;
+            fast = fast->next->next;
+        } while (slow != fast);
+
+        slow = head;
+        while (slow != fast) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+        return slow;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:
+                slow = head
+                while slow is not fast:
+                    slow = slow.next
+                    fast = fast.next
+                return slow
+        return None
+```
+
+**代码经验：** C++ 的 `do` 循环在每轮开始先检查快指针及其后继，单节点无环时会立即返回空指针。
+
+## 合并两个有序链表
+
+### 题目描述
+
+将两个升序单链表合并为一个升序链表，并返回合并后的头节点。可以直接复用原节点。
+
+### 思路
+
+1. 建立虚拟头节点，尾指针始终指向已合并部分的末端。
+2. 比较两个当前节点，把较小者接到尾指针后并推进对应链表。
+3. 一条链表耗尽后，直接接上另一条剩余链表。
+
+**复杂度：** 时间 O(m+n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        ListNode dummy(0);
+        ListNode* tail = &dummy;
+        while (list1 && list2) {
+            if (list1->val <= list2->val) {
+                tail->next = list1;
+                list1 = list1->next;
+            } else {
+                tail->next = list2;
+                list2 = list2->next;
+            }
+            tail = tail->next;
+        }
+        tail->next = list1 ? list1 : list2;
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode()
+        tail = dummy
+        while list1 and list2:
+            if list1.val <= list2.val:
+                tail.next, list1 = list1, list1.next
+            else:
+                tail.next, list2 = list2, list2.next
+            tail = tail.next
+        tail.next = list1 or list2
+        return dummy.next
+```
+
+**代码经验：** 虚拟头节点省去了单独处理首个节点的分支；合并过程不创建数据节点。
+
+## 两数相加
+
+### 题目描述
+
+两个非空链表分别表示两个非负整数，数字按逆序存储。逐位相加并返回同样按逆序存储的结果链表。
+
+### 思路
+
+1. 同时遍历两个链表，并维护当前进位 `carry`。
+2. 每位计算 `sum = x + y + carry`，新节点保存 `sum % 10`，下一轮进位为 `sum / 10`。
+3. 两链表都结束后，若仍有进位，再追加一个节点。
+
+**复杂度：** 时间 O(max(m,n))，结果链表占用 O(max(m,n)) 空间。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        ListNode dummy(0);
+        ListNode* tail = &dummy;
+        int carry = 0;
+        while (l1 || l2 || carry) {
+            int sum = carry;
+            if (l1) {
+                sum += l1->val;
+                l1 = l1->next;
+            }
+            if (l2) {
+                sum += l2->val;
+                l2 = l2->next;
+            }
+            carry = sum / 10;
+            tail->next = new ListNode(sum % 10);
+            tail = tail->next;
+        }
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode()
+        tail = dummy
+        carry = 0
+        while l1 or l2 or carry:
+            total = carry
+            if l1:
+                total += l1.val
+                l1 = l1.next
+            if l2:
+                total += l2.val
+                l2 = l2.next
+            carry, digit = divmod(total, 10)
+            tail.next = ListNode(digit)
+            tail = tail.next
+        return dummy.next
+```
+
+**代码经验：** 循环条件包含 `carry`，因此最高位相加产生进位时会多生成一位。
+
+## 删除链表的倒数第 N 个结点
+
+### 题目描述
+
+删除单链表的倒数第 `n` 个节点，并返回新的头节点。`n` 在链表长度范围内。
+
+### 思路
+
+1. 在头节点前添加虚拟节点，快慢指针都从虚拟节点出发。
+2. 快指针先前进 `n` 步，再让快慢指针同步前进。
+3. 快指针到达尾节点时，慢指针正好位于待删节点的前一个位置。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode dummy(0);
+        dummy.next = head;
+        ListNode* fast = &dummy;
+        ListNode* slow = &dummy;
+        for (int i = 0; i < n; ++i) fast = fast->next;
+        while (fast->next) {
+            fast = fast->next;
+            slow = slow->next;
+        }
+        ListNode* removed = slow->next;
+        slow->next = removed->next;
+        delete removed;
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        fast = slow = dummy
+        for _ in range(n):
+            fast = fast.next
+        while fast.next:
+            fast = fast.next
+            slow = slow.next
+        slow.next = slow.next.next
+        return dummy.next
+```
+
+**代码经验：** 虚拟头节点让删除原头节点时仍使用同一套指针逻辑；题目保证 `n` 合法，因此快指针前进时无需额外判空。
+
+## 两两交换链表中的节点
+
+### 题目描述
+
+按相邻两节点为一组交换链表节点，返回新头节点。只能改变节点连接关系，不能只交换节点值。
+
+### 思路
+
+1. 虚拟头节点的 `next` 指向当前待交换的一对节点。
+2. 令前驱指向第二个节点，第二个节点指向第一个节点，第一个节点指向后续部分。
+3. 前驱移动到交换后的一对尾节点；不足两个节点时结束。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* swapPairs(ListNode* head) {
+        ListNode dummy(0, head);
+        ListNode* prev = &dummy;
+        while (prev->next && prev->next->next) {
+            ListNode* first = prev->next;
+            ListNode* second = first->next;
+            first->next = second->next;
+            second->next = first;
+            prev->next = second;
+            prev = first;
+        }
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        prev = dummy
+        while prev.next and prev.next.next:
+            first = prev.next
+            second = first.next
+            first.next = second.next
+            second.next = first
+            prev.next = second
+            prev = first
+        return dummy.next
+```
+
+**代码经验：** 先保存这一组的两个节点，再调整三条边，能避免覆盖尚未处理的后续链表。
+
+## K 个一组翻转链表
+
+### 题目描述
+
+每 `k` 个节点为一组翻转链表，不足 `k` 个的尾部保持原顺序。节点值不变，只调整指针。
+
+### 思路
+
+1. 从组前驱出发向后找第 `k` 个节点；找不到说明剩余节点不足一组，直接结束。
+2. 记下组后节点，把组内节点逐个反转，并让原组头指向组后节点。
+3. 更新组前驱到本组原头节点，继续处理下一组。
+
+**复杂度：** 时间 O(n)，额外空间 O(1)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        ListNode dummy(0, head);
+        ListNode* groupPrev = &dummy;
+        while (true) {
+            ListNode* kth = groupPrev;
+            for (int i = 0; i < k && kth; ++i) kth = kth->next;
+            if (!kth) break;
+
+            ListNode* groupNext = kth->next;
+            ListNode* cur = groupPrev->next;
+            ListNode* prev = groupNext;
+            while (cur != groupNext) {
+                ListNode* next = cur->next;
+                cur->next = prev;
+                prev = cur;
+                cur = next;
+            }
+            ListNode* oldHead = groupPrev->next;
+            groupPrev->next = kth;
+            groupPrev = oldHead;
+        }
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        group_prev = dummy
+        while True:
+            kth = group_prev
+            for _ in range(k):
+                kth = kth.next
+                if not kth:
+                    return dummy.next
+            group_next = kth.next
+
+            prev, cur = group_next, group_prev.next
+            while cur is not group_next:
+                nxt = cur.next
+                cur.next = prev
+                prev, cur = cur, nxt
+            old_head = group_prev.next
+            group_prev.next = kth
+            group_prev = old_head
+```
+
+**代码经验：** 反转时把 `prev` 初始设为组后节点，处理完本组后，原组头自然连接到未处理部分。
+
+## 随机链表的复制
+
+### 题目描述
+
+链表每个节点除 `next` 外还有一个 `random` 指针，它可以指向链表中的任意节点或空。创建一份深拷贝并返回新头节点。
+
+### 思路
+
+1. 第一次遍历为每个原节点创建副本，并用哈希表保存“原节点 → 副本节点”。
+2. 第二次遍历时，分别通过映射设置副本的 `next` 和 `random`。
+3. 返回头节点对应的副本；原链表与副本之间不共享节点。
+
+**复杂度：** 时间 O(n)，额外空间 O(n)。
+
+### C++ 实现
+
+```cpp
+/*
+class Node {
+public:
+    int val;
+    Node* next;
+    Node* random;
+    Node(int _val) : val(_val), next(nullptr), random(nullptr) {}
+};
+*/
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        if (!head) return nullptr;
+        unordered_map<Node*, Node*> copies;
+        for (Node* cur = head; cur; cur = cur->next) {
+            copies[cur] = new Node(cur->val);
+        }
+        for (Node* cur = head; cur; cur = cur->next) {
+            copies[cur]->next = cur->next ? copies[cur->next] : nullptr;
+            copies[cur]->random = cur->random ? copies[cur->random] : nullptr;
+        }
+        return copies[head];
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def copyRandomList(self, head: Optional["Node"]) -> Optional["Node"]:
+        if not head:
+            return None
+        copies = {}
+        cur = head
+        while cur:
+            copies[cur] = Node(cur.val)
+            cur = cur.next
+        cur = head
+        while cur:
+            copies[cur].next = copies.get(cur.next)
+            copies[cur].random = copies.get(cur.random)
+            cur = cur.next
+        return copies[head]
+```
+
+**代码经验：** 映射使用节点对象而不是节点值作键，因为不同节点可能有相同值。
+
+## 排序链表
+
+### 题目描述
+
+将单链表按节点值升序排序，要求平均时间复杂度为 O(n log n)，并尽量减少额外空间。
+
+### 思路
+
+1. 使用归并排序：快慢指针找中点并断开链表，递归排序两半。
+2. 将两个已排序链表归并。链表归并不需要像数组那样申请临时缓冲区。
+3. 递归深度为 O(log n)，拆分和合并每层总计处理 O(n) 个节点。
+
+**复杂度：** 时间 O(n log n)，递归栈 O(log n)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    ListNode* merge(ListNode* a, ListNode* b) {
+        ListNode dummy(0);
+        ListNode* tail = &dummy;
+        while (a && b) {
+            if (a->val <= b->val) {
+                tail->next = a;
+                a = a->next;
+            } else {
+                tail->next = b;
+                b = b->next;
+            }
+            tail = tail->next;
+        }
+        tail->next = a ? a : b;
+        return dummy.next;
+    }
+public:
+    ListNode* sortList(ListNode* head) {
+        if (!head || !head->next) return head;
+        ListNode* slow = head;
+        ListNode* fast = head->next;
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        ListNode* right = slow->next;
+        slow->next = nullptr;
+        return merge(sortList(head), sortList(right));
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:
+            return head
+        slow, fast = head, head.next
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+        right = slow.next
+        slow.next = None
+
+        left = self.sortList(head)
+        right = self.sortList(right)
+        dummy = ListNode()
+        tail = dummy
+        while left and right:
+            if left.val <= right.val:
+                tail.next, left = left, left.next
+            else:
+                tail.next, right = right, right.next
+            tail = tail.next
+        tail.next = left or right
+        return dummy.next
+```
+
+**代码经验：** 先将链表从中点断开，否则递归调用可能再次收到原链表并无法缩小问题规模。
+
+## 合并 K 个升序链表
+
+### 题目描述
+
+给定 `k` 个升序链表，将它们合并为一个升序链表并返回头节点。
+
+### 思路
+
+1. 将每条非空链表的头节点放入最小堆。
+2. 每次取出当前最小节点接到结果尾部，再把它的后继节点放入堆。
+3. 堆中最多有 `k` 个节点，因此每个节点只需一次 O(log k) 的堆操作。
+
+**复杂度：** 总节点数为 N，时间 O(N log k)，额外空间 O(k)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    struct Compare {
+        bool operator()(ListNode* a, ListNode* b) const {
+            return a->val > b->val;
+        }
+    };
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        priority_queue<ListNode*, vector<ListNode*>, Compare> heap;
+        for (ListNode* node : lists) {
+            if (node) heap.push(node);
+        }
+        ListNode dummy(0);
+        ListNode* tail = &dummy;
+        while (!heap.empty()) {
+            ListNode* node = heap.top();
+            heap.pop();
+            if (node->next) heap.push(node->next);
+            tail->next = node;
+            tail = node;
+        }
+        tail->next = nullptr;
+        return dummy.next;
+    }
+};
+```
+
+### Python 实现
+
+```python
+import heapq
+
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        heap = []
+        for index, node in enumerate(lists):
+            if node:
+                heapq.heappush(heap, (node.val, index, node))
+        dummy = ListNode()
+        tail = dummy
+        order = len(lists)
+        while heap:
+            _, _, node = heapq.heappop(heap)
+            tail.next = node
+            tail = node
+            if node.next:
+                heapq.heappush(heap, (node.next.val, order, node.next))
+                order += 1
+        tail.next = None
+        return dummy.next
+```
+
+**代码经验：** Python 堆元组加入递增序号，避免值相同时继续比较不可排序的节点对象。
+
+## LRU 缓存
+
+### 题目描述
+
+实现最近最少使用（LRU）缓存，支持 `get` 和 `put`。当容量已满并插入新键时，删除最久未使用的键。
+
+### 思路
+
+1. 哈希表提供键到链表节点的 O(1) 定位。
+2. 双向链表按最近使用顺序排列：头部最近，尾部最久。
+3. 访问或更新时把节点移动到头部；插入后若超容量，删除尾节点。
+
+**复杂度：** `get` 和 `put` 平均 O(1)，空间 O(capacity)。
+
+### C++ 实现
+
+```cpp
+class LRUCache {
+    int capacity;
+    list<pair<int, int>> order;
+    unordered_map<int, list<pair<int, int>>::iterator> positions;
+public:
+    LRUCache(int capacity) : capacity(capacity) {}
+
+    int get(int key) {
+        auto it = positions.find(key);
+        if (it == positions.end()) return -1;
+        order.splice(order.begin(), order, it->second);
+        return it->second->second;
+    }
+
+    void put(int key, int value) {
+        auto it = positions.find(key);
+        if (it != positions.end()) {
+            it->second->second = value;
+            order.splice(order.begin(), order, it->second);
+            return;
+        }
+        if (capacity == 0) return;
+        if (static_cast<int>(order.size()) == capacity) {
+            positions.erase(order.back().first);
+            order.pop_back();
+        }
+        order.emplace_front(key, value);
+        positions[key] = order.begin();
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import OrderedDict
+
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.items = OrderedDict()
+
+    def get(self, key: int) -> int:
+        if key not in self.items:
+            return -1
+        self.items.move_to_end(key)
+        return self.items[key]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.items:
+            self.items.move_to_end(key)
+        self.items[key] = value
+        if len(self.items) > self.capacity:
+            self.items.popitem(last=False)
+```
+
+**代码经验：** `std::list::splice` 可在 O(1) 时间移动节点且保持迭代器有效；Python 的 `OrderedDict` 提供对应的顺序维护操作。
+
+## 二叉树的中序遍历
+
+### 题目描述
+
+按左子树、根节点、右子树的顺序遍历二叉树，并返回节点值列表。
+
+### 思路
+
+1. 沿当前节点的左边界不断入栈。
+2. 左边界走完后弹出栈顶并访问，再转向它的右子树。
+3. 栈和当前节点都为空时遍历结束。
+
+**复杂度：** 时间 O(n)，额外空间 O(h)，其中 h 为树高。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> result;
+        stack<TreeNode*> nodes;
+        TreeNode* cur = root;
+        while (cur || !nodes.empty()) {
+            while (cur) {
+                nodes.push(cur);
+                cur = cur->left;
+            }
+            cur = nodes.top();
+            nodes.pop();
+            result.push_back(cur->val);
+            cur = cur->right;
+        }
+        return result;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        result, stack = [], []
+        cur = root
+        while cur or stack:
+            while cur:
+                stack.append(cur)
+                cur = cur.left
+            cur = stack.pop()
+            result.append(cur.val)
+            cur = cur.right
+        return result
+```
+
+**代码经验：** 迭代写法避免树退化成链表时递归深度过大。
+
+## 二叉树的最大深度
+
+### 题目描述
+
+返回二叉树从根节点到最远叶节点的节点数。空树深度为 0。
+
+### 思路
+
+1. 空节点返回深度 0。
+2. 非空节点的深度等于左右子树较大深度加 1。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if (!root) return 0;
+        return 1 + max(maxDepth(root->left), maxDepth(root->right));
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right))
+```
+
+**代码经验：** 递归深度最坏为 O(n)，若输入可能是极深的链状树，可改用队列按层遍历。
+
+## 翻转二叉树
+
+### 题目描述
+
+翻转一棵二叉树，交换每个节点的左右子树，并返回根节点。
+
+### 思路
+
+1. 空节点无需处理。
+2. 交换当前节点的左右孩子，再分别递归翻转两个子树。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        if (!root) return nullptr;
+        swap(root->left, root->right);
+        invertTree(root->left);
+        invertTree(root->right);
+        return root;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if root:
+            root.left, root.right = root.right, root.left
+            self.invertTree(root.left)
+            self.invertTree(root.right)
+        return root
+```
+
+**代码经验：** 直接原地交换指针，不需要新建树节点。
+
+## 对称二叉树
+
+### 题目描述
+
+判断二叉树是否沿根节点中心轴镜像对称。空树视为对称。
+
+### 思路
+
+1. 对称比较一对节点：两者都为空时相等，一者为空时不相等。
+2. 值相等后，比较左节点的左子树与右节点的右子树，以及左节点的右子树与右节点的左子树。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    bool mirror(TreeNode* a, TreeNode* b) {
+        if (!a || !b) return a == b;
+        return a->val == b->val
+            && mirror(a->left, b->right)
+            && mirror(a->right, b->left);
+    }
+public:
+    bool isSymmetric(TreeNode* root) {
+        return mirror(root, root);
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        def mirror(a, b):
+            if not a or not b:
+                return a is b
+            return (a.val == b.val
+                    and mirror(a.left, b.right)
+                    and mirror(a.right, b.left))
+
+        return mirror(root, root)
+```
+
+**代码经验：** 同一棵树中的两个相同节点值不够证明对称，子树位置也必须镜像对应。
+
+## 二叉树的直径
+
+### 题目描述
+
+返回树中任意两节点之间最长路径的边数。路径不要求经过根节点。
+
+### 思路
+
+1. 后序遍历求每个节点左右子树的高度。
+2. 以该节点为转折点的路径长度是左高加右高，用它更新全局最大值。
+3. 向父节点返回当前节点的高度，即较大子树高度加 1。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int diameterOfBinaryTree(TreeNode* root) {
+        int diameter = 0;
+        function<int(TreeNode*)> height = [&](TreeNode* node) {
+            if (!node) return 0;
+            int left = height(node->left);
+            int right = height(node->right);
+            diameter = max(diameter, left + right);
+            return 1 + max(left, right);
+        };
+        height(root);
+        return diameter;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        diameter = 0
+
+        def height(node):
+            nonlocal diameter
+            if not node:
+                return 0
+            left = height(node.left)
+            right = height(node.right)
+            diameter = max(diameter, left + right)
+            return 1 + max(left, right)
+
+        height(root)
+        return diameter
+```
+
+**代码经验：** 高度按节点数计算，直径按边数计算，所以候选值是左右高度之和，而不是再加当前节点。
+
+## 二叉树的层序遍历
+
+### 题目描述
+
+从上到下逐层遍历二叉树，同一层按从左到右的顺序返回节点值。
+
+### 思路
+
+1. 用队列进行广度优先遍历。
+2. 每轮先记录队列当前长度，只处理这一层已有节点。
+3. 处理节点时把非空左、右孩子加入队尾。
+
+**复杂度：** 时间 O(n)，队列空间 O(w)，w 为树的最大宽度。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        vector<vector<int>> result;
+        if (!root) return result;
+        queue<TreeNode*> nodes;
+        nodes.push(root);
+        while (!nodes.empty()) {
+            int size = nodes.size();
+            vector<int> level;
+            while (size--) {
+                TreeNode* node = nodes.front();
+                nodes.pop();
+                level.push_back(node->val);
+                if (node->left) nodes.push(node->left);
+                if (node->right) nodes.push(node->right);
+            }
+            result.push_back(level);
+        }
+        return result;
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import deque
+
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        if not root:
+            return []
+        result, queue = [], deque([root])
+        while queue:
+            level = []
+            for _ in range(len(queue)):
+                node = queue.popleft()
+                level.append(node.val)
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+            result.append(level)
+        return result
+```
+
+**代码经验：** 固定每轮开始时的队列长度，避免把下一层新加入的节点放进当前层结果。
+
+## 将有序数组转换为二叉搜索树
+
+### 题目描述
+
+给定严格递增数组，将其转换为高度平衡的二叉搜索树。
+
+### 思路
+
+1. 当前区间的中间元素作为根节点，保证左右元素数量尽量相等。
+2. 对中点左侧和右侧区间递归构造左右子树。
+3. 区间为空时返回空节点。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(log n)，新树占用 O(n) 节点空间。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    TreeNode* build(const vector<int>& nums, int left, int right) {
+        if (left > right) return nullptr;
+        int mid = left + (right - left) / 2;
+        TreeNode* root = new TreeNode(nums[mid]);
+        root->left = build(nums, left, mid - 1);
+        root->right = build(nums, mid + 1, right);
+        return root;
+    }
+public:
+    TreeNode* sortedArrayToBST(vector<int>& nums) {
+        return build(nums, 0, static_cast<int>(nums.size()) - 1);
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:
+        def build(left, right):
+            if left > right:
+                return None
+            mid = (left + right) // 2
+            node = TreeNode(nums[mid])
+            node.left = build(left, mid - 1)
+            node.right = build(mid + 1, right)
+            return node
+
+        return build(0, len(nums) - 1)
+```
+
+**代码经验：** 输入已排序且元素互异；取中点能让左右子树的节点数差不超过 1。
+
+## 验证二叉搜索树
+
+### 题目描述
+
+判断二叉树是否满足二叉搜索树性质：左子树所有节点小于当前节点，右子树所有节点大于当前节点。
+
+### 思路
+
+1. 递归时为节点维护一个开区间 `(lower, upper)`。
+2. 当前值必须严格落在区间内；左子树上界收紧为当前值，右子树下界收紧为当前值。
+3. 递归检查能同时覆盖整棵子树，不会漏掉远处节点造成的越界。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    bool valid(TreeNode* node, long long lower, long long upper) {
+        if (!node) return true;
+        if (node->val <= lower || node->val >= upper) return false;
+        return valid(node->left, lower, node->val)
+            && valid(node->right, node->val, upper);
+    }
+public:
+    bool isValidBST(TreeNode* root) {
+        return valid(root, LLONG_MIN, LLONG_MAX);
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        def valid(node, lower, upper):
+            if not node:
+                return True
+            if not lower < node.val < upper:
+                return False
+            return (valid(node.left, lower, node.val)
+                    and valid(node.right, node.val, upper))
+
+        return valid(root, float("-inf"), float("inf"))
+```
+
+**代码经验：** C++ 需要比节点值范围更宽的边界类型，否则用节点值初始化上下界可能溢出。
+
+## 二叉搜索树中第 K 小的元素
+
+### 题目描述
+
+返回二叉搜索树按升序排列后的第 `k` 小节点值，题目保证 `k` 合法。
+
+### 思路
+
+1. 二叉搜索树的中序遍历结果递增。
+2. 迭代执行中序遍历，每访问一个节点就将计数减一。
+3. 计数降为零时当前值就是第 `k` 小元素，无需遍历剩余节点。
+
+**复杂度：** 最坏时间 O(n)，额外空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int kthSmallest(TreeNode* root, int k) {
+        stack<TreeNode*> nodes;
+        while (root || !nodes.empty()) {
+            while (root) {
+                nodes.push(root);
+                root = root->left;
+            }
+            root = nodes.top();
+            nodes.pop();
+            if (--k == 0) return root->val;
+            root = root->right;
+        }
+        return -1;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        stack = []
+        while root or stack:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            k -= 1
+            if k == 0:
+                return root.val
+            root = root.right
+        return -1
+```
+
+**代码经验：** 中序遍历可以提前停止，若需要多次查询不同的 `k`，可考虑预先保存中序序列。
+
+## 二叉树的右视图
+
+### 题目描述
+
+从树的右侧观察二叉树，返回从上到下每一层最右侧可见的节点值。
+
+### 思路
+
+1. 按层广度优先遍历。
+2. 每层按从左到右处理，记录该层最后一个节点的值。
+
+**复杂度：** 时间 O(n)，队列空间 O(w)，w 为树的最大宽度。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    vector<int> rightSideView(TreeNode* root) {
+        vector<int> result;
+        if (!root) return result;
+        queue<TreeNode*> nodes;
+        nodes.push(root);
+        while (!nodes.empty()) {
+            int size = nodes.size();
+            for (int i = 0; i < size; ++i) {
+                TreeNode* node = nodes.front();
+                nodes.pop();
+                if (node->left) nodes.push(node->left);
+                if (node->right) nodes.push(node->right);
+                if (i == size - 1) result.push_back(node->val);
+            }
+        }
+        return result;
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import deque
+
+class Solution:
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        if not root:
+            return []
+        result, queue = [], deque([root])
+        while queue:
+            level_size = len(queue)
+            for i in range(level_size):
+                node = queue.popleft()
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+                if i == level_size - 1:
+                    result.append(node.val)
+        return result
+```
+
+**代码经验：** Python 版本中队列长度会随着入队改变，因此不能用 `len(queue)` 判断当前层末尾；应在循环前保存层大小。
+
+## 二叉树展开为链表
+
+### 题目描述
+
+将二叉树原地展开为按前序遍历顺序连接的单链表，所有节点只使用右指针，左指针置空。
+
+### 思路
+
+1. 用栈模拟前序遍历，先压右孩子，再压左孩子。
+2. 每取出一个节点，就把它接到上一个节点的右侧，并清空上一个节点的左指针。
+3. 所有节点处理后，将末节点的左右指针都置空。
+
+**复杂度：** 时间 O(n)，栈空间 O(n)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        if (!root) return;
+        stack<TreeNode*> nodes;
+        nodes.push(root);
+        TreeNode* prev = nullptr;
+        while (!nodes.empty()) {
+            TreeNode* node = nodes.top();
+            nodes.pop();
+            if (prev) {
+                prev->left = nullptr;
+                prev->right = node;
+            }
+            if (node->right) nodes.push(node->right);
+            if (node->left) nodes.push(node->left);
+            prev = node;
+        }
+        prev->left = nullptr;
+        prev->right = nullptr;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def flatten(self, root: Optional[TreeNode]) -> None:
+        if not root:
+            return
+        stack, prev = [root], None
+        while stack:
+            node = stack.pop()
+            if prev:
+                prev.left = None
+                prev.right = node
+            if node.right:
+                stack.append(node.right)
+            if node.left:
+                stack.append(node.left)
+            prev = node
+        prev.left = None
+        prev.right = None
+```
+
+**代码经验：** 入栈顺序与弹出顺序相反，先压右孩子才能先处理左子树，得到根、左、右的前序次序。
+
+## 从前序与中序遍历序列构造二叉树
+
+### 题目描述
+
+给定无重复值的前序和中序遍历序列，重建并返回对应二叉树。
+
+### 思路
+
+1. 前序序列当前元素是子树根节点。
+2. 用哈希表快速查找根在中序序列中的位置，据此确定左右子树区间。
+3. 按前序顺序递归构造左子树和右子树。
+
+**复杂度：** 时间 O(n)，哈希表和递归栈空间 O(n)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        unordered_map<int, int> inorderIndex;
+        for (int i = 0; i < static_cast<int>(inorder.size()); ++i) {
+            inorderIndex[inorder[i]] = i;
+        }
+        int preorderIndex = 0;
+        function<TreeNode*(int, int)> build = [&](int left, int right) -> TreeNode* {
+            if (left > right) return nullptr;
+            int value = preorder[preorderIndex++];
+            int mid = inorderIndex[value];
+            TreeNode* root = new TreeNode(value);
+            root->left = build(left, mid - 1);
+            root->right = build(mid + 1, right);
+            return root;
+        };
+        return build(0, static_cast<int>(inorder.size()) - 1);
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        positions = {value: i for i, value in enumerate(inorder)}
+        self.pre_index = 0
+
+        def build(left, right):
+            if left > right:
+                return None
+            value = preorder[self.pre_index]
+            self.pre_index += 1
+            root = TreeNode(value)
+            mid = positions[value]
+            root.left = build(left, mid - 1)
+            root.right = build(mid + 1, right)
+            return root
+
+        return build(0, len(inorder) - 1)
+```
+
+**代码经验：** 该方法依赖节点值唯一；重复值会让中序位置无法由值唯一确定。
+
+## 路径总和 III
+
+### 题目描述
+
+统计二叉树中路径和等于目标值的路径数量。路径必须向下，但可以从任意节点开始并在任意节点结束。
+
+### 思路
+
+1. 沿根到当前节点维护前缀和 `sum`。
+2. 若此前某个前缀和为 `sum - target`，两者之间的节点路径和就是目标值。
+3. 用哈希表记录当前递归路径上的前缀和次数；回溯离开节点时撤销当前前缀和。
+
+**复杂度：** 时间 O(n)，哈希表和递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+    long long countFrom(TreeNode* node, long long sum, int target,
+                        unordered_map<long long, int>& prefix) {
+        if (!node) return 0;
+        sum += node->val;
+        long long count = prefix[sum - target];
+        ++prefix[sum];
+        count += countFrom(node->left, sum, target, prefix);
+        count += countFrom(node->right, sum, target, prefix);
+        if (--prefix[sum] == 0) prefix.erase(sum);
+        return count;
+    }
+public:
+    int pathSum(TreeNode* root, int targetSum) {
+        unordered_map<long long, int> prefix{{0, 1}};
+        return static_cast<int>(countFrom(root, 0, targetSum, prefix));
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import defaultdict
+
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        prefix = defaultdict(int)
+        prefix[0] = 1
+
+        def count_from(node, total):
+            if not node:
+                return 0
+            total += node.val
+            count = prefix[total - targetSum]
+            prefix[total] += 1
+            count += count_from(node.left, total)
+            count += count_from(node.right, total)
+            prefix[total] -= 1
+            return count
+
+        return count_from(root, 0)
+```
+
+**代码经验：** 前缀和计数必须在回溯时减回去，否则一个分支的路径会错误影响另一个分支。
+
+## 二叉树的最近公共祖先
+
+### 题目描述
+
+给定二叉树中的两个节点 `p` 和 `q`，返回它们的最近公共祖先。题目保证两个节点都存在。
+
+### 思路
+
+1. 当前节点为空或等于 `p`、`q` 时直接返回当前节点。
+2. 分别在左右子树递归查找。
+3. 若左右都找到目标，当前节点就是最近公共祖先；若只有一侧找到，就向上传递该结果。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (!root || root == p || root == q) return root;
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+        if (left && right) return root;
+        return left ? left : right;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def lowestCommonAncestor(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:
+        if not root or root is p or root is q:
+            return root
+        left = self.lowestCommonAncestor(root.left, p, q)
+        right = self.lowestCommonAncestor(root.right, p, q)
+        if left and right:
+            return root
+        return left or right
+```
+
+**代码经验：** 用节点身份判断是否命中目标，避免值相等但对象不同造成误判。
+
+## 二叉树中的最大路径和
+
+### 题目描述
+
+返回二叉树中任意非空路径的最大节点值之和。路径可以从任意节点开始和结束，但沿父子边连接。
+
+### 思路
+
+1. 后序遍历计算节点向父节点提供的最大单边贡献；负贡献按 0 处理。
+2. 经过当前节点的候选路径和为节点值加左右两侧的正贡献。
+3. 用候选路径更新全局最大值，再返回节点值加左右较大的单侧贡献。
+
+**复杂度：** 时间 O(n)，递归栈空间 O(h)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int maxPathSum(TreeNode* root) {
+        int best = INT_MIN;
+        function<int(TreeNode*)> gain = [&](TreeNode* node) {
+            if (!node) return 0;
+            int left = max(0, gain(node->left));
+            int right = max(0, gain(node->right));
+            best = max(best, node->val + left + right);
+            return node->val + max(left, right);
+        };
+        gain(root);
+        return best;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        best = float("-inf")
+
+        def gain(node):
+            nonlocal best
+            if not node:
+                return 0
+            left = max(0, gain(node.left))
+            right = max(0, gain(node.right))
+            best = max(best, node.val + left + right)
+            return node.val + max(left, right)
+
+        gain(root)
+        return best
+```
+
+**代码经验：** 返回父节点的贡献只能选择一侧；全局候选路径才可以同时使用左右子树。
+
+## 岛屿数量
+
+### 题目描述
+
+给定由 `'1'`（陆地）和 `'0'`（水）组成的网格，统计由上下左右相连陆地组成的岛屿数量。
+
+### 思路
+
+1. 扫描网格，每遇到未访问陆地就找到一个新岛屿。
+2. 用显式栈进行深度优先搜索，把连通的陆地全部标记为已访问。
+3. 每个格子最多访问一次。
+
+**复杂度：** 时间 O(mn)，显式栈最坏 O(mn)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        if (grid.empty()) return 0;
+        int m = grid.size(), n = grid[0].size();
+        int islands = 0;
+        const int dr[4] = {1, -1, 0, 0};
+        const int dc[4] = {0, 0, 1, -1};
+        for (int r = 0; r < m; ++r) {
+            for (int c = 0; c < n; ++c) {
+                if (grid[r][c] == '1') {
+                    ++islands;
+                    vector<pair<int, int>> cells{{r, c}};
+                    grid[r][c] = '0';
+                    while (!cells.empty()) {
+                        auto [row, col] = cells.back();
+                        cells.pop_back();
+                        for (int d = 0; d < 4; ++d) {
+                            int nr = row + dr[d], nc = col + dc[d];
+                            if (nr < 0 || nr >= m || nc < 0 || nc >= n || grid[nr][nc] != '1') continue;
+                            grid[nr][nc] = '0';
+                            cells.push_back({nr, nc});
+                        }
+                    }
+                }
+            }
+        }
+        return islands;
+    }
+};
+```
+
+### Python 实现
+
+```python
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        if not grid:
+            return 0
+        rows, cols = len(grid), len(grid[0])
+
+        islands = 0
+        directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == "1":
+                    islands += 1
+                    stack = [(r, c)]
+                    grid[r][c] = "0"
+                    while stack:
+                        row, col = stack.pop()
+                        for dr, dc in directions:
+                            nr, nc = row + dr, col + dc
+                            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == "1":
+                                grid[nr][nc] = "0"
+                                stack.append((nr, nc))
+        return islands
+```
+
+**代码经验：** 这两种实现会原地把陆地改成水；若需要保留输入网格，可单独维护访问矩阵。
+
+## 腐烂的橘子
+
+### 题目描述
+
+网格中 `0` 为空格、`1` 为新鲜橘子、`2` 为腐烂橘子。每分钟腐烂橘子会使相邻的新鲜橘子腐烂，返回全部橘子腐烂所需的最少分钟数；若无法全部腐烂则返回 `-1`。
+
+### 思路
+
+1. 把所有初始腐烂橘子同时加入队列，并统计新鲜橘子数量。
+2. 广度优先搜索按分钟扩散，每层代表同一分钟内被感染的橘子。
+3. 搜索结束后仍有新鲜橘子就返回 `-1`；否则返回扩散层数。
+
+**复杂度：** 时间 O(mn)，队列空间 O(mn)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    int orangesRotting(vector<vector<int>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        queue<pair<int, int>> rotten;
+        int fresh = 0;
+        for (int r = 0; r < m; ++r) {
+            for (int c = 0; c < n; ++c) {
+                if (grid[r][c] == 2) rotten.push({r, c});
+                else if (grid[r][c] == 1) ++fresh;
+            }
+        }
+        int minutes = 0;
+        const int dr[4] = {1, -1, 0, 0};
+        const int dc[4] = {0, 0, 1, -1};
+        while (fresh && !rotten.empty()) {
+            int size = rotten.size();
+            while (size--) {
+                auto [r, c] = rotten.front();
+                rotten.pop();
+                for (int d = 0; d < 4; ++d) {
+                    int nr = r + dr[d], nc = c + dc[d];
+                    if (nr < 0 || nr >= m || nc < 0 || nc >= n || grid[nr][nc] != 1) continue;
+                    grid[nr][nc] = 2;
+                    --fresh;
+                    rotten.push({nr, nc});
+                }
+            }
+            ++minutes;
+        }
+        return fresh == 0 ? minutes : -1;
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import deque
+
+class Solution:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        rows, cols = len(grid), len(grid[0])
+        queue = deque()
+        fresh = 0
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == 2:
+                    queue.append((r, c))
+                elif grid[r][c] == 1:
+                    fresh += 1
+
+        minutes = 0
+        directions = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        while fresh and queue:
+            for _ in range(len(queue)):
+                r, c = queue.popleft()
+                for dr, dc in directions:
+                    nr, nc = r + dr, c + dc
+                    if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:
+                        grid[nr][nc] = 2
+                        fresh -= 1
+                        queue.append((nr, nc))
+            minutes += 1
+        return minutes if fresh == 0 else -1
+```
+
+**代码经验：** 初始没有新鲜橘子时循环不执行，答案为 0；所有初始腐烂橘子必须作为同一轮起点。
+
+## 课程表
+
+### 题目描述
+
+给定课程数和先修关系，判断是否可以完成所有课程。先修关系 `[a, b]` 表示必须先修课程 `b` 才能学习课程 `a`。
+
+### 思路
+
+1. 把每个先修关系视为有向边 `b → a`，并统计每门课的入度。
+2. 将所有入度为 0 的课程加入队列，逐个取出并删除其出边。
+3. 若最终取出的课程数等于课程总数，图中无环，所有课程可完成。
+
+**复杂度：** 时间 O(V+E)，空间 O(V+E)。
+
+### C++ 实现
+
+```cpp
+class Solution {
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> graph(numCourses);
+        vector<int> indegree(numCourses, 0);
+        for (const auto& edge : prerequisites) {
+            graph[edge[1]].push_back(edge[0]);
+            ++indegree[edge[0]];
+        }
+        queue<int> ready;
+        for (int course = 0; course < numCourses; ++course) {
+            if (indegree[course] == 0) ready.push(course);
+        }
+        int completed = 0;
+        while (!ready.empty()) {
+            int course = ready.front();
+            ready.pop();
+            ++completed;
+            for (int next : graph[course]) {
+                if (--indegree[next] == 0) ready.push(next);
+            }
+        }
+        return completed == numCourses;
+    }
+};
+```
+
+### Python 实现
+
+```python
+from collections import deque
+
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        graph = [[] for _ in range(numCourses)]
+        indegree = [0] * numCourses
+        for course, prerequisite in prerequisites:
+            graph[prerequisite].append(course)
+            indegree[course] += 1
+        ready = deque(i for i, degree in enumerate(indegree) if degree == 0)
+        completed = 0
+        while ready:
+            course = ready.popleft()
+            completed += 1
+            for next_course in graph[course]:
+                indegree[next_course] -= 1
+                if indegree[next_course] == 0:
+                    ready.append(next_course)
+        return completed == numCourses
+```
+
+**代码经验：** 多条边可以具有相同端点时，每条边都要计入入度，并在处理时各减一次。

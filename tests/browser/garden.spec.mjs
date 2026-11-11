@@ -115,7 +115,7 @@ test('Mobile contents close after selection; printing retains the complete artic
 });
 
 test('Numbered equations reserve room for their tags without clipping',async({page})=>{
- await page.goto('blog/ai-infra-ch06/');await page.evaluate(()=>document.fonts.ready);
+ await page.goto('blog/fods-generative-learning-llm/');await page.evaluate(()=>document.fonts.ready);
  const equations=page.locator('.article-body .katex-display').filter({has:page.locator('.katex-tag')});
  expect(await equations.count()).toBeGreaterThan(0);
  const equation=equations.first();await equation.scrollIntoViewIfNeeded();

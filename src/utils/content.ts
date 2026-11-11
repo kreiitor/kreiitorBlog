@@ -46,7 +46,6 @@ export function getReadingTime(post: PostEntry) {
 /** Explicit artwork always wins; infer a subject only when no cover is chosen. */
 export function getPostCover(post: PostEntry) {
 	if (post.data.cover) return resolveCover(post.data.cover);
-	if (post.id.includes('infra')) return resolveCover('/covers/series-ai-infra.svg');
 	if (/reading|literature|annotation|paper/.test(post.id)) return resolveCover('/covers/post-paper.svg');
 	if (/algorithm|career|roadmap/.test(post.id)) return resolveCover('/covers/post-code-algorithm.svg');
 	return resolveCover(post.data.category === 'knowledge' ? '/covers/post-tools.svg' : '/covers/post-paper.svg');

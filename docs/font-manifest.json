@@ -4,39 +4,31 @@
     400,
     600
   ],
-  "corpusGlyphCount": 2287,
+  "corpusGlyphCount": 1756,
   "files": {
     "journal-serif-sc-400-0.woff2": {
-      "bytes": 129816,
-      "sha256": "7aa19ca1bced975772d839671001eeef64a4ae8800c099a10699b698f3715679"
+      "bytes": 130488,
+      "sha256": "bd8d216723b8c1ef328302adb2d97909b48fc3a12bcfc7dff00f98390f8894ed"
     },
     "journal-serif-sc-400-1.woff2": {
-      "bytes": 146452,
-      "sha256": "a0b0ad55c5dcd78217a2fcb6581d065e9905024ec6385bf42fad0bd5a31567de"
+      "bytes": 146576,
+      "sha256": "8e34b75b31b9517c5d2d3b1700734a5cf45b16967a1c11568a600b72e8dee551"
     },
     "journal-serif-sc-400-2.woff2": {
-      "bytes": 152412,
-      "sha256": "20ee708f2f9bcdbecb82d35551435621a94f7cec3e7189373d6de44c761bb116"
-    },
-    "journal-serif-sc-400-3.woff2": {
-      "bytes": 11000,
-      "sha256": "55f2de49e3cc0f565c04122cd63ee925160427fdc27d565551898460b6f21629"
+      "bytes": 57192,
+      "sha256": "44597d3610dc2bf675b54028646d304627dcfef6e70f3378a9858d854eaee075"
     },
     "journal-serif-sc-600-0.woff2": {
-      "bytes": 131736,
-      "sha256": "e5c4b869514386d327676df2c90ed63e1fcad1a35ad7c07554c03e69a03685ee"
+      "bytes": 132396,
+      "sha256": "2d04c424ca47c3782a280d198ab351d5373725d9cfffca536ecc6b2c5e6932c5"
     },
     "journal-serif-sc-600-1.woff2": {
-      "bytes": 148844,
-      "sha256": "b71de8a65f4af8c4a4418f1d771efef3b4b359b2d6185f6acfca0b2144d9309e"
+      "bytes": 149028,
+      "sha256": "b52ee50340372f980b2a3f32ad60891faa821cebe31edbfdcb964ca4af451273"
     },
     "journal-serif-sc-600-2.woff2": {
-      "bytes": 154708,
-      "sha256": "011bed4c68481ee731ed7c7ccacb69f29c4035b0b8abf26ccb0785e6b9cec12f"
-    },
-    "journal-serif-sc-600-3.woff2": {
-      "bytes": 11200,
-      "sha256": "10b30a7c5bc5e46f2045b912fbfc171a2d62bf8fd34e0a2be6dc4c1c00daa231"
+      "bytes": 58008,
+      "sha256": "f5c6b7d10cab38c57a6d1e792434d977832ea99ad809813d416ddf93d35da0f9"
     },
     "journal-serif-latin-normal.woff2": {
       "bytes": 79452,
