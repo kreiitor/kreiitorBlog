@@ -73,8 +73,10 @@ test('Home typing completes once and respects reduced motion', async ({ page }) 
  await page.emulateMedia({ reducedMotion: 'no-preference' });
  await page.goto('');
  await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识', { timeout: 8000 });
+ // 静态文案不随动态偏好改变：减少动效时仍是同一句最终词，只是不播打字动画。
  await page.emulateMedia({ reducedMotion: 'reduce' });
- await expect(page.locator('[data-typed-text]')).toHaveText('札记');
+ await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识');
+ await expect(page.locator('.caret')).toBeHidden();
  await expect(page.locator('.claim .sr-only')).toHaveText('札记、长卷与闲笔');
 });
 
@@ -95,7 +97,8 @@ test('Page introduction artwork stays clear of text across breakpoints', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(route);
   await expect(page.locator('.page-intro .page-mark')).toBeHidden();
-  await page.setViewportSize({ width: 800, height: 900 });
+  // 901 是页头插画显示的最小档位，取边界值最能抓到「插画压住标题」的回归。
+  await page.setViewportSize({ width: 901, height: 900 });
   const intro = page.locator('.page-intro');
   await expect(intro.locator('.page-mark')).toBeVisible();
   const overlap = await intro.evaluate(node => {
@@ -114,7 +117,8 @@ test('Home remains readable without JavaScript', async ({ browser, baseURL }) =>
  try {
   const page = await context.newPage();
   await page.goto(baseURL);
-  await expect(page.locator('[data-typed-text]')).toHaveText('札记');
+  await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识');
+  await expect(page.locator('.caret')).toBeHidden();
   await expect(page.locator('#recent .feed-item').first()).toBeVisible();
   await expect(page.locator('.feed-time').first()).not.toBeEmpty();
  } finally {

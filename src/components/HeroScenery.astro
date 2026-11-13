@@ -212,19 +212,19 @@ const stars = [
   --scene-plum: #d39aa0; --scene-peach: #e2b597; --scene-gold: #d8bd7c; --scene-azure: #a9bccb;
   --scene-pine: #a3bfa9; --scene-teal: #9cbcbc; --scene-ink: #7d8aa0; --scene-sun: #ebc29f;
   --scene-bough: #8c7867; --scene-line: #6d7c92; --scene-paper: var(--color-paper);
-  --scene-alpha: .62; --line-alpha: .5;
+  --scene-alpha: .62; --line-alpha: .5; --scene-ring-alpha: .55;
   position: absolute; inset: 0; overflow: hidden; pointer-events: none; container-type: size;
  }
  :global(:root[data-theme="dark"]) .scenery {
   --scene-plum: #9f6f76; --scene-peach: #a7836c; --scene-gold: #a08a5c; --scene-azure: #4d6074;
   --scene-pine: #4d6658; --scene-teal: #456466; --scene-ink: #3c4759; --scene-sun: #d8cfb9;
-  --scene-bough: #7a6a5c; --scene-line: #8c9ab0; --scene-alpha: .62; --line-alpha: .38;
+  --scene-bough: #7a6a5c; --scene-line: #8c9ab0; --scene-alpha: .62; --line-alpha: .38; --scene-ring-alpha: .42;
  }
  @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme])) .scenery {
    --scene-plum: #9f6f76; --scene-peach: #a7836c; --scene-gold: #a08a5c; --scene-azure: #4d6074;
    --scene-pine: #4d6658; --scene-teal: #456466; --scene-ink: #3c4759; --scene-sun: #d8cfb9;
-   --scene-bough: #7a6a5c; --scene-line: #8c9ab0; --scene-alpha: .62; --line-alpha: .38;
+   --scene-bough: #7a6a5c; --scene-line: #8c9ab0; --scene-alpha: .62; --line-alpha: .38; --scene-ring-alpha: .42;
   }
  }
  /* --u：一个画布单位对应的像素，和底图 slice 的缩放一致；画布水平居中、底边对齐。 */
@@ -240,7 +240,8 @@ const stars = [
  .sun { opacity: var(--scene-alpha); animation: drift-y 16s ease-in-out infinite alternate; }
  .rings { animation: ring-spin 140s linear infinite; }
  .rings-b { animation-duration: 180s; animation-direction: reverse; }
- .rings circle { fill: none; stroke: var(--scene-sun); stroke-width: 1; opacity: calc(.7 - var(--i) * .1); stroke-dasharray: calc(4 + var(--i) * 3) 6; }
+ /* 环线用统一的线色 + 主题各自的透明度，让日轮在明暗两套里视觉重量接近。 */
+ .rings circle { fill: none; stroke: var(--scene-line); stroke-width: 1; opacity: calc(var(--scene-ring-alpha) - var(--i) * .08); stroke-dasharray: calc(4 + var(--i) * 3) 6; }
  .sun-face { fill: var(--scene-sun); }
  .sun-shade { fill: var(--scene-ink); opacity: .14; }
  .sun-fold { fill: none; stroke: var(--scene-paper); stroke-width: .9; opacity: .55; }
@@ -330,9 +331,9 @@ const stars = [
   .petals { display: none; }
   .boat { translate: calc(var(--rest) * var(--u)) 0; }
  }
- /* 窄屏：画布按底部对齐裁切，只露中下部；收起梅枝、竹、云、日轮和线描鹤，避免压到文字。 */
- @media (max-width: 760px) {
-  .plum-tree,.bamboo,.cloud,.line-crane,.sun { display: none; }
-  .petal:nth-child(n+5) { display: none; }
- }
+/* 与导航、栅格同一档：≤900 只露中下部，收起梅枝、竹、云、日轮和线描鹤，避免半幅插画被硬切在窄屏边缘。 */
+@media (max-width: 900px) {
+ .plum-tree,.bamboo,.cloud,.line-crane,.sun { display: none; }
+ .petal:nth-child(n+5) { display: none; }
+}
 </style>

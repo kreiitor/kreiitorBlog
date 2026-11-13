@@ -18,12 +18,14 @@ const initial = new Set(posts.slice(0,12).map(post => post.id));
 <style>
  .post-list { border-top: 1px solid var(--color-line); }
  .post-row { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 40px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--color-line); }
- .post-row::before { content: ''; position: absolute; left: 0; bottom: -1px; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ /* 悬停用墨色强调线：整行朱砂会把一个列表动作抬到和「当前项」同一权重。 */
+ .post-row::before { content: ''; position: absolute; left: 0; bottom: -1px; width: 100%; height: 1px; background: var(--color-ink-soft); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
  .row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
- .row-category { color: var(--color-sage); font-weight: 600; }
+ /* 分类是墨色 + 字重；松石绿留给「已完成 / 进度」，不再一色两义。 */
+ .row-category { color: var(--color-ink-soft); font-weight: 600; }
  .post-row h2 { margin-top: 8px; font-size: 22px; line-height: 1.45; transition: color var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo); }
  .row-description { max-width: 72ch; margin-top: 8px; color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
- .row-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
+ .row-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-boundary); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
  .post-row:is(:hover,:focus-visible)::before { transform: scaleX(1); }
  .post-row:is(:hover,:focus-visible) h2 { color: var(--color-accent-strong); }
  .post-row:is(:hover,:focus-visible) .row-arrow { transform: translateX(3px); background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }

@@ -31,7 +31,7 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
    </a>
    <details class="mobile-menu">
-    <summary aria-label="展开导航"><span class="menu-icon menu-icon-open"><Icon name="menu"/></span><span class="menu-icon menu-icon-close"><Icon name="close"/></span></summary>
+    <summary aria-label="展开导航" aria-expanded="false"><span class="menu-icon menu-icon-open"><Icon name="menu"/></span><span class="menu-icon menu-icon-close"><Icon name="close"/></span></summary>
     <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>归档</a></nav>
    </details>
   </div>
@@ -98,15 +98,16 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
  .brand:is(:hover,:focus-visible) .brand-mark :global(.brand-far-wing) { fill-opacity: .75; }
  .brand-name { display: flex; align-items: baseline; font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: .08em; line-height: 1.2; }
  .brand-subtitle { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--color-line-strong); color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; letter-spacing: .08em; white-space: nowrap; }
- .desktop-nav { display: flex; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--color-line); border-radius: 999px; background: color-mix(in srgb,var(--color-surface) 55%,transparent); }
+ .desktop-nav { display: flex; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--color-boundary); border-radius: 999px; background: color-mix(in srgb,var(--color-surface) 55%,transparent); }
  .desktop-nav a { position: relative; z-index: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px; color: var(--color-ink-soft); font-size: 14px; font-weight: 500; transition: color var(--dur-base) var(--ease-smooth); }
  .desktop-nav a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-hover); opacity: 0; transform: scale(.85); transition: opacity var(--dur-base),transform var(--dur-base) var(--ease-out-expo); }
  .desktop-nav a:is(:hover,:focus-visible) { color: var(--color-ink); }
  .desktop-nav a:is(:hover,:focus-visible)::before { opacity: 1; transform: none; }
- .desktop-nav a[aria-current] { color: var(--color-on-primary); font-weight: 600; }
- .desktop-nav a[aria-current]::before { background: var(--color-primary); opacity: 1; transform: none; }
+ /* 暗色下不再把当前项整块反相成近白色亮块，改用抬起的表面 + 朱砂字。 */
+ .desktop-nav a[aria-current] { color: var(--color-nav-current-ink); font-weight: 600; }
+ .desktop-nav a[aria-current]::before { background: var(--color-nav-current-bg); opacity: 1; transform: none; }
  .header-actions { display: flex; align-items: center; gap: 6px; }
- .header-search { display: flex; min-width: 44px; justify-content: center; min-height: 40px; gap: 10px; align-items: center; padding: 0 8px 0 14px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base); }
+ .header-search { display: flex; min-width: 44px; justify-content: center; min-height: 40px; gap: 10px; align-items: center; padding: 0 8px 0 14px; border: 1px solid var(--color-boundary); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base); }
  .header-search:hover { color: var(--color-ink); border-color: var(--color-line-strong); background: var(--color-surface); }
  kbd { padding: 1px 7px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-surface-soft); font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-muted); }
  .header-github,.theme-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 999px; color: var(--color-ink-soft); transition: color var(--dur-base),background-color var(--dur-base); }
@@ -142,6 +143,7 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
   .mobile-menu nav a:is(:hover,:focus-visible) { color: var(--color-accent); padding-left: 4px; }
   .mobile-menu nav a[aria-current] { color: var(--color-accent); }
  }
- @media (max-width: 400px) { .brand-subtitle { display: none; } }
+ /* 420 是极窄屏的内容级微调，不是布局档位；其余宽度阈值只用 600 / 900 / 1100。 */
+ @media (max-width: 420px) { .brand-subtitle { display: none; } }
  @keyframes menuSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 </style>

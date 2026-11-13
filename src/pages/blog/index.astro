@@ -78,7 +78,7 @@ const filters = [{ key: 'all', label: '全部', count: posts.length }, ...[...ta
  :global(::view-transition-group(*.post-row)) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-out-expo); }
  :global(::view-transition-old(*.post-row)),:global(::view-transition-new(*.post-row)) { animation-duration: var(--dur-base); }
  .blog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
- .filter-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); }
+ .filter-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--color-boundary); border-radius: 999px; background: var(--color-surface); }
  .filter-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 16px; border-radius: 999px; color: var(--color-ink-soft); font-size: 14px; font-weight: 500; transition: color var(--dur-base), background-color var(--dur-base); }
  .filter-tabs button:not([aria-pressed="true"]):hover { color: var(--color-ink); background: var(--color-surface-hover); }
  .filter-tabs button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); font-weight: 600; }
@@ -86,7 +86,7 @@ const filters = [{ key: 'all', label: '全部', count: posts.length }, ...[...ta
  .filter-status { font-size: 13px; color: var(--color-ink-muted); margin: 28px 0 12px; }
  .list-pagination { display: flex; justify-content: center; align-items: center; gap: 24px; padding-top: 32px; font-size: 12px; }
  .list-pagination button:disabled { opacity: .5; cursor: default; }
- @media (max-width: 700px) {
+ @media (max-width: 600px) {
   .blog-content { padding-top: 18px; }
   .blog-toolbar { display: block; }
   .blog-toolbar > a { display: none; }

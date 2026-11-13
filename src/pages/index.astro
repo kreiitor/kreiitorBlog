@@ -87,7 +87,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
    <div class="hero-copy">
     <div class="avatar reveal" style="--d:0"><span class="avatar-disc" aria-hidden="true" set:html={avatarMark}/></div>
     <h1 class="greeting reveal" style="--d:1"><span class="word" style="--w:0">Hi,</span> <span class="word" style="--w:1">我是</span> <b class="name word" style="--w:2">kreiitor<svg class="brush" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9c34-5 72-7 110-6 30 1 58 3 84 1" pathLength="1"/></svg></b></h1>
-    <p class="claim reveal" style="--d:2">把读过的、试过的，写成<span class="typed" data-typed={JSON.stringify(typed)} aria-hidden="true"><span data-typed-text>{typed[0]}</span><span class="caret"></span></span><span class="sr-only">札记、长卷与闲笔</span></p>
+    <p class="claim reveal" style="--d:2">把读过的、试过的，写成<span class="typed" data-typed={JSON.stringify(typed)} aria-hidden="true"><span data-typed-text>{typed.at(-1)}</span><span class="caret"></span></span><span class="sr-only">札记、长卷与闲笔</span></p>
     <p class="role reveal" style="--d:3"><span>{siteConfig.role}</span><span class="role-divider" aria-hidden="true"> · </span><span class="role-details">AI 工程 · 程序分析 · 实验复现</span></p>
     <p class="motto reveal" style="--d:4">「{siteConfig.tagline}。」</p>
     <p class="stats reveal" style="--d:5">{stats.map((item, index) => <>{index > 0 && <i aria-hidden="true">·</i>}<span>{item.prefix}<b data-count={item.value} data-since={item.since}>{item.value}</b> {item.unit}</span></>)}</p>
@@ -226,31 +226,36 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
   hero.addEventListener('pointerleave', () => delete hero.dataset.lit);
  }
 
+ // 静态文案恒为最终词：SSR、无脚本、减少动效、同会话回访、动画终态读到的是同一句话。
+ // 打字只是首次访问时盖在这句话上的视觉层，从空串打起，结束回到最终词。
  const typed = document.querySelector<HTMLElement>('[data-typed]');
  const text = typed?.querySelector<HTMLElement>('[data-typed-text]');
  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
- if (typed?.dataset.typed && text && !reduced.matches && welcomed) {
+ if (typed?.dataset.typed && text && !reduced.matches && !welcomed) {
   const words: string[] = JSON.parse(typed.dataset.typed);
-  text.textContent = words.at(-1) ?? '';
-  typed.dataset.done = '';
- } else if (typed?.dataset.typed && text && !reduced.matches) {
-  const words: string[] = JSON.parse(typed.dataset.typed);
-  let index = 0;
-  let length = words[0]?.length ?? 0;
-  let deleting = true;
-  let timer = 0;
+  const final = words.at(-1) ?? '';
+  let index = 0, length = 0, deleting = false, timer = 0;
+  const finish = () => {
+   text.textContent = final;
+   delete typed.dataset.typing;
+   typed.dataset.done = '';
+  };
+  typed.dataset.typing = '';
+  text.textContent = '';
   const step = () => {
-   if (reduced.matches) return;
+   if (reduced.matches) { window.clearTimeout(timer); finish(); return; }
+   const word = words[index];
+   if (!word) { finish(); return; }
    if (deleting) {
-    length--;
-    text.textContent = words[index].slice(0, length);
-    if (length === 0) { deleting = false; index++; }
+    length = Math.max(0, length - 1);
+    text.textContent = word.slice(0, length);
+    if (length === 0) { deleting = false; index += 1; }
    } else {
-    length++;
-    text.textContent = words[index].slice(0, length);
-    if (length === words[index].length) {
+    length = Math.min(word.length, length + 1);
+    text.textContent = word.slice(0, length);
+    if (length === word.length) {
+     if (index === words.length - 1) { finish(); return; }
      deleting = true;
-     if (index === words.length - 1) { typed.dataset.done = ''; return; }
      timer = window.setTimeout(step, 800);
      return;
     }
@@ -259,7 +264,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
   };
   timer = window.setTimeout(step, stagger * 8);
   reduced.addEventListener('change', event => {
-   if (event.matches) { window.clearTimeout(timer); text.textContent = words[0]; }
+   if (event.matches) { window.clearTimeout(timer); finish(); }
   });
  }
 </script>
@@ -323,8 +328,9 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .typed { display: inline-block; color: var(--color-accent-strong); text-align: left; }
  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) { :root:not([data-welcomed]) .typed { min-width: 6.4em; } }
  .typed [data-typed-text] { padding-inline: .08em; background: linear-gradient(transparent 62%,color-mix(in srgb,var(--color-accent) 13%,transparent) 62% 92%,transparent 92%); }
- .caret { display: inline-block; width: 1.5px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
- [data-done] .caret { opacity: 0; animation: none; transition: opacity var(--dur-slow); }
+ /* 光标只在脚本真的打字时出现；无脚本、减少动效、同会话回访都看不到一个静止的光标。 */
+ .caret { display: none; width: 1.5px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
+ [data-typing] .caret { display: inline-block; }
  .role { margin-top: 14px; color: var(--color-ink-soft); font-size: 14px; }
  .motto { margin-top: 16px; color: var(--color-ink-muted); font-family: var(--font-display); font-size: 15px; letter-spacing: .06em; }
  .stats { display: inline-flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 24px; padding: 8px 18px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); color: var(--color-ink-muted); font-size: 13px; }
@@ -339,7 +345,8 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .socials a:is(:hover,:focus-visible)::before { scale: 1; opacity: 1; }
  .scroll-cue { position: absolute; bottom: 28px; left: 50%; display: grid; place-items: center; width: 44px; height: 44px; translate: -50% 0; }
  /* 欢迎屏占满一屏，下方内容看不见，箭头需要轻轻招手；入场结束后才开始。 */
- .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-muted); border-bottom: 1.5px solid var(--color-ink-muted); rotate: 45deg; animation: cue 2.4s var(--ease-smooth) calc(var(--stagger) * 12) infinite; transition: border-color var(--dur-base); }
+ /* 压在青海波上，描边要深一档才看得见。 */
+ .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-soft); border-bottom: 1.5px solid var(--color-ink-soft); rotate: 45deg; animation: cue 2.4s var(--ease-smooth) calc(var(--stagger) * 12) infinite; transition: border-color var(--dur-base); }
  .scroll-cue:is(:hover,:focus-visible) span { border-color: var(--color-ink); }
 
  /* ---------- 共用区块标题 ---------- */
@@ -421,6 +428,11 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .months li:first-child a:is(:hover,:focus-visible) .tip { translate: 0 0; }
  .months li:last-child .tip { left: auto; right: 0; translate: 0 6px; }
  .months li:last-child a:is(:hover,:focus-visible) .tip { translate: 0 0; }
+ /* 触屏没有 hover：点按聚焦时也给提示，否则 601px 以上的平板看不到柱子的说明。 */
+ @media (hover: none) {
+  .months a:focus .tip { opacity: 1; visibility: visible; translate: -50% 0; }
+  .months li:first-child a:focus .tip,.months li:last-child a:focus .tip { translate: 0 0; }
+ }
  .latest,.year { color: var(--color-ink-muted); font-size: 13px; }
  .latest { margin-top: 20px; }
  .year { margin-top: 4px; }
@@ -433,7 +445,8 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  .outro .sec-head { grid-column: 1 / -1; width: 100%; }
  .outro { justify-items: stretch; }
  .greet { display: flex; flex-direction: column; font-family: var(--font-display); font-size: clamp(30px,1.2rem + 2vw,46px); font-weight: 600; line-height: 1.3; }
- .greet span:last-child { color: var(--color-accent-strong); }
+ /* 大字标题改用墨色：朱砂只留给当前项、品牌标记和时间线当月柱。 */
+ .greet span:last-child { color: var(--color-ink); }
  .outro-links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
  .outro-links a { position: relative; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'title icon' 'text icon'; align-items: center; gap: 4px 12px; min-width: 0; padding: 18px 20px; border: 1px solid var(--color-line); border-radius: 14px; overflow: hidden; transition: border-color var(--dur-base),translate var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow); }
  .outro-links a::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-surface-soft); opacity: 0; transition: opacity var(--dur-slow); }
@@ -483,7 +496,7 @@ const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear()
  @keyframes orbit { to { rotate: 360deg; } }
  @keyframes cue { 0%,100% { translate: 0 0; opacity: .55; } 50% { translate: 0 6px; opacity: 1; } }
 
- @media (max-width: 800px) {
+ @media (max-width: 900px) {
   .home-page { --gap: 88px; }
   .recent { grid-template-columns: minmax(0,1fr); gap: 56px; }
   .outro { grid-template-columns: minmax(0,1fr); }

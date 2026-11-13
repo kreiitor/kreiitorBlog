@@ -23,9 +23,9 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-heading :is(h2,h3) > span { display: block; }
  .series-heading .series-subtitle { margin-top: 6px; color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 15px; font-weight: 500; text-wrap: balance; }
  .series-card:not(.series-compact) .series-emblem { display: none; }
- .series-emblem { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-sage-soft); color: var(--color-sage); transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .series-emblem { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-surface-soft); color: var(--color-ink-soft); transition: transform var(--dur-slow) var(--ease-out-expo); }
  .series-card:hover .series-emblem { transform: rotate(-6deg); }
- .series-arrow { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
+ .series-arrow { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-boundary); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
  .series-card:is(:hover,:focus-visible) .series-arrow { transform: rotate(-45deg); background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
  .series-description { margin-block: 14px 18px; color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; }
  .series-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px dashed var(--color-line-strong); color: var(--color-ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -55,7 +55,7 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-index .series-bottom > span:last-child { white-space: nowrap; }
  .series-index:is(:hover,:focus-visible) { translate: none; box-shadow: none; border-color: var(--color-line-strong); }
  .series-index:is(:hover,:focus-visible) :is(h2,h3),.series-index:is(:hover,:focus-visible) .series-bottom > span:last-child { color: var(--color-accent); }
- @media (min-width: 1201px) { .series-index { grid-template-columns: minmax(200px,280px) minmax(0,1fr) 160px; } }
+ @media (min-width: 1101px) { .series-index { grid-template-columns: minmax(200px,280px) minmax(0,1fr) 160px; } }
  @media (min-width: 601px) and (max-width: 900px) {
   .series-index { grid-template-columns: minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
   .series-index .series-heading { grid-column: 1; grid-row: 1; }

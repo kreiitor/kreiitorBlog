@@ -20,8 +20,8 @@ const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
  {columns.map(column => <div class="gallery-column">{column.map(({ photo: p, index }) => <figure class="photo-card" style={`--order:${index}`}>
   <a class="photo-frame" href={withBase(`/gallery/${p.file}`)} data-photo data-index={index} data-large={large(p)} aria-label={`放大查看：${p.title}`}>
    <picture>
-    <source type="image/avif" srcset={srcset(p, 'avif')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
-    <source type="image/webp" srcset={srcset(p, 'webp')} sizes="(min-width: 900px) 45vw, (min-width: 641px) 44vw, calc(100vw - 40px)"/>
+    <source type="image/avif" srcset={srcset(p, 'avif')} sizes="(min-width: 900px) 45vw, (min-width: 601px) 44vw, calc(100vw - 40px)"/>
+    <source type="image/webp" srcset={srcset(p, 'webp')} sizes="(min-width: 900px) 45vw, (min-width: 601px) 44vw, calc(100vw - 40px)"/>
     <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async" data-photo-thumb/>
    </picture>
   </a><figcaption>{p.title}</figcaption>
@@ -139,7 +139,7 @@ const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
  .photo-stage img { transition: opacity 140ms var(--ease-smooth),translate 140ms var(--ease-smooth); }
  .photo-stage img.is-leaving { opacity: 0; translate: calc(var(--shift) * -1) 0; }
  .photo-stage img { max-width: 100%; max-height: calc(94dvh - 144px); width: auto; height: auto; object-fit: contain; }
- @media (max-width: 640px) {
+ @media (max-width: 600px) {
     /* 单栏时拆掉分栏容器，按原始顺序排。 */
   .gallery-grid { display: flex; flex-direction: column; gap: 0; }
   .gallery-column { display: contents; }

@@ -78,9 +78,9 @@ const labels = Object.fromEntries(Object.entries(sections).map(([key, item]) => 
  .archive-row h4 { font-family: var(--font-sans); font-size: 15px; line-height: 1.9; font-weight: 500; transition: color var(--dur-base),translate var(--dur-base) var(--ease-out-expo); }
  .archive-row:is(:hover,:focus-visible) h4 { translate: 4px 0; color: var(--color-accent); }
  .archive-category { color: var(--color-ink-muted); font-size: 12.5px; white-space: nowrap; }
- .archive-category[data-category="writing"] { color: var(--color-sage); }
+ .archive-category[data-category="writing"] { color: var(--color-ink-soft); }
  @media (max-width: 900px) { .archive-layout { gap: 36px; grid-template-columns: 160px minmax(0,1fr); } .archive-nav a { grid-template-columns: 40px minmax(0,1fr) 20px; gap: 8px; } }
- @media (max-width: 640px) {
+ @media (max-width: 600px) {
   .archive-layout { grid-template-columns: 1fr; margin-top: 28px; gap: 24px; }
   /* 窄屏把月份导航摊成一条横向可滑的标签，不再吸附。 */
   .archive-nav { position: static; max-height: none; overflow-x: auto; overscroll-behavior-x: contain; }

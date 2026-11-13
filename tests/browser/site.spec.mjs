@@ -128,7 +128,8 @@ test('Back to top reaches the document start',async({page})=>{
 });
 test('Viewport boundaries retain readable content without horizontal page scrolling',async({page},info)=>{
  test.setTimeout(120000);
- for(const width of info.project.name==='mobile'?[320,390]:[768,900,901,1024,1440]) {
+ // 收敛后的三条边界两侧各取一个值，外加常见笔记本宽度。
+ for(const width of info.project.name==='mobile'?[320,390,600]:[600,601,900,901,1024,1100,1101,1440]) {
   await page.setViewportSize({width,height:1000});
   await page.goto('');await page.evaluate(()=>document.fonts.ready);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
