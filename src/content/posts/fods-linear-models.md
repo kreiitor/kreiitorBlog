@@ -21,19 +21,19 @@ cover: /covers/post-math.svg
 3. 固定设计最小二乘的精确误差 $\frac{r\sigma^2}{n}$；
 4. Ridge 的偏差–方差公式，以及 $\lambda$ 怎么选；
 5. OLS 的高概率界（次高斯 + 并集）；
-6. minimax 下界为什么也是 $\frac{d\sigma^2}{n}$（贝叶斯方法，习题里的高斯条件分布会补全）；
+6. minimax 下界为什么也是 $\frac{d\sigma^2}{n}$（贝叶斯方法与高斯条件分布证明见[习题与证明](/blog/fods-exercises/)）；
 7. 约束最小二乘（$\ell_1$ 球、稀疏球）和 Lasso 的完整证明。
 
-需要的预备（看不懂就去附录）：
+需要的预备（可按需查阅附录）：
 
-- 向量、内积、$\|x\|_2$、矩阵乘法、迹 $\mathrm{tr}$：附录 A
-- 正交投影：附录 A「投影」
-- 高斯分布、期望、方差、独立：附录 B
-- 次高斯、Hoeffding、并集界：附录 B 后半（本节高概率部分会现场用）
+- 向量、内积、$\|x\|_2$、矩阵乘法、迹 $\mathrm{tr}$：[数学附录 A](/blog/fods-linear-algebra-calculus-convexity/)
+- 正交投影：[数学附录 A](/blog/fods-linear-algebra-calculus-convexity/)
+- 高斯分布、期望、方差、独立：[数学附录 B](/blog/fods-probability-concentration/)
+- 次高斯、Hoeffding、并集界：[数学附录 B](/blog/fods-probability-concentration/) 后半（本节高概率部分会直接用到）
 
 ---
 
-## 0. 先用一个故事把符号钉死
+## 0. 先用一个具体问题确定符号
 
 假设房价 $Y$ 真的是面积等特征 $x\in\mathbb{R}^d$ 的线性函数，再加一点噪声：
 
@@ -41,12 +41,12 @@ $$
 y = \langle x,\theta^*\rangle + \epsilon.
 $$
 
-- $\theta^*$：真正的「每平米多少钱」等系数，上帝知道、你不知道。
-- $\epsilon$：噪声（看房时心情、议价……），我们常假设 $\epsilon\sim N(0,\sigma^2)$。
-- 你有 $n$ 套房子的数据 $(x_i,y_i)$。
-- 你的任务：给出一个 $\widehat\theta$，希望 $\widehat\theta\approx\theta^*$，更准确地说，希望**预测误差**小。
+- $\theta^*$：真正的特征系数，模型未知的真实参数。
+- $\epsilon$：噪声（看房时心情、议价……），常假设 $\epsilon\sim N(0,\sigma^2)$。
+- 手头有 $n$ 套房子的数据 $(x_i,y_i)$。
+- 任务：给出估计 $\widehat\theta$，希望 $\widehat\theta\approx\theta^*$，更准确地说，希望**预测误差**小。
 
-「预测误差」不是 $\|\widehat\theta-\theta^*\|_2^2$ 那么简单：如果某个方向上数据很少，那个方向估不准，但也许你也很少在那个方向上预测。正确的尺子是**用数据的协方差加权**。这就是后面的 $\|\cdot\|_\Sigma$。
+「预测误差」不是 $\|\widehat\theta-\theta^*\|_2^2$ 那么简单：如果某个方向上数据很少，那个方向估不准，但也很少在那个方向上预测。更合理的尺度是**用数据的协方差加权**，即下文的 $\|\cdot\|_\Sigma$。
 
 ---
 
@@ -89,9 +89,9 @@ $$
 f^*(x) \;=\; \arg\min_{a\in\mathcal{Y}}\; \mathbb{E}\bigl[\ell(a,Y)\mid X=x\bigr].
 $$
 
-**补全：平方损失 $\Rightarrow$ 条件均值。**
+**推导：平方损失 $\Rightarrow$ 条件均值。**
 
-取 $\mathcal{Y}=\mathbb{R}$，平方损失 $\ell(a,y)=\frac12(a-y)^2$（常数 $\frac12$ 只是为了求导好看，不影响 argmin）。对固定的 $x$，
+取 $\mathcal{Y}=\mathbb{R}$，平方损失 $\ell(a,y)=\frac12(a-y)^2$（常数 $\frac12$ 只是为了求导方便，不影响极小值点）。对固定的 $x$，
 
 $$
 \begin{aligned}
@@ -103,7 +103,7 @@ $$
 
 第二项与 $a$ 无关，所以最小在 $a=\mathbb{E}[Y\mid X=x]$。交叉项为 $0$：$\mathbb{E}[(a-\mathbb{E}[Y\mid x])(\mathbb{E}[Y\mid x]-Y)\mid x]=0$。
 
-**补全：绝对值损失 $\Rightarrow$ 条件中位数。**
+**推导：绝对值损失 $\Rightarrow$ 条件中位数。**
 
 $\ell(a,y)=|a-y|$（也叫 $L^1$ / MAE）。Bayes 规则不再是均值，而是**条件中位数**。
 
@@ -145,7 +145,7 @@ $$
 
 取期望：$a>m$ 且 $\mathbb{P}(Y\ge m)\ge 1/2$，右边期望 $\ge 0$。$\square$
 
-**人话。** 平方把大误差放大，最优猜「平均」；绝对值一视同仁，最优猜「排在正中间的那个」。有离群点时常用绝对值（或 Huber）。
+**直觉理解：** 平方把大误差放大，最优猜「平均」；绝对值一视同仁，最优猜「排在正中间的那个」。有离群点时常用绝对值（或 Huber）。
 
 若 $Y\mid x$ 有密度，也可对 $a$ 求导：
 
@@ -169,10 +169,10 @@ $$
 f^*(x)=\mathbf{1}_{\{\eta(x)\ge 1/2\}}.
 $$
 
-（内容在 $\eta=1/2$ 时写了 $\le$ 和 $\ge$ 两边都可，因为两者风险相同。**
+在 $\eta=1/2$ 处取 $\le$ 或 $\ge$ 两边风险完全相同，任选其一即可。
 
 - **Pinball / 分位数损失。** $\ell_\tau(a,y)=(y-a)(\tau-1_{y<a})$，$\tau\in(0,1)$。$\tau=1/2$ 就是绝对值的一半。Bayes 规则是条件 $\tau$-分位数：$\mathbb{P}(Y\le f^*(x)\mid x)=\tau$。证明与绝对值相同，左右权重变成 $\tau$ 与 $1-\tau$。
-- **对数损失（交叉熵）。** 二分类若预测的是概率 $a\in(0,1)$，$\ell(a,y)=-y\log a-(1-y)\log(1-a)$，则 $f^*(x)=\eta(x)$。Lec2 的 logistic 就是在用这个。
+- **对数损失（交叉熵）。** 二分类若预测的是概率 $a\in(0,1)$，$\ell(a,y)=-y\log a-(1-y)\log(1-a)$，则 $f^*(x)=\eta(x)$，logistic 回归用的就是这个损失。
 
 | 损失 $\ell(a,y)$ | Bayes 规则 $f^*(x)$ |
 |-----------------|---------------------|
@@ -223,15 +223,15 @@ $$
 
 ### 2.1 四个对象
 
-内容用 $u$ 表示「解」，监督学习里就是 $f$：
+在一般变分与逼近语境下，常以 $u$ 表示解，对应监督学习里的 $f$：
 
-| 符号 | 意义 | 人话 |
+| 符号 | 意义 | 直观含义 |
 |------|------|------|
-| $u_o$ / $f^*$ | 问题的神谕解 | 真正最好的预测规则 |
-| $u^*$ | 连续（总体）层的模型解 | 有时指模型方程的总体版 |
-| $\bar u$ / $\bar f$ | 工作类 $\mathcal{F}$（或神经网络类）里对 $f^*$ 的最佳逼近 | 「模型能力允许的最好」 |
-| $\widehat u$ / $\widehat f$ | 样本上的 ERM | 「有限数据上算出来的最好」 |
-| $u_A$ / $f_A(\tau)$ | 优化算法实际输出 | 「电脑跑完给你的」 |
+| $u_o$ / $f^*$ | 神谕解 | 真正最好的预测规则 |
+| $u^*$ | 连续（总体）层的模型解 | 模型方程在总体分布上的解 |
+| $\bar u$ / $\bar f$ | 工作类 $\mathcal{F}$（或神经网络类）里对 $f^*$ 的最佳逼近 | 模型能力允许的最好结果 |
+| $\widehat u$ / $\widehat f$ | 样本上的 ERM | 有限数据上求得的经验最优解 |
+| $u_A$ / $f_A(\tau)$ | 优化算法实际输出 | 有限精度求解后得到的解 |
 
 算法精度 $\tau\ge 0$ 的含义：
 
@@ -278,17 +278,16 @@ $$
 \qquad\text{（*）}
 $$
 
-（内容两边先乘 2，写成 $2\mathbb{E}_D[\widehat L(f_A)-L(f^*)]\le 2E_{\mathrm{app}}+2\tau$。）
+（若先乘以 $2$，也可等价写成 $2\mathbb{E}_D[\widehat L(f_A)-L(f^*)]\le 2E_{\mathrm{app}}+2\tau$。）
 
 定义
 
 $$
-E_{\mathrm{sta}} \;:=\; \mathbb{E}_D\bigl[L(f_A)-2\widehat L(f_A)+L(f^*)\bigr].
+E_{\mathrm{sta}} \;:=\; \mathbb{E}_D\bigl[L(f_A)-2\widehat L(f_A)+L(f^*)\bigr]
+\;=\; \mathbb{E}_D\bigl[L(f^*)-2\widehat L(f_A)+L(f_A)\bigr].
 $$
 
-（内容写 $\mathbb{E}[L(f^*)-2\widehat L(f_A)+L(f_A)]$，一样。）
-
-**关键恒等式（补全）：**
+**核心恒等式：**
 
 $$
 L(f_A)-L(f^*)
@@ -306,16 +305,16 @@ $$
 E_{\mathrm{sta}} + 2E_{\mathrm{app}} + 2\tau.
 $$
 
-$E_{\mathrm{sta}}$ 看起来古怪，它的好处是：中心化以后可以用 **Bernstein 不等式**（方差和超额风险成正比），得到比「均匀偏差 $2\sup|L-\widehat L|$」更紧的速率。Lec2 会做这件事。
+$E_{\mathrm{sta}}$ 看起来略显特别，它的好处在于：中心化以后可以结合 **Bernstein 不等式**（利用方差与超额风险成正比的特性），得到比均匀偏差 $2\sup|L-\widehat L|$ 更紧的快速率（详见[统计误差](/blog/fods-statistical-error/)）。
 
-内容还引入 ghost sample（独立的一份拷贝 $D'$）和
+引入独立同分布的影子样本（ghost sample）$D'$ 以及超额损失记号：
 
 $$
 g(f,Z)=\ell(f,Z)-\ell(f^*,Z),\qquad
 G(f,Z)=\mathbb{E}_{D'}[g(f,Z')]-2g(f,Z),
 $$
 
-于是 $E_{\mathrm{sta}}=\mathbb{E}[\frac1n\sum_i G(f_A,Z_i)]$。这是为 Lec2 的 Esta 界做准备。
+其中对 $D'$ 的期望只作用在第一项，于是 $E_{\mathrm{sta}}=\mathbb{E}\bigl[\frac1n\sum_i G(f_A,Z_i)\bigr]$，这正是推导快速率统计误差上界的出发点。
 
 ### 2.3 第二条分解
 
@@ -350,7 +349,7 @@ L(f_A)-L(f^*)
 E_{\mathrm{gen}}+E_{\mathrm{app}}+E_{\mathrm{opt}}.
 $$
 
-**两种分解的差别：** $E_{\mathrm{gen}}$ 是最坏函数的均匀偏差，对「很尖」的损失往往多付一个 $\sqrt{\log|\mathcal{F}|/n}$ 甚至更差的因子；$E_{\mathrm{sta}}$ 利用局部强凸，常能得到更快的 $1/n$ 型速率。Lec1 的线性高斯模型两种都能精确算。
+**两种分解的差别：** $E_{\mathrm{gen}}$ 是最坏函数的均匀偏差，对「很尖」的损失往往多付一个 $\sqrt{\log|\mathcal{F}|/n}$ 甚至更差的因子；$E_{\mathrm{sta}}$ 利用局部强凸，常能得到更快的 $1/n$ 型速率。在线性高斯模型下，这两种误差框架都可以算到显式结果。
 
 ---
 
@@ -364,8 +363,8 @@ $$
 Y = X\theta^* + \varepsilon,\qquad \varepsilon\sim N(0,\sigma^2 I_n).
 $$
 
-- $X\in\mathbb{R}^{n\times d}$：第 $i$ 行是 $x_i^\top$。**固定设计**意味着 $X$ 当成非随机的已知矩阵（实验设计里你选定了测哪些 $x$）。随机设计要把 $X$ 的随机性再平均进去，更难（内容引用 Hsu–Kakade–Zhang 2014）。
-- $\Sigma := \frac1n X^\top X\in\mathbb{R}^{d\times d}$。这是特征的经验协方差（差一个中心化）。
+- $X\in\mathbb{R}^{n\times d}$：第 $i$ 行是 $x_i^\top$。**固定设计**意味着 $X$ 当成非随机的已知矩阵（实验设计里预先选定测哪些 $x$）。随机设计则需将 $X$ 的随机性一并纳入平均，分析更复杂（见 Hsu–Kakade–Zhang, 2014）。
+- $\Sigma := \frac1n X^\top X\in\mathbb{R}^{d\times d}$。这是特征的经验协方差（未作中心化）。
 
 单点风险（对一个独立的新样本，且 $\theta$ 与新噪声独立）：
 
@@ -373,7 +372,7 @@ $$
 L(\theta)=\mathbb{E}\bigl[(x^\top\theta-y)^2\bigr].
 $$
 
-**补全计算。** $y=x^\top\theta^*+\epsilon$，$\mathbb{E}[\epsilon]=0$，且 $\theta$ 与 $\epsilon$ 独立：
+**推导细节：** 设 $y=x^\top\theta^*+\epsilon$，$\mathbb{E}[\epsilon]=0$，且 $\theta$ 与 $\epsilon$ 独立：
 
 $$
 \begin{aligned}
@@ -470,13 +469,13 @@ $$
 \widehat\theta_r = \Sigma_\lambda^{-1}\bigl(\tfrac1n X^\top Y\bigr).
 $$
 
-**贝叶斯解释（补全）。** 若先验 $\theta\sim N(0,\tau^2 I)$，似然 $Y\mid\theta\sim N(X\theta,\sigma^2 I)$，则后验均值恰是 Ridge，且
+**贝叶斯解释：** 若先验 $\theta\sim N(0,\tau^2 I)$，似然 $Y\mid\theta\sim N(X\theta,\sigma^2 I)$，则后验均值恰是 Ridge，且
 
 $$
 \lambda \;=\; \frac{\sigma^2}{n\tau^2}.
 $$
 
-$\lambda$ 大 = 你先验认为 $\theta$ 靠近 0 = 收缩得更狠。
+$\lambda$ 大 = 先验认为 $\theta$ 更靠近 0 = 收缩得更强。
 
 ### 4.2 偏差–方差分解
 
@@ -488,7 +487,7 @@ $$
 + \underbrace{\|\mathbb{E}\widehat\theta_r-\theta^*\|_\Sigma^2}_{\mathrm{Bias}^2}.
 $$
 
-内容：令 $X=USV^\top$（SVD）。则
+令 $X=USV^\top$（SVD），则
 
 $$
 \Sigma=\frac1n X^\top X=\frac1n V(S^\top S)V^\top.
@@ -626,13 +625,13 @@ $$
 \sqrt{\frac{\|\theta^*\|_2^2\,\mathrm{tr}(\Sigma)\,\sigma^2}{n}}.
 $$
 
-（内容把 $\mathrm{tr}(\Sigma)$ 有时写成 $\mathrm{tr}(P)$，同一意思。）
+（若协方差矩阵记作 $P$，对应迹也写作 $\mathrm{tr}(P)$。）
 
 **怎么读这个界：**
 
-- 它比 OLS 的 $\frac{r\sigma^2}{n}$ **更差**（多了 $\|\theta^*\|_2$ 这种未知半径，速率变成 $n^{-1/2}$ 型如果把 $\|\theta^*\|$ 当常数）；
+- 它比 OLS 的 $\frac{r\sigma^2}{n}$ **更差**（多了 $\|\theta^*\|_2$ 这种未知半径，若把 $\|\theta^*\|_2$ 当常数，速率仅为 $n^{-1/2}$）；
 - 但它在 $d\gg n$（$\Sigma$ 不可逆、OLS 不唯一）时仍然有定义；
-- 现代「双下降」现象说明 $\lambda\to 0^+$ 的 ridgeless 在过参数化时也可以很好，见 Bartlett–Long–Lugosi–Tsigler 2019，Hastie–Montanari–Rosset–Tibshirani 2019。这超出 Lec1 计算范围。
+- 现代「双下降」现象说明 $\lambda\to 0^+$ 的 ridgeless 回归在过参数化时也可以表现良好（见 Bartlett–Long–Lugosi–Tsigler, 2019；Hastie–Montanari–Rosset–Tibshirani, 2019），这里不展开过参数化分支。
 
 ---
 
@@ -679,7 +678,7 @@ $$
 \;=\; 2\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u.
 $$
 
-（内容在球 $B_2$ 上取 $\sup$，一样。）
+（若在球 $B_2$ 上取 $\sup$，结果相同。）
 
 ### 5.2 $\tilde\varepsilon$ 是次高斯向量
 
@@ -693,10 +692,10 @@ $$
 
 这正是「$\tilde\varepsilon\sim\mathrm{subG}_r(\sigma^2)$」的定义：每个一维投影都是参数 $\sigma^2$ 的次高斯。高斯 $N(0,\sigma^2 I)$ 是特例。
 
-### 5.3 控制 $\|\tilde\varepsilon\|_2$（补全内容的常数）
+### 5.3 控制 $\|\tilde\varepsilon\|_2$ 的具体常数
 
-**方法 A（$\varepsilon$-网，适合小白，常数稍松）。**
-单位球面 $\mathbb{S}^{r-1}$ 的 $\frac12$-覆盖数 $\le 5^r$（附录 B 覆盖数：$N(B_2,\|\cdot\|_2,\varepsilon)\le(1+2/\varepsilon)^d$）。设 $\mathcal{N}$ 为 $\frac12$-网。对任意 $\|u\|_2=1$，取 $u_0\in\mathcal{N}$ 使 $\|u-u_0\|_2\le 1/2$，则
+**方法 A（$\varepsilon$-网，推导更初等，常数稍松）。**
+单位球面 $\mathbb{S}^{r-1}$ 的 $\frac12$-覆盖数 $\le 5^r$（见[数学附录 B](/blog/fods-probability-concentration/)：$N(B_2,\|\cdot\|_2,\varepsilon)\le(1+2/\varepsilon)^d$）。设 $\mathcal{N}$ 为 $\frac12$-网。对任意 $\|u\|_2=1$，取 $u_0\in\mathcal{N}$ 使 $\|u-u_0\|_2\le 1/2$，则
 
 $$
 \|\tilde\varepsilon\|_2 = \sup_{\|u\|=1}\tilde\varepsilon^\top u
@@ -705,7 +704,7 @@ $$
 
 故 $\|\tilde\varepsilon\|_2\le 2\max_{u_0\in\mathcal{N}}\tilde\varepsilon^\top u_0$。
 
-一维次高斯尾（附录 B）：$\mathbb{P}(\tilde\varepsilon^\top u_0>t)\le\exp(-t^2/(2\sigma^2))$。并集界：
+一维次高斯尾（见[数学附录 B](/blog/fods-probability-concentration/)）：$\mathbb{P}(\tilde\varepsilon^\top u_0>t)\le\exp(-t^2/(2\sigma^2))$。并集界：
 
 $$
 \mathbb{P}\bigl(\max_{\mathcal{N}}\tilde\varepsilon^\top u_0 > t\bigr)
@@ -726,14 +725,14 @@ $$
 \;\le\; C\sigma\bigl(\sqrt{r}+\sqrt{\log(1/\delta)}\bigr).
 $$
 
-附录 B 用 $6^r$-网把同一件事写成：以概率 $\ge 1-\delta$，
+若用松一格的 $6^r$-网（对应更保守的体积放缩），可写成：以概率 $\ge 1-\delta$，
 
 $$
 \|\tilde\varepsilon\|_2=\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u
 \le 4\sigma\sqrt{r}+2\sigma\sqrt{2\log(1/\delta)}.
 $$
 
-再乘基本不等式里的 2，就是内容的
+再乘基本不等式里的 2，就得到标准高概率上界：
 
 $$
 \|X(\widehat\theta_{\mathrm{ls}}-\theta^*)\|_2
@@ -791,9 +790,9 @@ $$
 A^*(y)=\mathbb{E}[\theta^*\mid Y=y].
 $$
 
-### 6.2 习题：高斯条件分布（完整补全）
+### 6.2 高斯条件分布与后验均值推导
 
-**引理（内容 HW）。** $(Y,Z)$ 联合高斯，均值 $\mu=(\mu_Y,\mu_Z)$，协方差分块
+**引理（高斯条件分布）。** $(Y,Z)$ 联合高斯，均值 $\mu=(\mu_Y,\mu_Z)$，协方差分块
 
 $$
 \Sigma=\begin{pmatrix}\Sigma_{YY}&\Sigma_{YZ}\\ \Sigma_{ZY}&\Sigma_{ZZ}\end{pmatrix}\succeq 0
@@ -868,7 +867,7 @@ $$
 
 把平移加回去即得原公式。$\square$
 
-**联合协方差（内容那块矩阵）。** 模型 $Y=X\theta^*+\varepsilon$，$\theta^*\sim N\bigl(0,\frac{\sigma^2}{\lambda n}I_d\bigr)$ 与 $\varepsilon\sim N(0,\sigma^2 I_n)$ 独立。$(Y,\theta^*)$ 是 $(\theta^*,\varepsilon)$ 的线性像，故零均值联合高斯。逐块算：
+**联合协方差矩阵：** 模型 $Y=X\theta^*+\varepsilon$，$\theta^*\sim N\bigl(0,\frac{\sigma^2}{\lambda n}I_d\bigr)$ 与 $\varepsilon\sim N(0,\sigma^2 I_n)$ 独立。$(Y,\theta^*)$ 是 $(\theta^*,\varepsilon)$ 的线性像，故零均值联合高斯。逐块算：
 
 $$
 \mathrm{Cov}(\theta^*)
@@ -901,7 +900,7 @@ $$
 \qquad(d\times n).
 $$
 
-拼起来正是内容的
+拼起来得到分块协方差矩阵
 
 $$
 \mathrm{Cov}\begin{pmatrix}Y\\\theta^*\end{pmatrix}
@@ -943,7 +942,7 @@ $$
 
 这正是 Ridge（$\Sigma_\lambda=\Sigma+\lambda I$ 那一版：$\widehat\theta_r=(X^\top X+n\lambda I)^{-1}X^\top Y$）。
 
-### 6.3 贝叶斯风险的显式计算（补全）
+### 6.3 贝叶斯风险的显式计算
 
 记 $S=X^\top X=n\Sigma$，$M=(S+n\lambda I)^{-1}$。则
 
@@ -957,7 +956,7 @@ A^*(Y)-\theta^*
 \end{aligned}
 $$
 
-（中间用了 $M(S+n\lambda I)=I$。）$\varepsilon\perp\theta^*$ 且 $\mathbb{E}[\varepsilon]=0$，交叉项
+（中间用了 $M(S+n\lambda I)=I$。）由于 $\varepsilon\perp\theta^*$ 且 $\mathbb{E}[\varepsilon]=0$，交叉项
 
 $$
 \mathbb{E}\bigl[(M X^\top\varepsilon)^\top\Sigma(n\lambda M\theta^*)\bigr]
@@ -980,7 +979,7 @@ $$
 \end{aligned}
 $$
 
-（$\Sigma$ 与 $\Sigma+\lambda I$ 可交换，故 $(\Sigma+\lambda I)^{-1}\Sigma(\Sigma+\lambda I)^{-1}=(\Sigma+\lambda I)^{-2}\Sigma$。）内容把同一式写成 $\frac{\sigma^2}{n\lambda}\lambda^2\mathrm{tr}[(\Sigma+\lambda I)^{-2}\Sigma]$。
+（因 $\Sigma$ 与 $\Sigma+\lambda I$ 可交换，故 $(\Sigma+\lambda I)^{-1}\Sigma(\Sigma+\lambda I)^{-1}=(\Sigma+\lambda I)^{-2}\Sigma$，等价地写作 $\frac{\sigma^2}{n\lambda}\lambda^2\mathrm{tr}[(\Sigma+\lambda I)^{-2}\Sigma]$。）
 
 **方差项。** $\mathbb{E}[\varepsilon\varepsilon^\top]=\sigma^2 I_n$：
 
@@ -1016,7 +1015,7 @@ $$
 
 与 OLS 上界 $\frac{d\sigma^2}{n}$ **完全匹配**。所以在固定设计、平方损失、$\|\cdot\|_\Sigma$ 风险下，OLS 是 minimax 最优的。
 
-若 $\mathrm{rank}(\Sigma)=r<d$，则 $\tau_j=0$ 的项贡献 0，下界是 $\frac{r\sigma^2}{n}$，同样匹配。内容写 $\ge O(d\sigma^2/n)$，是同一件事。
+若 $\mathrm{rank}(\Sigma)=r<d$，则 $\tau_j=0$ 的项贡献 0，下界是 $\frac{r\sigma^2}{n}$，同样匹配上界。若写作渐近下界 $\Omega(d\sigma^2/n)$，二者表达一致。
 
 ---
 
@@ -1115,9 +1114,9 @@ $$
 =4\sigma\sqrt{\frac{2\log(2d/\delta)}{n}}.
 $$
 
-内容写成 $\lesssim\sigma\sqrt{\log(d/\delta)/n}$（同一数量级）。若约束是 $\|\theta\|_1\le R$ 而非单位球，则 $K-K=2RB_1$，右边多一个 $R$。
+等价地写为同阶数量级 $\lesssim\sigma\sqrt{\log(d/\delta)/n}$。若约束是 $\|\theta\|_1\le R$ 而非单位球，则 $K-K=2RB_1$，右边多一个 $R$。
 
-OLS 那套「$\|Xv\|_2\le 2\|\Phi^\top\varepsilon\|_2$」对约束 LS 仍然成立（$Xv$ 仍在 $\mathrm{range}(X)$ 里），故内容同时保留
+OLS 那套「$\|Xv\|_2\le 2\|\Phi^\top\varepsilon\|_2$」对约束 LS 仍然成立（$Xv$ 仍在 $\mathrm{range}(X)$ 里），故两类上界可并写为
 
 $$
 \|\widehat\theta_K-\theta^*\|_\Sigma^2
@@ -1143,7 +1142,7 @@ $$
 2\max_{A:\,r(A)\le 2k}\;\sup_{\|v\|_2\le 1}\tilde\varepsilon_A^\top v.
 $$
 
-**固定 $A$：$\frac12$-网。** $\mathbb{S}^{r_k-1}$（或 $B_2$）的 $\frac12$-网基数 $\le(1+2/(1/2))^{r_k}=5^{r_k}$，内容写成 $6^{r_k}$。对任意 $\|u\|_2\le 1$ 取网上 $u_0$ 使 $\|u-u_0\|_2\le 1/2$，则
+**固定 $A$：$\frac12$-网。** $\mathbb{S}^{r_k-1}$（或 $B_2$）的 $\frac12$-网基数 $\le(1+2/(1/2))^{r_k}=5^{r_k}$（为留出常系数余量常放缩到 $6^{r_k}$）。对任意 $\|u\|_2\le 1$ 取网上 $u_0$ 使 $\|u-u_0\|_2\le 1/2$，则
 
 $$
 \sup_{\|v\|_2\le 1}\tilde\varepsilon_A^\top v
@@ -1157,7 +1156,7 @@ $$
 \le 6^{r_k}e^{-t^2/(8\sigma^2)}.
 $$
 
-**组合界（内容重点 $\log(ed/(2k))$）。** 候选支撑至多 $\binom{d}{2k}$ 个（内容写 $C_d^{2k}$；更精细可对 $|A|\le 2k$ 求和，阶不变）。Stirling $m!\ge(m/e)^m$ 给出
+**组合界（关键对数因子 $\log(ed/(2k))$）。** 候选支撑至多 $\binom{d}{2k}$ 个（更精细可对 $|A|\le 2k$ 求和，同阶）。Stirling 界 $m!\ge(m/e)^m$ 给出
 
 $$
 \binom{d}{m}=\frac{d(d-1)\cdots(d-m+1)}{m!}\le\frac{d^m}{m!}\le\Bigl(\frac{ed}{m}\Bigr)^m.
@@ -1189,7 +1188,7 @@ t^2
 \sigma^2\Bigl(k\log\frac{ed}{2k}+k\log 6+\log\frac1\delta\Bigr).
 $$
 
-（内容把同一式写成 $t\ge O\bigl(\sigma^2(k\log(ed/(2k))+\cdots)\bigr)$，那是 $t^2$ 的阶。）以概率 $\ge 1-\delta$ 有 $\max_A\sup_v\le t$，于是 $\|X(\widehat\theta_K-\theta^*)\|_2\le 2t$，
+（部分文献直接把 $t^2$ 写成平方误差的阶。）以概率 $\ge 1-\delta$ 有 $\max_A\sup_v\le t$，于是 $\|X(\widehat\theta_K-\theta^*)\|_2\le 2t$，
 
 $$
 \|\widehat\theta_K-\theta^*\|_\Sigma^2
@@ -1199,7 +1198,7 @@ $$
 \frac{\sigma^2 k}{n}\log\frac{ed}{2k}+\frac{\sigma^2 k}{n}\log 6+\frac{\sigma^2}{n}\log\frac1\delta.
 $$
 
-**人话：** 若 $\theta^*$ 真的 $k$-稀疏，你又知道 $k$，误差相当于「有效维度 $k\log(d/k)$」的 OLS。多出来的 $\log(d/k)$ 是「不知道哪 $k$ 个坐标非零」的搜寻税。这几乎是 oracle（若上帝告诉你支撑，误差是 $\frac{k\sigma^2}{n}$）再乘对数。
+**直观解读：** 若 $\theta^*$ 真的 $k$-稀疏且已知 $k$，误差相当于「有效维度 $k\log(d/k)$」的 OLS。多出来的 $\log(d/k)$ 是「不知道哪 $k$ 个坐标非零」带来的搜寻代价。这几乎是神谕估计（已知支撑时的误差为 $\frac{k\sigma^2}{n}$）再乘以对数因子。
 
 **计算代价：** 枚举所有支撑需要 $\sum_{\ell=1}^k\binom{d}{\ell}(\ell^3+n^2\ell)\ge \Omega(d^k n^2 k)$ 量级，$d$ 稍大就不可能。这引出 Lasso。
 
@@ -1214,7 +1213,7 @@ $$
 \Bigl\{\frac1{2n}\|Y-X\theta\|_2^2 + \lambda\|\theta\|_1\Bigr\}.
 $$
 
-这是凸问题（可求近端梯度，见 Lec2），不必枚举子集。
+这是凸问题（可用近端梯度求解，见[优化误差](/blog/fods-optimization-error/)），不必枚举子集。
 
 ### 8.1 慢速率（只靠 $\|\theta^*\|_1$，不对 $X$ 作相关假设）
 
@@ -1244,7 +1243,7 @@ $$
 +2\lambda\bigl(\|\theta^*\|_1-\|\widehat\theta_L\|_1\bigr).
 $$
 
-（内容在 $\frac1{2n}$ 损失下把基本不等式写成没有前面这个 2；按 $\|\cdot\|_\Sigma^2=\frac1n\|X\cdot\|_2^2$ 的定义应保留。下面一律用带 2 的版本，否则 8.2 的常数 $6/\gamma$ 对不上。）
+（由于目标为 $\frac1{2n}$ 倍平方损失，对应到 $\|\cdot\|_\Sigma^2=\frac1n\|X\cdot\|_2^2$ 时需保留前系数 $2$，这样才能与 8.2 节的 $6/\gamma$ 常数严格匹配。）
 
 **Hölder：** $\langle a,b\rangle\le\|a\|_\infty\|b\|_1$，且 $\|v\|_1\le\|\widehat\theta_L\|_1+\|\theta^*\|_1$，故
 
@@ -1294,7 +1293,7 @@ $$
 \end{aligned}
 $$
 
-内容写 $\le 2\lambda\|\theta^*\|_1$（来自漏掉的那个 2）；**数量级都是 $\lambda\|\theta^*\|_1$**。代入 $\lambda\sim\sigma\sqrt{\log(d/\delta)/n}$：
+（部分文献在省略系数 2 后写成 $\le 2\lambda\|\theta^*\|_1$，数量级同为 $\lambda\|\theta^*\|_1$。）代入 $\lambda\sim\sigma\sqrt{\log(d/\delta)/n}$：
 
 $$
 \|\widehat\theta_L-\theta^*\|_\Sigma^2
@@ -1401,25 +1400,25 @@ $$
 =\frac6\gamma\sqrt{2\ln(2d/\delta)}\,\sigma\sqrt{\frac{s}{n}}.
 $$
 
-这正是内容的界（$s=|A^*|$）。$\square$
+这正是经典的快速率误差界（$s=|A^*|$）。$\square$
 
-若漏掉基本不等式里的 2，锥的系数仍是 3（$\frac\lambda2\|v\|_1+\lambda(\|v_{A^*}\|_1-\|v_{A^{*c}}\|_1)$ 同样给出 $\|v_{A^{*c}}\|_1\le 3\|v_{A^*}\|_1$），但最后只得到 $3\lambda\sqrt{s}/(2\gamma)$，常数变成 $3/\gamma$ 而不是内容的 $6/\gamma$。
+若前面省略了基本不等式里的系数 2，锥的条件系数仍是 3（$\frac\lambda2\|v\|_1+\lambda(\|v_{A^*}\|_1-\|v_{A^{*c}}\|_1)$ 同样给出 $\|v_{A^{*c}}\|_1\le 3\|v_{A^*}\|_1$），但最后只得到 $3\lambda\sqrt{s}/(2\gamma)$，常数变成 $3/\gamma$ 而不是带系数 2 下的 $6/\gamma$。
 
-**人话：** Lasso 用凸问题「几乎」实现了稀疏约束 LS 的 oracle 速率，代价是 (i) 多一个 $\log d$；(ii) 需要 RE，不是对任意 $X$ 都成立。设计矩阵是随机高斯时，RE 在 $n\gtrsim s\log d$ 时以高概率成立。
+**直观理解：** Lasso 用凸问题「几乎」实现了稀疏约束 LS 的神谕速率，代价是 (i) 多一个 $\log d$；(ii) 需要 RE，不是对任意 $X$ 都成立。设计矩阵是随机高斯时，RE 在 $n\gtrsim s\log d$ 时以高概率成立。
 
 ---
 
-## 9. Lec1 收束：你应该记住的一张表
+## 9. 总结：线性模型的核心结果对照表
 
 | 方法 | 适用 | 预测误差（数量级） | 要点 |
 |------|------|---------------------|------|
 | OLS | $n\ge d$，固定设计 | $\dfrac{r\sigma^2}{n}$（期望精确） | minimax 最优 |
 | Ridge | $d$ 可 $>n$ | $\sqrt{\|\theta^*\|_2^2\mathrm{tr}(\Sigma)\sigma^2/n}$（松上界） | 偏差–方差，贝叶斯高斯先验 |
 | 约束 LS，$K=B_1$ | $\|\theta^*\|_1$ 小 | $\sigma\sqrt{\log d/n}$ | 并集界在 $2d$ 个顶点 |
-| 约束 LS，$K=B_0(k)$ | $k$-稀疏 | $\dfrac{k\sigma^2\log(d/k)}{n}$ | 接近 oracle，但组合爆炸 |
+| 约束 LS，$K=B_0(k)$ | $k$-稀疏 | $\dfrac{k\sigma^2\log(d/k)}{n}$ | 接近神谕界，但组合爆炸 |
 | Lasso 慢速率 | 高维，只知 $\|\theta^*\|_1$ | $\|\theta^*\|_1\sigma\sqrt{\log d/n}$ | 凸、可算 |
 | Lasso + RE | $s$-稀疏且 $X$ 不太共线 | $\dfrac{\sigma^2 s\log(d/\delta)}{n\gamma}$ | 快速率（预测误差） |
 
-全课后面，每次看到「超额风险 $\le$ 统计 + 逼近 + 优化」，都可以回到本章：线性高斯模型里统计误差就是 $\frac{d\sigma^2}{n}$，逼近误差在模型正确时是 0，优化误差在有闭式解时是 0。
+后续每章每次遇到「超额风险 $\le$ 统计 + 逼近 + 优化」，都可以回到线性模型对照：线性高斯模型里统计误差就是 $\frac{d\sigma^2}{n}$，逼近误差在模型正确时是 0，优化误差在有闭式解时是 0。
 
-下一份：[02a_Lec2_统计误差](/blog/fods-statistical-error/)——把「$\frac{d}{n}$」推广到无穷维函数类。
+下一篇：[统计误差](/blog/fods-statistical-error/)——把「$\frac{d}{n}$」推广到无穷维函数类。

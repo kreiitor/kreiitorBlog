@@ -12,8 +12,7 @@ category: knowledge
 
 ## 这个方案解决什么问题
 
-Codex CLI 默认不会在终端里常驻显示上下文占用、token 使用量或剩余窗口。  
-这个方案的目标是给 CLI 加一个轻量的可视化层，让你在使用时能看到类似下面的信息：
+Codex CLI 默认不会在终端里常驻显示上下文占用、token 使用量或剩余窗口。这个方案为 CLI 增加一个轻量的可视化层，在使用时展示以下信息：
 
 - 当前累计 token 使用量
 - 模型上下文窗口大小
@@ -31,8 +30,7 @@ Codex CLI 默认不会在终端里常驻显示上下文占用、token 使用量�
 
 ## 实现思路
 
-这个实现没有修改 Codex 的认证配置，也没有改 `config.toml`。  
-它只是新增了一个包装脚本：
+这个实现不修改 Codex 的认证配置，也不修改 `config.toml`，只新增一个包装脚本：
 
 - 脚本路径：`~/.local/bin/codex-usage`
 - 作用：启动 Codex，并在 `tmux` 里打开一个侧窗监视上下文信息
@@ -74,8 +72,7 @@ Codex 的 session 文件里本来就会写出类似字段：
 tmux split-window -v -l 18%
 ```
 
-这里用 `-l 18%` 更直观。  
-`size missing` 通常是因为没给尺寸或百分比参数，而不是 `-p` 被移除：
+这里用 `-l 18%` 更直观；`size missing` 通常是因为漏了尺寸或百分比参数，而不是 `-p` 参数被移除：
 
 ```text
 size missing
@@ -91,8 +88,7 @@ size missing
 ~/.codex/sessions/**/*.jsonl
 ```
 
-然后找最近的会话文件，从中提取 `token_count` 事件。  
-如果当前不在 `tmux` 中，它会退回普通 `codex`，不影响原有用法。
+然后找到最近的会话文件，从中提取 `token_count` 事件。如果当前不在 `tmux` 中，脚本会退回普通 `codex`，不影响原有用法。
 
 下面是一份最小骨架。不同 Codex 版本的字段名可能不同，按实际 JSONL 调整 `jq` 过滤条件即可：
 
@@ -131,8 +127,7 @@ exec codex "$@"
 
 ### 3. 保持可回滚
 
-这个实现是独立包装器，不覆盖原始 `codex` 命令，不改系统级配置。  
-所以回滚只需要删掉这个脚本即可。
+这个实现是独立包装器，不覆盖原始 `codex` 命令，也不修改系统级配置。回滚只需删除脚本即可。
 
 ---
 
@@ -191,15 +186,15 @@ alias codex='codex-usage'
 
 那就去你的 shell 配置里删掉那一行即可。
 
-### 方式三：不改任何现有 Codex 配置
+### 说明：不影响现有 Codex 配置
 
-它不会改：
+该包装脚本不会修改：
 
 - `~/.codex/auth.json`
 - `~/.codex/config.toml`
-- Windows 侧的 Codex 配置
+- 其他环境下已有的 Codex 配置
 
-所以一般不需要额外清理。
+因此通常不需要额外清理。
 
 ---
 
@@ -209,7 +204,7 @@ alias codex='codex-usage'
 
 ```bash
 command -v codex-usage
-python3 -m py_compile ~/.local/bin/codex-usage
+bash -n ~/.local/bin/codex-usage
 ```
 
 如果这两个都通过，说明脚本已经可用。

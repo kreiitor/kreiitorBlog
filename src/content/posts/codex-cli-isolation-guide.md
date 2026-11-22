@@ -13,9 +13,9 @@ cover: /covers/post-cli-terminal.svg
 
 ## 适用场景
 
-在共享服务器上使用 Codex CLI 时，默认的 `~/.codex` 会和同门或全局配置混在一起。常见问题是读到别人的配置。想用中转服务时启动仍会弹登录，`codex login status` 显示未登录，但实际能对话。
+在共享 Linux 服务器上使用 Codex CLI 时，默认的 `~/.codex` 容易与其他用户或全局配置混在一起，常见问题是误读他人的配置；接入自定义中转服务时，也常遇到启动仍弹出登录菜单、`codex login status` 显示未登录但实际能对话的现象。
 
-做法是给项目单独一个 `CODEX_HOME`，把配置、认证、日志和会话都放进去。项目目录下的 `.codex/config.toml` 只是覆盖层，不是完整的用户目录。
+解决思路是给每个项目单独指定 `CODEX_HOME` 目录，把配置、认证、日志和会话都放进去。项目根目录下的 `.codex/config.toml` 只是配置覆盖层，不能替代完整的用户状态目录。
 
 ---
 
@@ -27,20 +27,14 @@ Codex 默认会使用：
 ~/.codex
 ```
 
-如果多人共用同一台服务器、同一个 Linux 用户，或者同门已经在默认目录配置过 Codex，那么直接运行：
+如果多人共用同一台服务器、同一个 Linux 账号，或他人在默认目录配置过 Codex，直接运行 `codex` 就可能读取外部已有配置。
 
-```bash
-codex
-```
+项目级 `.codex/config.toml` 只能作为项目覆盖层，不能完全替代用户级 `CODEX_HOME` 目录。对于中转服务这类 provider 配置，应当放进项目隔离的 `CODEX_HOME` 目录中。
 
-可能会读取外部已有配置。
-
-项目级 `.codex/config.toml` 只能作为项目覆盖层，不能完全替代用户级 Codex home。对于中转服务这类 provider 配置，应该放到隔离后的 Codex home 目录中。
-
-推荐结构是：
+推荐目录结构如下（以 `/path/to/your-project` 为例）：
 
 ```text
-/nasdata/cn/decompile
+/path/to/your-project
 ├── .codex-home/
 │   ├── config.toml
 │   ├── sessions/
@@ -49,11 +43,11 @@ codex
 └── run-codex.sh
 ```
 
-其中：
+各路径职责：
 
 | 路径 | 作用 |
 | --- | --- |
-| `.codex-home` | 当前项目专用的 Codex 用户目录 |
+| `.codex-home` | 当前项目专用的 `CODEX_HOME` 目录 |
 | `.codex-home/config.toml` | 当前项目专用 Codex 配置 |
 | `.codex-home/sessions` | 当前项目专用会话记录 |
 | `run-codex.sh` | 固定设置 `CODEX_HOME` 和 API key 的启动脚本 |
@@ -61,12 +55,12 @@ codex
 
 ---
 
-## 一、创建项目内 Codex home
+## 一、创建项目内 `CODEX_HOME` 目录
 
 进入项目目录：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 ```
 
 创建隔离目录：
@@ -76,8 +70,7 @@ mkdir -p .codex-home
 chmod 700 .codex-home
 ```
 
-这里使用 `.codex-home`，而不是 `.codex`。
-原因是 `.codex` 更适合保留项目级规则或说明；`.codex-home` 则明确表示这是 Codex 的用户状态目录。
+这里使用 `.codex-home`，而不是 `.codex`。原因是 `.codex` 更适合存放项目级规则或说明，`.codex-home` 则明确区分出 Codex 的用户状态目录。
 
 ---
 
@@ -87,12 +80,12 @@ chmod 700 .codex-home
 
 ```bash
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "lucen"
+model_provider = "relay"
 model = "gpt-5-codex"
 
-[model_providers.lucen]
-name = "lucen"
-base_url = "https://lucen.run/v1"
+[model_providers.relay]
+name = "relay"
+base_url = "https://your-relay.example.com/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -100,17 +93,17 @@ EOF
 chmod 600 .codex-home/config.toml
 ```
 
-关键点：
+配置说明：
 
 | 配置项 | 含义 |
 | --- | --- |
-| `model_provider = "lucen"` | 让 Codex 使用名为 `lucen` 的 provider |
-| `model = "gpt-5-codex"` | 默认模型名，可按中转服务支持情况修改 |
-| `base_url = "https://lucen.run/v1"` | 中转服务地址 |
+| `model_provider = "relay"` | 让 Codex 使用名为 `relay` 的 provider |
+| `model = "gpt-5-codex"` | 默认模型名，按中转服务实际支持的名称填写 |
+| `base_url = "https://your-relay.example.com/v1"` | 中转服务 API 根地址 |
 | `env_key = "OPENAI_API_KEY"` | 从环境变量 `OPENAI_API_KEY` 读取 API key |
-| `wire_api = "responses"` | 使用 Responses API 格式 |
+| `wire_api = "responses"` | 使用 Responses API 协议格式 |
 
-`env_key = "OPENAI_API_KEY"` 让 Codex 从环境变量 `OPENAI_API_KEY` 读取密钥。配置里只写变量名。
+`env_key = "OPENAI_API_KEY"` 只指定读取哪一个环境变量，配置里不要直接写明文密钥。
 
 ---
 
@@ -155,7 +148,7 @@ codex
 启动：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 ./run-codex.sh
 ```
 
@@ -164,7 +157,7 @@ cd /nasdata/cn/decompile
 ```text
 OpenAI Codex
 model:     gpt-5-codex
-directory: /nasdata/cn/decompile
+directory: /path/to/your-project
 ```
 
 并且能够正常对话，说明中转服务路径可用。
@@ -243,7 +236,7 @@ codex
 如果不用脚本，必须先设置：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex
@@ -271,7 +264,7 @@ ls -l .codex-home/config.toml
 env_key = "OPENAI_API_KEY"
 ```
 
-错误理解：
+错误写法：
 
 ```toml
 env_key = "sk-..."
@@ -283,13 +276,13 @@ env_key = "sk-..."
 
 ## 七、模型名问题
 
-如果 Codex 启动后提示切换模型，例如：
+如果 Codex 启动后提示模型发生切换，例如：
 
 ```text
-Model changed to gpt-5.5 high
+Model changed to <target-model>
 ```
 
-说明当前环境可能支持新模型，或者用户在 CLI 中通过 `/model` 切换过模型。
+说明当前环境可能调整了默认模型，或用户在 CLI 中通过 `/model` 切换过模型。
 
 如果想固定模型，可以修改：
 
@@ -303,14 +296,7 @@ nano .codex-home/config.toml
 model = "gpt-5-codex"
 ```
 
-改成中转服务支持的模型名，例如：
-
-```toml
-model = "gpt-5.5"
-```
-
-如果模型名不被中转服务支持，常见表现是请求失败、超时或模型不存在。
-这种情况下应该查看中转服务后台支持的模型列表，并把 `model` 改成可用值。
+改成中转服务实际支持的模型名。如果模型名不被中转服务支持，常见表现是请求失败、超时或返回模型不存在错误；此时应核对服务端支持的模型列表并更新 `model` 字段。
 
 ---
 
@@ -330,11 +316,11 @@ chmod 600 .codex-home/config.toml
 ls -l run-codex.sh .codex-home/config.toml
 ```
 
-期望类似：
+期望输出类似：
 
 ```text
--rw------- 1 cn cn 303 Jun  2 11:29 .codex-home/config.toml
--rwx------ 1 cn cn 207 Jun  2 11:28 run-codex.sh
+-rw------- 1 youruser yourgroup 303 Jun  2 11:29 .codex-home/config.toml
+-rwx------ 1 youruser yourgroup 207 Jun  2 11:28 run-codex.sh
 ```
 
 含义：
@@ -344,22 +330,16 @@ ls -l run-codex.sh .codex-home/config.toml
 | `700` | 只有当前用户可读、写、执行 |
 | `600` | 只有当前用户可读、写 |
 
-只要同门不是同一个 Linux 用户，就无法读取你的脚本和配置。
+只要其他协作者与你不使用同一个 Linux 账号，就无法直接读取你的脚本和配置。
 
 ---
 
 ## 九、原来的 `.codex` 是否可以删除
 
-如果之前把配置写在当前项目的 `.codex/config.toml`，并且已经移动到：
-
-```text
-.codex-home/config.toml
-```
-
-那么原来的 `.codex` 可以检查后删除：
+如果之前把配置写在当前项目的 `.codex/config.toml`，并且已经移动到 `.codex-home/config.toml`，检查后可清理旧目录：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 ls -la .codex
 ```
 
@@ -371,32 +351,32 @@ rm -rf .codex
 
 如果里面有项目说明、指令、skills 或其他人工维护文件，先不要删除。
 
-两个目录不要混淆：
+两个目录职责不同，不要混淆：
 
 ```text
 .codex       项目级说明或覆盖配置，可选
-.codex-home  当前项目专用 Codex 用户目录，不能删
+.codex-home  当前项目专用 CODEX_HOME 状态目录，不能删
 ```
 
 ---
 
 ## 十、完整可复制版本
 
-从零开始的完整命令如下。执行前把 API key 占位符换成自己的密钥。
+从零开始的完整命令如下，执行前把服务地址、模型名和 API key 占位符换成实际值。
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 
 mkdir -p .codex-home
 chmod 700 .codex-home
 
 cat > .codex-home/config.toml <<'EOF'
-model_provider = "lucen"
+model_provider = "relay"
 model = "gpt-5-codex"
 
-[model_providers.lucen]
-name = "lucen"
-base_url = "https://lucen.run/v1"
+[model_providers.relay]
+name = "relay"
+base_url = "https://your-relay.example.com/v1"
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 EOF
@@ -424,10 +404,10 @@ chmod 700 run-codex.sh
 
 ## 排查命令清单
 
-检查 Codex home：
+检查 `CODEX_HOME`：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 CODEX_HOME="$PWD/.codex-home" codex login status
 ls -la .codex-home
 ```
@@ -441,7 +421,7 @@ ls -l run-codex.sh .codex-home/config.toml
 临时绕过脚本启动：
 
 ```bash
-cd /nasdata/cn/decompile
+cd /path/to/your-project
 export CODEX_HOME="$PWD/.codex-home"
 export OPENAI_API_KEY="你的 sk-... API key"
 codex

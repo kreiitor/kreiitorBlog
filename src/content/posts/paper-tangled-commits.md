@@ -11,7 +11,7 @@ cover: /covers/post-paper.svg
 draft: true
 ---
 
-围绕 commit untangling 与代码变更分解，收集了以下文献：
+围绕 commit untangling 与代码变更分解，以下列出几篇代表性论文：
 
 - Untangling fine-grained code changes
 - CoRA: Decomposing and Describing Tangled Code Changes for Reviewer

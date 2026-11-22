@@ -128,7 +128,7 @@ let mut dp = vec![vec![0; n]; m];
 let mut vis = vec![vec![false; n]; m];
 ```
 
-`vec![x; n]` 要求元素 `Clone`，基本类型都没问题。越界 `v[i]` 会 panic，不是 UB；显式崩溃比 C++ 好调试。
+`vec![x; n]` 要求元素 `Clone`，基本类型都没问题。越界 `v[i]` 会直接 panic，而不是未定义行为（UB）；显式崩溃比 C++ 好调试。
 
 ### 1.5 字符串
 
@@ -248,14 +248,14 @@ use std::cmp::Reverse;
 let mut h = BinaryHeap::new();
 h.push(x); h.pop(); h.peek();    // 大根堆
 
-let mut min_h = BinaryHeap::from(Reverse(x));   // 小根堆：包 Reverse
+let mut min_h = BinaryHeap::from([Reverse(x)]);   // 小根堆：包 Reverse
 min_h.push(Reverse(5));
 min_h.pop().map(|Reverse(v)| v);
 
 h.push((priority, item));        // 元组按字典序比，大的在堆顶
 ```
 
-和 Python 正好相反：**Rust 默认大根堆，小根堆用 `Reverse<T>`**。元组比较要求整个元组 Ord；item 不可比时只放 `(priority, index)`。
+和 Python 正好相反：**Rust 默认大根堆，小根堆用 `Reverse<T>`**。元组比较要求整个元组实现 `Ord`；item 不可比时只放 `(priority, index)`。
 
 ### 2.5 常用 slice/Vec 方法
 
@@ -350,14 +350,14 @@ while !q.is_empty() {
 }
 ```
 
-**borrow 的作用域注意**：`node.borrow()` 的临时值如果在 `if let Some(x) = node.borrow_mut().left` 这种写法里会活到整个语句结束，容易触发「already mutably borrowed」panic。安全写法是先把 `borrow_mut()` 绑定到变量、操作完再进下一步，或借用前先把需要的数据读出来。
+**借用作用域注意**：在 `if let Some(x) = node.borrow_mut().left` 这类写法里，`borrow_mut()` 返回的临时守卫会活到整条语句结束，容易触发「already mutably borrowed」panic。安全写法是先把 `borrow_mut()` 绑定到变量、操作完再进下一步，或借用前先把需要的数据读出来。
 
 ### 3.3 什么时候认输换写法
 
-Rust 刷链表/树的困难题（LRU、反转 k 组、二叉树 Morris）借用冲突会非常痛苦。实用主义策略：
+Rust 刷链表/树的困难题（LRU、反转 k 组、二叉树 Morris 遍历）借用冲突会非常痛苦。实用主义策略：
 
 - **下标模拟指针**：图/树的节点存 `Vec`，「指针」用 `usize` 下标，这是 Rust 竞赛社区的标配（邻接表本来就这么写）。
-- 双向链表/LRU 用下标 + `Vec<Node>` 实现，别硬刚 `Rc<RefCell>`。
+- 双向链表/LRU 用下标 + `Vec<Node>` 实现，不必硬写 `Rc<RefCell>`。
 
 ```rust
 // 图邻接表：节点用下标
@@ -620,20 +620,20 @@ pub fn num_islands(grid: Vec<Vec<char>>) -> i32 {
 2. **链表忘了 `.take()`** → 「cannot move out of borrowed content」。
 3. **`borrow_mut` 生命周期过长** → 运行时「already borrowed」panic。借用绑定到变量、用完立即结束作用域。
 4. **`usize` 下溢**：`i - 1` 在 0 处 panic。先判界或转 isize。
-5. **递归 clone 子树忘了 Rc 语义**：`node.left.clone()` 是 O(1) 的引用计数，放心用；但没有它所有权过不去。
+5. **递归 clone 子树忘了 Rc 语义**：`node.left.clone()` 是 O(1) 的引用计数，放心用；否则无法通过所有权检查。
 6. **`BinaryHeap` 默认大根堆**，要小根堆包 `Reverse`。
 7. **元组堆里 item 不可比** → 只放 `(priority, index)`。
 8. **字符串按下标** → 编译错。先 `.as_bytes()` 或 `.chars().collect()`。
 9. **`sort_by` 里写 `a.partial_cmp(b)`**：f64 没有 Ord，整数用 `cmp`。
 10. **i32 溢出**：累加换 i64，返回前 `as i32`。
-11. **`vec![None; n]` 编译错**（Option<Box<T>> 不是 Copy），用 `vec![(); n].map(|_| None)` 或 `Default::default()`。
+11. **`vec![None; n]` 编译错**（Option<Box<T>> 不是 Copy），用 `(0..n).map(|_| None).collect::<Vec<_>>()`、定长数组 `[(); N].map(|_| None)` 或 `Default::default()`。
 12. **`map.get(&x)` 返回 `Option<&V>`**：数字要 `.copied()` 才能脱离借用。
 
 ---
 
 ## 10. 学习节奏建议
 
-- **第 1~2 天**：只过第 1、2 节和第 4.1、4.2 节，在简单题上找回 HashMap entry API、Vec 当栈、sort_by 的手感。
+- **第 1–2 天**：只过第 1、2 节和第 4.1、4.2 节，在简单题上找回 HashMap entry API、Vec 当栈、sort_by 的手感。
 - **第 1 周**：数组/字符串类刷完，刻意用迭代器改写一遍命令式循环，体会零成本抽象。
 - **第 2 周**：集中攻克链表与二叉树，把 `take()`、`borrow()`、`clone()` 练成条件反射。
 - **第 3 周起**：三个专项 + DP/贪心。写不出来的题先想「能不能用下标代替指针」。

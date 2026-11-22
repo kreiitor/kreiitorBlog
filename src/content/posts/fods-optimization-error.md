@@ -25,11 +25,11 @@ $$
 
 - 梯度下降（GD）在什么步长下会下降？要多少步才让梯度变小？
 - **没有凸性**时还能保证什么？Polyak–Łojasiewicz（PL）条件为什么对过参数化网络重要？
-- Lasso、核范数、指示函数这类不可微项怎么处理？（近端梯度）
+- Lasso、核范数、示性函数这类不可微项怎么处理？（近端梯度）
 - 随机梯度（SGD）的期望 / 高概率速率，以及强凸时为什么只能线性收敛到一个**邻域**？
 - 方差缩减（SVRG）怎样把总成本从 $n\kappa\log(1/\varepsilon)$ 降到 $(n+\kappa)\log(1/\varepsilon)$？
 
-内容这几页公式挤、步骤跳（核范数近端写了 `?`，SVRG 证明尤其跳）。下面每条假设先用人话钉死，证明按可跟的顺序补全。
+这几类问题在推导上最容易卡住的地方是符号与中间步骤的跳跃（例如核范数近端算子的求解、SVRG 的方差缩减递推）。下面先把每条假设的几何含义讲清楚，再把完整证明补全。
 
 需要的预备（看不懂就去附录）：
 
@@ -41,7 +41,7 @@ $$
 
 ---
 
-## 0. 先把「我们在优化什么」钉死
+## 0. 问题设定：优化目标
 
 经验风险（或总体风险）对参数 $x\in\mathbb{R}^d$ 的依赖写成 $f(x)$ 或 $F(x)=f(x)+h(x)$。典型例子：
 
@@ -55,7 +55,7 @@ $$
 
 光滑部分用梯度，非光滑部分用**近端算子**。随机性来自：每次只抽一个样本（或一个 $f_i$）来估计 $\nabla f$。
 
-**人话：** 统计误差问「样本够不够」，逼近误差问「模型死不死板」，优化误差问「你用的迭代有没有把眼前这个有限和真正变小」。
+**直观对比。** 统计误差关注样本是否足够，逼近误差关注函数类表达能力是否受限，优化误差则衡量具体迭代算法是否真正把当前经验目标降到最低。
 
 ---
 
@@ -71,7 +71,7 @@ $$
 L\|x-y\|_2.
 $$
 
-**人话：** 你在 $x$ 处看到的「斜率」$\nabla f(x)$，走到旁边的 $y$ 时，斜率的改变量不超过距离的 $L$ 倍。$L$ 越大，函数越「尖」、越不能迈大步。
+**直观理解。** 在 $x$ 处看到的梯度 $\nabla f(x)$，走到旁边的 $y$ 时，梯度的改变量不超过距离的 $L$ 倍。$L$ 越大，函数曲率越陡，能安全使用的步长就越小。
 
 若 $f$ 二阶可微，这等价于 $\nabla^2 f(x)\preceq L I$（最大特征值 $\le L$）。**它不要求凸**：Hessian 仍可以有负特征值，只要不太正（不超过 $L$）。
 
@@ -211,7 +211,7 @@ $$
 
 **命题。** 若 $\alpha\in(0,2/L)$，则 $1-\alpha L/2>0$，从而 $f(y)\le f(x)$，且严格小于除非 $\nabla f(x)=0$。
 
-**人话：** 步长不能超过 $2/L$，否则二次上界在那一步已经翘起来，不能保证下降。最常用的保险步长是 $\alpha=1/L$，此时
+**直观理解。** 步长不能超过 $2/L$，否则二次上界在终点处已经高于当前点，不再保证函数值下降。最稳妥的常见步长是 $\alpha=1/L$，此时
 
 $$
 f(y)\;\le\; f(x)-\frac1{2L}\|\nabla f(x)\|_2^2.
@@ -247,7 +247,7 @@ $$
 \frac{2}{t\alpha(2-\alpha L)}\bigl(f(x_0)-f(x^*)\bigr).
 $$
 
-（内容有的地方把 $\|\nabla f\|^2$ 的平方印丢了；从推导看必须是平方：左边与 $f$ 同量纲。）
+（注意公式左边是 $\|\nabla f(x_k)\|_2^2$ 的平方，从推导与量纲上都必须带平方，才能与右边的 $f$ 同量纲。）
 
 对 $\alpha\in(0,2/L)$ 最小化右边：令 $\phi(\alpha)=\alpha(2-\alpha L)$，$\phi'(\alpha)=2-2\alpha L=0\Rightarrow\alpha=1/L$，此时 $\phi=1/L$，于是
 
@@ -257,7 +257,7 @@ $$
 \frac{2L}{t}\bigl(f(x_0)-f(x^*)\bigr).
 $$
 
-**人话：** 不靠凸性，GD 就能让「曾经见过的最小梯度范数」以 $1/t$ 变小。这是驻点保证，不是全局最小保证。想要 $f(x_t)-f(x^*)$ 本身的速率，需要下一节的 $\gamma$-条件、凸性或 PL。
+**直观理解。** 不靠凸性，GD 就能让历史见过的最小梯度范数以 $1/t$ 变小。这是驻点保证，不是全局最小保证。想要 $f(x_t)-f(x^*)$ 本身的收敛率，还需要 $\gamma$-条件、凸性或 PL 条件。
 
 ---
 
@@ -295,7 +295,7 @@ $$
 
 ### 4.1 假设（1）在说什么
 
-**假设（内容 (1)）。** 存在 $\gamma>0$ 使得对一切 $x$，
+**假设 (1)（$\gamma$-条件）。** 存在 $\gamma>0$ 使得对一切 $x$，
 
 $$
 \langle\nabla f(x),\, x-x^*\rangle
@@ -303,7 +303,7 @@ $$
 \gamma\bigl(f(x)-f(x^*)\bigr).
 $$
 
-**人话：** 梯度在「指向极小点」的方向上，不能太弱。它比凸性弱、也和凸性不完全可比：
+**直观理解。** 梯度在「指向极小点」的方向上不能太弱。它比凸性弱，也和凸性不完全可比：
 
 - 若 $f$ **凸**，一阶条件是 $f(x^*)\ge f(x)+\langle\nabla f(x),x^*-x\rangle$，即 $\langle\nabla f(x),x-x^*\rangle\ge f(x)-f(x^*)$，所以凸 $\Rightarrow$ $\gamma=1$ 的 (1)（有时叫 star-convex / 限制割线不等式）。
 - 反过来 (1) 并不强迫 $f$ 处处凸，只要沿通往 $x^*$ 的射线不太坏。
@@ -321,7 +321,7 @@ R
 \;<\;\infty.
 $$
 
-**人话：** $f$ 不能有一条「函数值不太大、但跑到无穷远」的峡谷。强制（coercive）函数，例如 $\|x\|\to\infty\Rightarrow f(x)\to\infty$，就满足。若 $R=\infty$，下面的 $O(1/t)$ 常数炸掉，结论无信息。
+**直观理解。** $f$ 不能有一条「函数值不太大、但一直延伸到无穷远」的平缓峡谷。强制（coercive）函数（例如 $\|x\|\to\infty\Rightarrow f(x)\to\infty$）天然满足这一条件；若 $R=\infty$，上述 $O(1/t)$ 上界的常数会发散。
 
 ### 4.2 从 (1) 到 $\varepsilon_{k+1}\le\varepsilon_k-\frac1{2L}(\varepsilon_k\gamma/R)^2$
 
@@ -411,7 +411,7 @@ f(x_0)-f(x^*)
 \frac{LR^2}2.
 $$
 
-（内容写 $\varepsilon_0\le\langle\nabla f(x^*),x_0-x^*\rangle+\frac L2\|x_0-x^*\|^2\le LR^2/2$，第一项因 $\nabla f(x^*)=0$ 消失。）
+（若写成 $\varepsilon_0\le\langle\nabla f(x^*),x_0-x^*\rangle+\frac L2\|x_0-x^*\|^2\le LR^2/2$，其中内积项同样因 $\nabla f(x^*)=0$ 消去。）
 
 于是 $\frac1{\varepsilon_0}\ge\frac2{LR^2}$。从 $k=0$ 加到 $t-1$：
 
@@ -457,7 +457,7 @@ $$
 2m\bigl(f(x)-f(x^*)\bigr).
 $$
 
-**人话：** 函数值还没降到位，梯度就不能太小。强凸可微时，一阶条件给出 $f(x)-f^*\ge\frac m2\|x-x^*\|^2$ 以及 $f(x)-f^*\le\frac1{2m}\|\nabla f(x)\|^2$ 的「反过来」$\|\nabla f\|^2\ge 2m(f-f^*)$，所以
+**直观理解。** 函数值还没降到位，梯度就不能太小。强凸可微时，一阶条件给出 $f(x)-f^*\ge\frac m2\|x-x^*\|^2$ 以及 $\|\nabla f(x)\|^2\ge 2m(f(x)-f^*)$，所以
 
 $$
 \text{$m$-强凸（可微）}
@@ -465,7 +465,7 @@ $$
 \text{PL}.
 $$
 
-PL **不**蕴含凸，更不蕴含强凸。过参数化神经网络里，经验风险常常不是凸的，但在流形 / 插值区域附近可以有 PL，于是 GD/SGD 仍线性降函数值。这就是内容说「PL is important for over-parameterized deep learning」的原因。
+PL **不**蕴含凸，更不蕴含强凸。过参数化神经网络里，经验风险常常不是凸的，但在流形或插值区域附近可以满足 PL 条件，于是 GD/SGD 仍能线性降函数值——这也是 PL 条件在过参数化深度学习理论中常用的原因。
 
 由光滑性 $\|\nabla f(x)\|^2\le 2L(f-f^*)$（第 1.2 节推论），PL 常数必须满足 $m\le L$。
 
@@ -493,18 +493,18 @@ f(x_t)-f(x^*)
 \exp\Bigl(-\frac{mt}{L}\Bigr)\bigl(f(x_0)-f(x^*)\bigr).
 $$
 
-**人话：** 强凸给「点 $x_k$ 到 $x^*$ 的距离」线性收缩；PL 只给「函数值」线性收缩，不管是不是只有一个极小点（可以有一整个极小集合，PL 在商空间上看仍像强凸）。
+**直观理解。** 强凸保证「点 $x_k$ 到 $x^*$ 的距离」线性收缩；PL 只保证「函数值」线性收缩，而不要求极小点唯一（可以存在一整个极小点集合，PL 在商空间视角下仍表现出类似强凸的收缩性质）。
 
 ### 5.3 例子：$f(x)=x^2+3\sin^2(x)$（PL 但非凸）
 
-这是内容上的一维例子。先算导数：
+先计算它的一阶与二阶导数：
 
 $$
 f'(x)=2x+3\sin(2x),\qquad
 f''(x)=2+6\cos(2x).
 $$
 
-**非凸。** $f''(x)\in[2-6,\,2+6]=[-4,8]$。例如 $x=\pi/2$，$f''(\pi/2)=2+6\cos\pi=-4<0$，Hessian 可以负，故非凸。
+**非凸。** $f''(x)\in[2-6,\,2+6]=[-4,8]$。例如 $x=\pi/2$，$f''(\pi/2)=2+6\cos\pi=-4<0$，Hessian 可以为负，故非凸。
 
 **$0$ 是唯一驻点，也是全局极小。** $f(x)\ge 0=f(0)$。$f'(x)=0\Leftrightarrow u+3\sin u=0$（$u=2x$）。令 $g(u)=u+3\sin u$，$g(0)=0$，$g'(u)=1+3\cos u=0\Leftrightarrow\cos u=-1/3$。在 $|u|\le 3$（因为 $|u|=3|\sin u|\le 3$）里，$g$ 在 $u\approx 1.91$ 取局部最大且为正，在 $u\approx-1.91$ 取局部最小且为负，$g(u)$ 在 $u>0$ 为正、在 $u<0$ 为负，故只有 $u=0$。于是只有 $x=0$ 是驻点。
 
@@ -518,7 +518,7 @@ m_*
 \;>\;0.
 $$
 
-用反证 + 紧性（小白版：如果比值能任意接近 0，极限点会制造第二个驻点，或与 $x=0$ 附近的局部强凸矛盾）。
+用反证法结合紧性论证（如果比值能任意接近 $0$，则极限点要么制造第二个驻点，要么与 $x=0$ 附近的局部强凸性矛盾）：
 
 - 若有 $x_n\neq 0$ 使比值 $\to 0$ 且 $|x_n|\to\infty$：$f(x)\sim x^2$，$f'(x)\sim 2x$，比值 $\to 4x^2/(2x^2)=2\neq 0$，矛盾。
 - 若 $x_n\to x_\infty\in\mathbb{R}\setminus\{0\}$：连续，$f'(x_\infty)=0$，与唯一驻点矛盾。
@@ -530,7 +530,7 @@ $$
 
 ---
 
-## 6. 近端梯度：复合目标与 $\mathrm{Prox}$
+## 6. 近端梯度：复合目标与 $\mathrm{prox}$
 
 ### 6.1 问题
 
@@ -540,18 +540,18 @@ $$
 
 其中 $\nabla f\in\mathrm{Lip}(L)$，$h$ **凸**，可以不可微、甚至取 $+\infty$（用来编码约束）。
 
-**人话：** $f$ 是「数据拟合」，好求导；$h$ 是「你喜欢的结构」（稀疏、低秩、落在某个凸集里），只在少数点折一下，但折的方式很规则，可以用一次小问题处理。
+**直观理解。** $f$ 是光滑的「数据拟合项」，容易求导；$h$ 代表结构约束（稀疏、低秩或凸集约束），只在少数点不光滑，但形式规则，适合用子问题近端步处理。
 
 ### 6.2 近端算子
 
 $$
-\mathrm{Prox}_h(x)
+\mathrm{prox}_h(x)
 \;:=\;
 \arg\min_{z\in\mathbb{R}^d}
 \Bigl\{\frac12\|z-x\|_2^2+h(z)\Bigr\}.
 $$
 
-**人话：** 既要靠近 $x$，又要让 $h(z)$ 小。$h$ 闭真凸时，目标 $1$-强凸且强制，极小点**存在唯一**，所以 $\mathrm{Prox}_h$ 是良定义的单值映射。
+**直观理解。** 既要靠近 $x$，又要让 $h(z)$ 小。$h$ 闭真凸时，目标 $1$-强凸且强制，极小点**存在唯一**，因此 $\mathrm{prox}_h$ 是良定义的单值映射。
 
 一阶最优（Fermat：$0\in\partial(\frac12\|\cdot-x\|^2+h)(z)$）：
 
@@ -566,17 +566,17 @@ $$
 因此
 
 $$
-z=\mathrm{Prox}_h(x)=\bigl(I+\partial h\bigr)^{-1}(x)
+z=\mathrm{prox}_h(x)=\bigl(I+\partial h\bigr)^{-1}(x)
 $$
 
-（单调算子 $\partial h$ 的**预解式**）。内容把最后一处写成 $(I+\partial f)^{-1}$，是把 $h$ 误写成 $f$。
+（即单调算子 $\partial h$ 的**预解式**；注意算子中出现的是 $\partial h$ 而非 $\partial f$）。
 
 ### 6.3 三个基本例子
 
-**（i）指示函数 $\Leftrightarrow$ 投影。** $h=I_C$（$C$ 上为 $0$，外面为 $+\infty$）当且仅当 $C$ 凸时 $h$ 凸。此时
+**（i）示性函数 $\Leftrightarrow$ 投影。** $h=I_C$（$C$ 上为 $0$，外面为 $+\infty$）当且仅当 $C$ 凸时 $h$ 凸。此时
 
 $$
-\mathrm{Prox}_{I_C}(x)=\mathrm{Proj}_C(x)=\arg\min_{z\in C}\|z-x\|_2,
+\mathrm{prox}_{I_C}(x)=\mathrm{Proj}_C(x)=\arg\min_{z\in C}\|z-x\|_2,
 $$
 
 因为目标在 $C$ 外是 $+\infty$，在 $C$ 上就是到 $x$ 的距离平方。约束光滑问题 $\min_{x\in C}f(x)$ 的近端梯度就是**投影梯度**。
@@ -598,23 +598,23 @@ S_\lambda(t)
 \;=\;
 \mathrm{sign}(t)\,\max\bigl(|t|-\lambda,\,0\bigr),
 \qquad
-\mathrm{Prox}_{\lambda\|\cdot\|_1}(x)=S_\lambda(x)
+\mathrm{prox}_{\lambda\|\cdot\|_1}(x)=S_\lambda(x)
 \ \text{（逐坐标）}.
 $$
 
 这就是 ISTA：梯度步之后把每个坐标往 0 缩 $\lambda$ 那么多，不够缩的直接剪成 0。
 
-**（iii）核范数：内容 在 $h(X)=\lambda\|X\|_*$ 处写 `Prox=?`。下一节给出完整的奇异值软阈值证明。**
+**（iii）核范数。** 对 $h(X)=\lambda\|X\|_*$，其近端算子是奇异值软阈值（下一节给出完整证明）。
 
 ### 6.4 近端梯度迭代
 
 $$
 x_{k+1}
 \;=\;
-\mathrm{Prox}_{\alpha_k h}\bigl(x_k-\alpha_k\nabla f(x_k)\bigr).
+\mathrm{prox}_{\alpha_k h}\bigl(x_k-\alpha_k\nabla f(x_k)\bigr).
 $$
 
-**人话：** 先假装没有 $h$，沿 $-\nabla f$ 走一步；再把这一点「拉回」$h$ 喜欢的结构（稀疏、低秩、落到 $C$ 里）。$\alpha_k=1/L$ 时，这正是对
+**直观理解。** 先沿光滑项的负梯度 $-\nabla f$ 走一步，再通过近端算子把点「拉回」符合正则结构 $h$（稀疏、低秩或凸集约束）的区域。$\alpha_k=1/L$ 时，这正是对
 
 $$
 M(x,z)=f(x)+\langle\nabla f(x),z-x\rangle+\frac L2\|z-x\|_2^2+h(z)
@@ -624,29 +624,29 @@ $$
 
 ---
 
-## 7. 核范数的近端 = 奇异值软阈值（补全内容的 `?`）
+## 7. 核范数的近端：奇异值软阈值
 
 ### 7.1 结论
 
 矩阵 $X\in\mathbb{R}^{m\times n}$，$h(X)=\lambda\|X\|_*$，$\|X\|_*=\sum_i\sigma_i(X)$（奇异值之和）。令紧 SVD $X=U\Sigma V^\top$，$\Sigma=\mathrm{diag}(\sigma_1,\ldots,\sigma_r)$。则
 
 $$
-\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)
+\mathrm{prox}_{\lambda\|\cdot\|_*}(X)
 \;=\;
 U\,S_\lambda(\Sigma)\,V^\top,
 $$
 
 即对每个奇异值做标量软阈值，左右奇异向量不动。这叫 **singular value thresholding (SVT)**。
 
-**人话：** 核范数是「矩阵版 $\ell_1$」（$\ell_1$ 作用在奇异值上）。近端也是「矩阵版软阈值」。**千万不要**对矩阵元素做软阈值——那是 $\|X\|_1=\sum_{ij}|X_{ij}|$，对应元素稀疏，不是低秩。
+**直观理解。** 核范数是作用在奇异值上的「矩阵版 $\ell_1$」，近端算子也相应地表现为对奇异值做软阈值；切勿对矩阵元素直接做软阈值——那对应于 $\|X\|_1=\sum_{ij}|X_{ij}|$（促进元素稀疏），而不是促进低秩。
 
-下面两条路都写全：Fenchel / SVD 特征（与附录共轭配套），以及 von Neumann 迹不等式（内容点名的工具）。
+下面给出两种证明路线：基于 Fenchel 共轭与奇异基特征的直接验证，以及基于 von Neumann 迹不等式的变分推导。
 
 ### 7.2 预备：核范数与谱范数对偶
 
 谱范数 $\|Y\|_2=\sigma_1(Y)=\sup_{\|u\|_2=\|v\|_2=1}u^\top Y v$。
 
-**引理。** $\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F=\|X\|_*$，其中 $\langle X,Y\rangle_F=\mathrm{tr}(X^\top Y)$。因此核范数的 Fenchel 共轭是谱范数单位球的指示函数：
+**引理。** $\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F=\|X\|_*$，其中 $\langle X,Y\rangle_F=\mathrm{tr}(X^\top Y)$。因此核范数的 Fenchel 共轭是谱范数单位球的示性函数：
 
 $$
 \bigl(\|\cdot\|_*\bigr)^*
@@ -677,9 +677,9 @@ $$
 
 取 $h=\|\cdot\|_*$：$Y\in\partial\|X\|_*$ 当且仅当 $\|Y\|_2\le 1$ 且 $\langle X,Y\rangle_F=\|X\|_*$。
 
-### 7.3 用次微分验证 SVT 是近端（填内容的 `?`）
+### 7.3 用次微分验证 SVT
 
-$Z=\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)$ 当且仅当 $X-Z\in\lambda\,\partial\|Z\|_*$。由 7.2，这等价于
+$Z=\mathrm{prox}_{\lambda\|\cdot\|_*}(X)$ 当且仅当 $X-Z\in\lambda\,\partial\|Z\|_*$。由 7.2，这等价于
 
 $$
 \Bigl\|\frac{X-Z}{\lambda}\Bigr\|_2\le 1
@@ -719,10 +719,10 @@ $$
 故 $\langle Z,X-Z\rangle_F=\lambda\sum_i\max(\sigma_i-\lambda,0)=\lambda\|Z\|_*$，即 $\langle Z,(X-Z)/\lambda\rangle_F=\|Z\|_*$。两条最优性都成立。近端唯一，所以
 
 $$
-\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)=U\,S_\lambda(\Sigma)\,V^\top.
+\mathrm{prox}_{\lambda\|\cdot\|_*}(X)=U\,S_\lambda(\Sigma)\,V^\top.
 $$
 
-这就是内容 `?` 处应写的公式。$\square$
+$\square$
 
 ### 7.4 用 von Neumann 迹不等式再证一遍
 
@@ -782,7 +782,7 @@ $$
 
 ### 8.1 定理
 
-记 $P=\mathrm{Prox}_h$。对一切 $x_1,x_2$，
+记 $P=\mathrm{prox}_h$。对一切 $x_1,x_2$，
 
 $$
 \langle P(x_1)-P(x_2),\, x_1-x_2\rangle
@@ -798,7 +798,7 @@ $$
 \|x_1-x_2\|_2.
 $$
 
-**人话：** 近端映射不会把两点拉得更远；而且「沿着 $x_1-x_2$ 方向看，像的位移还挺长」——这比普通 $1$-Lipschitz 强（投影、软阈值都满足）。
+**直观理解。** 近端映射不会把两点拉得更远；而且沿 $x_1-x_2$ 方向的位移内积不小于像距平方，这比一般的 $1$-Lipschitz 性质更强（投影与软阈值都满足这一条）。
 
 ### 8.2 用次梯度单调性证明
 
@@ -844,17 +844,17 @@ $\square$
 
 ## 9. Moreau 分解
 
-**定理。** $h:\mathbb{R}^d\to(-\infty,+\infty]$ 闭真凸（内容说 closed），则对一切 $x$，
+**定理。** $h:\mathbb{R}^d\to(-\infty,+\infty]$ 闭真凸，则对一切 $x$，
 
 $$
 x
 \;=\;
-\mathrm{Prox}_h(x)+\mathrm{Prox}_{h^*}(x),
+\mathrm{prox}_h(x)+\mathrm{prox}_{h^*}(x),
 $$
 
 其中 $h^*$ 是 Fenchel 共轭。
 
-**人话：** 像正交分解 $x=\mathrm{Proj}_S(x)+\mathrm{Proj}_{S^\perp}(x)$，但「子空间」换成「凸函数 $h$ 与它的共轭」。事实上指示函数就是特例。
+**直观理解。** 它相当于把正交分解 $x=\mathrm{Proj}_S(x)+\mathrm{Proj}_{S^\perp}(x)$ 从线性子空间推广到一般凸函数 $h$ 及其共轭；示性函数正是其中的特例。
 
 **证明。** 闭真凸 $\Rightarrow h^{**}=h$，且（附录 A）
 
@@ -864,23 +864,23 @@ $$
 z\in\partial h^*(\xi).
 $$
 
-令 $z=\mathrm{Prox}_h(x)$，则 $x-z\in\partial h(z)$，从而 $z\in\partial h^*(x-z)$。
+令 $z=\mathrm{prox}_h(x)$，则 $x-z\in\partial h(z)$，从而 $z\in\partial h^*(x-z)$。
 
-另一方面，$w=\mathrm{Prox}_{h^*}(x)$ 的最优性是 $x-w\in\partial h^*(w)$。验证 $w=x-z$ 满足：此时 $x-w=z$，而刚才正有 $z\in\partial h^*(x-z)=\partial h^*(w)$。近端唯一，故 $\mathrm{Prox}_{h^*}(x)=x-z$。$\square$
+另一方面，$w=\mathrm{prox}_{h^*}(x)$ 的最优性是 $x-w\in\partial h^*(w)$。验证 $w=x-z$ 满足：此时 $x-w=z$，而刚才正有 $z\in\partial h^*(x-z)=\partial h^*(w)$。近端唯一，故 $\mathrm{prox}_{h^*}(x)=x-z$。$\square$
 
-内容把链条缩成
+整条等价链可以写作
 
 $$
-z=\mathrm{Prox}_h(x)
+z=\mathrm{prox}_h(x)
 \;\Leftrightarrow\;
 x-z\in\partial h(z)
 \;\Leftrightarrow\;
 z\in\partial h^*(x-z)
 \;\Leftrightarrow\;
-x-z=\mathrm{Prox}_{h^*}(x).
+x-z=\mathrm{prox}_{h^*}(x).
 $$
 
-最后一步就是「$z\in\partial h^*(x-z)$ 恰是 $w=x-z$ 的 prox 最优性」。
+最后一步正是「$z\in\partial h^*(x-z)$ 恰为 $w=x-z$ 的近端最优性条件」。
 
 **子空间特例。** $h=I_S$，$S\subset\mathbb{R}^d$ 是子空间。共轭 $I_S^*=I_{S^\perp}$：因为 $\sup_{y\in S}\langle y,x\rangle$ 在 $x\in S^\perp$ 时为 $0$，否则为 $+\infty$。于是 Moreau 就是正交分解
 
@@ -897,10 +897,10 @@ $$
 $$
 y
 \;=\;
-\mathrm{Prox}_{h/L}\Bigl(x-\frac1L\nabla f(x)\Bigr)
+\mathrm{prox}_{h/L}\Bigl(x-\frac1L\nabla f(x)\Bigr)
 $$
 
-（一步近端梯度）。Bregman 散度（附录 A；内容记号 $D_f^\xi(z,x)$，$\xi=\nabla f(x)$）
+（一步近端梯度）。Bregman 散度 $D_f^\xi(z,x)$（$\xi=\nabla f(x)$，定义见附录 A）为
 
 $$
 D_f^\xi(z,x)
@@ -908,7 +908,7 @@ D_f^\xi(z,x)
 f(z)-f(x)-\langle\nabla f(x),\, z-x\rangle.
 $$
 
-第一个槽 $z$ 是「走到的点」，第二个槽 $x$ 是「线性化的点」。立刻有内容重点的那条代数恒等式：
+第一个槽 $z$ 是「走到的点」，第二个槽 $x$ 是「线性化的点」。由此立刻得到一条核心代数恒等式：
 
 $$
 f(x)+\langle\nabla f(x),\, z-x\rangle-f(z)
@@ -926,7 +926,7 @@ F(y)
 F(z)+\frac L2\|x-z\|_2^2-\frac L2\|y-z\|_2^2-D_f^\xi(z,x).
 $$
 
-### 10.1 从 $M(x,z)$ 的强凸推出（按内容三行写全）
+### 10.1 从 $M(x,z)$ 的强凸推出基本不等式
 
 令
 
@@ -956,7 +956,7 @@ F(z)+\frac L2\|z-x\|_2^2-D_f^\xi(z,x).
 \end{aligned}
 $$
 
-**（ii）$z\mapsto M(x,z)$ 是 $L$-强凸，极小点是 $y$。** 二次项 $\frac L2\|z-x\|^2$ 的强凸模是 $L$，$h$ 凸不减损。$y=\mathrm{Prox}_{h/L}(x-\nabla f(x)/L)$ 按定义就是 $\arg\min_w M(x,w)$。强凸在极小点的二次下界：$0\in\partial_w M(x,y)$，故对一切 $z$
+**（ii）$z\mapsto M(x,z)$ 是 $L$-强凸，极小点是 $y$。** 二次项 $\frac L2\|z-x\|^2$ 的强凸模是 $L$，$h$ 凸不减损。$y=\mathrm{prox}_{h/L}(x-\nabla f(x)/L)$ 按定义就是 $\arg\min_w M(x,w)$。强凸在极小点的二次下界：$0\in\partial_w M(x,y)$，故对一切 $z$
 
 $$
 M(x,z)
@@ -976,7 +976,7 @@ $$
 
 移项、并把 $\|z-x\|=\|x-z\|$ 即基本不等式。$\square$
 
-**人话：** $M$ 是 $F$ 的可最小化上界；它比 $F(y)$ 至少还高出一只以 $y$ 为底的碗 $\frac L2\|z-y\|^2$。把这只碗和「$f$ 在 $x$ 处线性化的误差 $D_f$」写回 $F$，就得到基本不等式。
+**直观理解。** $M$ 是 $F$ 的可最小化上界；它比 $F(y)$ 至少高出一只以 $y$ 为底的二次碗 $\frac L2\|z-y\|^2$。把这只碗与「$f$ 在 $x$ 处线性化的误差 $D_f$」写回 $F$，就得到基本不等式。
 
 若 $f$ 凸，$D_f^\xi\ge 0$ 可丢掉，得到更常用的
 
@@ -990,7 +990,7 @@ $$
 
 ## 11. 近端 GD 的 $O(1/t)$ 与强凸线性率
 
-全程 $\alpha_k=1/L$，$x_{k+1}=\mathrm{Prox}_{h/L}(x_k-\nabla f(x_k)/L)$。设 $f$ 凸（于是 $D\ge 0$）。
+全程 $\alpha_k=1/L$，$x_{k+1}=\mathrm{prox}_{h/L}(x_k-\nabla f(x_k)/L)$。设 $f$ 凸（于是 $D\ge 0$）。
 
 ### 11.1 函数值下降、距离不增
 
@@ -1028,16 +1028,16 @@ F(x_t)-F(x^*)
 O\Bigl(\frac{L\|x_0-x^*\|_2^2}{t}\Bigr).
 $$
 
-内容写成 $O(L\|x_0-x^*\|/t)$，漏了范数的平方；量纲上必须是 $\|x_0-x^*\|^2$。
+（注意量纲上必须带有范数平方 $\|x_0-x^*\|^2$，切勿漏掉平方而误写为 $O(L\|x_0-x^*\|/t)$。）
 
-### 11.3 习题：用映射 $G$ 的 $\gamma$-条件也得 $O(1/t)$（题面保留，证明写全）
+### 11.3 用近端映射 $G$ 的 $\gamma$-条件推导 $O(1/t)$
 
-内容 HW：令
+令
 
 $$
 G(x)
 \;=\;
-x-\mathrm{Prox}_{h/L}\Bigl(x-\frac1L\nabla f(x)\Bigr)
+x-\mathrm{prox}_{h/L}\Bigl(x-\frac1L\nabla f(x)\Bigr)
 \;=\;
 x-y,
 $$
@@ -1052,7 +1052,7 @@ $$
 
 求证近端 GD（步长 $1/L$）仍有 $F(x_t)-F^*=O(1/t)$。
 
-**人话：** $h=0$ 时 $\mathrm{Prox}=I$，$G(x)=\nabla f(x)/L$，这条就是第 4 节假设 (1) 差一个 $1/L$ 的缩放。$G(x)=0\Leftrightarrow x$ 是近端梯度的不动点 $\Leftrightarrow 0\in\nabla f(x)+\partial h(x)$。下面不引用第 4 节的结论，把倒数增量从头写一遍。
+**直观理解。** $h=0$ 时 $\mathrm{prox}=I$，$G(x)=\nabla f(x)/L$，这条正是第 4 节假设 (1) 差一个 $1/L$ 的缩放。$G(x)=0\Leftrightarrow x$ 是近端梯度的不动点 $\Leftrightarrow 0\in\nabla f(x)+\partial h(x)$。下面不直接引用第 4 节结论，从头写出倒数增量推导。
 
 **额外假设（与第 4 节相同角色）。** 下水平集有界：
 
@@ -1079,7 +1079,7 @@ $$
 因此 $\varepsilon_{k+1}\le\varepsilon_k$，轨道停在 $\{F\le F(x_0)\}$ 里，$\|x_k-x^*\|\le R$。
 
 **第二步：$\|G(x_k)\|\ge\gamma\varepsilon_k/R$。**
-Cauchy–Schwarz 接 HW 假设：
+将 Cauchy–Schwarz 不等式与 $\gamma$-条件假设结合：
 
 $$
 \gamma\varepsilon_k
@@ -1190,7 +1190,7 @@ $$
 \exp\Bigl(-\frac{m}{2L}\Bigr)\|x_k-x^*\|_2.
 $$
 
-内容最后写成 $\|x_{k+1}-x^*\|\le(1-m/L)\|x_k-x^*\|$，把平方漏掉了；**由上面的推导，$(1-m/L)$ 是作用在 $\|\cdot\|^2$ 上的。** 函数值方面，光滑给出 $F-F^*\le\frac L2\|x-x^*\|^2$，故 $F(x_t)-F^*=O\bigl(e^{-mt/L}\bigr)$，与内容 $\|x_t-x^*\|\le O(e^{-mt/L})$ 一致。
+（注意最后一行应写作 $\|x_{k+1}-x^*\|\le\sqrt{1-m/L}\|x_k-x^*\|$；**由上述推导，$(1-m/L)$ 作用在范数平方 $\|\cdot\|^2$ 上**。函数值方面，光滑性给出 $F-F^*\le\frac L2\|x-x^*\|^2$，故 $F(x_t)-F^*=O\bigl(e^{-mt/L}\bigr)$，而距离上界为 $\|x_t-x^*\|=O(e^{-mt/(2L)})$。）
 
 **条件数 $\kappa=L/m$。** 要让 $\bigl(1-m/L\bigr)^t\varepsilon_0\le\varepsilon$，需要 $t\asymp\kappa\log(1/\varepsilon)$ 次迭代。全梯度每次看 $n$ 个样本，总成本 $\asymp n\kappa\log(1/\varepsilon)$。这是第 15 节表格的 GD 一行。
 
@@ -1204,7 +1204,7 @@ $$
 \min_x f(x),\qquad f\text{ 凸}.
 $$
 
-（内容说：要界 $\min_{k\le t}f(x_k)-f^*$，其实假设 (1) 也够；下面按凸来写，$\gamma=1$。）
+（若只求 $\min_{k<t}f(x_k)-f^*$，弱于凸性的 $\gamma$-条件也足够；下文统一按凸函数取 $\gamma=1$ 展开。）
 
 迭代 $x_{k+1}=x_k-\alpha_k g_k$，$g_k$ 是 $\nabla f(x_k)$ 的替代。SGD 的关键假设是**条件无偏**：
 
@@ -1214,7 +1214,7 @@ $$
 \nabla f(x_k).
 $$
 
-内容写成 $\mathbb{E}[g_k\mid x_1,\ldots,x_{k-1}]=\nabla f(x_k)$，少 conditioning 了当前的 $x_k$（$x_k$ 由 $g_0,\ldots,g_{k-1}$ 决定，应放进 $\sigma$-代数）。人话：给定我现在站在哪，随机梯度的平均必须等于真梯度。
+注意条件里需要包含当前迭代点 $x_k$（因为 $x_k$ 由之前的 $g_0,\ldots,g_{k-1}$ 决定，应放入 $\sigma$-代数）。直观来说：给定当前所处位置，随机梯度的条件期望必须等于真实梯度。
 
 两个标准构造：
 
@@ -1252,7 +1252,7 @@ $$
 +\alpha^2\|g_k\|_2^2.
 $$
 
-移项并除以 $2\alpha$，即内容的**基本不等式**：
+移项并除以 $2\alpha$，即得到单步**基本不等式**：
 
 $$
 f(x_k)
@@ -1290,7 +1290,7 @@ f(z)
 +\frac1t\sum_{k<t}\epsilon_k.
 $$
 
-**人话：** 前两项是「距离 / 步长」与「步长 $\times$ 梯度能量」的折中，各贡献 $1/\sqrt t$；最后一项是噪声，期望为 0，高概率是 $\sqrt{\log(1/\delta)/t}$。
+**直观理解。** 前两项是「初始距离 / 步长」与「步长 $\times$ 梯度能量」的权衡，各自贡献 $1/\sqrt t$ 量级；最后一项是随机梯度噪声，期望为 0，以高概率贡献 $\sqrt{\log(1/\delta)/t}$。
 
 ### 12.4 $\epsilon_k$ 是有界鞅差
 
@@ -1375,7 +1375,7 @@ $$
 \exp\Bigl(\frac{t\lambda^2 B^2}2\Bigr).
 $$
 
-内容把 conditioning 写成 $x^{1:t-2}$，少写了当前的 $x_{t-1}$（应进 $\mathcal{F}_{t-1}$），并把某一行的 $\mathbb{E}$ 印丢了。按上面补全后，内容最后两行成立：
+注意条件期望应以 $\mathcal{F}_{t-1}=\sigma(x_0,\ldots,x_{t-1})$ 为条件（需包含当前点 $x_{t-1}$，不能只取到 $t-2$），并将外部的期望 $\mathbb{E}$ 保留完整。由此直接得到尾部上界：
 
 $$
 \mathbb{P}(S_t\ge s)
@@ -1403,7 +1403,7 @@ B\sqrt{2t\log(1/\delta)},
 B\sqrt{\frac{2\log(1/\delta)}{t}}.
 $$
 
-这就是内容重点 $\sum_{k<t}\epsilon_k\le B\sqrt{2t\log(1/\delta)}$。
+这就得到了核心鞅差尾部界 $\sum_{k<t}\epsilon_k\le B\sqrt{2t\log(1/\delta)}$。
 
 ### 13.3 高概率界与期望界
 
@@ -1426,13 +1426,13 @@ $$
 +\frac{c G^2}{2\sqrt t}.
 $$
 
-选 $c\sim\|x_0-x^*\|/G$ 使两项平衡，期望超额风险 $O(GR/\sqrt t)$。要 $\varepsilon$ 精度，$t\asymp 1/\varepsilon^2$（凸、光滑但非强凸）。内容表格把强凸 SGD 写成 $t\asymp 1/\varepsilon$，见下一节。
+选 $c\sim\|x_0-x^*\|/G$ 使两项平衡，期望超额风险 $O(GR/\sqrt t)$。要达到 $\varepsilon$ 精度，在凸光滑但非强凸设定下需要 $t\asymp 1/\varepsilon^2$；而强凸情形下的迭代次数可改进到 $t\asymp 1/\varepsilon$，详见下一节。
 
 **常见误区：** 这个 $O(1/\sqrt t)$ 是**平均迭代** $\bar x_t$ 的函数值，不是最后一点 $x_t$。非强凸时最后一点可以振荡；实践中会做平均或取历史上函数值最好的点。
 
 ---
 
-## 14. 强凸 SGD：协强制与线性到邻域
+## 14. 强凸 SGD：余强制与线性到邻域
 
 现在 $f$ $m$-强凸且 $\nabla f\in\mathrm{Lip}(L)$。无偏随机梯度再加二阶矩控制
 
@@ -1442,11 +1442,11 @@ $$
 G^2+M_f\|\nabla f(x)\|_2^2.
 $$
 
-**这个 $G^2$ 不是 那个一致上界。** 的 $G=\max_k\max\{\|g_k\|,\|\nabla f(x_k)\|\}$ 用来把 $\alpha\|g_k\|^2$ 收成 $\alpha G^2$，给凸 SGD 的 $O(1/\sqrt t)$。 的 $G^2$ 是**最优点处还剩下的噪声能量**：$\nabla f(x^*)=0$ 时 $\mathbb{E}\|g(x^*)\|^2\le G^2$。内容两个地方都写 $G$，后面「Reduce the variance $G^2$」指的是本页这个噪声地板。
+**注意这里 $G^2$ 的含义不同于前文的一致梯度上界。** 第 12 节中的 $G=\max_k\max\{\|g_k\|,\|\nabla f(x_k)\|\}$ 用于把 $\alpha\|g_k\|^2$ 控制为 $\alpha G^2$，进而得到凸 SGD 的 $O(1/\sqrt t)$；而这里的 $G^2$ 是**最优点处的残余噪声能量**：当 $\nabla f(x^*)=0$ 时，$\mathbb{E}\|g(x^*)\|^2\le G^2$。后文方差缩减所针对的正是这个噪声地板 $G^2$。
 
-**人话：** 把 $\mathbb{E}\|g\|^2$ 拆成「固有噪声 $G^2$」和「随 $\|\nabla f\|$ 变大的部分」。方差分解 $\mathbb{E}\|g\|^2=\|\nabla f\|^2+\mathbb{E}\|g-\nabla f\|^2$ 表明通常 $M_f\ge 1$；若噪声均匀有界则 $G^2$ 是方差上界。GD 对应 $G=0$、$M_f=1$。SVRG 要消灭的正是这个 $G^2$：控制变量让 $x\approx\tilde x$ 时 $\mathbb{E}\|G_{\mathrm{SVRG}}\|^2\to 0$。
+**直观理解。** 把二阶矩 $\mathbb{E}\|g\|^2$ 拆成「固有噪声 $G^2$」与「随 $\|\nabla f\|$ 缩放的部分」。由方差分解 $\mathbb{E}\|g\|^2=\|\nabla f\|^2+\mathbb{E}\|g-\nabla f\|^2$ 可知通常 $M_f\ge 1$；若梯度噪声均匀有界，则 $G^2$ 即为噪声方差上界。全梯度 GD 对应 $G=0,M_f=1$；SVRG 的核心正是用控制变量消去这里的 $G^2$，使 $x\approx\tilde x$ 时 $\mathbb{E}\|G_{\mathrm{SVRG}}\|^2\to 0$。
 
-### 14.1 协强制不等式（完整证明）
+### 14.1 余强制不等式（完整证明）
 
 **定理。** $f$ $m$-强凸、$\nabla f\in\mathrm{Lip}(L)$，则对一切 $x,y$，
 
@@ -1457,7 +1457,7 @@ $$
 +\frac1{m+L}\|\nabla f(x)-\nabla f(y)\|_2^2.
 $$
 
-先证光滑**凸**函数的协强制。
+先证光滑**凸**函数的余强制。
 
 **引理（$m=0$）。** $f$ 凸且 $\nabla f\in\mathrm{Lip}(L)$，则
 
@@ -1532,7 +1532,7 @@ $$
 
 ### 14.2 代入 SGD 展开
 
-$\nabla f(x^*)=0$，故 $\langle\nabla f(x_k),x^*-x_k\rangle=-\langle\nabla f(x_k)-\nabla f(x^*),x_k-x^*\rangle$。用协强制：
+$\nabla f(x^*)=0$，故 $\langle\nabla f(x_k),x^*-x_k\rangle=-\langle\nabla f(x_k)-\nabla f(x^*),x_k-x^*\rangle$。利用余强制不等式：
 
 $$
 \langle\nabla f(x_k),x^*-x_k\rangle
@@ -1558,7 +1558,7 @@ $$
 \end{aligned}
 $$
 
-把协强制代进中间那项：
+把余强制上界代进中间那项：
 
 $$
 \begin{aligned}
@@ -1606,7 +1606,7 @@ $$
 \frac{m+L}{2mL}.
 $$
 
-内容取 $M_f\ge 1$，$\alpha=1/(L M_f)$，并验证它落在上述区间内。因为 $L\ge m$，有 $2L/(m+L)\ge 1$，从而 $\frac{2\alpha m L}{m+L}\ge\alpha m$，收缩因子
+当 $M_f\ge 1$ 时，取 $\alpha=1/(L M_f)$ 显然满足上述条件。又因 $L\ge m$，有 $2L/(m+L)\ge 1$，从而 $\frac{2\alpha m L}{m+L}\ge\alpha m$，收缩因子满足
 
 $$
 1-\frac{2\alpha m L}{m+L}
@@ -1642,9 +1642,9 @@ $$
 \end{aligned}
 $$
 
-**人话：** 前一项指数消失，像 GD；后一项是噪声地板，半径 $\alpha G^2/m$。步长越小地板越低，但收缩越慢。常数步长 SGD **不能**精确到 $x^*$，除非 $G=0$（没有梯度噪声）。这就是为什么要方差缩减。
+**直观理解。** 前一项随迭代指数衰减，形如 GD；后一项是噪声地板，半径 $\alpha G^2/m$。步长越小地板越低，但收缩越慢。常数步长 SGD **无法**精确收敛到 $x^*$（除非 $G=0$，即无梯度噪声），因此需要方差缩减。
 
-若用递减步长 $\alpha_k\sim 1/(mk)$，强凸 SGD 的函数值可以 $O(1/(mt))$，迭代复杂度 $t\asymp 1/\varepsilon$（表格里 SGD 的那一行）。
+若用递减步长 $\alpha_k\sim 1/(mk)$，强凸 SGD 的函数值误差可以达到 $O(1/(mt))$，迭代复杂度 $t\asymp 1/\varepsilon$。
 
 ---
 
@@ -1652,7 +1652,7 @@ $$
 
 ERM：$f=\sum_{i=1}^n f_i$（或 $\frac1n\sum\psi_i$），每次算一个 $\nabla f_i$ 的成本记为 $1$，全梯度成本 $n$。精度 $\varepsilon$ 指 $\mathbb{E}[f(x)-f^*]\le\varepsilon$ 或 $\mathbb{E}\|x-x^*\|^2\le\varepsilon$（强凸时两者差一个 $m,L$ 因子）。
 
-内容 的表（强凸、SGD 用到精度 $\varepsilon$ 所需的迭代，不把 $\kappa$ 写进 GD）：
+忽略条件数 $\kappa$ 的粗略复杂度对照（强凸、目标精度 $\varepsilon$）：
 
 |  | 迭代复杂度 | 每次迭代成本 | 总计算量 |
 |--|------------|--------------|----------|
@@ -1667,7 +1667,7 @@ ERM：$f=\sum_{i=1}^n f_i$（或 $\frac1n\sum\psi_i$），每次算一个 $\nabl
 | SGD（强凸，递减步长） | $O(1/\varepsilon)$ | $1$ | $O(1/\varepsilon)$ |
 | SGD（凸，平均） | $O(1/\varepsilon^2)$ | $1$ | $O(1/\varepsilon^2)$ |
 
-**何时 SGD 更划算（内容原话）。** 大样本、中等精度，使得 $\frac1\varepsilon < n\log\frac1\varepsilon$。例如 $n=10^6$、$\varepsilon=10^{-3}$：SGD 约 $10^3$ 量级的梯度，GD 即使 $\kappa=1$ 也要 $n\log(1/\varepsilon)\sim 10^7$。若你要 $\varepsilon=e^{-n}$ 那种荒谬精度，GD 的对数依赖又回来了。
+**何时 SGD 更划算。** 当样本量大且仅需中等精度时，常满足 $\frac1\varepsilon < n\log\frac1\varepsilon$。例如 $n=10^6$、$\varepsilon=10^{-3}$ 时，SGD 仅需约 $10^3$ 量级的单样本梯度；而 GD 即使在 $\kappa=1$ 的最优情形下也要付出 $n\log(1/\varepsilon)\sim 10^7$ 次分量梯度。只有当目标精度极高（如 $\varepsilon=e^{-n}$）时，GD 对 $\log(1/\varepsilon)$ 的对数依赖才会重新胜出。
 
 SGD 的短板是地板 $G^2$：精度进入噪声区以后，再迭代也只是在极小点附近抖动。SVRG 就是来拆这根刺的。
 
@@ -1694,7 +1694,7 @@ $$
 
 $\theta$ 小且 $\mathrm{Cov}>0$ 时，方差比 $\mathrm{Var}(X)$ 小。最优 $\theta^*=\mathrm{Cov}(X,Y)/\mathrm{Var}(Y)$。
 
-**SVRG 的选择（Johnson & Zhang, 2013；内容拼成 Jonson）。** 在当前点 $x_k$ 与快照 $\tilde x$ 上，
+**SVRG 的选择（Johnson & Zhang, 2013）。** 在当前点 $x_k$ 与快照 $\tilde x$ 上，
 
 $$
 X=\frac{\nabla f_{i_k}(x_k)}{p_{i_k}},
@@ -1732,14 +1732,14 @@ for s = 1, 2, … until 收敛:
         抽 i_k = j，概率 p_j
         g_{s,k}  ← ∇f_{i_k}(x_{s,k}) / p_{i_k}
         ˜g_{s,k} ← ∇f_{i_k}(˜x_{s-1}) / p_{i_k}
-        x_{s,k+1} ← Prox_{α h}( x_{s,k} - α (g_{s,k} - ˜g_{s,k} + ˜g_s) )
+        x_{s,k+1} ← prox_{α h}( x_{s,k} - α (g_{s,k} - ˜g_{s,k} + ˜g_s) )
     end
 end
 ```
 
 每个 epoch 的梯度次数：一次全梯度 $n$，内层每步两个分量梯度，共 $2T+n$。
 
-收敛定理（内容，$h=0$）：每个 $f_i$ 凸、$\nabla f_i\in\mathrm{Lip}(L)$，$f$ $m$-强凸，$0<c_1\le p_i\le c_2$。若
+收敛定理（无非光滑项，$h=0$）：每个 $f_i$ 凸、$\nabla f_i\in\mathrm{Lip}(L)$，$f$ $m$-强凸，$0<c_1\le p_i\le c_2$。若
 
 $$
 \rho
@@ -1757,13 +1757,13 @@ $$
 \rho^s\bigl(f(\tilde x_0)-f^*\bigr).
 $$
 
-内容取 $T\ge 9\kappa$（$\kappa=L/m$）、$\alpha=1/(6L)$，并声称 $\rho<5/6$。下一节补全证明后会把这个数字算清楚：公式本身是对的，$9\kappa$ 与 $5/6$ 对不上，但正确选 $T\asymp\kappa$ 仍给出总成本 $(n+\kappa)\log(1/\varepsilon)$。
+若选 $\alpha=1/(6L)$，$9\kappa$ 与 $\rho<5/6$ 在常数上并不完全匹配（详见第 17.4 节算术验证：需要 $T>27\kappa$ 才能使 $\rho<5/6$），但只需取 $T\asymp\kappa$，即可给出总梯度复杂度 $(n+\kappa)\log(1/\varepsilon)$。
 
 ---
 
 ## 17. SVRG 证明
 
-以下按内容取 $h=0$，内层是
+以下仍取 $h=0$，内层迭代为
 
 $$
 x_{s,k+1}=x_{s,k}-\alpha G_{s,k},
@@ -1771,7 +1771,7 @@ x_{s,k+1}=x_{s,k}-\alpha G_{s,k},
 G_{s,k}=g_{s,k}-\tilde g_{s,k}+\tilde g_s.
 $$
 
-条件无偏：$\mathbb{E}[G_{s,k}\mid x_{s,0:k}]=\nabla f(x_{s,k})$。鞅差 $\epsilon_{s,k}=\langle G_{s,k}-\nabla f(x_{s,k}),\, x^*-x_{s,k}\rangle$ 条件期望为 0。为把常数写成内容的 $4L$，下面用均匀抽样的标准记法（Johnson–Zhang）：
+条件无偏：$\mathbb{E}[G_{s,k}\mid x_{s,0:k}]=\nabla f(x_{s,k})$。鞅差 $\epsilon_{s,k}=\langle G_{s,k}-\nabla f(x_{s,k}),\, x^*-x_{s,k}\rangle$ 条件期望为 0。为得到带有系数 $4L$ 的标准形式，下面采用均匀抽样记法（Johnson–Zhang）：
 
 $$
 f(x)=\frac1n\sum_{i=1}^n\psi_i(x),
@@ -1805,7 +1805,7 @@ $$
 
 ### 17.2 $\mathbb{E}\|G_{s,k}\|^2\le 4L\,\mathbb{E}\bigl[f(x_{s,k})-f^*+f(\tilde x_{s-1})-f^*\bigr]$
 
-内容重点是这条。下面按内容的 $p_i$ 写法走，再说明均匀抽样怎样把 $p_i$ 消掉得到 $4L$。
+这是证明的核心界。下面先按一般采样概率 $p_i$ 的写法展开，再说明均匀抽样如何消去 $p_i$ 并给出常数 $4L$。
 
 冻结 epoch $s$、内层步 $k$。简写 $x=x_{s,k}$、$\tilde x=\tilde x_{s-1}$、$i=i_k$，
 
@@ -1855,9 +1855,9 @@ $$
 +2\mathbb{E}\Bigl\|\frac{\nabla f_i(\tilde x)-\nabla f_i(x^*)}{p_i}\Bigr\|^2.
 $$
 
-这就是内容 中间两行（它把 $\nabla f(x^*)$ 写成 $f_{i_k}(x^*)$，括号不齐，意思是这一步）。
+这就是带有非均匀权重 $p_i$ 的二阶矩估计。$\square$
 
-**第三步：换成均匀抽样，套 17.1。** 内容最后写成 $4L$、没有 $1/p_i$，对应标准记法 $f=\frac1n\sum_{j=1}^n\psi_j$、$p_j=1/n$、$G=\nabla\psi_i(x)-\nabla\psi_i(\tilde x)+\nabla f(\tilde x)$（此时 $\nabla f_i/p_i=\nabla\psi_i$）。对每个凸、$\nabla\psi_i\in\mathrm{Lip}(L)$ 的 $\psi_i$ 用 17.1：
+**第三步：换成均匀抽样，套用 17.1。** 若改用均匀抽样标准记法 $f=\frac1n\sum_{j=1}^n\psi_j$、$p_j=1/n$、$G=\nabla\psi_i(x)-\nabla\psi_i(\tilde x)+\nabla f(\tilde x)$（此时 $\nabla f_i/p_i=\nabla\psi_i$），常数就能收整成 $4L$。对每个凸、$\nabla\psi_i\in\mathrm{Lip}(L)$ 的 $\psi_i$ 用 17.1：
 
 $$
 \|\nabla\psi_i(x)-\nabla\psi_i(x^*)\|_2^2
@@ -1904,7 +1904,7 @@ $$
 4L\,\mathbb{E}\bigl[f(x_{s,k})-f^*+f(\tilde x_{s-1})-f^*\bigr].
 $$
 
-**非均匀 $p_i$。** 若只知 $c_1\le p_i\le c_2$，第二步多因子 $1/p_i\le 1/c_1$，$L$ 换成 $L/c_1$ 量级，后面 $\rho$ 的形状不变。内容假设 $0<c_1\le p_i\le c_2$ 就是为此。$\square$
+**非均匀 $p_i$。** 若仅假设 $0<c_1\le p_i\le c_2$，第二步多出因子 $1/p_i\le 1/c_1$，于是 $L$ 替换为 $L/c_1$ 量级，后续收缩率 $\rho$ 的结构不变。$\square$
 
 ### 17.3 内层递推与 $\rho$
 
@@ -1965,7 +1965,7 @@ $$
 +4LT\alpha^2\,\mathbb{E}[f(\tilde x_{s-1})-f^*].
 $$
 
-（内容有一处把右边的 $f(\tilde x_s)$ 和 $f(\tilde x_{s-1})$ 写成同一个，那是笔误：方差项必须来自**上一轮**快照。）
+（注意右端方差项必须来自**上一轮**快照 $f(\tilde x_{s-1})$，不可误写成当前轮次 $f(\tilde x_s)$。）
 
 强凸：$f(\tilde x)-f^*\ge\frac m2\|\tilde x-x^*\|^2$，即 $\|\tilde x-x^*\|^2\le\frac2m(f(\tilde x)-f^*)$。代入
 
@@ -1985,9 +1985,9 @@ $$
 \end{aligned}
 $$
 
-这就是内容的 $\rho$。于是 $\mathbb{E}[f(\tilde x_s)-f^*]\le\rho\,\mathbb{E}[f(\tilde x_{s-1})-f^*]$，迭代得 $\rho^s$。
+于是 $\mathbb{E}[f(\tilde x_s)-f^*]\le\rho\,\mathbb{E}[f(\tilde x_{s-1})-f^*]$，递推即得 $\rho^s$ 线性收敛。
 
-### 17.4 代入 $\alpha=1/(6L)$、$T\ge 9\kappa$
+### 17.4 代入 $\alpha=1/(6L)$、$T$ 与 $\kappa$ 的数量关系
 
 $\alpha=1/(6L)$ 时 $2L\alpha=1/3$，$1-2L\alpha=2/3$，于是
 
@@ -2004,13 +2004,13 @@ $$
 =\frac{9\kappa}{T}+\frac12.
 $$
 
-- $T\ge 9\kappa$ $\Rightarrow$ $\rho\le 1+1/2=3/2>1$，**不能收缩**。内容「$T\ge 9\kappa\Rightarrow\rho<5/6$」与它自己写出的 $\rho$ 公式在算术上对不上。
-- 要 $\rho<1$：$9\kappa/T+1/2<1\Rightarrow T>18\kappa$。
-- 要 $\rho<5/6$：$9\kappa/T+1/2<5/6\Rightarrow 9\kappa/T<1/3\Rightarrow T>27\kappa$。
+- 若只取 $T\ge 9\kappa$，只能得到 $\rho\le 1+1/2=3/2>1$，**尚不能保证收缩**；
+- 要使 $\rho<1$：需 $9\kappa/T+1/2<1\Rightarrow T>18\kappa$；
+- 要使 $\rho<5/6$：需 $9\kappa/T+1/2<5/6\Rightarrow 9\kappa/T<1/3\Rightarrow T>27\kappa$。
 
 取 $T=27\kappa$，则 $\rho=9\kappa/(27\kappa)+1/2=5/6$，再把 $T$ 略放大或把 $\alpha$ 略改小即可 $\rho<5/6$。例如 $T=28\kappa$ 已有 $\rho<5/6$。
 
-**人话：** 内层必须跑大约 $\kappa$ 量级步，快照才够「新」，方差才够小；具体是 $9\kappa$ 还是 $27\kappa$ 只影响隐藏常数，不改变后面的大 $O$。
+**直观理解。** 内层必须跑够 $\kappa$ 量级步，快照点才算充分更新、方差控制才足够紧；具体取 $18\kappa$ 还是 $28\kappa$ 只影响隐藏常数，不改变最终的大 $O$ 复杂度。
 
 ### 17.5 总成本：$(n+\kappa)\log(1/\varepsilon)$ vs GD 的 $n\kappa\log(1/\varepsilon)$
 
@@ -2045,7 +2045,7 @@ GD 是每次全梯度、迭代 $\kappa\log(1/\varepsilon)$ 次，总成本 $n\ka
 
 ---
 
-## 18. 你应该记住的一张表
+## 18. 优化算法速查表
 
 | 设定 | 步长 | 保证 | 要点 |
 |------|------|------|------|
@@ -2053,9 +2053,9 @@ GD 是每次全梯度、迭代 $\kappa\log(1/\varepsilon)$ 次，总成本 $n\ka
 | 再加假设 (1) 与有界水平集 | $1/L$ | $f(x_t)-f^*=O(LR^2/(\gamma^2 t))$ | 倒数增量 $1/\varepsilon_{k+1}-1/\varepsilon_k\ge\gamma^2/(2LR^2)$ |
 | PL，$\|\nabla f\|^2\ge 2m(f-f^*)$ | $1/L$ | $f(x_t)-f^*\le(1-m/L)^t(f(x_0)-f^*)$ | 过参数网络；$x^2+3\sin^2 x$ PL 非凸 |
 | 近端 GD，$f$ 凸 $L$-光滑，$h$ 凸 | $1/L$ | $F(x_t)-F^*\le\frac{L}{2t}\|x_0-x^*\|^2$ | 基本不等式来自 $M$ 的 $L$-强凸 |
-| 近端 GD，$f$ 再 $m$-强凸 | $1/L$ | $\|x_{k+1}-x^*\|^2\le(1-m/L)\|x_k-x^*\|^2$ | 内容漏了平方 |
+| 近端 GD，$f$ 再 $m$-强凸 | $1/L$ | $\|x_{k+1}-x^*\|^2\le(1-m/L)\|x_k-x^*\|^2$ | 注意收敛因子作用在范数平方上 |
 | 凸 SGD，无偏、有界 | $\alpha=c/\sqrt t$ | 平均迭代 $O(1/\sqrt t)$（期望与高概率） | 鞅差 + Hoeffding/Azuma |
-| 强凸光滑 SGD | $\alpha=1/(LM_f)$ | 线性到邻域 $\alpha G^2/m$ | 协强制；要任意 $\varepsilon$ 必须降方差 |
+| 强凸光滑 SGD | $\alpha=1/(LM_f)$ | 线性到邻域 $\alpha G^2/m$ | 余强制；要任意 $\varepsilon$ 必须降方差 |
 | SVRG | $\alpha=1/(6L)$，$T\asymp\kappa$ | $\rho^{s}$ 线性，总成本 $(n+\kappa)\log(1/\varepsilon)$ | 控制变量；$\mathbb{E}\|G\|^2\le 4L(\cdots)$ |
 
 近端三件套：
@@ -2064,16 +2064,16 @@ GD 是每次全梯度、迭代 $\kappa\log(1/\varepsilon)$ 次，总成本 $n\ka
 - $\lambda\|x\|_1$ $\to$ 软阈值 $S_\lambda$；
 - $\lambda\|X\|_*$ $\to$ 奇异值软阈值 $U S_\lambda(\Sigma)V^\top$（von Neumann 或 SVD + Fenchel）。
 
-Prox 坚定非扩张（次梯度单调性），因而 $1$-Lipschitz。闭凸 $h$ 有 Moreau 分解 $x=\mathrm{Prox}_h(x)+\mathrm{Prox}_{h^*}(x)$。
+$\mathrm{prox}$ 坚定非扩张（次梯度单调性），因而 $1$-Lipschitz。闭凸 $h$ 有 Moreau 分解 $x=\mathrm{prox}_h(x)+\mathrm{prox}_{h^*}(x)$。
 
-**常见误区（再钉一次）：**
+**常见易混点：**
 
-1. 下降引理**不需要**凸性；没有凸性 GD 只保证梯度小，不保证全局最小。
+1. 下降引理**不需要**凸性；没有凸性时 GD 只保证梯度范数变小，不保证收敛到全局极小。
 2. PL $\not\Rightarrow$ 凸。强凸 $\Rightarrow$ PL，反过来不行。
 3. 核范数近端是对**奇异值**软阈值，不是对矩阵元素。
 4. 凸 SGD 的 $O(1/\sqrt t)$ 是平均迭代；强凸常数步长 SGD 有噪声地板。
-5. 内容 的 $\|x_{k+1}-x^*\|\le(1-m/L)\|x_k-x^*\|$、 的「$T\ge 9\kappa\Rightarrow\rho<5/6$」都是常数/平方没对齐；推导以本节补全的版本为准，大 $O$ 结论不变。
+5. 近端 GD 强凸收缩应写为 $\|x_{k+1}-x^*\|^2\le(1-m/L)\|x_k-x^*\|^2$（平方不可省），SVRG 保证 $\rho<5/6$ 在 $\alpha=1/(6L)$ 下需要 $T>27\kappa$；两处细节写齐后，渐近复杂度不变。
 
-全课的误差分解里，这一份给出了 $E_{\mathrm{opt}}$ 随迭代次数、样本数、条件数怎么走。把 $t$ 或 epoch 数选到 $E_{\mathrm{opt}}$ 与统计误差同阶，优化就不再是瓶颈。
+在统计–逼近–优化的整体误差分解中，优化分析刻画了 $E_{\mathrm{opt}}$ 随迭代次数、样本量 $n$ 与条件数 $\kappa$ 的下降规律：只要将迭代轮数或 epoch 数选到 $E_{\mathrm{opt}}$ 与统计误差同阶，优化本身就不会成为瓶颈。
 
-下一份：[02d_Lec2_下界与监督方法](/blog/fods-minimax-supervised-learning/)——非参回归的 minimax 下界，以及凸化损失、plugin、LDA/QDA、SVM、核与 RKHS。
+下一篇：[非参下界与监督学习方法](/blog/fods-minimax-supervised-learning/)——非参回归的 minimax 下界，以及凸替代损失、plugin 规则、LDA/QDA、SVM、核与 RKHS。

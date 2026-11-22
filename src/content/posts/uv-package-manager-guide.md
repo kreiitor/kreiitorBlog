@@ -1,6 +1,6 @@
 ---
-title: "uv 包管理工具实践哲学与完整使用流程"
-description: "讲解 uv 的实践哲学、完整使用流程、与其他工具的对比，以及在实际项目中的应用。"
+title: "uv 上手指南：项目初始化、依赖管理与环境同步"
+description: "介绍 uv 的安装、项目结构、日常依赖管理命令，以及从 pip 和 conda 迁移的注意事项。"
 pubDate: 2026-06-02
 updatedDate: 2026-10-26
 tags:
@@ -26,7 +26,7 @@ winget install --id astral-sh.uv -e
 也可以用官方安装脚本或 pipx：
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://astral.sh/uv/install.ps1 | iex"
 pipx install uv
 ```
 
@@ -141,7 +141,7 @@ uv add -r requirements.txt
 
 ## 和 AI 协作时
 
-- 让 AI 改依赖时，要求它同时更新 `pyproject.toml` 和 `uv.lock`，不要只改一个。
+- 让 AI 增删依赖时，优先使用 `uv add` / `uv remove`；若直接修改了 `pyproject.toml`，随后运行 `uv lock` 同步锁文件，不要手改 `uv.lock`。
 - 不要提交 `.venv/`；把它写进 `.gitignore`。
 - 在 README 里写清楚：`uv sync` 安装，`uv run ...` 运行。
 - 如果 AI 生成 `pip install` 命令，改成 `uv add` 或 `uv run`，避免绕过锁文件。

@@ -39,10 +39,10 @@ fatal: not a git repository (or any of the parent directories): .git
 ### 1. 进入项目目录
 
 ```powershell
-cd E:\Code\your-project
+cd path\to\your-project
 ```
 
-请把 `E:\Code\your-project` 替换成你的实际项目目录。
+请把 `path\to\your-project` 替换成你的实际项目目录。
 
 ### 2. 初始化仓库
 
@@ -151,11 +151,9 @@ git branch -M main
 
 ---
 
-## 把本地仓库连接到 GitHub
+## 把本地仓库连接到 GitHub（本地初始化流程）
 
-### 方法一：先在本地初始化，再连接 GitHub
-
-这是最常见的方式，适合你已经有项目文件的情况。
+适合本地已有项目文件、再在 GitHub 新建空仓库关联的场景。
 
 ### 1. 在 GitHub 上创建一个新仓库
 
@@ -211,11 +209,12 @@ git push -u origin main
 - `main` 是你要推送的本地主分支
 - `-u` 会建立本地分支和远程分支的跟踪关系，之后可以直接用 `git push` 和 `git pull`
 
-如果你使用 `HTTPS`，GitHub 现在通常不接受账号密码直接推送，需要改用以下方式之一：
+如果你使用 `HTTPS`，GitHub 现在通常不接受账号密码直接推送，需要改用以下认证方式之一：
 
-- Personal Access Token
-- Git Credential Manager
-- SSH Key
+- Personal Access Token（PAT）
+- Git Credential Manager（GCM）
+
+如果不想每次维护 Token，也可以改用 `SSH` 远程地址并配置 SSH Key。
 
 ---
 
@@ -516,10 +515,10 @@ git status
 先执行：
 
 ```powershell
-git status
+git rev-parse --show-toplevel
 ```
 
-只要这个命令成功，说明 AI 所在目录一般是对的。
+只要返回预期的仓库根目录路径，说明 AI 所在目录位于正确的 Git 仓库内。
 
 ### 2. 在让 AI 大改代码前先提交一次
 
@@ -558,7 +557,7 @@ git switch -c experiment/ai-refactor
 最短的一套命令：
 
 ```powershell
-cd E:\Code\your-project
+cd path\to\your-project
 git init
 git config user.name "你的名字"
 git config user.email "你的邮箱@example.com"

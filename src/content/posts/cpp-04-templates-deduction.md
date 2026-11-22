@@ -24,7 +24,6 @@ cover: /covers/post-code-cpp.svg
 | 4.5 | 别名模板   | 如何用 `using` 简化复杂类型表达式？       |
 | 4.6 | 可变模板参数 | 如何处理任意数量的类型和实参？类型推导还有哪些现代语法？ |
 | 4.7 | 小结     | 模板和类型推导如何构成现代 C++ 泛型编程基础？    |
-|     |        |                              |
 
 ---
 
@@ -154,7 +153,7 @@ gcd(12L, 18L);     // 可能实例化 gcd<long>
 | 显式实例化 | 程序员明确要求编译器生成某个模板实例。 |
 
 ```cpp
-template int gcd<int>(int, int); // 显式实例化声明/定义的典型形式之一
+template int gcd<int>(int, int); // 显式实例化定义（声明需在前面加 extern）
 ```
 
 初学阶段更常见的是隐式实例化：写模板，然后直接调用，让编译器推导。
@@ -659,10 +658,8 @@ int& get_ref() {
 }
 
 auto a = get_ref();           // int，拷贝
- decltype(auto) b = get_ref(); // int&，保留引用
+decltype(auto) b = get_ref(); // int&，保留引用
 ```
-
-> 示例中第二行的前导空格只用于对比，实际代码中不需要。
 
 函数返回 `decltype(auto)` 时要格外注意生命周期：
 
@@ -721,7 +718,7 @@ int b(1);      // 直接初始化
 int c{1};      // 列表初始化
 int d = {1};   // 拷贝列表初始化
 auto e = 1;    // auto 推导为 int
-auto f = {1};  // 通常推导为 std::initializer_list<int>
+auto f = {1};  // 推导为 std::initializer_list<int>（对比 C++17+ 中 auto f{1}; 推导为 int）
 ```
 
 花括号初始化有两个特点：

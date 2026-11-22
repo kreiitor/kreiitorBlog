@@ -1,6 +1,6 @@
 ---
 title: "Google 高级搜索技巧"
-description: "整理 31 条 Google 高级搜索技巧，涵盖精确搜索、范围限定、页面元素定位和内置工具四类，适合日常信息检索与研究工作长期参考。"
+description: "整理常用 Google 高级搜索语法、页面元素定位和内置实用工具，区分仍有效语法与已下线历史运算符，适合日常信息检索参考。"
 pubDate: 2026-05-27
 updatedDate: 2026-10-26
 tags:
@@ -13,212 +13,176 @@ cover: /covers/post-cli-terminal.svg
 
 ## 适用场景
 
-这些语法适合在 Google 上精确找论文、找原话、限定站点或文件类型。下面 31 条按用途分组，常用的其实不超过 10 条。
-
-> 来源：[HubSpot - How to Search on Google: 31 Google Advanced Search Tips](https://blog.hubspot.com/marketing/google-advanced-search-tips)
+这些语法适合在 Google 上精确查找论文、原话、限定站点或特定文件类型，日常检索中最常用的通常不超过 10 条。
 
 ---
 
 ## 一、精确搜索
 
 ### 1. 精确短语（双引号）
-用双引号包裹短语，Google 会精确匹配该短语，而非拆分单词搜索。
-```
+
+用双引号包裹短语，让 Google 精确匹配该词序，而不是拆散匹配。
+
+```text
 "inbound marketing"
 ```
 
 ### 2. 排除词（减号）
-在词语前加 `-`，排除包含该词的搜索结果。
-```
+
+在词语前加 `-`（减号前保留空格），排除包含该词的搜索结果。
+
+```text
 inbound marketing -advertising
 ```
 
 ### 3. 多选一（OR，必须大写）
-`OR` 连接多个词，命中任意一个即可。注意必须大写。
-```
+
+用 `OR` 连接多个检索词，命中任意一个即可；注意 `OR` 必须全部大写。
+
+```text
 inbound marketing OR advertising
 ```
 
 ### 4. 通配符（星号）
-用 `*` 替代记不清的词，常用于歌词、台词、谚语等。
-```
-much * about nothing
-```
 
-### 5. 同义词（波浪号）
-在词前加 `~`，同时搜索该词及其同义词。
-```
-"inbound marketing" ~professional
+用 `*` 替代记不清的词，常用于核对引文、台词或固定搭配。
+
+```text
+much * about nothing
 ```
 
 ---
 
 ## 二、限定搜索范围
 
-### 6. 站内搜索（site:）
-限定只搜索某个网站。
-```
-site:www.smallbusinesshub.com "inbound marketing"
+### 5. 站内搜索（`site:`）
+
+限定只检索某个域名或网站。
+
+```text
+site:arxiv.org "speculative decoding"
 ```
 
-### 7. 相关网站（related:）
-查找与指定网站内容相似的其他网站。
-```
-related:visual.ly
+### 6. 文件类型（`filetype:`）
+
+搜索指定格式的文件，如 PDF、PPT、DOC 等。
+
+```text
+"transformer architecture" filetype:pdf
 ```
 
-### 8. 反向链接（link:）
-查找有哪些页面链接到了指定页面。
-```
-link:buzzfeed
-```
+### 7. 数字范围（`X..Y`）
 
-### 9. 文件类型（filetype:）
-搜索指定格式的文件，如 PPT、PDF、DOC 等。
-```
-"inbound marketing" filetype:ppt
-```
+在两个数字之间使用 `..`，搜索落在该范围内的数字，常用于限定年份或价格。
 
-### 10. 新闻地域（location:）
-在 Google News 中限定新闻来源地点。
-```
-star wars location:london
-```
-
-### 11. 数字范围（X..Y）
-两个数字间用 `..` 连接，搜索指定范围内的数字，常用于年份、价格等。
-```
-president 1940..1950
+```text
+transformer attention 2017..2024
 ```
 
 ---
 
 ## 三、页面元素定位
 
-### 12. 正文全匹配（allintext:）
-搜索正文中包含所有指定词汇的页面。
-```
-allintext:vermont ski house lake
+### 8. 正文全匹配（`allintext:`）
+
+要求网页正文中包含所有指定词汇。
+
+```text
+allintext:distributed training memory optimization
 ```
 
-### 13. 正文含某词（intext:）
-限定某词必须出现在正文中，其他词可出现在标题、URL 等处。
-```
-neil diamond intext:red sox
+### 9. 正文含某词（`intext:`）
+
+限定紧随其后的词语必须出现在网页正文中，其余检索词可分布在标题或 URL 中。
+
+```text
+attention mechanism intext:softmax
 ```
 
-### 14. 标题全匹配（allintitle:）
-搜索标题中包含所有指定词汇的页面。
-```
-allintitle:wine club
+### 10. 标题全匹配（`allintitle:`）
+
+搜索页面标题中包含所有指定词汇的结果。
+
+```text
+allintitle:machine learning systems
 ```
 
-### 15. 标题含某词（intitle:）
-限定某词必须出现在标题中。
-```
-flu shot intitle:advice
+### 11. 标题含某词（`intitle:`）
+
+限定某个词汇必须出现在页面标题中。
+
+```text
+flashattention intitle:benchmark
 ```
 
-### 16. URL 全匹配（allinurl:）
+### 12. URL 全匹配（`allinurl:`）
+
 搜索 URL 中包含所有指定词汇的页面。
-```
-allinurl:hubspot blog
+
+```text
+allinurl:docs python logging
 ```
 
 ---
 
 ## 四、Google 内置工具
 
-### 17. 查词定义（define:）
-直接显示单词定义和发音。
-```
+下列快捷工具多在英文检索语境下稳定触发，部分地区或语言设置下界面可能有所差异。
+
+### 13. 查词定义（`define:`）
+
+直接显示单词释义与发音。
+
+```text
 define:plethora
 ```
 
-### 18. 翻译（translate）
+### 14. 翻译（`translate`）
+
 直接在搜索栏翻译单词或短语。
-```
+
+```text
 translate krankenwagen to english
 ```
 
-### 19. 计算器
-直接输入算式即可得到结果。
-```
+### 15. 计算器
+
+直接输入算式即可显示结果。
+
+```text
 48512 * 1.02
 ```
 
-### 20. 小费计算器
-搜索 `tip calculator` 弹出小费计算界面。
-```
-tip calculator
-```
+### 16. 计时器与秒表
 
-### 21. 计时器
-输入时长 + `timer`，自动开始倒计时。
-```
+输入时长加 `timer` 自动开始倒计时，或搜索 `stopwatch` 打开秒表。
+
+```text
 20 min timer
 ```
 
-### 22. 秒表
-搜索 `stopwatch` 弹出秒表工具。
-```
-stopwatch
-```
+### 17. 天气与日出日落
 
-### 23. 天气（weather）
-搜索 `weather` + 地点，显示当前天气和预报。
-```
+搜索 `weather`、`sunrise` 或 `sunset` 加上地点名称。
+
+```text
 weather cambridge ma
 ```
 
-### 24. 日出 / 日落时间
-搜索 `sunrise` 或 `sunset` + 地点。
-```
-sunrise acadia
-```
+### 18. 股票、航班与单位对比
 
-### 25. 股票查询
-直接输入股票代码，显示实时股价和走势图。
-```
-GOOG
-```
-
-### 26. 航班状态
-输入航司代码 + 航班号，查看航班实时状态。
-```
-BA 181
-```
-
-### 27. 体育比分
-输入球队名称即可查看赛程和比分。
-```
-manchester united
-```
-
-### 28. 食物对比
-两样食物间用 `vs` 连接，对比营养成分（热量、蛋白质、脂肪等）。
-```
-pizza vs broccoli
-```
+直接输入股票代码（如 `GOOG`）、航司与航班号（如 `BA 181`），或使用 `vs` 对比两种食物的营养成分（如 `pizza vs broccoli`）。
 
 ---
 
-## 五、其他实用技巧
+## 五、已下线或不再推荐的历史运算符
 
-### 29. 电话查询（phonebook:）
-输入电话号码查归属人。仅限真实号码。
-```
-phonebook:617-555-1212
-```
+早期搜索教程常提及的以下运算符现已停用或长期失效，查阅旧资料时注意区分：
 
-### 30. 区号查询
-直接输入 3 位区号，查看归属地。
-```
-617
-```
+- `~word`（同义词展开）：Google 现已默认进行语义与同义词匹配，`~` 已停止支持。
+- `link:`（反向链接查询）与 `related:`（相似站点）：均已下线，不再返回完整结果。
+- `phonebook:`（电话反查）与旧式新闻 `location:` 参数：已退役或改为通过专门产品筛选器设置。
 
-### 31. 邮编查询
-输入街道地址，自动返回邮编。
-```
-25 First St., Cambridge, MA
-```
+## 参考来源
+
+- [HubSpot - How to Search on Google: 31 Google Advanced Search Tips](https://blog.hubspot.com/marketing/google-advanced-search-tips)

@@ -12,23 +12,23 @@ order: 2
 cover: /covers/post-math.svg
 ---
 
-本章目标：把 Lec1 线性模型里那个「误差 $\asymp d/n$」推广到**一般函数类** $\mathcal{F}$（有限类、线性类、ReLU 网络……）。你会得到两条上界链：
+本章把[线性模型](/blog/fods-linear-models/)里那个「误差 $\asymp d/n$」推广到**一般函数类** $\mathcal{F}$（有限类、线性类、ReLU 网络……）。你会得到两条上界链：
 
-1. **快速率（Esta）**：损失对 $f$ Lipschitz + 总体风险在 $f^*$ 处局部强凸 $\Rightarrow$ $\mathbb{E}[\text{超额风险}]$ 里统计部分 $\lesssim (\lambda B+\lambda^2/c)\,(\log N)/n$。
+1. **快速率（$E_{\mathrm{sta}}$）**：损失对 $f$ Lipschitz + 总体风险在 $f^*$ 处局部强凸 $\Rightarrow$ $\mathbb{E}[\text{超额风险}]$ 里统计部分 $\lesssim (\lambda B+\lambda^2/c)\,(\log N)/n$。
 2. **慢速率（泛化误差 / Rademacher / Dudley）**：不靠强凸，用对称化 + 收缩 + chaining，得到 $\lesssim \lambda\,\mathrm{Rad}(\mathcal{F})$，再把 $\mathrm{Rad}$ 写成覆盖熵积分。
 
-内容在 Bernstein 的方差吸收、 的「Hölder」、Dudley 从离散和到积分这几处跳步很大，下面逐步补全，并标明常数哪里松。
+下面的推导会完整展开 Bernstein 的方差吸收、链式法中首项的严格估计、以及 Dudley 从离散和到熵积分的关键步骤，并标明常数的松紧边界。
 
 需要的预备：
 
-- 风险、ERM、$E_{\mathrm{sta}}/E_{\mathrm{gen}}/E_{\mathrm{app}}$：Lec1 第 1–2 节
-- 期望、方差、Chernoff、并集界：附录 B
-- Bernstein（有界 r.v.）：附录 B，本节会当场重写
-- 覆盖数体积论证：附录 B，与 重复，本节写完整证明
+- 风险、ERM、$E_{\mathrm{sta}}/E_{\mathrm{gen}}/E_{\mathrm{app}}$：[线性模型](/blog/fods-linear-models/) 第 1–2 节
+- 期望、方差、Chernoff、并集界：[数学附录 B](/blog/fods-probability-concentration/)
+- Bernstein（有界随机变量）：[数学附录 B](/blog/fods-probability-concentration/)，本节会直接重写
+- 覆盖数体积论证：[数学附录 B](/blog/fods-probability-concentration/)，此处一并给出完整证明
 
 ---
 
-## 0. 监督学习 setup
+## 0. 监督学习设定
 
 数据 $(X,Y)\sim P$（或写成 $Z\sim\mu_Z$）。损失函数 $\ell$，总体风险 $L(f)=\mathbb{E}[\ell(f(X),Y)]$。Bayes 规则
 
@@ -37,11 +37,11 @@ f^*\;\in\;\arg\min_{\text{可测 }f}L(f),\qquad
 f^*(x)=\arg\min_{a}\mathbb{E}[\ell(a,Y)\mid X=x].
 $$
 
-平方损失时 $f^*(x)=\mathbb{E}[Y\mid X=x]$；0-1 损失时是后验最大类。详见 Lec1 §1。
+平方损失时 $f^*(x)=\mathbb{E}[Y\mid X=x]$；0-1 损失时是后验最大类，详见[线性模型](/blog/fods-linear-models/) 第 1 节。
 
 函数类 $\mathcal{F}$ 上的 ERM $\widehat f\in\arg\min_{f\in\mathcal{F}}\widehat L(f)$。优化器输出 $f_A(\tau)$ 满足 $\widehat L(f_A)\le\widehat L(\widehat f)+\tau$。$\mathcal{F}$ 里总体最好的记 $\bar f$，逼近误差 $E_{\mathrm{app}}=L(\bar f)-L(f^*)$。
 
-**超额风险** $\mathcal{E}(f_A)=L(f_A)-L(f^*)$。Lec1 给出两条分解：
+**超额风险** $\mathcal{E}(f_A)=L(f_A)-L(f^*)$。前面已给出两条分解：
 
 $$
 \mathbb{E}[\mathcal{E}(f_A)]
@@ -59,9 +59,9 @@ $$
 
 其中 $E_{\mathrm{opt}}\le\tau$，$E_{\mathrm{gen}}:=2\sup_{f\in\mathcal{F}}|L(f)-\widehat L(f)|$。
 
-**人话：** $E_{\mathrm{gen}}$ 是「整个 $\mathcal{F}$ 上经验风险和总体风险差多远」的最坏偏差，通常只有 $\sqrt{(\log N)/n}$ 这种慢速率。$E_{\mathrm{sta}}$ 长得怪，但中心化以后方差能跟超额风险成正比，Bernstein 可以给出 $(\log N)/n$。本节上半部分 bound $E_{\mathrm{sta}}$，下半部分把 $E_{\mathrm{gen}}$ 写成 Rademacher。
+**直观理解：** $E_{\mathrm{gen}}$ 是「整个 $\mathcal{F}$ 上经验风险和总体风险差多远」的最坏偏差，通常只有 $\sqrt{(\log N)/n}$ 这种慢速率。$E_{\mathrm{sta}}$ 形式更绕，但中心化以后方差能跟超额风险成正比，Bernstein 可以给出 $(\log N)/n$。本节上半部分界定 $E_{\mathrm{sta}}$，下半部分把 $E_{\mathrm{gen}}$ 写成 Rademacher 复杂度。
 
-记号（与 Lec1 一致）：
+记号与前章一致：
 
 $$
 g(f,Z)=\ell(f,Z)-\ell(f^*,Z),\qquad
@@ -76,7 +76,7 @@ E_{\mathrm{sta}}
 =\mathbb{E}_D\Bigl[\frac1n\sum_{i=1}^n G(f_A,Z_i)\Bigr].
 $$
 
-**补全：为什么 $G$ 这么定义。** $L(f)-L(f^*)=\mathbb{E}[g(f,Z')]$，$\widehat L(f)-\widehat L(f^*)=\frac1n\sum g(f,Z_i)$，所以
+**定义解释（为何这样构造 $G$）：** $L(f)-L(f^*)=\mathbb{E}[g(f,Z')]$，$\widehat L(f)-\widehat L(f^*)=\frac1n\sum g(f,Z_i)$，所以
 
 $$
 L(f)-2\widehat L(f)+L(f^*)
@@ -84,13 +84,13 @@ L(f)-2\widehat L(f)+L(f^*)
 =\frac1n\sum_i G(f,Z_i).
 $$
 
-内容把 $G(f,Z)=\mathbb{E}_{D'}[g(f,Z')-2g(f,Z)]$ 写在一起；对 $D'$ 的期望只打在第一项上。
+对重采样变量 $Z'$（或影子样本集 $D'$）的期望仅作用在第一项上。
 
 ---
 
 ## 1. $E_{\mathrm{sta}}$ 是什么、为何比 $E_{\mathrm{gen}}$ 更紧
 
-### 1.1 恒等式（Lec1 已有，这里只钉钉子）
+### 1.1 恒等式回顾
 
 $$
 L(f_A)-L(f^*)
@@ -132,30 +132,30 @@ $E_{\mathrm{gen}}$ 带一个 2，超额风险因此是 $\sqrt{(\log N)/n}$ 型�
 
 - **$E_{\mathrm{sta}}$：** $g(f,Z)$ 的方差 $\le(\lambda^2/c)\,\mathbb{E}[g]$，也就是**方差跟超额风险成正比**。Bernstein 的分母是 $\sigma^2+bt$ 而不是常数；当你关心的偏差 $t$ 本身和 $\sigma^2$ 同阶时，指数从 $e^{-nt^2}$ 变成 $e^{-nt}$，积分以后是 $1/n$ 型（**快速率**）。
 
-Lec1 的 OLS 精确等式 $\frac{r\sigma^2}{n}$ 就是快速率；下面用覆盖数 + Bernstein 在一般 $\mathcal{F}$ 上恢复「$(\log N)/n$」，只多一个对数。
+线性模型下的 OLS 精确等式 $\frac{r\sigma^2}{n}$ 就是快速率；下面用覆盖数 + Bernstein 在一般 $\mathcal{F}$ 上恢复「$(\log N)/n$」，只多一个对数。
 
 ---
 
-## 2. Bound $E_{\mathrm{sta}}$
+## 2. 界定 $E_{\mathrm{sta}}$
 
 ### 2.1 假设
 
 1. **$\mathcal{F}$ 有界 $B$：** $|f(x)|\le B$ 对所有 $f\in\mathcal{F}$ 和 $x$ 成立；也假定 $|f^*|\le B$（否则把 $B$ 换成两者的共同上界）。
 2. **损失对 $f$ 是 $\mathrm{Lip}(\lambda)$：** $|\ell(f,Z)-\ell(f',Z)|\le\lambda\,|f(X)-f'(X)|$。
-   **补全：平方损失的 $\lambda$。** $\ell(f,Z)=(f(X)-Y)^2$，则
+   **例：平方损失的 $\lambda$。** $\ell(f,Z)=(f(X)-Y)^2$，则
 
 $$
 |\ell(f)-\ell(g)|=|f-g|\,|f+g-2Y|.
 $$
 
-   若再假定 $|Y|\le B$，则 $|f+g-2Y|\le 4B$，可取 $\lambda=4B$。无界 $Y$ 时 Lipschitz 不成立，Esta 这条链不能直接用（改用次指数尾或截断）。
+   若再假定 $|Y|\le B$，则 $|f+g-2Y|\le 4B$，可取 $\lambda=4B$。无界 $Y$ 时 Lipschitz 不成立，$E_{\mathrm{sta}}$ 这条链不能直接用（需改用次指数尾或截断）。
 3. **$L$ 在 $f^*$ 处局部强凸，常数 $c>0$：** 对 $f\in\mathrm{Ball}_B(f^*)$，
 
 $$
 L(f)-L(f^*)\;\ge\; c\,\|f-f^*\|_{L^2(\mu_X)}^2.
 $$
 
-   **补全：平方损失 $c=1$。** $Y=f^*(X)+\epsilon$，$\mathbb{E}[\epsilon\mid X]=0$ 时交叉项消失，$L(f)-L(f^*)=\mathbb{E}[(f-f^*)^2]$。若损失带 $\frac12$，则 $c=\frac12$。
+   **例：平方损失 $c=1$。** $Y=f^*(X)+\epsilon$，$\mathbb{E}[\epsilon\mid X]=0$ 时交叉项消失，$L(f)-L(f^*)=\mathbb{E}[(f-f^*)^2]$。若损失带 $\frac12$，则 $c=\frac12$。
 
 ### 2.2 积分尾界（非负部分）
 
@@ -165,9 +165,9 @@ $$
 \mathbb{E}[W]\;\le\;\int_0^\infty\mathbb{P}(W>t)\,dt.
 $$
 
-**证明（补全）。** $W_+=\max(W,0)$ 非负，层饼公式 $\mathbb{E}[W_+]=\int_0^\infty\mathbb{P}(W_+>t)\,dt=\int_0^\infty\mathbb{P}(W>t)\,dt$。而 $\mathbb{E}[W]=\mathbb{E}[W_+]-\mathbb{E}[W_-]\le\mathbb{E}[W_+]$。$\square$
+**证明。** $W_+=\max(W,0)$ 非负，层饼公式 $\mathbb{E}[W_+]=\int_0^\infty\mathbb{P}(W_+>t)\,dt=\int_0^\infty\mathbb{P}(W>t)\,dt$。而 $\mathbb{E}[W]=\mathbb{E}[W_+]-\mathbb{E}[W_-]\le\mathbb{E}[W_+]$。$\square$
 
-内容写「若 $\mathbb{E}[|W|]<\infty$，则 $\mathbb{E}[W]\le\int\mathbb{P}(W>w)\,dw$」——等号需要 $W\ge 0$，上界对有符号的 $W$ 也成立。下面取
+（注意「$\mathbb{E}[W]=\int_0^\infty\mathbb{P}(W>w)\,dw$」这一等式需要 $W\ge 0$，但作为上界对一般有符号可积随机变量 $W$ 同样成立。）下面取
 
 $$
 W=\frac1n\sum_{i=1}^n G(f_A,Z_i),
@@ -266,7 +266,7 @@ $$
 \exp\Bigl(-\frac{nu^2}{2(\sigma^2+bu)}\Bigr).
 $$
 
-**补全证明（Chernoff + 矩展开）。** 下面的 $s$ 是 Chernoff 参数，不要和损失的 Lipschitz 常数 $\lambda$ 搞混。令 $\eta=X-\mu$，$|\eta|\le b$，$\mathbb{E}\eta=0$，$\mathbb{E}\eta^2=\sigma^2$。对 $0<s<1/b$，
+**证明（Chernoff + 矩展开）。** 下面的 $s$ 是 Chernoff 参数，不要和损失的 Lipschitz 常数 $\lambda$ 搞混。令 $\eta=X-\mu$，$|\eta|\le b$，$\mathbb{E}\eta=0$，$\mathbb{E}\eta^2=\sigma^2$。对 $0<s<1/b$，
 
 $$
 \begin{aligned}
@@ -280,19 +280,17 @@ $$
 
 第三步用了 $|\mathbb{E}\eta^k|\le b^{k-2}\sigma^2$ 以及 $k\ge 3$ 时 $1/k!\le 1/2$。对 $n$ 个 i.i.d. 拷贝 $\eta_i$ 做 Chernoff：$\mathbb{P}(-\frac1n\sum\eta_i\ge u)\le e^{-snu}(\mathbb{E}e^{-s\eta})^n$（$-\eta$ 的 mgf 同样有界）。取 $s=u/(bu+\sigma^2)<1/b$，指数变成 $-nu^2/(2(\sigma^2+bu))$。$\square$
 
-（经典教材常写分母 $2\sigma^2+(2/3)bt$，略紧。内容用 $2(\sigma^2+bt)$，后面所有数字都跟着这个版本。）
+（经典文献常写分母 $2\sigma^2+(2/3)bt$，常数略紧；以下统一采用 $2(\sigma^2+bt)$ 版本以便衔接积分常数。）
 
-### 2.6 把方差吸收进线性指数（内容的计算）
+### 2.6 把方差吸收进线性指数
 
-我们需要的偏差水平是 $u_*=t/2+\mu/2$。内容设
+我们需要的偏差水平是 $u_*=t/2+\mu/2$。首先看常见放缩写法：若直接设
 
 $$
 u=\frac t2+\frac{\sigma^2 c}{\lambda^2},
 $$
 
-并写 $\sigma^2\le b\lambda u/(4Bc)$（因为 $b=4\lambda B$ 时 $b\lambda/(4Bc)=\lambda^2/c$，且 $u\ge\sigma^2 c/\lambda^2$ 给出 $\sigma^2\le(\lambda^2/c)u$），以及 $u\ge t/2$。
-
-代入 Bernstein：
+利用 $b=4\lambda B$ 时 $b\lambda/(4Bc)=\lambda^2/c$，由 $u\ge\sigma^2 c/\lambda^2$ 得 $\sigma^2\le(\lambda^2/c)u$，再结合 $u\ge t/2$ 代入 Bernstein：
 
 $$
 \frac{nu^2}{2(\sigma^2+bu)}
@@ -301,13 +299,7 @@ $$
 =\frac{nu}{2b+2\lambda^2/c}.
 $$
 
-而 $2b+2\lambda^2/c=8\lambda B+2\lambda^2/c$。内容把它写成
-
-$$
-(2+\lambda/(2Bc))b=2b+\frac{\lambda b}{2Bc}=2b+\frac{2\lambda^2}{c},
-$$
-
-同一件事。再用 $u\ge t/2$：
+其中 $2b+2\lambda^2/c=8\lambda B+2\lambda^2/c=(2+\lambda/(2Bc))b$，再用 $u\ge t/2$：
 
 $$
 \frac{nu}{8\lambda B+2\lambda^2/c}
@@ -316,7 +308,7 @@ $$
 =\frac{nt}{16\lambda B+4\lambda^2/c}.
 $$
 
-因此内容得到：对每个网点心，
+这样对每个网点心得到：
 
 $$
 \mathbb{P}\Bigl(\frac1n\sum_i G(\widetilde f,Z_i)>t\Bigr)
@@ -332,9 +324,9 @@ $$
 N\exp\Bigl(-\frac{n(t-3\lambda\delta)}{16\lambda B+4\lambda^2/c}\Bigr).
 $$
 
-**补全：内容这里有一处常数缝。** 真事件是 $\{\mu-\mathrm{avg}>t/2+\mu/2\}$。用 $\{\mu-\mathrm{avg}>t/2+\sigma^2 c/\lambda^2\}$ 去上界它，需要 $\mu/2\ge\sigma^2 c/\lambda^2$，即 $\mu\ge 2\sigma^2 c/\lambda^2$；我们只有 $\mu\ge\sigma^2 c/\lambda^2$，差一个 2。
+**严谨常数校对：** 严格来看，原事件是 $\{\mu-\mathrm{avg}>t/2+\mu/2\}$，要用 $\{\mu-\mathrm{avg}>t/2+\sigma^2 c/\lambda^2\}$ 去上界它，需要 $\mu/2\ge\sigma^2 c/\lambda^2$（即 $\mu\ge 2\sigma^2 c/\lambda^2$），而条件仅保证 $\mu\ge\sigma^2 c/\lambda^2$，相差一个因子 $2$。
 
-严谨改法：令 $u=t/2+\mu/2\ge t/2$。则 $\sigma^2\le(\lambda^2/c)\mu=(2\lambda^2/c)(\mu/2)\le(2\lambda^2/c)u$，于是
+严谨改法：直接令 $u=t/2+\mu/2\ge t/2$。则 $\sigma^2\le(\lambda^2/c)\mu=(2\lambda^2/c)(\mu/2)\le(2\lambda^2/c)u$，于是
 
 $$
 \frac{nu^2}{2(\sigma^2+bu)}
@@ -345,7 +337,7 @@ $$
 \frac{nt}{16\lambda B+8\lambda^2/c}.
 $$
 
-指数分母里 $\lambda^2/c$ 的系数从 4 变成 8，**速率同阶**。下面继续用内容的 $16\lambda B+4\lambda^2/c$ 写积分，你要写习题时用 $16\lambda B+8\lambda^2/c$ 更站得住。其它松弛还有：$|g-\mathbb{E}g|\le 4\lambda B$ 而不是 $2\lambda B$；Bernstein 分母的 2 对 $2/3$；指数里丢掉 $u$ 中的方差项只留 $t/2$。
+指数分母里 $\lambda^2/c$ 的系数从 $4$ 变为 $8$，**渐近速率同阶**。下文积分演示沿用 $16\lambda B+4\lambda^2/c$ 以便对照常见数字，严格推导时应取 $16\lambda B+8\lambda^2/c$。其他常见松弛还有：$|g-\mathbb{E}g|\le 4\lambda B$ 而不是 $2\lambda B$、Bernstein 分母系数 2 对 $2/3$、以及指数中丢掉 $u$ 里的方差项只保留 $t/2$。
 
 ### 2.7 积分尾：选 $a=3\lambda\delta+c_0$，$\delta=1/n$
 
@@ -391,7 +383,7 @@ $$
 E_{\mathrm{sta}}\;\lesssim\;\Bigl(\lambda B+\frac{\lambda^2}{c}\Bigr)\frac{\log N(\mathcal{F},\|\cdot\|_\infty,1/n)}{n}.
 $$
 
-**人话：** 复杂度只以对数进入；样本以 $1/n$ 进入。$\delta=1/n$ 不是唯一选择：$\log N(\delta)$ 通常随 $\delta\downarrow$ 变大，理论上应对 $\delta$ 做一点权衡，但 $3\lambda\delta$ 已经是 $O(1/n)$，对数项主导时不必纠结。
+**直观理解：** 复杂度只以对数进入；样本以 $1/n$ 进入。$\delta=1/n$ 不是唯一选择：$\log N(\delta)$ 通常随 $\delta\downarrow$ 变大，理论上应对 $\delta$ 做一点权衡，但 $3\lambda\delta$ 已经是 $O(1/n)$，对数项主导时不必纠结。
 
 **误区：** $N$ 是 $\delta=1/n$ 的覆盖数，不是 $|\mathcal{F}|$。有限类可以取 $\delta=0$、$N=|\mathcal{F}|$，扰动项 $3\lambda\delta$ 消失，只剩 $\kappa(\log|\mathcal{F}|+1)/n$。
 
@@ -403,7 +395,7 @@ $$
 
 固定 $K\subset\mathbb{R}^d$（后面 $K$ 也可以是函数类，距离换成 $\|\cdot\|_\infty$），$\varepsilon>0$。
 
-- **$\varepsilon$-网：** $N\subset K$，使得每个 $z\in K$ 都有 $x\in N$ 满足 $d(x,z)\le\varepsilon$（内容用的是**内网**：中心必须在 $K$ 里）。
+- **$\varepsilon$-网：** $N\subset K$，使得每个 $z\in K$ 都有 $x\in N$ 满足 $d(x,z)\le\varepsilon$（这里采用**内网**定义，即网中心必须落在 $K$ 内）。
 - **覆盖数** $N(K,d,\varepsilon)$：最小 $\varepsilon$-网的基数。
 - **$\varepsilon$-分离 / packing：** $P\subset K$，任意两点 $d(x,y)>\varepsilon$。
 - **packing 数** $P(K,d,\varepsilon)$：最大 packing 的基数。
@@ -460,13 +452,13 @@ $$
 
 $\varepsilon\ge 1$ 时左边 $\varepsilon^{-d}\le 1$，而 $N=1$（一个原点就盖住），不等式仍对。附录 B 还写过更粗的 $N(B_2,\varepsilon)\le(3/\varepsilon)^d$（$\varepsilon\le 1$ 时 $1+2/\varepsilon\le 3/\varepsilon$）。
 
-**人话：** $d$ 维单位球，精度 $\varepsilon$，大约 $(1/\varepsilon)^d$ 个点。指数在维度上，这就是「维数灾难」。函数类如果「有效维度」是 $d$，覆盖数就是这个样子。
+**直观理解：** $d$ 维单位球，精度 $\varepsilon$，大约 $(1/\varepsilon)^d$ 个点。指数在维度上，这就是「维数灾难」。函数类如果「有效维度」是 $d$，覆盖数就是这个样子。
 
 ---
 
 ## 4. 线性类与 ReLU 网络的 $\log N$
 
-覆盖数是抽象的；要进 Esta 的公式必须对具体 $\mathcal{F}$ 算出 $\log N(\mathcal{F},\|\cdot\|_\infty,\delta)$。基本套路：**参数空间的覆盖 $\times$ 参数到函数的 Lipschitz。**
+覆盖数是抽象的；要代入 $E_{\mathrm{sta}}$ 的公式必须对具体 $\mathcal{F}$ 算出 $\log N(\mathcal{F},\|\cdot\|_\infty,\delta)$。基本套路：**参数空间的覆盖 $\times$ 参数到函数的 Lipschitz 常数。**
 
 ### 4.1 线性类
 
@@ -489,7 +481,7 @@ $$
 d\log\bigl(1+2B/\delta\bigr).
 $$
 
-代进 Esta（$\delta=1/n$）：统计误差 $\lesssim\bigl(\lambda B+\lambda^2/c\bigr)\,d\log(nB)/n$。OLS 精确结果是 $d\sigma^2/n$；这里多一个 $\log n$，来自「并集 + 固定尺度覆盖」的粗糙，不是线性模型真的更差。
+代入 $E_{\mathrm{sta}}$（取 $\delta=1/n$）：统计误差 $\lesssim\bigl(\lambda B+\lambda^2/c\bigr)\,d\log(nB)/n$。OLS 精确结果是 $d\sigma^2/n$；这里多一个 $\log n$，来自「并集 + 固定尺度覆盖」的粗糙，不是线性模型真的更差。
 
 **误区：** 若 $x\in[0,1]^d$ 而不是 $B_2$，$\|x\|_2\le\sqrt{d}$，$\infty$-距离 $\le\sqrt{d}\,\|\theta_1-\theta_2\|_2$，覆盖数变成 $(1+2B\sqrt{d}/\delta)^d$，对数里多 $\frac12\log d$。
 
@@ -568,7 +560,7 @@ $$
 L=O\bigl(D(BW)^D\bigr)
 $$
 
-（$B\ge 1$ 时把 $1/B$ 吞掉）。内容写 $L=O(2D^2(BW)^D)$：多一个 $D$ 和常数 2，相当于把 $M_\ell\le\ell(BW)^\ell$、以及宽度/输出维的次要因子一并包进 $O(\cdot)$。**对后面的 $\log N$，$D^2$ 只贡献 $2\log D$，被 $D\log(BWD/\delta)$ 吃掉。**
+（$B\ge 1$ 时把 $1/B$ 吞掉）。若进一步把 $M_\ell\le\ell(BW)^\ell$ 及宽度、输出维次要因子包进 $O(\cdot)$，常写作 $L=O(2D^2(BW)^D)$；对后续的 $\log N$ 而言，$D^2$ 只贡献 $2\log D$，会被主项 $D\log(BWD/\delta)$ 吸收。
 
 ### 4.3 从参数立方体到函数覆盖数
 
@@ -596,31 +588,31 @@ S\log\bigl(1+2BL/\delta\bigr)
 O\bigl(SD\log(BWD/\delta)\bigr),
 $$
 
-因为 $\log(BL/\delta)\le\log\bigl(C B\cdot D^2(BW)^D/\delta\bigr)=D\log(BW)+O(\log(BD/\delta))$。这就是 最后一行。
+因为 $\log(BL/\delta)\le\log\bigl(C B\cdot D^2(BW)^D/\delta\bigr)=D\log(BW)+O(\log(BD/\delta))$。
 
-代进 Esta：统计误差
+代入 $E_{\mathrm{sta}}$：统计误差
 
 $$
 \lesssim
 \Bigl(\lambda B+\frac{\lambda^2}{c}\Bigr)\frac{SD\log(BWDn)}{n}.
 $$
 
-**人话：** 网络的「有效参数个数」是 $SD$ 而不是 $S$——深度在覆盖指数里又乘了一次，因为参数到函数的 Lipschitz 是 $(BW)^D$ 爆炸的。这只是最粗的 $\infty$-覆盖；用经验 $L^2$ 覆盖 / 范数约束（Bartlett 等）可以弱得多，那是后续文献，不是这页内容。
+**直观理解：** 网络的「有效参数个数」是 $SD$ 而不是 $S$——深度在覆盖指数里又乘了一次，因为参数到函数的 Lipschitz 常数随深度按 $(BW)^D$ 指数增长。这是最粗的 $\infty$-覆盖估计；若改用经验 $L^2$ 覆盖或谱范数约束（如 Bartlett 等人）可得到更紧依赖。
 
 ---
 
 ## 5. 另一条路：对称化 $\to$ Rademacher $\to$ Dudley
 
-Esta 要强凸。没有强凸时（0-1 损失、非凸 $\mathcal{F}$ 上相对 $\bar f$ 的超额），退回 $E_{\mathrm{gen}}$。
+$E_{\mathrm{sta}}$ 依赖局部强凸。没有强凸时（如 0-1 损失、非凸 $\mathcal{F}$ 上相对 $\bar f$ 的超额），退回均匀偏差 $E_{\mathrm{gen}}$。
 
-本节到 §11 的符号约定（把内容里前后不一的 $E_{\mathrm{gen}}$ 钉死）：
+以下统一采用全局对称化记号，避免与前文局部记号混淆：
 
 $$
 \Delta_n(\mathcal{F}):=\sup_{f\in\mathcal{F}}\bigl|\widehat L(f)-L(f)\bigr|
 =\|P-P_n\|_{\ell\mathcal{F}}.
 $$
 
-Lec1 的 $E_{\mathrm{gen}}=2\Delta_n(\mathcal{F})$（随机量）。对「$\mathcal{F}$ 内超额」：
+前面给出的 $E_{\mathrm{gen}}=2\Delta_n(\mathcal{F})$（随机量）。对「$\mathcal{F}$ 内超额」：
 
 $$
 L(f_A)-L(f^*)
@@ -656,9 +648,9 @@ $$
 \tau+8\lambda\,\mathrm{Rad}(\mathcal{F})+O(B/\sqrt{n}).
 $$
 
-Dudley（§9–§10）再把 $\mathrm{Rad}(\mathcal{F})$ 写成覆盖熵积分。这就是用户要求串起来的那条链；内容 把 $\tau+2\mathbb{E}\Delta_n$ 和 $4\mathrm{Rad}$ 写在同一行，$\tau$ 有时被默认为 0。
+Dudley（§9–§10）再把 $\mathrm{Rad}(\mathcal{F})$ 写成覆盖熵积分，从而把超额风险、对称化、Rademacher 收缩与覆盖熵积分连成完整的慢速率上界链；相关总结中常把 $\tau+2\mathbb{E}\Delta_n$ 与 $4\mathrm{Rad}$ 并列书写（有时隐去优化精度项 $\tau$）。
 
-下面先把 Rademacher、Massart、结构性质、对称化、chaining 逐个补成可跟的证明。
+下面先把 Rademacher 复杂度、Massart 有限引理、结构性质、对称化与链式论证（chaining）逐一展开为完整证明。
 
 ---
 
@@ -672,7 +664,7 @@ $$
 R_\theta=\langle\tau,\theta\rangle=\sum_{i=1}^n\tau_i\theta_i,
 $$
 
-**Rademacher 复杂度**（带绝对值，跟内容一致）
+**Rademacher 复杂度**（按带绝对值版本定义）：
 
 $$
 R(\Theta)=\mathbb{E}_\tau\Bigl[\sup_{\theta\in\Theta}|R_\theta|\Bigr].
@@ -690,7 +682,7 @@ $$
 =\mathbb{E}_{X,\tau}\Bigl[\sup_{g\in\mathcal{G}}\Bigl|\frac1n\sum_{i=1}^n\tau_i g(X_i)\Bigr|\Bigr].
 $$
 
-内容的 $\|R_n\|$ 已经含 $1/n$。事故：`Randemacher` = Rademacher。
+这里的 $\|R_n\|$ 记号已包含归一化因子 $1/n$。
 
 ### 6.2 Massart finite lemma
 
@@ -700,7 +692,7 @@ $$
 R(A)\;\le\;\sqrt{2R^2\log(2|A|)}.
 $$
 
-**证明（Chernoff + 并集，补全内容没写的优化 $\lambda$）。**
+**证明（Chernoff + 并集 + 参数 $\lambda$ 优化）。**
 
 先控制不带绝对值的 $\mathbb{E}\sup_{a\in A}\langle\tau,a\rangle$。Jensen（$e^{\lambda\cdot}$ 凸）+ $\sup e\le\sum e$：
 
@@ -738,7 +730,7 @@ $$
 
 带绝对值：$\sup_a|\langle\tau,a\rangle|=\sup_{a\in A\cup(-A)}\langle\tau,a\rangle$，$|A\cup(-A)|\le 2|A|$，同一套 $R$，故 $\sqrt{2R^2\log(2|A|)}$。$\square$
 
-**人话：** 有限个高斯/Rademacher 最大值，期望是「半径 $\times\sqrt{\log\text{个数}}$」，不是个数本身。这就是为什么 Esta 和 Rad 里出现 $\log N$ 而不是 $N$。
+**直观理解：** 有限个高斯或 Rademacher 随机变量最大值的期望量级是「半径 $\times\sqrt{\log\text{个数}}$」，而不是线性依赖于个数。这也正是统计误差上界里频繁出现 $\log N$ 而非 $N$ 的原因。
 
 ---
 
@@ -763,7 +755,7 @@ R(\{g\}|_X)\;\le\;\sqrt{2n\log 2}
 \|R_n\|_g\;\le\;\sqrt{\frac{2\log 2}{n}}.
 $$
 
-内容写「$|g|\le 1$ 则差 $\le\sqrt{2\log 2/n}$」。
+当 $|g|\le 1$ 时，附加函数造成的复杂度的偏移至多为 $\sqrt{2\log 2/n}$。
 
 ### 7.3 凸包不变
 
@@ -773,9 +765,7 @@ $\|R_n\|_{\mathrm{conv}(\mathcal{F})}=\|R_n\|_{\mathcal{F}}$。
 
 ### 7.4 Lipschitz 收缩（Ledoux–Talagrand 1991, Corollary 3.17）
 
-内容这里。
-
-**定理（内容形式）。** 若 $\varphi:\mathbb{R}\times\mathcal{Z}\to\mathbb{R}$ 满足：对每个固定的 $z$，$\alpha\mapsto\varphi(\alpha,z)$ 是 1-Lipschitz，并且 $\varphi(0,z)=0$。记 $\varphi(\mathcal{F})=\{z\mapsto\varphi(f(z),z):f\in\mathcal{F}\}$。则
+**定理。** 若 $\varphi:\mathbb{R}\times\mathcal{Z}\to\mathbb{R}$ 满足：对每个固定的 $z$，$\alpha\mapsto\varphi(\alpha,z)$ 是 1-Lipschitz，并且 $\varphi(0,z)=0$。记 $\varphi(\mathcal{F})=\{z\mapsto\varphi(f(z),z):f\in\mathcal{F}\}$。则
 
 $$
 \|R_n\|_{\varphi(\mathcal{F})}\;\le\; 2\|R_n\|_{\mathcal{F}}.
@@ -899,7 +889,7 @@ $$
 
 两边除以 $n$，再对 $X$ 取期望，即 $\|R_n\|_{\varphi(\mathcal{F})}\le 2\|R_n\|_{\mathcal{F}}$。
 
-$\varphi_i(0)=0$ 在内容里还有一层用处：它保证 $|\varphi_i(t)|\le|t|$，从而 $\varphi(\mathcal{F})$ 的坐标不会比 $\mathcal{F}$ 本身更大；后面把 $\ell(\alpha,y)$ 改写成 $\ell(\alpha,y)-\ell(0,y)$ 时，新映射过原点，正好套进这条定理。无绝对值的引理本身不需要过原点。
+$\varphi_i(0)=0$ 的另一层作用是保证 $|\varphi_i(t)|\le|t|$，从而 $\varphi(\mathcal{F})$ 的坐标不会比 $\mathcal{F}$ 本身更分散；后面将 $\ell(\alpha,y)$ 平移为 $\ell(\alpha,y)-\ell(0,y)$ 时，新映射恰好过原点，得以直接套用此定理（而无绝对值的引理本身不需要过原点条件）。
 
 **$\lambda$-Lipschitz。** 若 $\alpha\mapsto\varphi(\alpha,z)$ 是 $\lambda$-Lipschitz，令 $\psi=\varphi/\lambda$，则 $\psi$ 是 1-Lipschitz。齐次性 $\|R_n\|_{c\mathcal{G}}=|c|\,\|R_n\|_{\mathcal{G}}$ 给出因子 $2\lambda$：
 
@@ -931,9 +921,9 @@ $$
 2\lambda\,\mathrm{Rad}(\mathcal{F})+O(B/\sqrt{n}).
 $$
 
-内容 的 $O(B/\sqrt{n})$ 就是这个单点类余项（常数依损失有界性而定，不必记死）。
+上述 $O(B/\sqrt{n})$ 正是该单点类带来的余项（常数依损失有界性而定）。
 
-**误区：** 收缩的 2 来自定义里的绝对值。不少书对 $\mathbb{E}\sup\sum\tau_i f_i$（不带绝对值、类关于 0 对称）写因子 1。做题时：先看这里的 $\mathrm{Rad}$ 有没有绝对值。
+**误区：** 收缩因子 2 来自定义里的绝对值。不少教材对不带绝对值且关于 0 对称的 $\mathbb{E}\sup\sum\tau_i f_i$ 写因子 1。应用时要先确认当前 `Rad` 定义是否带有绝对值。
 
 ---
 
@@ -985,7 +975,7 @@ $$
 \mathbb{E}_{X,X',\tau}\sup_g\Bigl|\frac1n\sum\tau_i\bigl(g(X_i')-g(X_i)\bigr)\Bigr|.
 $$
 
-内容说「对任意固定的 $\{\tau_i\}$ 都对，所以可以对随机的 $\tau$ 再取期望」——两种说法等价：你可以从「先对换再平均」或「先乘 $\pm 1$ 再平均」看。
+无论从「对任意固定的符号组 $\{\tau_i\}$ 都成立、再对随机 $\tau$ 取期望」，还是「先以硬币交换样本、再对符号求平均」来看，两步推理完全等价。
 
 **第三步（三角不等式拆成两份 Rademacher）。**
 
@@ -1015,7 +1005,7 @@ $$
 
 它 $\le N(\mathcal{U},\|\cdot\|_{L^\infty(\Omega)},\varepsilon)$（函数上的均匀覆盖一定给出每条样本上的覆盖）。
 
-**定理（Dudley entropy formula，内容形式）。** 假定 $0\in\mathcal{U}$，且 $\|u\|_{L^\infty}\le B$ 对所有 $u\in\mathcal{U}$。则
+**定理（Dudley 熵积分定理）。** 假定 $0\in\mathcal{U}$，且 $\|u\|_{L^\infty}\le B$ 对所有 $u\in\mathcal{U}$。则
 
 $$
 \|R_n\|_{\mathcal{U}}
@@ -1029,7 +1019,7 @@ $$
 \Biggr).
 $$
 
-**人话：** 不要用一张很细的网把整个类一次性并集（那会留下 $\sqrt{\log N(\delta_{\min})}$，$\delta_{\min}$ 太小时爆炸）。改成一层层网：粗网负责大尺度振荡，相邻两层的差很小，Massart 的半径跟着尺度走。把离散层求和变成积分，就是熵积分。
+**直观理解：** 不要用一张很细的网把整个类一次性并集（那会留下 $\sqrt{\log N(\delta_{\min})}$，$\delta_{\min}$ 太小时爆炸）。改成一层层网：粗网负责大尺度振荡，相邻两层的差很小，Massart 的半径跟着尺度走。把离散层求和变成积分，就是熵积分。
 
 ---
 
@@ -1063,21 +1053,11 @@ $$
 
 $0\in\mathcal{U}$ 且直径 $\le B=\varepsilon_1$，零向量本身就是 $\varepsilon_1$-网。取 $C_1=\{0\}$，则 $c^1\equiv 0$，第三项消失。
 
-**补全：** 若 $0\notin\mathcal{U}$ 但函数仍有界 $B$，可把 $\mathcal{U}$ 换成 $\mathcal{U}-u_0$，Rademacher 多一个单点项 $O(B/\sqrt{n})$，与收缩余项同类。
+**去中心化说明：** 若 $0\notin\mathcal{U}$ 但函数仍有界 $B$，可把 $\mathcal{U}$ 换成 $\mathcal{U}-u_0$，Rademacher 多一个单点项 $O(B/\sqrt{n})$，与收缩余项同类。
 
-### 10.4 第一项：勘误内容的「Hölder」
+### 10.4 第一项的严格放缩（避免误用 Hölder）
 
-内容写
-
-$$
-\Bigl|\frac1n\sum_i\tau_i a_i\Bigr|
-\le
-\frac1n\Bigl(\sum_i|\tau_i|\Bigr)\Bigl(\sum_i\max_i|a_i|\Bigr)
-$$
-
-还声称这 $\le\varepsilon_K$。这是错的：$\sum|\tau_i|=n$，再乘 $\sum\max|a_i|$ 会多出 $n\varepsilon_K$，完全废掉。
-
-**正确（补全）：** 令 $a_i=u(Z_i)-c^K_i(u)$，则 $\|a\|_\infty\le\varepsilon_K$，$|\tau_i|=1$，故
+若把 $\bigl|\frac1n\sum_i\tau_i a_i\bigr|$ 误放缩成 $\frac1n(\sum_i|\tau_i|)(\sum_i\max_i|a_i|)$，会多出整整一个因子 $n$；正确估计直接用三角不等式与 $|\tau_i|=1$：令 $a_i=u(Z_i)-c^K_i(u)$，由 $\|a\|_\infty\le\varepsilon_K$，得
 
 $$
 \Bigl|\frac1n\sum_{i=1}^n\tau_i a_i\Bigr|
@@ -1089,7 +1069,7 @@ $$
 \varepsilon_K.
 $$
 
-（更短：$\le\|a\|_\infty\cdot\frac1n\sum|\tau_i|=\|a\|_\infty$。）对 $u$ 取 sup、对 $\tau$ 取期望，第一项 $\le\varepsilon_K$。
+（或简写作 $\le\|a\|_\infty\cdot\frac1n\sum|\tau_i|=\|a\|_\infty$。）对 $u$ 取 sup、对 $\tau$ 取期望，第一项 $\le\varepsilon_K$。
 
 ### 10.5 增量类 $V_j$、基数与直径 $D_j$
 
@@ -1129,7 +1109,7 @@ $$
 =\frac{3\sqrt{2}\,\varepsilon_{j+1}}{\sqrt{n}}\sqrt{\log(2|V_j|)}.
 $$
 
-要接到内容的 $6\varepsilon_{j+1}/\sqrt{n}\sqrt{\log(2|C_{j+1}|)}$，需要 $3\sqrt{2}\,\sqrt{\log(2|V_j|)}\le 6\sqrt{\log(2|C_{j+1}|)}$。两边平方：
+要化简为 $\frac{6\varepsilon_{j+1}}{\sqrt{n}}\sqrt{\log(2|C_{j+1}|)}$，需要 $3\sqrt{2}\,\sqrt{\log(2|V_j|)}\le 6\sqrt{\log(2|C_{j+1}|)}$。两边平方：
 
 $$
 \Bigl(\frac{3\sqrt{2}}{6}\Bigr)^2\log(2|V_j|)
@@ -1152,7 +1132,7 @@ $$
 
 对 $j=1,\ldots,K-1$ 求和。
 
-### 10.7 离散和 $\to$ 积分（补全 dyadic 因子 2）
+### 10.7 离散和 $\to$ 积分（二进因子 $2$ 的处理）
 
 目前
 
@@ -1196,7 +1176,7 @@ $$
 \sqrt{\log(2N_n(\varepsilon))}\,d\varepsilon.
 $$
 
-内容把 6 写成 $12(\varepsilon_j-\varepsilon_{j+1})$ 再直接认成 Riemann 和，方向其实是「和 $\ge$ 积分」；上面这段才是 $\le$。
+（注意不能把 6 粗略写成 $12(\varepsilon_j-\varepsilon_{j+1})$ 当作 Riemann 和，那样的不等号方向是「和 $\ge$ 积分」；用下一档区间 $[\varepsilon_{j+2},\varepsilon_{j+1}]$ 才能严格得到上界。）
 
 ### 10.8 用 $\delta$ 换掉离散的 $K$：为什么是 $4\delta$
 
@@ -1226,7 +1206,7 @@ $$
 \mathbb{E}[\mathcal{E}(f_A)]
 &\le
 \tau+2\mathbb{E}[\Delta_n(\mathcal{F})]
-&&\text{（$\mathcal{F}$ 内超额；Lec1 的 $E_{\mathrm{gen}}=2\Delta_n$）}\\
+&&\text{（$\mathcal{F}$ 内超额；即前文的 $E_{\mathrm{gen}}=2\Delta_n$）}\\
 &\le
 \tau+4\,\mathrm{Rad}(\ell\mathcal{F})
 &&\text{（对称化）}\\
@@ -1263,21 +1243,21 @@ $N=N(\mathcal{F},\|\cdot\|_\infty,1/n)$。线性类 $\log N\lesssim d\log(nB)$�
 | 条件 | 工具 | 统计项典型速率 |
 |------|------|----------------|
 | 损失有界 Lipschitz，无强凸 | 对称化 + Rad + Dudley | $\lambda$ × 熵积分 $\sim n^{-1/2}$ |
-| 再加 $L$ 在 $f^*$ 局部强凸 | 覆盖网 + Bernstein（Esta） | $(\lambda B+\lambda^2/c)(\log N)/n$ |
+| 再加 $L$ 在 $f^*$ 局部强凸 | 覆盖网 + Bernstein（$E_{\mathrm{sta}}$） | $(\lambda B+\lambda^2/c)(\log N)/n$ |
 | 有限类、平方损失、模型正确 | 两者都可用 | 快速率多一个 $\log N$；Rad 链仍是慢的，除非再做局部 Rademacher / peeling |
 
-**误区：** 不能把 Dudley 的 $\sqrt{(\log N)/n}$ 和 Esta 的 $(\log N)/n$ 乘在一起「两个都要」。它们是同一项超额风险的两种上界，取更小的那个。
+**误区：** 不能把 Dudley 的 $\sqrt{(\log N)/n}$ 和 $E_{\mathrm{sta}}$ 的 $(\log N)/n$ 乘在一起同时算上。它们是同一项超额风险的两种不同上界，取更小的那个即可。
 
 ---
 
-## 12. 收束
+## 12. 总结
 
-Lec2 统计误差这一段，数学上只做了三件事：
+统计误差这一章在数学上只做了三件事：
 
 1. 用一张网把函数类变成有限个点（覆盖数）；
 2. 用集中不等式控制有限个经验过程（Bernstein 或 Massart）；
-3. 要么直接积分尾界得到 Esta，要么用对称化把均匀偏差换成 Rademacher，再用 chaining 把 Massart 从「一张网」升级成「熵积分」。
+3. 要么直接积分尾界得到 $E_{\mathrm{sta}}$，要么用对称化把均匀偏差换成 Rademacher，再用 chaining 把 Massart 从「一张网」升级成「熵积分」。
 
-和 Lec1 对照：线性高斯模型里「覆盖数的对数 $\approx$ 维度 $d$」，「Bernstein 的方差 $\approx\sigma^2$」，Esta 就回到 $\frac{d}{n}$。网络把 $d$ 换成 $SD\log(BWD/\delta)$。
+和[线性模型](/blog/fods-linear-models/)对照：线性高斯模型里「覆盖数的对数 $\approx$ 维度 $d$」，「Bernstein 的方差 $\approx\sigma^2$」，快速率 $E_{\mathrm{sta}}$ 就回到 $\frac{d}{n}$。对于 ReLU 网络，只是把有效维数 $d$ 换成 $SD\log(BWD/\delta)$。
 
-下一份：[02b_Lec2_逼近误差](/blog/fods-approximation-error/)——$\mathcal{F}$ 是 ReLU 网络时，$E_{\mathrm{app}}$ 对 Hölder 函数能有多小。
+下一篇：[逼近误差](/blog/fods-approximation-error/)——$\mathcal{F}$ 是 ReLU 网络时，$E_{\mathrm{app}}$ 对 Hölder 函数能有多小。

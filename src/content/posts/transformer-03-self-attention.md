@@ -13,10 +13,10 @@ cover: /covers/series-deep-learning.svg
 
 ## 1. Attention 的优势
 
-- 并行性：只用计算矩阵乘法，天生适合并行
-- 长距离依赖问题：原有的 RNN 后一步依赖前一步，序列长了信号衰减明显；现在的 self-attention 一次性计算任两个位置，不存在长距离衰减问题
+- 并行性：只用计算矩阵乘法，天生适合并行；
+- 长距离依赖：RNN 后一步依赖前一步，序列长了信号衰减明显；Self-Attention 直接计算任意两个位置之间的关联，没有顺序传递造成的长距离衰减。
 
-## 2. QKV 的「马后炮」解释
+## 2. Q、K、V 的直观理解
 
 ### 2.1 图书馆检索的类比
 
@@ -38,38 +38,39 @@ cover: /covers/series-deep-learning.svg
 
 Q、K、V 从同一个 $X$ 做三次不同的线性变换，而非直接复用 $X$，原因在于**解耦不同的角色**。一个 token「需要什么」和它「能提供什么」往往不同。比如一个句子里，动词可能需要关注它的主语和宾语（Query 的方向），但它被别人关注时，提供的是动作语义（Key/Value 的方向）。三个独立的投影矩阵让模型有自由度学习这些不同的映射。
 
-模型在学习语言中的语义、结构、逻辑时，三个矩阵分别承担不同类型的「语义」学习。
+模型在捕捉句法结构与上下文关联时，三个投影矩阵分别承担不同方向的变换。
 
-## 3. Scaled dot-product attention 详解
+## 3. Scaled Dot-Product Attention 详解
 
 注意力计算公式：
 $$
-Attention=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\operatorname{Attention} = \operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 $$
 
 ### 3.1 计算三个投影并拆头
 ```python
-#x->(N, d_model)
+# x -> (N, d_model)
 Q = X @ W_Q
 K = X @ W_K
 V = X @ W_V
 
-def split(x:torch.tensor):
-	x = x.view(-1,num_heads, size_heads)
-	x = x.transpose(0,1)
+def split(x: torch.Tensor, num_heads: int, size_heads: int):
+	x = x.view(-1, num_heads, size_heads)
+	x = x.transpose(0, 1)
 	return x
-Q = split(Q)
-K = split(K)
-V = split(V)
+
+Q = split(Q, num_heads, size_heads)
+K = split(K, num_heads, size_heads)
+V = split(V, num_heads, size_heads)
 ```
 ### 3.2 计算注意力矩阵
 ```python
-#Q,K->(num_heads, N, size_heads)
+# Q, K -> (num_heads, N, size_heads)
 attn_scores = Q @ K.transpose(-1, -2) / math.sqrt(size_heads)
 
-# 因果或者padding掩码在这个环节加上。假定处理后，True表示为掩码，False表示不为掩码
-attn_scores += mask*torch.finfo(attn_scores.dtype).min
-# 或者更工程： attn_scores.mask_fill(mask.bool(),'inf')
+# 因果或者 padding 掩码在这个环节加上。假定 True 表示被掩码，False 表示不被掩码
+attn_scores += mask * torch.finfo(attn_scores.dtype).min
+# 或使用 masked_fill：attn_scores = attn_scores.masked_fill(mask.bool(), float('-inf'))
 ```
 ### 3.3 计算注意力权重
 ```python
@@ -88,16 +89,15 @@ attn = attn.transpose(0,1).contiguous().view(-1,d_model)
 state = attn @ W_O.T + bias
 ```
 
-## 4. Pytorch 实现
+## 4. PyTorch 实现
 
-下面实现单头和多头注意力，假定 x 的形状为 (B,N,d_model)。
+下面实现单头和多头注意力，假定输入 `x` 的形状为 `(B, N, d_model)`。
 
-- 在实现上，init 定义结构、超参数和可训练参数；forward 定义输入张量的动态计算过程
-- 4.1 和 4.2 一体，先实现单头，再用 nn.ModuleList 构建多头
-- 4.3 不再显式构建多头，用一个大矩阵统一计算
-- 这个模块的输入和输出形状一致，TransformerBlock 才能像搭积木一样一直搭下去
+- 在实现上，`__init__` 定义结构、超参数和可训练参数，`forward` 定义输入张量的动态计算过程；
+- 4.1 与 4.2 先实现单头，再用 `nn.ModuleList` 拼接成多头，4.3 再给出用大矩阵统一投影后 reshape 拆头的工程写法；
+- 模块的输入和输出形状一致，多个 Transformer Block 才能像积木一样堆叠。
 
-### 4.1 single-head self-attention
+### 4.1 Single-Head Self-Attention
 ```python
 import torch
 from torch import nn
@@ -114,7 +114,7 @@ class SingleHeadSelfAttention(nn.Module):
 		self.q_proj = nn.Linear(d_model, head_size)
 		self.k_proj = nn.Linear(d_model, head_size)
 		self.v_proj = nn.Linear(d_model, head_size)
-		# drop_out
+		# dropout
 		self.dropout = nn.Dropout(dropout)
 	def forward(self, x, mask=None):
 		# 三个投影
@@ -131,7 +131,7 @@ class SingleHeadSelfAttention(nn.Module):
 		# 计算注意力
 		return attn_probs @ v
 ```
-### 4.2 multi-head self-attention
+### 4.2 Multi-Head Self-Attention
 ```python
 class MultiHeadSelfAttention(nn.Module):
 	def __init__(self, d_model, head_nums, dropout=0.0):
@@ -161,7 +161,7 @@ class MultiHeadSelfAttention(nn.Module):
 		return self.dropout(out)
 ```
 
-### 4.3 multi-head self-attention（非显式多头）
+### 4.3 Multi-Head Self-Attention（非显式多头）
 ```python
 class MultiHeadSelfAttention(nn.Module):
 	def __init__(self, d_model, head_nums, dropout=0.0):
@@ -191,74 +191,72 @@ class MultiHeadSelfAttention(nn.Module):
 		# 计算注意力分数
 		attn_scores = q @ k.transpose(-1,-2) / math.sqrt(self.head_size)
 		# 引入掩码
-		attn_scores = attn_scores.masked_fill(mask.bool(), float('-inf'))
+		if mask is not None:
+			attn_scores = attn_scores.masked_fill(mask.bool(), float('-inf'))
 		# 计算注意力权重并dropout
 		attn_probs = self.dropout(F.softmax(attn_scores, dim=-1))
 		# 计算注意力，并合并头
 		attn = attn_probs @ v# (B, head_nums, N, head_size)
-		attn = attn.transpose(1,2).contiguous().view(x.shape[0], -1, d_model)
+		attn = attn.transpose(1,2).contiguous().view(x.shape[0], -1, self.d_model)
 		# W_O投影并dropout
 		return self.dropout(self.out_proj(attn))
 ```
 
 ## 5. 为什么要除以 $\sqrt{d_k}$，数学推导
 
-假定：$Q$ 和 $K$ 中的每个元素独立同分布，$x \sim \mathbb{N}(0,1)$；计算 $QK^T$ 中元素的方差。对于 $A = QK^T$，其中任一元素
+假定 $Q$ 和 $K$ 中的每个元素独立同分布，且 $Q_{i,k}, K_{k,j} \sim \mathcal{N}(0,1)$；计算 $QK^T$ 中元素的方差。对于 $A = QK^T$，其中任一元素
 $$
 A_{i,j}=\sum_{k=1}^{d_k}Q_{i,k}K_{k,j}
 $$
 对于期望：
 $$
-E(A_{i,j})=E(\sum_k Q_{i,k} K_{k,j}) =\sum_k(E( Q_{i,k} K_{k,j}))=\sum_k(E(Q_{i,k}) E(K_{k,j}))=0
+E(A_{i,j})=E\left(\sum_k Q_{i,k} K_{k,j}\right) =\sum_k E(Q_{i,k} K_{k,j})=\sum_k E(Q_{i,k}) E(K_{k,j})=0
 $$
 对于方差：
 $$
-Var(A_{i,j})=Var(\sum_k Q_{i,k} K_{k,j}) =\sum_k(Var( Q_{i,k} K_{k,j}))=\sum_k(E(Q_{i,k}^2K_{k,j}^2) - E(Q_{i,k}K_{k,j})^2)=\sum_k(E(Q_{i,k}^2K_{k,j}^2)
+\operatorname{Var}(A_{i,j})=\operatorname{Var}\left(\sum_k Q_{i,k} K_{k,j}\right) =\sum_k \operatorname{Var}(Q_{i,k} K_{k,j})=\sum_k \left(E(Q_{i,k}^2 K_{k,j}^2) - E(Q_{i,k} K_{k,j})^2\right)=\sum_k E(Q_{i,k}^2 K_{k,j}^2)
 $$
-其中 $E(Q_{i,k}^2K_{k,j}^2)=E(Q_{i,k}^2)E(K_{k,j}^2)=Var(Q_{i,k})Var(K_{k,j})=1$，即 $Var(A_{i,j})=d_k$。
+其中 $E(Q_{i,k}^2K_{k,j}^2)=E(Q_{i,k}^2)E(K_{k,j}^2)=\operatorname{Var}(Q_{i,k})\operatorname{Var}(K_{k,j})=1$，即 $\operatorname{Var}(A_{i,j})=d_k$。
 
-> 我们需要缩小 $QK^T$ 元素的方差，集中到 1 附近。**softmax 对数值量级敏感，输入值差距太大，softmax 之后的权重会几乎集中在最大值上**
-
-我们有
+因此需要把 $QK^T$ 元素的方差缩放到 1（均值仍为 0）。softmax 对数值量级敏感，输入差距过大时权重会坍缩到最大值上，导致梯度消失：
 $$
-Var(\frac{A_{i,j}}{\sqrt{d_k}})=\left(\frac{Var(A_{i,j})}{d_k}\right)=1
+\operatorname{Var}\left(\frac{A_{i,j}}{\sqrt{d_k}}\right)=\frac{\operatorname{Var}(A_{i,j})}{d_k}=1
 $$
-推导完毕。
+缩放因子 $\frac{1}{\sqrt{d_k}}$ 正是由此而来。
 
 ## 6. softmax 的数值稳定性
 
 ### 6.1 溢出问题与平移不变性
 
 - softmax 因为有指数计算，对大值很敏感，会出现指数爆炸。
-- 为了防止指数爆炸超出数据类型（fp32/fp16、bf16）的表示范围，利用 softmax 的平移不变性——$f(x)=f(x-m)$。实际工程中取 $m=\max_i {x_i}$。
+- 为了防止指数爆炸超出数据类型（FP32/FP16、BF16）的表示范围，利用 softmax 的平移不变性——$f(x)=f(x-m)$。实际工程中取 $m=\max_i {x_i}$。
 
-### 6.2 online softmax
+### 6.2 Online Softmax
 
-> 扫描（遍历）次数增多，HBM 会被多次读取，IO 开销很大
-
+标准遍历次数较多，HBM 会被多次读取，IO 开销很大：
 $$
-softmax(x_i)=\frac{\exp(x_i)}{\sum_j \exp(x_j)}
+\operatorname{softmax}(x_i)=\frac{\exp(x_i)}{\sum_j \exp(x_j)}
 $$
 计算 softmax 需要：
-1. 遍历一遍得到 $x_i$ 的最大值 m
-2. 遍历一遍得到 $\sum_i\exp(x_i-m)$
-3. 遍历一遍得到 $x_1,x_2,...,x_N$ 的 softmax
+1. 遍历一遍得到 $x_i$ 的最大值 $m$；
+2. 遍历一遍得到 $\sum_i\exp(x_i-m)$；
+3. 遍历一遍得到 $x_1, x_2, \dots, x_N$ 的 softmax。
 
-只要在遍历时同时维护两个变量 $m_i$ 和 $d_i$，分别是从 $x_1$ 到 $x_i$ 的最大值和 $x_1$ 到 $x_i$ 的平移 softmax 之和（平移基为 $m_i$）
+只要在遍历时同时维护两个变量 $m_i$ 和 $d_i$，分别是从 $x_1$ 到 $x_i$ 的最大值和 $x_1$ 到 $x_i$ 的平移 softmax 之和（平移基为 $m_i$）。
 递推公式（对于 $d_i$ 先换平移基，然后加上新的元素）：
-$m_i=\max(m_{i-1},x_i)$, $d_i = d_{i-1}\exp(m_{i-1}-m_i)+\exp(x_i-m_i)$
+$m_i=\max(m_{i-1},x_i)$, $d_i = d_{i-1}\exp(m_{i-1}-m_i)+\exp(x_i-m_i)$。
 
-这样 online softmax 只需遍历两次：第一次计算最大值 m 和平移 $\exp$ 之和，第二次计算 $x_1,...,x_N$ 的平移 softmax。
+这样 online softmax 只需遍历两次：第一次计算最大值 $m$ 和平移 $\exp$ 之和，第二次计算 $x_1,\dots,x_N$ 的平移 softmax。
 
-online softmax 让后续的 FlashAttention 可以分块（tile）计算：在块内完成 softmax，不必等合并成大矩阵之后再算全局 softmax。
+online softmax 让后续的 FlashAttention 可以分块（tiling）计算：在块内完成 softmax，不必等合并成大矩阵之后再算全局 softmax。
 
-## 7. Multihead
+## 7. Multi-Head Attention
 
 ### 7.1 多头的好处
 
-多头让不同的头学习不同的语义特征，模型的学习因此更多样、更灵活。工程实现上，多个头就是大矩阵切成的几个小矩阵（一个大矩阵可以看作多个小矩阵拼接）。
+多头让不同的头学习不同的语义特征，模型的表征能力因此更多样、更灵活。工程实现上，多个头就是大矩阵切成的几个小矩阵（一个大矩阵可以看作多个小矩阵拼接）。
 
-> 每个头都有独立的 K、V，KV cache 因此很大，后面才有削减 KV 数目的动机
+由于标准多头下每个头都有独立的 K、V，KV Cache 占用很大，这也引出了后续削减 KV 头数的需求。
 
 工程上，多头的设计天然适合并行化：
 - GPU 内并行：在一个 kernel 中一次性算出所有头的值
@@ -266,13 +264,11 @@ online softmax 让后续的 FlashAttention 可以分块（tile）计算：在块
 
 ### 7.2 参数量
 
-涉及四个矩阵：$W_Q,W_K,W_V,W_O$，形状统一为 $(d_{model}, d_{model})$，参数量为 $4\times d_{model}^2$。
-
-> 这里不考虑 bias，占比很低，是一次项。
+涉及四个矩阵：$W_Q,W_K,W_V,W_O$，形状统一为 $(d_{model}, d_{model})$，参数量为 $4\times d_{model}^2$（此处忽略占比极低的一次项 bias）。
 
 ## 8. MHA vs MQA vs GQA
 
-MQA 和 GQA 都是为了缩减 KV cache。
+MQA 和 GQA 都是为了缩减 KV Cache。
 
 ### 8.1 MHA (Multi-Head Attention)
 
@@ -302,11 +298,9 @@ GQA 在模型质量和推理效率之间取得了更好的平衡。LLaMA-2-70B�
 
 ### 8.4 对比表格
 
-> 单 token 的 KV cache 计算方式：
-> $K=XW_K,V=XW_V$
-> 其中 K、V 的形状为 $(B, N, num\_heads, head\_dim)$
+单 token 的 KV Cache 计算方式为 $K=XW_K, V=XW_V$，其中 $K, V$ 的形状为 $(B, N, \text{num\_kv\_heads}, \text{head\_dim})$。
 
-以 $d_{model}$=4096、num_heads=32、head_dim=128 为例，假设序列长度 N=4096，FP16 精度：
+以 $d_{model}=4096$、`num_heads=32`、`head_dim=128` 为例，假设序列长度 $N=4096$，FP16 精度（表内 `1M` 按二进制 $2^{20}$ 换算）：
 
 | 指标                      | MHA (g=32)       | GQA (g=8)      | MQA (g=1)        |
 | ----------------------- | ---------------- | -------------- | ---------------- |
@@ -318,10 +312,10 @@ GQA 在模型质量和推理效率之间取得了更好的平衡。LLaMA-2-70B�
 | 4096 token KV Cache / 层 | 64MB             | 16MB           | 2MB              |
 | 模型质量                    | 最好               | 接近 MHA         | 有下降              |
 
-注：Cache size = 2 × B × L × num_heads × head_dim × d_type_bytes（其中 2 是 K 和 V，B 是 batch_size，L 是已生成序列长度）。从 MHA 到 GQA(g=8)，KV Cache 缩小为 1/4，参数量减少，模型质量几乎不受影响。GQA 因此成为主流选择。
+注：单层 Cache 大小 = `2 × B × N × num_kv_heads × head_dim × dtype_bytes`（其中 `2` 是 K 和 V，`B` 是 `batch_size`，`N` 是已生成序列长度）。从 MHA 到 GQA(g=8)，KV Cache 缩小为 1/4，参数量减少，模型质量几乎不受影响，GQA 因此成为主流选择。
 
-### 8.5 MLA (Multi-Latent Attention)
-DeepSeek-V2 提出了 MLA（Multi-Latent Attention），是另一种压缩 KV Cache 的思路。
+### 8.5 MLA (Multi-head Latent Attention)
+DeepSeek-V2 提出了 MLA（Multi-head Latent Attention），是另一种压缩 KV Cache 的思路。
 
 MLA 的核心思想是：不直接缓存完整的 K 和 V 向量，而是将它们**压缩到一个低维潜在空间**（latent space），只缓存这个低维表示。推理时再将低维表示解压回完整的 K 和 V。
 
@@ -335,26 +329,24 @@ MLA 通过低秩压缩将 KV Cache 大幅缩小（DeepSeek-V2 报告了约 93.3%
 ### 9.1 因果掩码
 
 自回归语言模型的训练目标是根据已生成的序列预测下一个词，训练时不能看到未来的词。
-因果掩码把后面的词排除在计算之外。
-
-> 在自注意力阶段，上三角部分不用参与运算，可以节省算力。
+因果掩码把后面的词排除在计算之外。标准实现通常先算完整矩阵再施加掩码，而 FlashAttention 等分块实现可直接跳过全零的上三角分块以节省算力。
 
 ### 9.2 实现因果掩码
 ```python
-def generate_casual_mask(seq_len):
+def generate_causal_mask(seq_len):
 	return torch.tril(torch.ones(seq_len, seq_len, dtype=torch.bool))
 ```
 
-## 10. self-attention 的计算瓶颈
+## 10. Self-Attention 的计算瓶颈
 
-### 10.1 Flops
+### 10.1 FLOPs
 
 自注意力计算涉及四个矩阵。分头只是形式上的拆分，计算量可以直接按大矩阵算。
 
-1. QKV 的计算，三个矩阵的投影，(N,d_model) * (d_model,d_model)
-2. $QK^T$ 的计算，(N,d_model) * (d_model,N)
-3. attn_scores 与 V 的计算，(N,N) * (N,d_model)
-4. 综合多头的投影计算，(N,d_model) * (d_model,d_model)
+1. QKV 的计算，三个矩阵的投影，(N, d_model) * (d_model, d_model)
+2. $QK^T$ 的计算，(N, d_model) * (d_model, N)
+3. attn_scores 与 V 的计算，(N, N) * (N, d_model)
+4. 综合多头的投影计算，(N, d_model) * (d_model, d_model)
 
 最终为 $6Nd^2+2N^2d+2N^2d+2Nd^2=8Nd^2+4N^2d$。
 
@@ -362,24 +354,24 @@ def generate_casual_mask(seq_len):
 
 ### 10.2 算术强度和 roofline
 
-算术强度衡量一个算法的计算量：Flops/Bytes
-加速器性能（GPU 等）衡量一个硬件的计算能力：Flop/s / Bytes/s
+算术强度衡量一个算法的计算访存比：`FLOPs / Byte`。
+加速器性能衡量硬件的算力与带宽比：`FLOP/s ÷ (Byte/s)`。
 
-算术强度 > 加速器性能时，受限于计算，GPU 满载，时间主要花在计算上
-算术强度 < 加速器性能时，受限于内存，GPU 经常没有满载，时间主要花在数据搬运
+- 算术强度大于硬件拐点时，受限于计算，GPU 满载，时间主要花在计算上。
+- 算术强度小于硬件拐点时，受限于显存带宽，GPU 经常等待数据搬运。
 
-- Prefill 阶段：预处理 prompt 计算 GEMM，算术强度大，一般是计算受限
-- Decode 阶段：逐个吐出 Token，计算 GEMV，算术强度较低，一般是内存受限。大部分时间在 HBM 搬运模型权重和 KV cache
+- Prefill 阶段：预处理 prompt 计算 GEMM，算术强度大，一般是计算受限。
+- Decode 阶段：逐个生成 token，计算 GEMV，算术强度较低，一般是内存受限，大部分时间在从 HBM 搬运模型权重和 KV Cache。
 
-### 10.3 self-attention 的 $O(N^2)$ 瓶颈
+### 10.3 Self-Attention 的 $O(N^2)$ 瓶颈
 
-自注意力的注意力计算要保留 N×N 的矩阵，显存随序列长度平方增长。N=128K、num_heads=32 时，32×N×N×2B=1TB；即使 N=8K，也有 4GB 的显存。
+自注意力的注意力计算要保留 $N\times N$ 的矩阵，显存随序列长度平方增长。$N=128\text{K}$、`num_heads=32` 时，$32\times N\times N\times 2\text{B}=1\text{TB}$；即使 $N=8\text{K}$，也有 4 GB 的显存。
 
 这个平方复杂度就是 FlashAttention 要解决的问题。
 
 ## 11. FlashAttention 的核心思想
 
-FlashAttention（Dao et al., 2022）是过去几年 Attention 优化领域最具影响力的工作。它的计算是精确的，不改变 Attention 的结果，只重新编排计算顺序，大幅减少了对 HBM 的访问量。
+FlashAttention（Dao et al., 2022）是 Attention 算子优化领域最具代表性的工作之一。它的计算是精确的，不改变 Attention 的数学结果，只重新编排计算顺序，大幅减少了对 HBM 的访问量。
 
 ### 11.1 GPU 存储层次回顾
 
@@ -416,7 +408,7 @@ Tiling 带来一个问题：Softmax 需要对每一行的所有元素做归一�
 
 Online Softmax 解决的就是这个问题。第 6.2 节的递推公式可以在新数据块到来时动态更新全局最大值和归一化分母，并修正之前块的计算结果。
 
-处理 Qi 对 K1 块的 Attention 后，得到一个局部输出 O1 和对应的 Softmax 统计量（局部最大值 m1 和局部分母 l1）。继续处理 Qi 对 K2 块时，会得到新的局部统计量 m2 和 l2。Online Softmax 的修正公式为（其中 $O_j$ 是以当前最大值为底和 $v_i$ 计算过的）：
+处理 $Q_i$ 对 $K_1$ 块的 Attention 后，得到一个局部输出 $O_1$ 和对应的 Softmax 统计量（局部最大值 $m_1$ 和局部分母 $l_1$）。继续处理 $Q_i$ 对 $K_2$ 块时，会得到新的局部统计量 $m_2$ 和 $l_2$。Online Softmax 的修正公式为（其中 $O_1$、$O_2^{\text{local}}$ 均是以各自局部最大值为基准、经局部分母加权后的 $V$ 聚合结果）：
 
 $$
 m_{\text{new}} = \max(m_1, m_2)
@@ -430,7 +422,7 @@ $$
 O_{\text{new}} = \frac{O_1 \cdot l_1 \cdot e^{m_1 - m_{\text{new}}} + O_2^{\text{local}} \cdot l_2 \cdot e^{m_2 - m_{\text{new}}}}{l_{\text{new}}}
 $$
 
-不断累积，直到所有 K 块处理完毕，最终结果与标准 Attention 的全局 Softmax 在数学上完全一致。
+不断累积，直到所有 K 块处理完毕，最终结果在数学上与全局 Softmax 等价（工程上仅存在浮点运算顺序带来的极小舍入差异）。
 
 ### 11.4 为什么能减少 HBM 访问
 
@@ -453,12 +445,12 @@ FlashAttention 的 HBM 访问量：
 
 ### 11.5 FlashAttention-2 和 FlashAttention-3
 
-FlashAttention-2（Dao, 2023）在 FlashAttention 的基础上进一步优化了并行策略和 warp 调度：
+FlashAttention-2（Dao, 2023）在 FlashAttention 的基础上改进了并行策略和 warp 调度：
 
-- 调整了内外循环的顺序（外循环遍历 Q 块，内循环遍历 K/V 块），减少了共享内存的读写
-- 更好的 warp 级工作分配，提升了 GPU 的占用率
-- 利用 Causal Mask 跳过全零的 tile，进一步减少计算量
+- 调整了内外循环的顺序（外循环遍历 Q 块，内循环遍历 K/V 块），减少了共享内存的读写；
+- 改善了 warp 级工作分配，提升了 GPU 的占用率；
+- 利用 Causal Mask 跳过全零的 tile，减少无效计算。
 
-FlashAttention-3（Dao et al., 2024）则针对 Hopper 架构（H100）进行了优化，利用了 TMA（Tensor Memory Accelerator）和 wgmma（Warp Group MMA）指令，进一步提升了硬件利用率。
+FlashAttention-3（Shah et al., 2024）则针对 Hopper 架构（H100）做了适配优化，利用 TMA（Tensor Memory Accelerator）和 wgmma（Warp Group MMA）指令提升硬件利用率。
 
 目前 FlashAttention 已经是所有主流推理和训练框架的标配：PyTorch 2.0+ 内置了 `torch.nn.functional.scaled_dot_product_attention`，底层默认调用 FlashAttention kernel。

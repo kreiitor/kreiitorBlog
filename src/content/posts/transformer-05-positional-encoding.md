@@ -15,16 +15,16 @@ cover: /covers/series-deep-learning.svg
 
 ### 1.1 自然语言使用语序表达语义
 
-- 我爱你 -> 主宾
-- 我今天开心 - 今天我开心 -> 强调位置不同
+- 「我爱你」与「你爱我」用词相同，语序不同则主宾关系完全颠倒；
+- 「我今天开心」与「今天我开心」语序微调，句子的强调重心随之改变。
 
-### 1.2 self-attention 位置「盲」
+### 1.2 Self-Attention 位置「盲」
 
-记输入矩阵 $X\in \mathbb{R}^{N\times d\_model}$，打乱输入 token 的顺序（即输入矩阵的行维度打乱，左乘排列矩阵 $\Pi$）。
-有 $X^{'} = \Pi X$。经过投影之后，$Q^{'},K^{'},V^{'}$ 都是 $Q,K,V$ 左乘一个排列矩阵的结果。对于 attention 的计算，逐步代入：
+记输入矩阵 $X \in \mathbb{R}^{N \times d_{model}}$，打乱输入 token 的顺序（即输入矩阵的行维度打乱，左乘排列矩阵 $\Pi$）。
+有 $X' = \Pi X$。经过投影之后，$Q', K', V'$ 都是 $Q, K, V$ 左乘一个排列矩阵的结果。对于 Attention 的计算，逐步代入：
 由于 softmax 逐行操作，可以提出因子 $\Pi$；且排列矩阵有 $\Pi \Pi^T=I$。
 $$
-attn^{'}=softmax\left(\frac{Q^{'}K^{'T}}{d_k}\right)V^{'}=\Pi softmax\left(\frac{QK^{T}}{d_k}\right)\Pi^T\Pi V=\Pi attn
+\operatorname{attn}' = \operatorname{softmax}\left(\frac{Q' K'^T}{\sqrt{d_k}}\right)V' = \Pi \operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)\Pi^T \Pi V = \Pi \operatorname{attn}
 $$
 可知，将输入 token 打乱之后，最终注意力等价于把原来的注意力按同样方式打乱（行维度），数值没有变化。
 
@@ -56,11 +56,11 @@ $$
 ## 3. Sinusoidal 位置编码
 
 ### 3.1 数学实现
-固定三角函数，生成位置指纹加到词嵌入向量中。对于隐藏维度的索引对 $(2i,2i+1)$，共用同一个频率 $\omega_i=1/1000^{\frac{2i}{d}}$，分别使用正弦和余弦编码：
+固定三角函数，生成位置指纹加到词嵌入向量中。对于隐藏维度的索引对 $(2i,2i+1)$，共用同一个频率 $\omega_i=1/10000^{\frac{2i}{d}}$，分别使用正弦和余弦编码：
 $$
 \begin{aligned}
-PE(pos,2i)&=\sin\left(\frac{pos}{1000^{2i/d}}\right) \\
-PE(pos,2i+1)&=\cos\left(\frac{pos}{1000^{2i/d}}\right)
+PE(pos,2i)&=\sin\left(\frac{pos}{10000^{2i/d}}\right) \\
+PE(pos,2i+1)&=\cos\left(\frac{pos}{10000^{2i/d}}\right)
 \end{aligned}
 $$
 
@@ -108,8 +108,7 @@ $$
 
 ### 5.1 数学实现
 
-RoPE（Rotary Position Embedding）**通过旋转 Q 和 K 向量来编码位置，使 Attention 分数天然包含相对位置信息。**
-> 没有旋转 V，只改变信息被读取的方向，信息本身的值不用旋转。
+RoPE（Rotary Position Embedding）**通过旋转 Q 和 K 向量来编码位置，使 Attention 分数天然包含相对位置信息**（不旋转 V——只改变信息被读取的方向，不改变信息本身的值）。
 
 #### 二维情形
 
@@ -129,9 +128,9 @@ x \\
 y
 \end{bmatrix}
 $$
-RoPE 的核心思路是：**用 token 的位置决定旋转角度。** 位置 0 的 token 不旋转，位置 1 的 token 旋转 $\theta$ 度，位置 2 的 token 旋转 $2\theta$ 度，以此类推。**位置 $m$ 的 token 旋转 $m\theta$ 度。**
+RoPE 的核心思路是：**用 token 的位置决定旋转角度。** 位置 0 的 token 不旋转，位置 1 的 token 旋转角度为 $\theta$，位置 2 的 token 旋转 $2\theta$，以此类推，**位置 $m$ 的 token 旋转 $m\theta$。**
 
-现在考虑两个 token：位置 $m$ 的 Q 向量被旋转了 $m\theta$ 度，位置 $n$ 的 K 向量被旋转了 $n\theta$ 度。当我们计算它们的内积（Attention 分数）时，由于旋转是刚性变换，**两个向量的内积只取决于它们之间的角度差 $(m - n)\theta$**，与各自的绝对旋转角度无关。
+现在考虑两个 token：位置 $m$ 的 Q 向量旋转了 $m\theta$，位置 $n$ 的 K 向量旋转了 $n\theta$。计算它们的内积（Attention 分数）时，由于旋转是刚性变换，**两个向量的内积只取决于它们的相对旋转角度 $(n - m)\theta$**，与各自的绝对旋转角度无关。
 
 下面严格推导。考虑二维情形，设 Q 和 K 分别是位置 $m$ 和 $n$ 的查询和键向量。RoPE 对它们施加位置相关的旋转：
 $$
@@ -240,9 +239,9 @@ $$
 
 RoPE 和 Sinusoidal 编码之间有直接的联系，但工作方式不同。
 **联系**：
-- 两者使用**完全相同的频率参数** θi=1/100002i/dθi=1/100002i/d
-- 两者都利用了三角函数的周期性和和角公式
-- Sinusoidal 编码中相对位置的线性变换性质（第 3.2 节）可以看作一种旋转操作，RoPE 则把这一性质显式化了
+- 两者使用**完全相同的频率参数** $\theta_i = 1 / 10000^{2i/d}$；
+- 两者都利用了三角函数的周期性和和角公式；
+- Sinusoidal 编码中相对位置的线性变换性质（第 3.2 节）可以看作一种旋转操作，RoPE 则把这一性质显式化了。
 **区别**：
 
 | 维度      | Sinusoidal         | RoPE                |
@@ -256,18 +255,18 @@ RoPE 和 Sinusoidal 编码之间有直接的联系，但工作方式不同。
 
 ### 5.3 朴素循环 → 向量化 → 工程实践
 
-> 逐元素相乘的写法和工程思维，第一遍学时不容易跟上。
+按相邻两维成对旋转的等价循环写法如下：
 
 ```python
-# 对于每一个token的q为例
+# 以单条序列的 q (seq_len, head_dim) 为例
 pos = torch.arange(seq_len).float()
-for i in range(head_dim//2):
-	x = q[:,2*i]
-	y = q[:,2*i+1]
-	freq = 1.0 / 10000**(2*i/head_dim) * pos
-	x = x*torch.cos(freq)-y*torch.sin(freq)
-	y = x*torch.cos(freq)+y*torch.sin(freq)
-
+for i in range(head_dim // 2):
+	x = q[:, 2 * i]
+	y = q[:, 2 * i + 1]
+	freq = (1.0 / 10000 ** (2 * i / head_dim)) * pos
+	x_rot = x * torch.cos(freq) - y * torch.sin(freq)
+	y_rot = x * torch.sin(freq) + y * torch.cos(freq)
+	q[:, 2 * i], q[:, 2 * i + 1] = x_rot, y_rot
 ```
 ## 6. ALiBi：带距离惩罚的注意力
 
@@ -305,7 +304,7 @@ ALiBi 相当于给 Attention 分数加了一个「距离惩罚」：两个 token
 ### 7.1 为什么相对位置编码仍未解决外推？
 
 $$
-\theta_i=\frac{pos}{10000^{2i/d}}
+\phi_i(pos)=\frac{pos}{10000^{2i/d}}
 $$
 回到 base 的定义：$\theta_i = base^{-2i/d}$。
 
@@ -322,16 +321,16 @@ $$
 
 ### 7.3 NTK-aware Scaling（Neural Tangent Kernel-aware Scaling）
 
-**NTK-aware scaling：** 对不同频率维度赋予不同的缩放策略。关键是给不同频率维度索引分配不同的缩放因子。取 $base^{'}=base\times s^{d/(d-2))}$，然后对于维度索引 $i$ 的新旧频率：
+**NTK-aware scaling：** 对不同频率维度赋予不同的缩放策略。取 $base' = base \times s^{d/(d-2)}$，则对于维度索引 $i$，新旧频率之比为：
 $$
-\frac{\theta_i^{'}}{\theta_i}=\frac{base^{'-2i/d}}{base^{-2i/d}}=\frac{base^{-2i/d}\times s^{d/(d-2)\times2i/d}}{base^{-2i/d}}=s^{2i/(d-2)}
+\frac{\theta_i'}{\theta_i}=\frac{(base')^{-2i/d}}{base^{-2i/d}}=\frac{base^{-2i/d}\times s^{-\frac{d}{d-2}\cdot\frac{2i}{d}}}{base^{-2i/d}}=s^{-2i/(d-2)}
 $$
 
-- 这个缩放因子随着 $i$ 单调递增。
-	- 高频时：极端取 $i=0$，缩放因子是 $s^0=1$，不动。
-	- 低频时：极端取 $i=\frac{d}{2} -1$（默认 $d$ 是 2 的倍数，且从零编号，每两个索引为一组），缩放因子是 $s^{(d-1)/(d-2)}=\frac{1}{s}$。
+- 当 $s > 1$ 时，这个缩放因子随着 $i$ 单调递减：
+  - 高频时：取 $i=0$，缩放因子是 $s^0=1$，保持不变；
+  - 低频时：取 $i=\frac{d}{2}-1=\frac{d-2}{2}$（默认 $d$ 是偶数，从零编号），指数为 $-\frac{2i}{d-2}=-1$，缩放因子是 $s^{-1}=\frac{1}{s}$。
 
-> 这里实际上缩小了低频区域的频率，以覆盖更长的上下文。要保持远距离的位置关系，比如 $m=1$ 和 $m=1000000$，至少要求频率满足 1000000 步才转一圈，也就是波长要更大、频率要更低。
+这一变换缩小了低频维度的角频率（拉长波长），以覆盖更长的上下文。要区分远距离的位置关系（如 $m=1$ 和 $m=1000000$），需要对应维度的波长足够长、角频率足够低。
 
 - 这样就实现了高低频不同步的缩放：高频索引继续维护近邻 token 的位置关系，低频索引通过缩放频率覆盖更大的位置范围。
 
@@ -353,7 +352,7 @@ YaRN（Yet another RoPE extensioN）在 NTK-aware Scaling 的基础上做了两�
 
 上述方法在推理前需要预先确定目标长度并设置缩放参数。实际部署中，输入长度是动态变化的：有些请求很短，有些很长。为短请求也施加长度扩展的缩放没有必要，甚至会损害性能。
 
-**动态 NTK** 根据当前实际序列长度动态调整 base 参数。推理过程中，当前序列长度 LcurrentLcurrent 会随着 token 的生成不断增长。如果 $L_{current}\le L_{train}$，使用原始的 base 参数（不做缩放）；如果 $L_{current}>L_{train}$，则根据 $L_{current}/L_{train}$ 的比值动态计算新的 base 值。
+**动态 NTK** 根据当前实际序列长度动态调整 base 参数。推理过程中，当前序列长度 $L_{\text{current}}$ 会随着 token 的生成不断增长。如果 $L_{\text{current}}\le L_{\text{train}}$，使用原始的 base 参数（不做缩放）；如果 $L_{\text{current}}>L_{\text{train}}$，则根据 $L_{\text{current}}/L_{\text{train}}$ 的比值动态计算新的 base 值。
 
 这种方法的优势在于：
 
@@ -369,7 +368,7 @@ YaRN（Yet another RoPE extensioN）在 NTK-aware Scaling 的基础上做了两�
 
 > kernel 融合是贯穿始终的事：把几步操作合并到一个 kernel 中，降低 kernel launch 的耗时，减少 HBM 数据搬运（对 memory-bound 阶段尤其重要）。
 
-RoPE 的核心操作是对 Q 和 K 向量做逐元素的乘加运算。从计算量看，这个操作非常轻量 $O(N⋅d)$，远小于 Attention 中的矩阵乘法 $（O(N^2⋅d)$。但如果把它作为一个独立的 CUDA kernel 执行，kernel launch 的开销和额外的显存读写就会成为瓶颈。
+RoPE 的核心操作是对 Q 和 K 向量做逐元素的乘加运算。从计算量看，这个操作计算量很轻（$O(N \cdot d)$），远小于 Attention 中的矩阵乘法（$O(N^2 \cdot d)$）。但如果把它作为一个独立的 CUDA kernel 执行，kernel launch 的开销和额外的显存读写就会成为瓶颈。
 
 因此，在高性能推理引擎中，RoPE 通常被**融合（fuse）**到 Attention kernel 的前端：
 
@@ -381,7 +380,7 @@ RoPE 的核心操作是对 Q 和 K 向量做逐元素的乘加运算。从计算
 - 减少一次 kernel launch（节省约 5-10 微秒的启动开销，在 Decode 阶段每步只处理 1 个 token 时这个开销占比不小）
 - 减少一次 HBM 读写往返（对于 Memory Bound 的 Decode 阶段尤其重要）
 
-此外，RoPE 的三角函数值 $cos⁡(mθ_i)$ 和 $sin⁡(mθ_i)$ 通常会预计算并缓存为查找表，存放在 GPU 的常量内存或共享内存中，避免每次推理重复计算。
+此外，RoPE 的三角函数值 $\cos(m\theta_i)$ 和 $\sin(m\theta_i)$ 通常会预计算并缓存为查找表，存放在 GPU 的常量内存或共享内存中，避免每次推理重复计算。
 
 ### 8.2 长上下文对 KV Cache 的影响
 
@@ -394,13 +393,11 @@ RoPE 的核心操作是对 Q 和 K 向量做逐元素的乘加运算。从计算
 |32K|16 GB|256 GB|
 |128K|64 GB|1024 GB|
 
-> 一个头中的 K、V 是 (B, num_heads, N, head_dim)，fp16 是 2B，则 $4K\times 32 \times 128 \times 2\times 2B \times 32 / 1024 /1024 = 2GB$
-> 记住，还有层数 32，缓存上一轮得到的所有 KV。
-> B\* N\* head_dim\* num_KVheads\* 2\* {数据类型字节}\* {模型结构堆叠的层数}=KVcache
+注：各层完整的 K、V 张量形状为 `(B, num_heads, N, head_dim)`，FP16 占 2 字节，以 32 层、$N=4096$ 为例，单请求显存为 $4096 \times 32 \times 128 \times 2 \times 2\text{B} \times 32 / 1024^3 = 2\text{ GB}$；通用公式为 `B × N × head_dim × num_kv_heads × 2 × dtype_bytes × num_layers`。
 
 当上下文长度从 4K 扩展到 128K 时，KV Cache 的显存需求增长了 32 倍。
 
-- **单请求即可能耗尽显存**：128K 上下文的单请求 KV Cache（64 GB）就已经接近一张 A100 的全部容量
+- **单请求即可能耗尽显存**：128K 上下文的单请求 KV Cache（64 GB）就已经接近一张 80 GB A100 的显存上限（并超过 40 GB 型号的容量）
 - **并发能力急剧下降**：即使有足够的显存，能同时处理的请求数也会大幅减少
 - **PagedAttention 的重要性凸显**：在长上下文场景中，KV Cache 的动态增长和碎片化问题更加严重，需要更精细的内存管理
 
@@ -415,7 +412,7 @@ RoPE 的核心操作是对 Q 和 K 向量做逐元素的乘加运算。从计算
 | 方案         | 推理额外计算          | 额外参数          | 实现复杂度 | 长上下文友好度 |
 | ---------- | --------------- | ------------- | ----- | ------- |
 | Sinusoidal | 预计算查表 + 向量加法    | 无             | 低     | 差       |
-| Learned PE | 嵌入查表 + 向量加法     | Lmax×dLmax×d | 极低    | 差（硬性上限） |
+| Learned PE | 嵌入查表 + 向量加法     | $L_{\max} \times d$ | 极低    | 差（硬性上限） |
 | RoPE       | 逐元素旋转（可融合）      | 无             | 中等    | 好（配合插值） |
 | ALiBi      | Attention 分数加偏置 | 无             | 低     | 好（天然外推） |
 

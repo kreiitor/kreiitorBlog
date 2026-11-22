@@ -14,11 +14,11 @@ cover: /covers/post-cli-terminal.svg
 
 ## 适用场景
 
-连接 GPU 服务器、云主机或 HPC 集群时，SSH 配置、会话保持、密钥管理和远程 CLI AI 代理的使用容易混在一起。下面按连接、保持、开发、代理四部分整理，命令按 OpenSSH 9+ 验证。
+连接 GPU 服务器、云主机或 HPC 集群时，SSH 配置、会话保持、密钥管理和远程 CLI AI 代理的使用容易混在一起。下面依次整理 SSH 配置与密钥、tmux 会话保持、远程开发与文件传输、CLI AI 代理及安全实践，命令按 OpenSSH 9+ 验证。
 
 ---
 
-## 一、SSH 配置——一切远程工作的基础
+## 一、SSH 配置
 
 ### 1.1 为什么需要配置 `~/.ssh/config`
 
@@ -55,7 +55,7 @@ if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Path $sshDir }
 New-Item -ItemType File -Path "$sshDir\config" -Force
 ```
 
-> **权限注意**：config 文件权限应为 600（Linux/macOS 下 `chmod 600 ~/.ssh/config`）。Windows 下通常不需要额外设置，但如果权限过宽 SSH 会拒绝读取。
+> **权限注意**：config 文件权限应为 600（Linux/macOS 下 `chmod 600 ~/.ssh/config`）。Windows 下新建配置文件默认仅当前用户可写，一般无需调整；若从别处复制导致权限过宽，SSH 同样会拒绝读取（可用 `icacls` 收紧权限）。
 
 ### 1.3 一套可直接参考的 SSH Config
 
@@ -163,7 +163,7 @@ Host *
 mkdir -p ~/.ssh/sockets
 ```
 
-效果：第一次连接建立 TCP 隧道，后续的 ssh、scp、rsync、sftp 全部复用，认证过程几乎为零延迟。
+效果：第一次连接建立 TCP 隧道，后续的 ssh、scp、rsync、sftp 全部复用，免去重复的 TCP 握手与密钥认证开销。
 
 ---
 
@@ -231,8 +231,8 @@ ssh-add ~/.ssh/id_ed25519
 # 方法一：ssh-copy-id（推荐）
 ssh-copy-id -i ~/.ssh/id_ed25519.pub user@server
 
-# 方法二：手动复制（如果没有 ssh-copy-id）
-type ~/.ssh/id_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+# 方法二：手动复制（如果没有 ssh-copy-id；Windows PowerShell 下将 cat 换为 Get-Content 并改用 $env:USERPROFILE 路径）
+cat ~/.ssh/id_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 ### 2.5 权限检查常见问题
@@ -247,23 +247,23 @@ type ~/.ssh/id_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && chmod 700 ~/.ss
 
 ---
 
-## 三、TMUX——远程会话的持久化基石
+## 三、tmux 远程会话保持
 
 ### 3.1 为什么必须用 tmux
 
 SSH 连接断了（合上笔记本、切换 Wi-Fi、VPN 掉线），终端里正在跑的程序跟着就没了。
 
-tmux 解决这个问题：**会话在服务器上持续运行，你只是“接上”和“离开”**。就算网络断了，程序照跑不误。
+tmux 解决这个问题：**会话在服务器上持续运行，你只是「接上」和「离开」**。就算网络断了，程序照跑不误。
 
-| 功能 | tmux | screen | 评价 |
-|------|------|--------|------|
-| 会话管理 | 优秀 | 基础 | tmux 强得多 |
-| 窗口分割 | 横向 + 纵向 | 有限 | tmux 体验更好 |
-| 配置体验 | 清晰易懂 | 语法晦涩 | tmux 更友好 |
-| 维护状态 | 活跃更新 | 维护模式 | tmux 更可靠 |
-| 现代生态 | 丰富（插件系统） | 有限 | tmux 完胜 |
+| 功能 | tmux | screen | 差异说明 |
+|------|------|--------|----------|
+| 会话管理 | 支持多客户端独立分离与重连 | 基础会话接管 | tmux 多会话管理更灵活 |
+| 窗口分割 | 原生支持横向与纵向窗格 | 纵分支持有限 | tmux 布局切换更完整 |
+| 配置体验 | 声明式选项较直观 | 语法偏晦涩 | tmux 更容易定制 |
+| 维护状态 | 社区持续更新 | 处于维护模式 | tmux 生态更活跃 |
+| 插件生态 | TPM 等插件体系成熟 | 扩展有限 | 现代工具链更偏向 tmux |
 
-**结论**：除非有 screen 遗留依赖，否则一律用 tmux。
+**结论**：除非有 screen 遗留依赖，否则优先选 tmux。
 
 ### 3.2 安装
 
@@ -413,7 +413,7 @@ mosh gpu-dev -- tmux new -A -s work
 
 ### 4.1 工作原理
 
-VS Code Remote SSH 在远程服务器上运行一个完整的 VS Code Server。你本地 VS Code 只是一个瘦客户端的 UI 壳。**所有代码编辑、IntelliSense、终端、调试、扩展都发生在远程服务器上**。
+VS Code Remote SSH 在远程服务器上运行一个完整的 VS Code Server。本地 VS Code 只承担界面显示（瘦客户端）。**所有代码编辑、IntelliSense、终端、调试、扩展都发生在远程服务器上**。
 
 好处：
 
@@ -440,7 +440,7 @@ tmux attach -t work
 
 这样你同时拥有：
 
-- VS Code 的编辑、导航、git 图形界面（远程）
+- VS Code 的编辑、导航、Git 图形界面（远程）
 - tmux 的持久化会话、多窗格（远程）
 
 ### 4.4 端口转发
@@ -538,7 +538,7 @@ scp -C large_log.txt user@server:/tmp/
 
 1. **Git 首选**：代码统一走 Git，本地和远程各 `clone` 一份。AI 代理在远程修改后 `git push`，本地 `git pull`。
 2. **rsync 补充**：非 Git 管理的大文件（数据集、模型权重），用 rsync 同步。
-3. **避免 scp 做日常同步**：scp 不支持增量，每次都全量传输，浪费时间和带宽。
+3. **避免用 scp 做日常同步**：scp 不支持增量，每次都全量传输，浪费时间和带宽。
 
 ---
 
@@ -555,12 +555,12 @@ scp -C large_log.txt user@server:/tmp/
                       ├── 项目代码
                       ├── CLI AI 代理（opencode / codex / claude-code）
                       ├── MCP 服务器
-                      └── LLM API 调用（走服务器外网）
+                      └── LLM API 调用（走服务器公网）
 ```
 
 - 适用：GPU 服务器、需要服务器环境才能运行的代码、大项目在服务器上有完整依赖
 - 优点：AI 直接看到完整的远程环境，能正确理解项目上下文
-- 缺点：服务器需要能访问外网（调用 LLM API）
+- 缺点：服务器需要能访问公网（调用 LLM API）
 
 **模式 B：代理跑在本地，代码在远程**
 
@@ -571,7 +571,7 @@ scp -C large_log.txt user@server:/tmp/
 └── LLM API 调用
 ```
 
-- 适用：远程服务器网络不稳定、想用本地 IDE、服务器不能访问外网
+- 适用：远程服务器网络不稳定、想用本地 IDE、服务器不能访问公网
 - 优点：代理响应更快（无网络延迟），本地编辑器体验更好
 - 缺点：文件同步可能出问题，AI 看到的可能不是远程真实环境
 
@@ -770,7 +770,7 @@ export ANTHROPIC_API_KEY=$(cat ~/.secrets/anthropic-key)
 export OPENAI_API_KEY=$(cat ~/.secrets/openai-key)
 ```
 
-**如果使用云平台（AWS / GCP / Azure）**：
+**如果使用云平台密钥管理（以 AWS / GCP 为例）**：
 
 ```bash
 # AWS Secrets Manager
@@ -865,7 +865,7 @@ OpenCode 提供了精细的权限系统。在你的项目 `opencode.json` 中：
 - **不要把 `.env`、密钥文件提交到 Git**
 - **不要在共享服务器上把代理服务端口暴露到公网**
 
-推荐的 `.gitignore` ：
+推荐的 `.gitignore`：
 
 ```gitignore
 # 密钥和凭证
@@ -873,7 +873,6 @@ OpenCode 提供了精细的权限系统。在你的项目 `opencode.json` 中：
 .env.*
 *.pem
 *.key
-~/.secrets/
 credentials.json
 
 # AI 代理本地配置
@@ -970,7 +969,7 @@ which python
 ### 8.6 API 密钥报错 "Invalid API key"
 
 - 检查环境变量是否设置：`echo $ANTHROPIC_API_KEY`
-- 如果用了 restricted 文件，检查文件权限：`ls -la ~/.secrets/`
+- 如果用了受限权限文件，检查文件权限：`ls -la ~/.secrets/`
 - OpenCode 配置中变量替换格式是 `{env:VAR_NAME}`（注意大括号和冒号）
 
 ---
@@ -982,7 +981,7 @@ which python
 3. **VS Code Remote SSH + tmux** 是常用的远程开发组合
 4. **代码走 Git 同步**，数据文件走 rsync 同步
 5. AI 代理在远程服务器上首选 **模式 A**（代理跑在服务器上），最贴近实际运行环境
-6. API 密钥用**环境变量**或**600 权限文件**管理，永远不要硬编码在配置文件里
+6. API 密钥用**环境变量**或**600 权限文件**管理，不要硬编码在配置文件里
 7. 生产服务器务必用 OpenCode 的 permission 系统**限制 AI 代理的操作权限**
 8. 所有密钥**必须设置密码**，不同环境**必须用不同密钥**
 

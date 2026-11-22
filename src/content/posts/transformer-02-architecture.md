@@ -18,7 +18,7 @@ cover: /covers/series-deep-learning.svg
 - Encoder：把输入序列压缩成一组「理解后」的表示
 - Decoder：基于「理解后」的表示逐步生成输出序列
 
-翻译时先读懂原文，再逐字写出中文，每写一个词都回头看一次原文。
+翻译时先读懂源句，再逐字写出译文，每写一个词都回头对照源句。
 
 ### 1.2 整体架构
 
@@ -41,34 +41,34 @@ cover: /covers/series-deep-learning.svg
 | Masked Decoder Self-Attention | Decoder 层 | 已生成序列 | 已生成序列      | 已生成的 token 之间互相交换信息（不能看未来） |
 | Cross-Attention               | Decoder 层 | 已生成序列 | Encoder 输出 | 生成过程中「回头查看」输入序列            |
 
-按翻译来对应：Encoder Self-Attention 是读原文时反复揣摩词与词的关系；Masked Decoder Self-Attention 是写译文时回顾自己已经写了什么；Cross-Attention 是写译文时回头对照原文。
+按翻译来对应：Encoder Self-Attention 是读源句时反复揣摩词与词的关系；Masked Decoder Self-Attention 是写译文时回顾自己已经写了什么；Cross-Attention 是写译文时回头对照源句。
 
 ## 2. Encoder 结构详解
 看一个结构，先看输入输出各是什么形状，再看中间怎么加工。
 
 ### 2.1 输入处理
-进入 Encoder 之前，要先经过 embedding 处理：
-- **Token embedding：** 将每个 token id 映射为一个 $d_{model}$ 维的稠密向量。这个映射由一个可学习的嵌入矩阵 $W_{emb} \in \mathbb{R}^{V\times d_{model}}$ 实现，其中 $V$ 是词表大小。
-- **Position embedding：** attention 机制本身不包含位置信息（打乱 token 顺序之后，计算结果不变），位置需要显式注入。原始 Transformer 用正弦、余弦函数生成位置编码，直接加到 token embedding 上：
+进入 Encoder 之前，要先经过 Embedding 处理：
+- **Token Embedding**：将每个 token ID 映射为一个 $d_{model}$ 维的稠密向量。这个映射由一个可学习的嵌入矩阵 $W_{emb} \in \mathbb{R}^{V\times d_{model}}$ 实现，其中 $V$ 是词表大小。
+- **Position Embedding**：Attention 机制本身不包含位置信息（打乱 token 顺序之后，计算结果不变），位置需要显式注入。原始 Transformer 用正弦、余弦函数生成位置编码，直接加到 Token Embedding 上：
 $$
-Input = TokenEmbed(x) + PosEncode(position)
+\operatorname{Input} = \operatorname{TokenEmbed}(x) + \operatorname{PosEncode}(\text{position})
 $$
-处理后输入形状为 $(N_{src}, d_{model})$，其中 $N_{src}$ 是原始序列长度。
+处理后输入形状为 $(N_{src}, d_{model})$，其中 $N_{src}$ 是源序列长度。
 
 ### 2.2 单个 Encoder 层的数据流
-一层 Encoder 由两个子模块组成，每个子模块外面包裹着 add & norm（残差连接和 LayerNorm）。数据流如下：
+一层 Encoder 由两个子模块组成，每个子模块外面包裹着 Add & Norm（残差连接和 LayerNorm）。数据流如下：
 
 1. 输入 $x$ 分成两路：一路进入 Multi-Head Self-Attention，另一路作为残差直连。
 2. 注意力输出与残差相加，再做 LayerNorm（Add & Norm）。
 3. 结果再次分成两路：一路进入 FFN，另一路作为第二次残差。
 4. FFN 输出与残差相加，再做 LayerNorm，得到该层输出。
 
-原始论文用的是 post-norm，先算子层再做 LayerNorm，即 $LayerNorm(x+SubLayer(x))$。当前大模型大多用 pre-norm，顺序反过来。
+原始论文用的是 Post-Norm，先算子层再做 LayerNorm，即 $\operatorname{LayerNorm}(x+\operatorname{SubLayer}(x))$。当前大模型大多用 Pre-Norm，顺序反过来。
 
-### 2.3 Encoder self-attention 的关键特性
+### 2.3 Encoder Self-Attention 的关键特性
 Encoder 中的 Self-Attention 是**双向的（Bidirectional）**——每个 token 可以关注序列中所有其他 token，包括它前面和后面的。
 
-用注意力矩阵看更清楚（1 表示可以关注，形状 $N_{src}×N_{src}$）：
+用注意力矩阵看更清楚（1 表示可以关注，形状 $N_{src} \times N_{src}$）：
 ```
      t0  t1  t2  t3  t4
 t0 [  1   1   1   1   1 ]
@@ -78,7 +78,7 @@ t3 [  1   1   1   1   1 ]
 t4 [  1   1   1   1   1 ]
 ```
 
-全连接，没有任何遮挡。即使在第一层 Encoder 里，序列末尾的 token 也能直接影响开头 token 的表示。经过 N 层 Encoder，每个位置的输出向量聚合了整个输入序列的全局信息。
+所有位置两两可见，没有任何遮挡。即使在第一层 Encoder 里，序列末尾的 token 也能直接影响开头 token 的表示。经过 $N$ 层 Encoder，每个位置的输出向量聚合了整个输入序列的全局信息。
 
 ### 2.4 Encoder 多层堆叠的信息流动
 原始论文使用 6 层 Encoder 堆叠。关键设计是**每层的输入和输出维度完全相同**（都是 $(N_{src},d_{model})$）。各层因此能像积木一样叠起来：6 层、12 层甚至 100 层，只要显存放得下。
@@ -122,13 +122,13 @@ $$
 \text{CrossAttn}(Q_{dec}, K_{enc}, V_{enc}) = \text{softmax}\left(\frac{Q_{dec} K_{enc}^T}{\sqrt{d_{model}}}\right) V_{enc}
 $$
 
-形状上，如果源序列长度为 $N_{src}$，目标序列长度为 $N_{target}$，各张量是：
+形状上，如果源序列长度为 $N_{src}$，目标序列长度为 $N_{tgt}$，各张量是：
 
 - $Q_{dec}\in \mathbb{R}^{N_{tgt}\times d_{model}}$
 - $K_{enc},V_{enc}\in \mathbb{R}^{N_{src}\times d_{model}}$
-- 注意力分数矩阵：($N_{tgt}\times N_{src}$)，不是方阵。
+- 注意力分数矩阵：$(N_{tgt}\times N_{src})$，不是方阵。
 
-Cross-Attention 的注意力矩阵不需要因果掩码，因为 Decoder 中的每个 token 应该能够关注 Encoder 输出的所有位置——翻译时要看到完整的原文。
+Cross-Attention 的注意力矩阵不需要因果掩码，因为 Decoder 中的每个 token 应该能够关注 Encoder 输出的所有位置——翻译时要看到完整的源文。
 
 ### 3.4 为什么 Decoder 层有三个子模块
 
@@ -137,7 +137,7 @@ Cross-Attention 的注意力矩阵不需要因果掩码，因为 Decoder 中的�
 | 子模块                   | 输入         | 作用                       | 类比           |
 | --------------------- | ---------- | ------------------------ | ------------ |
 | Masked Self-Attention | 目标序列自身     | 已生成的词之间互相协调——确保语法通顺、前后一致 | 写作时回顾自己已写的段落 |
-| Cross-Attention       | 目标序列 + 源序列 | 生成过程中参考源信息——确保翻译忠实于原文    | 写译文时回头对照原文   |
+| Cross-Attention       | 目标序列 + 源序列 | 生成过程中参考源信息——确保翻译忠实于源文    | 写译文时回头对照源文   |
 | FFN                   | 当前 token   | 对综合后的信息做深度非线性加工          | 消化理解后形成自己的表达 |
 
 顺序是这样排的：Self-Attention 先整合「自己已有的上下文」，Cross-Attention 再补上「来自输入的信息」，FFN 最后做「深度加工」。这样每个 token 做预测时，既带着已生成的上文，也参考了源输入。
@@ -163,8 +163,8 @@ Cross-Attention 的注意力矩阵不需要因果掩码，因为 Decoder 中的�
 ```
 
 **保留了什么**：双向 Self-Attention + FFN + 残差 + LayerNorm
-**去除了什么：** 因果掩码、Cross-Attention、自回归生成（只存在于 Decoder 中的部分）
-**适用场景：** 文本分类、命名实体识别（NER）、句子相似度、信息抽取——所有需要「理解」但不用生成的任务
+**去除了什么**：因果掩码、Cross-Attention、自回归生成（只存在于 Decoder 中的部分）
+**适用场景**：文本分类、命名实体识别（NER）、句子相似度、信息抽取——所有需要「理解」但不用生成的任务
 
 ### 4.2 Encoder-Decoder：T5
 2019 年，Google 发布 T5（Text-to-Text Transfer Transformer），保留了完整的 Encoder-Decoder 架构，同时做了范式统一：**把所有 NLP 任务都转成「文本到文本」的格式**。
@@ -275,33 +275,33 @@ Step 7: 自回归循环
 
 整个过程的数学表达是：
 $$
-P(next\_token∣x_1,x_2,…,x_n)=Softmax(RMSNorm(DecoderBlocks^{(L)}(Embed(x)))W_{lm})
+P(\text{next\_token} \mid x_1, x_2, \dots, x_n) = \operatorname{Softmax}(\operatorname{RMSNorm}(\operatorname{DecoderBlocks}^{(L)}(\operatorname{Embed}(x))) W_{lm})
 $$
 
 ### 5.2 五大组件拆解
 
 Decoder-only 模型可以拆成五个功能模块：
 
-#### **5.2.1 Token Embedding**
+#### 5.2.1 Token Embedding
 作用像一本「单词-向量」对照字典。模型维护一个嵌入矩阵 $W_{emb}\in \mathbb{R}^{V\times d_{model}}$，输入一个 token ID，输出对应那一行的向量。
 
 - LLaMA-2-7B 的词表大小 $V=32000$，$d_{model}=4096$，所以 $W_{emb}$ 有 $32000×4096≈131M$ 参数
 - 相对模型总参数 6.7B，Embedding 只占约 2%
 
-#### **5.2.2 Decoder Block 堆叠**
-这是模型的「主体」，占据了 95%+ 的参数和计算量。Block 内部的结构在入门篇和后续深入文章中详细讲解，这几条性质则贯穿所有 Block：
+#### 5.2.2 Decoder Block 堆叠
+这是模型的「主体」，占据了 95%+ 的参数和计算量。Block 内部各子模块的细节在后续章节分别展开，以下三条性质贯穿所有 Block：
 
 - **维度守恒**：每个 Block 的输入和输出形状严格相同，都是 $(N,d_{model})$，这使得 Block 可以任意堆叠
 - **参数不共享**：每一层的 $W_Q,W_K,W_V,W_O,W_{gate},W_{up},W_{down}$ 都是独立的参数，不同层之间不共享权重
-- **层数决定深度**：LLaMA-2-7B 有 32 层，LLaMA-2-70B 有 80 层，层数越多模型越「深」，理论上能捕捉更复杂的模式
+- **层数决定深度**：LLaMA-2-7B 有 32 层，LLaMA-2-70B 有 80 层，层数越多模型越「深」，通常能捕捉更复杂的模式
 
-#### **5.2.3 Final LayerNorm**
+#### 5.2.3 Final LayerNorm
 最后一层 Decoder Block 输出后，还有一个单独的归一化层。它的作用是在送入 LM Head 之前稳定数值范围，防止深层网络中数值漂移导致输出分布不稳定。
 
-#### **5.2.4 LM Head（语言模型头）**
+#### 5.2.4 LM Head（语言模型头）
 一个简单的线性层 $W_{lm}\in \mathbb{R}^{d_{model}\times V}$，将 $d_{model}$ 维的隐藏状态映射到词表大小 $V$ 的 logits 向量。
 
-工程上还有一步重要的优化：**Weight Tying（权重共享）**。许多模型（包括 LLaMA）让 LM Head 的权重直接复用 Token Embedding 的权重矩阵，转置后使用，即 $W_{lm}=W_{emb}^T$。这省掉 131M 参数，语义上也说得通：「把向量映射回 token」和「把 token 映射为向量」应该是互逆操作。
+工程上还有一步重要的优化：**Weight Tying（权重共享）**。许多模型（包括 LLaMA）让 LM Head 的权重直接复用 Token Embedding 的权重矩阵，转置后使用，即 $W_{lm}=W_{emb}^T$。这省掉 131M 参数，在表示空间上也对称：「把 token 映射为向量」与「把向量映射回词表分布」互为对偶操作。
 
 #### **5.2.5 Softmax + 采样**
 将 logits 转化为概率分布，再根据采样策略（Greedy、Top-k、Top-p、Temperature 等）选出下一个 token。不同的采样策略会显著影响生成质量和多样性——Temperature 越高输出越随机，越低越确定性。
@@ -380,17 +380,17 @@ LM Head: (4096, 32000)                  ← 131M 参数 (可能与 Embedding 共
 输出: logits (batch, seq_len, 32000)
 ```
 
-**参数分布**：32 层 Decoder Block 占 6,432M / 6,738M ≈ **95.5%** 的参数。模型的「智慧」几乎全部存储在这些 Block 的权重矩阵中。
+**参数分布**：32 层 Decoder Block 占 6,432M / 6,738M ≈ **95.5%** 的参数。模型的参数几乎全部集中在这些 Block 的权重矩阵中。
 
 ### 6.3 模型规模与层数/宽度的关系
 
 扩大模型有两个维度——加深（增加层数 $L$）和加宽（增加隐藏维度 $d_{model}$）。参数量的粗略公式为：
 
 $$
-Params≈L\times (12\cdot d_{model}^2)+2\cdot V\cdot d_{model}
+\text{Params} \approx L \times (12 \cdot d_{model}^2) + 2 \cdot V \cdot d_{model}
 $$
 
-其中 $12\cdot d_{model}^2$ 是单层 Decoder Block 的参数量（4 个 Attention 矩阵 + SwiGLU 的 3 个矩阵约等于 $4d^2+3\times \frac{8}{3}d^2=12\cdot d^2$），$2\cdot V\cdot d_{model}$ 是 Embedding 与 LM Head 的参数量（LLaMA 系列两者不共享权重；若像 GPT-2、Gemma 那样 tie embedding，则只算一份 $\cdot V\cdot d_{model}$）。
+其中 $12\cdot d_{model}^2$ 是单层 Decoder Block 的参数量（4 个 Attention 矩阵 + SwiGLU 的 3 个矩阵约等于 $4d^2+3\times \frac{8}{3}d^2=12\cdot d^2$），$2\cdot V\cdot d_{model}$ 是 Embedding 与 LM Head 的参数量（LLaMA 系列两者不共享权重；若像 GPT-2、Gemma 那样 tie embedding，则只算一份 $V\cdot d_{model}$）。
 
 参数量随规模的变化有一个规律：
 - 7B → 13B：层数从 32 增到 40（+25%），宽度从 4096 增到 5120（+25%），参数量约翻倍

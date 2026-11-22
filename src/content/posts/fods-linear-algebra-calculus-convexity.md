@@ -12,22 +12,22 @@ order: 8
 cover: /covers/post-math.svg
 ---
 
-本附录是给**完全零基础**的同学写的。从「向量就是一列数」讲起，但会把内容 的每一个定义、每一条 HW、每一处省略的证明都补成可以逐步跟下来的论证。Lec1 的最小二乘、投影、伪逆，Lec2 的范数 / 近端算子 / 凸优化，后面的核范数与 SVD，全部从这里调用。
+本附录面向线性代数与凸分析基础尚待巩固的读者，从向量定义出发，将后续要用到的每一条定义、性质与证明补全为可逐步推导的完整论证。监督学习中的最小二乘、投影、伪逆，以及优化与正则化理论中的范数、近端算子、核范数、SVD 与凸对偶，全部以此为基础。
 
 读法建议：
 
-1. 第 0–5 节必须会（向量、子空间、投影、范数、对偶）。
-2. 第 6–11 节（SVD、PCA、伪逆、Eckart–Young、条件数、核范数）是整门课的线性代数核心。
-3. 第 12 节（梯度 / Hessian / Taylor）是后面求导的字典。
-4. 第 13–24 节（凸集、凸函数、次梯度、共轭、对偶、KKT）在 Lec2 优化误差和约束问题里反复出现。
+1. 第 0–5 节是基础工具（向量、子空间、投影、范数、对偶）。
+2. 第 6–11 节（SVD、PCA、伪逆、Eckart–Young、条件数、核范数）是线性代数的核心部分。
+3. 第 12 节（梯度 / Hessian / Taylor）是向量与矩阵求导的常用字典。
+4. 第 13–24 节（凸集、凸函数、次梯度、共轭、对偶、KKT）支撑优化误差与带约束极值问题的分析。
 
-记号约定与全课一致：列向量默认，$x'$ 表示 $x^\top$，$\langle x,y\rangle=x^\top y$。内容把核写成 kernal，一律按 kernel 理解。
+记号约定：默认向量为列向量，$x'$ 表示 $x^\top$，$\langle x,y\rangle=x^\top y$；线性算子的零空间记为核（kernel）。
 
 ---
 
-## 0. 这一附录要解决什么
+## 0. 本附录要解决的四类问题
 
-线性代数在这门课里不是为了算行列式，而是为了回答四类问题：
+线性代数的重点不在于行列式技巧，而在于回答四类计算与建模问题：
 
 | 问题 | 工具 |
 |------|------|
@@ -50,7 +50,7 @@ $$
 x=\begin{pmatrix}x_1\\x_2\\\vdots\\x_p\end{pmatrix}\in\mathbb{R}^p.
 $$
 
-人话：$p$ 个实数排成一列。$\mathbb{R}^n$ 表示所有 $n$ 维实列向量。两个向量相加、乘标量，按坐标做：
+**直观理解。** 即 $p$ 个实数排成一列。$\mathbb{R}^n$ 表示所有 $n$ 维实列向量。两个向量相加、乘标量，按坐标做：
 
 $$
 (x+y)_i=x_i+y_i,\qquad (\lambda x)_i=\lambda x_i.
@@ -68,7 +68,7 @@ $$
 Ax=\sum_{j=1}^p x_j\,a_{\cdot j}.
 $$
 
-人话：$Ax$ 是 $A$ 的各列按 $x$ 的坐标做线性组合。所以矩阵 = 线性映射 $\mathbb{R}^p\to\mathbb{R}^n$。
+**直观理解。** $Ax$ 是 $A$ 的各列按 $x$ 的坐标做线性组合，因此矩阵即线性映射 $\mathbb{R}^p\to\mathbb{R}^n$。
 
 转置 $A^\top$ 满足 $(A^\top)_{ij}=A_{ji}$，把行变成列。对兼容尺寸，$(AB)^\top=B^\top A^\top$，$(A^\top)^\top=A$。
 
@@ -129,7 +129,7 @@ $$
 
 **证明。** $\mathrm{tr}(QAQ^{-1})=\mathrm{tr}(AQ^{-1}Q)=\mathrm{tr}(A)$。
 
-人话：相似变换不改变迹（因为不改变特征值）。Lec1 里 $\varepsilon^\top\Pi\varepsilon=\mathrm{tr}(\Pi\varepsilon\varepsilon^\top)$ 用的就是 $\mathrm{tr}(ab^\top)=b^\top a$（标量的迹是自己）。
+**直观理解。** 相似变换不改变迹（因为特征值不变）。在线性模型误差分析中常用的技巧 $\varepsilon^\top\Pi\varepsilon=\mathrm{tr}(\Pi\varepsilon\varepsilon^\top)$，利用的正是 $\mathrm{tr}(ab^\top)=b^\top a$（标量的迹等于自身）。
 
 ---
 
@@ -161,7 +161,7 @@ $$
 
 这是 $A$ 的列的一切线性组合。$\dim\mathcal{R}(A)=r$。
 
-**核 / 零空间**（内容拼成 kernal）
+**核 / 零空间（kernel）**
 
 $$
 \mathcal{N}(A)=\bigl\{x\in\mathbb{R}^n:Ax=0\bigr\}\subseteq\mathbb{R}^n.
@@ -169,7 +169,7 @@ $$
 
 **秩–零化度定理。** $\dim\mathcal{N}(A)=n-r$。
 
-人话：$n$ 个自由变量，被 $r$ 个独立方程钉死，剩下 $n-r$ 维可以随便走且 $Ax$ 仍是 $0$。
+**直观理解。** $n$ 个自由变量受到 $r$ 个独立线性方程约束后，剩余的自由度恰好构成 $n-r$ 维解空间 $\mathcal{N}(A)$。
 
 **行空间** $\mathcal{R}(A^\top)=\{A^\top y:y\in\mathbb{R}^m\}\subseteq\mathbb{R}^n$，维数也是 $r$。
 
@@ -205,7 +205,7 @@ $$
 
 维数相加已经等于全空间维数，且交是 $\{0\}$（正交子空间之交只能是 $0$），故为直和、等于全空间。
 
-人话：$\mathbb{R}^m$ 里，$A$ 「够得着」的方向（列空间）和「从左边乘 $A^\top$ 会死」的方向（左零空间）互相垂直、拼成整个空间。最小二乘残差 $b-A\widehat x$ 一定落在左零空间里，这就是法方程 $A^\top(b-A\widehat x)=0$。
+**直观理解。** 在 $\mathbb{R}^m$ 中，$A$ 的值域（列空间）与被 $A^\top$ 映为零向量的子空间（左零空间）彼此正交并张成全空间。最小二乘残差 $b-A\widehat x$ 必然落在左零空间内，这就是法方程 $A^\top(b-A\widehat x)=0$ 的几何由来。
 
 ---
 
@@ -232,7 +232,7 @@ $$
 
 （4）$y=(I-P)x\iff Py=P(I-P)x=0\iff y\in\mathcal{N}(P)$，故 $\mathcal{R}(I-P)=\mathcal{N}(P)$。对 $I-P$ 再用一遍得另一式。
 
-人话：投影把空间拆成「留下的部分 $\mathcal{R}(P)$」和「扔掉的部分 $\mathcal{N}(P)$」。一般这两个子空间**不必垂直**——那叫斜投影。最小二乘用的是下面的正交投影。
+**直观理解。** 投影把空间拆成「保留的子空间 $\mathcal{R}(P)$」与「消去的子空间 $\mathcal{N}(P)$」。一般投影中这两个子空间不必正交（即斜投影）；最小二乘所用的是下面讨论的正交投影。
 
 ### 3.2 正交投影 $\iff P=P^\top$
 
@@ -274,7 +274,7 @@ $$
 
 **证明（存在）。** 取 $S$ 的一组标准正交基 $q_1,\ldots,q_k$，令 $Q=[q_1,\ldots,q_k]$，$P=QQ^\top$。则 $P^\top=P$，$P^2=QQ^\top QQ^\top=QQ^\top=P$，且 $\mathcal{R}(P)=S$。
 
-**证明（最近点，补全）。** $x_0-Px_0\in\mathcal{N}(P)=S^\perp$。对任意 $y\in S$，
+**证明（最近点）。** $x_0-Px_0\in\mathcal{N}(P)=S^\perp$。对任意 $y\in S$，
 
 $$
 \begin{aligned}
@@ -341,7 +341,7 @@ $$
 \|x+y\|_q=2^{1/q}>2=\|x\|_q+\|y\|_q.
 $$
 
-**补全：拟范数常数。** 当 $0<q\le 1$ 时 $t\mapsto t^q$ 在 $[0,\infty)$ 上亚可加且凹，故
+**推导：拟范数常数。** 当 $0<q\le 1$ 时 $t\mapsto t^q$ 在 $[0,\infty)$ 上亚可加且凹，故
 
 $$
 \|x+y\|_q^q=\sum_i|x_i+y_i|^q\le\sum_i\bigl(|x_i|^q+|y_i|^q\bigr)=\|x\|_q^q+\|y\|_q^q.
@@ -357,7 +357,7 @@ $$
 
 于是 $\|x+y\|_q\le 2^{1/q-1}(\|x\|_q+\|y\|_q)$。
 
-### 4.3 $\ell_0$ 不是范数（内容重点）
+### 4.3 $\ell_0$ 为什么不是范数
 
 $$
 \|x\|_0=\bigl|\{i:x_i\neq 0\}\bigr|
@@ -374,7 +374,7 @@ $$
 \|2e_1\|_0=1\neq 2=2\|e_1\|_0.
 $$
 
-拟范数只把 (d) 改成带常数 $c$ 的三角，**仍然要求 (c)**；半范数只丢掉 (b)，**仍然要求 (c)**。因此 $\|\cdot\|_0$ 既不是范数，也不是拟范数，也不是半范数。内容仍叫「$\ell_0$ 范数」，全程加上引号理解。
+拟范数只把 (d) 改成带常数 $c$ 的三角，**仍然要求 (c)**；半范数只丢掉 (b)，**仍然要求 (c)**。因此 $\|\cdot\|_0$ 既不是范数，也不是拟范数，也不是半范数。文献中虽习惯称其为「$\ell_0$ 范数」，阅读时均应加上引号理解。
 
 ### 4.4 TV 半范数
 
@@ -386,7 +386,7 @@ $$
 
 (a)(c)(d) 成立（绝对值的三角），但 (b) 失败：常数向量 $x=(1,\ldots,1)^\top\neq 0$ 却有 $\|x\|_{\mathrm{TV}}=0$。核（使 TV 为零的向量）恰是全体常数向量。这是半范数。
 
-### 4.5 $\|x\|_A=\sqrt{x^\top A x}$（内容：Check）
+### 4.5 二次型范数 $\|x\|_A=\sqrt{x^\top A x}$
 
 **命题。** $A\in\mathbb{S}^p_{++}$ 时，$\|x\|_A=\sqrt{x^\top A x}$ 是范数。
 
@@ -396,7 +396,7 @@ $$
 \|x+y\|_A^2=\|x\|_A^2+\|y\|_A^2+2x^\top Ay\le\bigl(\|x\|_A+\|y\|_A\bigr)^2.
 $$
 
-Lec1 的 $\|\theta-\theta^*\|_\Sigma$ 就是这个（$\Sigma$ 半正定时它是半范数：$\Sigma$ 的核方向「看不见」）。
+在最小二乘预测误差分析中遇到的 $\|\theta-\theta^*\|_\Sigma$ 正属此类（$\Sigma$ 仅半正定时退化为半范数：$\Sigma$ 零空间方向上的误差分量不会体现出来）。
 
 ### 4.6 把矩阵拉成向量；Frobenius
 
@@ -406,7 +406,7 @@ $$
 \|A\|_F:=\|\mathrm{Vec}(A)\|_2=\Bigl(\sum_{i,j}a_{ij}^2\Bigr)^{1/2}=\bigl(\mathrm{tr}(AA^\top)\bigr)^{1/2}.
 $$
 
-内容写 $\|A\|_2:=\|A\|_F$ 是在「元素 $\ell_2$」的意义上；后面诱导谱范数也叫 $\|A\|_2$。上下文要分清：**向量 $\ell_2$ / Frobenius** 对矩阵元素，**谱范数**对作为算子的 $A$。本这里 Frobenius 一律写 $\|\cdot\|_F$，谱范数写 $\|\cdot\|_2$。
+注意文献记号常在「按元素 $\ell_2$」意义下把 $\|A\|_F$ 也写作 $\|A\|_2$，而后面诱导谱范数同样记作 $\|A\|_2$。阅读时需注意区分：**向量 $\ell_2$ / Frobenius** 作用于矩阵元素，**谱范数**作用于作为线性算子的 $A$。本文统一将 Frobenius 范数记为 $\|\cdot\|_F$，谱范数记为 $\|\cdot\|_2$。
 
 **命题。** 若 $U^\top U=I$ 且 $VV^\top=I$（左乘列正交、右乘行正交），则 $\|UAV\|_F=\|A\|_F$。
 
@@ -422,9 +422,9 @@ $$
 B_q(r)=\bigl\{x\in\mathbb{R}^p:\|x\|_q\le r\bigr\}.
 $$
 
-$q=1$ 是菱形（$\ell_1$ 球，Lasso 的约束集），$q=2$ 是圆盘，$q=\infty$ 是方块。$q$ 越小球越「尖」、越鼓励稀疏；这是 Lec1 约束最小二乘的几何。
+$q=1$ 是菱形（$\ell_1$ 球，Lasso 的约束集），$q=2$ 是圆盘，$q=\infty$ 是方块。$q$ 越小球越「尖」、越鼓励稀疏，这是约束最小二乘中 $\ell_1$ 诱发稀疏的几何基础。
 
-内容 只有标题 Computational complexity，没有内容。补一句量级：$n\times n$ 乘加是 $O(n^3)$；$m\times n$ 的完整 SVD 大约 $O(\min\{mn^2,m^2 n\})$。
+附计算复杂度量级：$n\times n$ 矩阵乘法的常规复杂度为 $O(n^3)$；$m\times n$ 矩阵完整 SVD 的计算复杂度大约为 $O(\min\{mn^2,m^2 n\})$。
 
 ---
 
@@ -458,7 +458,7 @@ $$
 
 **证明提纲。** $\|x\|_{**}=\sup_{\|y\|_*\le 1}x^\top y$。由定义 $x^\top y\le\|x\|\|y\|_*$，故 $\|x\|_{**}\le\|x\|$。反向：范数的单位球 $B$ 是原点对称的紧凸集，其极 $B^\circ=\{y:x^\top y\le 1\ \forall x\in B\}$ 恰是对偶单位球。有限维双极定理 $B^{\circ\circ}=B$，这正是 $\|x\|=\|x\|_{**}$。
 
-内容写「$\|\cdot\|$ 自对偶当且仅当它是 $\|\cdot\|_2$」。在 $\ell_q$ 族里这是对的（只有 $q=2$）。更精确的说法：用欧氏内积来定义对偶时，**唯一自对偶的内积范数**是欧氏范数；一般范数可以有别的自对偶例子，本课用不到。
+只有 $\ell_2$ 在 $\ell_q$ 族里自对偶。更精确地说：以标准欧氏内积定义对偶时，对偶泛函直接诱导同一欧氏范数的**内积范数**正是 $\ell_2$；若放宽内积结构，一般范数也可存在其他自对偶构造，此处不再展开。
 
 矩阵对偶范数用 Frobenius 内积同样定义：$\|X\|_*=\sup_{\|Y\|\le 1}\langle X,Y\rangle_F$。谱范数与核范数互为对偶（第 11 节）。
 
@@ -492,13 +492,13 @@ $$
 
 **证明（$\|A\|_1=\max_j\|A_{\cdot j}\|_1$）。** 对 $\|x\|_1=1$，$Ax=\sum_j x_j A_{\cdot j}$，三角给出 $\|Ax\|_1\le\sum_j\lvert x_j\rvert\|A_{\cdot j}\|_1\le\bigl(\max_j\|A_{\cdot j}\|_1\bigr)\|x\|_1$。取标准基向量 $e_{j^*}$（$j^*$ 取到列 $\ell_1$ 最大）得等号。
 
-**命题（内容 Check）。** $\|A\|_2=\max_{\|x\|_2=\|y\|_2=1}x'Ay$，并且
+**命题（双线性变分与算子界）。** $\|A\|_2=\max_{\|x\|_2=\|y\|_2=1}x'Ay$，并且
 
 $$
 \|A\|_2^2\le\|A\|_1\|A\|_\infty.
 $$
 
-**证明（变分；内容写 $x'Ay$，与 $y^\top Ax$ 相同）。**
+**证明（变分形式；记 $x'Ay$ 与 $y^\top Ax$ 同义）。**
 
 $$
 \max_{\|x\|_2=\|y\|_2=1}x'Ay
@@ -520,9 +520,9 @@ $$
 
 ## 6. 奇异值分解：构造、变分、Courant–Fischer
 
-### 6.1 动机：线性方程组的「逆」（内容 Question）
+### 6.1 动机：线性方程组的「逆」
 
-标量 $ax=b$、$a\neq 0$ 则 $x=a^{-1}b$。方阵可逆则 $x=A^{-1}b$。内容 Question：考虑**相容**方程 $Ax=b$，$A\in\mathbb{R}^{m\times n}$，能否把一切相容对写成 $x=Xb$，其中 $X\in\mathbb{R}^{n\times m}$ **不依赖** $(x,b)$？
+标量 $ax=b$（$a\neq 0$）则 $x=a^{-1}b$，方阵可逆则 $x=A^{-1}b$。对一般的**相容**线性方程组 $Ax=b$（$A\in\mathbb{R}^{m\times n}$），能否将所有相容解统一写为 $x=Xb$，使矩阵 $X\in\mathbb{R}^{n\times m}$ **不依赖**具体 $(x,b)$？
 
 **若这样的 $X$ 存在，它必须满足四件事。** 相容意味着 $b=Ax$ 对某个 $x$ 成立。代入 $x=Xb$：
 
@@ -559,7 +559,7 @@ $U\in\mathbb{R}^{m\times m}$、$V\in\mathbb{R}^{n\times n}$ 正交。几何：
 | $U_2$ | $\mathcal{N}(A^\top)$ |
 | $V_2$ | $\mathcal{N}(A)$ |
 
-### 6.3 从 $A^\top A$ 的谱分解构造（内容证明补全）
+### 6.3 从 $A^\top A$ 的谱分解构造 SVD
 
 实对称矩阵都可正交对角化：$B\in\mathbb{S}^s$ 则存在 $Q^\top Q=I$ 使 $Q^\top BQ=\mathrm{diag}(\lambda_1,\ldots,\lambda_s)$。
 
@@ -604,7 +604,7 @@ $$
 
 **证明。** 令 $v=Vc$、$\|c\|_2=1$。则 $\|Av\|_2^2=c^\top V^\top A^\top AVc=c^\top\Sigma^2 c=\sum_i\sigma_i^2 c_i^2$。若 $v\perp\mathrm{span}\{v_1,\ldots,v_{k-1}\}$，则 $c_1=\cdots=c_{k-1}=0$，故 $\|Av\|_2^2=\sum_{i\ge k}\sigma_i^2 c_i^2\le\sigma_k^2$。取 $v=v_k=Ve_k$ 等号成立。$\sigma_1=\max_{\|u\|=\|v\|=1}u^\top Av$ 已在第 5.3 节证明。
 
-### 6.5 Courant–Fischer min-max（内容 HW）
+### 6.5 Courant–Fischer min-max 定理
 
 **定理。**
 
@@ -659,7 +659,7 @@ $$
 \min L=\frac1n\sum_{j=s+1}^{\mathrm{rank}(X)}\sigma_j^2.
 $$
 
-**证明（补全）。** 记 $M=DE\in\mathbb{R}^{d\times d}$，则 $\mathrm{rank}(M)\le s$，且
+**证明。** 记 $M=DE\in\mathbb{R}^{d\times d}$，则 $\mathrm{rank}(M)\le s$，且
 
 $$
 nL(E,D)=\|X-XM^\top\|_F^2=\|X(I-M^\top)\|_F^2.
@@ -683,7 +683,7 @@ $$
 
 **第三步：最优值。** $\|X-X_s\|_F^2=\sum_{j>s}\sigma_j^2$（第 9 节）。
 
-人话：最好的 $s$ 维线性压缩就是把数据投影到协方差（更精确：$X^\top X$）的前 $s$ 个特征向量上。残差能量是扔掉的那些奇异值的平方和。
+**直观理解。** 最好的 $s$ 维线性压缩就是把数据投影到协方差矩阵（精确地说是 $X^\top X$）的前 $s$ 个特征向量方向上，重建残差能量恰好等于被截断奇异值的平方和。
 
 ---
 
@@ -724,7 +724,7 @@ $$
 A^\dagger AA^\dagger=V_1V_1^\top V_1\Sigma_1^{-1}U_1^\top=V_1\Sigma_1^{-1}U_1^\top=A^\dagger.
 $$
 
-### 8.3 唯一性（内容证明写全）
+### 8.3 唯一性证明
 
 设 $B,C$ 都满足四条公理。则
 
@@ -780,7 +780,7 @@ $$
 
 残差最小当且仅当 $Az=0$，即 $z\in\mathcal{N}(A)$。通解 $x=A^\dagger b+z$，$z\in\mathcal{N}(A)$。但 $A^\dagger b\in\mathcal{R}(A^\top)\perp\mathcal{N}(A)$，故 $\|x\|_2^2=\|A^\dagger b\|_2^2+\|z\|_2^2$，最小当且仅当 $z=0$。
 
-这就是 Lec1 的 $\widehat\theta_{\mathrm{ls}}=X^\dagger Y$。
+这正对应普通最小二乘解 $\widehat\theta_{\mathrm{ls}}=X^\dagger Y$。
 
 ---
 
@@ -802,7 +802,7 @@ $$
 \min_{\mathrm{rank}(B)\le q}\|A-B\|_F=\|A-A_q\|_F=\sqrt{\sigma_{q+1}^2+\cdots+\sigma_r^2}.
 $$
 
-（谱范数那条对一切单位不变范数的 Mirsky 形式也对，本课只用谱和 Frobenius。）
+（谱范数一条在所有酉不变范数下也成立，即 Mirsky 推广；本文只用谱范数和 Frobenius 范数。）
 
 ### 9.1 谱范数：维数交错
 
@@ -833,7 +833,7 @@ $$
 \|A-B\|_2=\max_{\|x\|_2=1}\|(A-B)x\|_2\ge\|(A-B)z\|_2=\|Az\|_2\ge\sigma_{q+1}.
 $$
 
-（内容提取把 $v_i^\top z$ 偶写成 $v_j^\top z$，下标应一致。）等号被 $A_q$ 取到。
+（注意此处对下标 $i$ 求和，写法应保持 $v_i^\top z$ 一致。）等号被 $A_q$ 取到。
 
 ### 9.2 Frobenius：用投影 + Courant–Fischer
 
@@ -857,7 +857,7 @@ $$
 
 等号在 $P=U_{1:q}U_{1:q}^\top$、$B=A_q$ 时达到。
 
-内容 用 cameraman 图片演示截断 SVD 压缩，结论：保留前 $k$ 个奇异值等于用秩 $k$ 矩阵近似原图，Frobenius 误差即扔掉的尾部能量。
+在图像压缩等实际应用中，保留前 $k$ 个奇异值等价于用秩 $k$ 矩阵逼近原矩阵，Frobenius 逼近误差恰好等于被舍弃的尾部奇异值能量之和。
 
 ---
 
@@ -875,7 +875,7 @@ $$
 
 **例。** $A=\begin{pmatrix}1&1\\1&1+\varepsilon\end{pmatrix}$，$\sigma_{\min}\sim\lvert\varepsilon\rvert$，$\mathrm{Cond}_2\sim 1/\lvert\varepsilon\rvert$。$\varepsilon=10^{-10}$ 时，$b$ 的第 $10$ 位扰动就可以让 $x$ 面目全非。
 
-### 10.1 右边扰动：完整推导（内容被截断处补完）
+### 10.1 右边扰动推导
 
 精确方程 $Ax=b$，扰动方程 $A(x+\delta x)=b+\delta b$。相减：
 
@@ -895,9 +895,9 @@ $$
 \frac{\|\delta x\|}{\|x\|}\le\|A^{-1}\|\,\frac{\|\delta b\|}{\|x\|}=\|A^{-1}\|\,\|A\|\,\frac{\|\delta b\|}{\|A\|\|x\|}\le\mathrm{Cond}(A)\,\frac{\|\delta b\|}{\|b\|}.
 $$
 
-人话：解的相对误差 $\le$ 条件数 $\times$ 右边的相对误差。这是上界，可以被几乎取到（取 $\delta b$ 沿 $A^{-1}$ 的最大拉伸方向，$x$ 沿 $A$ 的最大拉伸方向）。
+**直观理解。** 解的相对误差不超过条件数乘以右端项的相对误差，且上界几乎可达（只需取 $\delta b$ 沿 $A^{-1}$ 的最大拉伸方向、$x$ 沿 $A$ 的最大拉伸方向）。
 
-### 10.2 矩阵也扰动时（补全）
+### 10.2 矩阵同时扰动时的稳定性
 
 若 $(A+\delta A)(x+\delta x)=b$ 且 $\|A^{-1}\|\,\|\delta A\|<1$，则 $A+\delta A$ 仍可逆，且
 
@@ -929,7 +929,7 @@ $$
 \|X\|_F=\sup_{\|Y\|_F\le 1}\langle X,Y\rangle_F.
 $$
 
-**对偶公式的证明。** von Neumann 迹不等式 $\langle X,Y\rangle_F\le\sum_i\sigma_i(X)\sigma_i(Y)$，故 $\langle X,Y\rangle_F\le\sigma_1(Y)\sum_i\sigma_i(X)=\|Y\|_2\|X\|_*$。取 $X=U_1\Sigma_1 V_1^\top$、$Y=U_1 V_1^\top$（$\|Y\|_2=1$）得等号 $\langle X,Y\rangle_F=\sum\sigma_i$。因而核范数是谱范数的对偶；有限维对偶的对偶给出另一向。此式立刻给出三角不等式 $\|X+Y\|_*\le\|X\|_*+\|Y\|_*$。下面按内容走分解式证明，不依赖 von Neumann。
+**对偶公式的证明。** von Neumann 迹不等式 $\langle X,Y\rangle_F\le\sum_i\sigma_i(X)\sigma_i(Y)$，故 $\langle X,Y\rangle_F\le\sigma_1(Y)\sum_i\sigma_i(X)=\|Y\|_2\|X\|_*$。取 $X=U_1\Sigma_1 V_1^\top$、$Y=U_1 V_1^\top$（$\|Y\|_2=1$）得等号 $\langle X,Y\rangle_F=\sum\sigma_i$。因而核范数是谱范数的对偶，有限维下对偶的对偶给出反向，三角不等式 $\|X+Y\|_*\le\|X\|_*+\|Y\|_*$ 也随之成立。下面再用不依赖 von Neumann 不等式的矩阵分解路线证明变分形式。
 
 ### 11.2 Lemma 1（PSD 块与核范数）
 
@@ -966,7 +966,7 @@ $$
 \|Z\|_*=\min_{L,R:\,Z=LR^\top}\frac12\bigl(\|L\|_F^2+\|R\|_F^2\bigr).
 $$
 
-（内容写成 $\min\frac12(\|L\|_F^2+\|R\|_F^2)$，等号成立。）
+（下确界由极分解 / SVD 分解达到，因此可写为 $\min$。）
 
 **证明（$\ge$，下界）。** 若 $Z=LR^\top$，令 $W=LL^\top$、$\widetilde W=RR^\top$。则
 
@@ -1032,7 +1032,7 @@ $$
 
 其中 $W$ 活在被阈值掉的那些方向上且 $\|W\|_2\le 1$，这正好是 $\partial\|X\|_*$ 的刻画（第 18.4 节）。
 
-人话：核范数是秩的凸包（在谱范数单位球上），近端算子就是把小奇异值掐掉——和 Lasso 的软阈值是同一件事，只是发生在奇异值上。
+**直观理解。** 核范数是秩函数在谱范数单位球上的凸包络，其近端算子是将小奇异值收缩置零，与 Lasso 软阈值出于同一对偶结构，只是作用在奇异值而非坐标上。
 
 ---
 
@@ -1056,7 +1056,7 @@ $$
 
 $f:\mathbb{R}^n\to\mathbb{R}^m$ 的 Jacobian $Df(x)\in\mathbb{R}^{m\times n}$，$Df_{ij}=\partial f_i/\partial x_j$。标量时 $\nabla f=(Df)^\top$。链式法则：$h=g\circ f$ 则 $Dh(x)=Dg(f(x))\,Df(x)$。$\nabla^2 f=D(\nabla f)$。
 
-**积分余项（内容最后两条）。** 令 $x_t=x+t(y-x)$，$g(t)=f(x_t)$。则
+**积分余项公式。** 令 $x_t=x+t(y-x)$，$g(t)=f(x_t)$。则
 
 $$
 f(y)-f(x)=g(1)-g(0)=\int_0^1 g'(t)\,dt=\int_0^1\nabla f(x_t)^\top(y-x)\,dt,
@@ -1088,9 +1088,9 @@ $$
 
 $f(x)=Ax+b$ 时 $\nabla h=A^\top\nabla g(Ax+b)$，$\nabla^2 h=A^\top\nabla^2 g(Ax+b)\,A$。
 
-### 12.3 $\log\det$（内容 Check：$\nabla f(X)=X^{-1}$）
+### 12.3 对数行列式 $\log\det$ 的梯度与 Hessian
 
-内容写 $f(X)=\log\det X$，$X\in\mathbb{S}^n_{++}$，check $\nabla f(X)=X^{-1}$。（后面凸性用的是 $-\log\det$，梯度差一个符号。）在 Frobenius 内积下，梯度由方向导数定义：$\mathrm{D}f(X)[H]=\langle\nabla f(X),H\rangle_F$。
+设 $f(X)=\log\det X$，$X\in\mathbb{S}^n_{++}$（后续凸性分析使用的则是 $-\log\det X$，梯度与 Hessian 相差一个负号）。在 Frobenius 内积下，梯度由方向导数定义：$\mathrm{D}f(X)[H]=\langle\nabla f(X),H\rangle_F$。
 
 **证明。** 对 $H\in\mathbb{S}^n$、$\lvert t\rvert$ 充分小使 $X+tH\succ 0$，
 
@@ -1134,7 +1134,7 @@ $$
 \nabla^2 f=\frac1s\mathrm{diag}(z)-\frac1{s^2}zz^\top.
 $$
 
-对任意 $v$，Cauchy–Schwarz $\bigl(\sum z_i v_i^2\bigr)\bigl(\sum z_i\bigr)\ge\bigl(\sum z_i v_i\bigr)^2$ 给出 $v^\top\nabla^2 f\,v\ge 0$，故 $\nabla^2 f\succeq 0$，$f$ 凸。这是 softmax 的 log 配分函数，Lec2 分类会用。
+对任意 $v$，Cauchy–Schwarz $\bigl(\sum z_i v_i^2\bigr)\bigl(\sum z_i\bigr)\ge\bigl(\sum z_i v_i\bigr)^2$ 给出 $v^\top\nabla^2 f\,v\ge 0$，故 $\nabla^2 f\succeq 0$，$f$ 凸。这是 softmax 的 log 配分函数，分类损失与交叉熵分析中会用到它。
 
 ---
 
@@ -1142,7 +1142,7 @@ $$
 
 ### 13.1 定义与运算
 
-$C\subseteq\mathbb{R}^d$ **凸**：$x_1,x_2\in C$ $\Rightarrow$ $\lambda x_1+(1-\lambda)x_2\in C$ 对一切 $\lambda\in[0,1]$。人话：两点的线段仍在集合里。
+$C\subseteq\mathbb{R}^d$ **凸**：$x_1,x_2\in C$ $\Rightarrow$ $\lambda x_1+(1-\lambda)x_2\in C$ 对一切 $\lambda\in[0,1]$，即任意两点的连线段仍落在集合内。
 
 **保持凸的运算：** 正数倍 $tC$（$t\ge 0$）、Minkowski 和 $C+D=\{c+d\}$、任意交 $\bigcap C_i$。凸集的闭包、内部仍凸。
 
@@ -1156,7 +1156,7 @@ $$
 N_C(x)=\bigl\{z:\langle z,y-x\rangle\le 0\ \forall y\in C\bigr\}.
 $$
 
-人话：从 $x$ 出发，所有「不指向 $C$ 内部」的方向（支撑超平面的外法向）。
+**直观理解。** 法锥收集了从 $x$ 出发、所有不指向 $C$ 内部的方向（即支撑超平面的外法向）。
 
 **法锥的加法（约束资格）。** $C=\bigcap_{i=1}^m C_i$，各 $C_i$ 闭凸，且 $\bigcap\mathrm{int}(C_i)\neq\emptyset$，则 $N_C(x)=\sum_i N_{C_i}(x)$。
 
@@ -1168,7 +1168,7 @@ $$
 - 球 $B(x,r)=\{y:\|x-y\|\le r\}$（任意范数）。
 - 椭球 $\{y:(x-y)^\top A(x-y)\le r\}$，$A\succ 0$。
 - 多面体 $\{x:Ax\le b,\ Cx=d\}$。
-- $k$-单形：$k+1$ 个仿射无关点的凸包。（内容写 $v_1-v_0,\ldots,v_0-v_k$ 线性无关，即仿射无关。）
+- $k$-单形：$k+1$ 个仿射无关点的凸包（即要求 $v_1-v_0,\ldots,v_k-v_0$ 线性无关）。
 - 仿射像与原像：$f(x)=Ax+b$，$C$ 凸 $\Rightarrow$ $f(C)$、$f^{-1}(C)$ 凸。
 - 半正定锥 $\mathbb{S}^n_+$ 是闭凸锥。
 
@@ -1191,7 +1191,7 @@ $$
 - **闭**函数：$\mathrm{epi}(f)$ 闭。
 - **下半连续（lsc）** 于 $x$：$\liminf_{y\to x}f(y)\ge f(x)$。
 
-**HW：lsc $\iff$ 所有 $C_\alpha$ 闭 $\iff$ $f$ 闭。**
+**命题：lsc $\iff$ 所有 $C_\alpha$ 闭 $\iff$ $f$ 闭。**
 
 **证明。**
 
@@ -1222,7 +1222,7 @@ $$
 
 以下均默认 $f$ 真。
 
-### 15.1 零阶：限制在直线上（内容证明提纲写全）
+### 15.1 零阶条件：限制在直线上
 
 **定理。** $f:\mathbb{R}^n\to\overline{\mathbb{R}}$ 凸 $\iff$ 对一切 $x\in\mathrm{dom}(f)$、$v\in\mathbb{R}^n$，一元函数 $g(t)=f(x+tv)$（$\mathrm{dom}(g)=\{t:x+tv\in\mathrm{dom}(f)\}$）凸。
 
@@ -1239,7 +1239,7 @@ $$
 f(\theta x+(1-\theta)y)=g(\theta\cdot 1+(1-\theta)\cdot 0)\le\theta g(1)+(1-\theta)g(0)=\theta f(y)+(1-\theta)f(x).
 $$
 
-**应用：$f(X)=-\log\det X$ 在 $\mathbb{S}^n_{++}$ 上凸（内容 HW）。** 把环境空间当成 $\mathbb{S}^n$。对 $X\succ 0$、$V\in\mathbb{S}^n$，
+**应用：$f(X)=-\log\det X$ 在 $\mathbb{S}^n_{++}$ 上凸。** 把环境空间取为对称矩阵空间 $\mathbb{S}^n$。对 $X\succ 0$、$V\in\mathbb{S}^n$，
 
 $$
 g(t)=-\log\det(X+tV)=-\log\det X-\sum_i\log(1+t\lambda_i),
@@ -1280,7 +1280,7 @@ $$
 
 $\theta$ 倍加 $(1-\theta)$ 倍：右边交叉项 $\theta(x-z)+(1-\theta)(y-z)=0$，故 $\theta f(x)+(1-\theta)f(y)\ge f(z)$。
 
-人话：凸函数始终在自己的切平面上方。这是后面次梯度定义的可微版。
+**直观理解。** 凸函数图像始终位于自身切平面的上方，这也是下文次梯度定义在可微时的原型。
 
 ### 15.3 二阶：Hessian PSD
 
@@ -1309,7 +1309,7 @@ $$
 
 被积函数 $\ge 0$，故一阶不等式成立，从而凸。
 
-**内容 check：$\nabla^2 f(x)\succ 0$ 处处 $\Rightarrow$ 严格凸。** 若 Hessian 处处正定且 $y\neq x$，余项积分里 $(y-x)^\top\nabla^2 f(x_t)(y-x)>0$ 对每个 $t$ 成立，故一阶不等式**严格**，Jensen 也严格。反过来不对：$f(x)=x^4$ 严格凸（$g(t)=t^4$ 的二阶差商为正），但 $f''(0)=0$。
+**正定充分性验证：$\nabla^2 f(x)\succ 0$ 处处成立 $\Rightarrow$ 严格凸。** 若 Hessian 处处正定且 $y\neq x$，余项积分里 $(y-x)^\top\nabla^2 f(x_t)(y-x)>0$ 对每个 $t$ 成立，故一阶不等式**严格**，Jensen 也严格。反过来不对：$f(x)=x^4$ 严格凸（$g(t)=t^4$ 的二阶差商为正），但 $f''(0)=0$。
 
 ### 15.4 梯度单调
 
@@ -1331,9 +1331,9 @@ $$
 
 ## 16. 严格凸、强凸的全部等价条件
 
-### 16.1 严格凸：平行于凸的条件（内容 HW）
+### 16.1 严格凸的零阶、一阶、二阶与单调等价条件
 
-内容：Derive the similar conditions of strictly convex function。把第 15 节四条全部改成严格版。以下 $x\neq y$、$\theta\in(0,1)$，$\mathrm{dom}$ 凸。
+把第 15 节的四条全部改写为严格版（以下均设 $x\neq y$、$\theta\in(0,1)$ 且 $\mathrm{dom}$ 凸）。
 
 **（零阶）** $f$ 严格凸 $\iff$ 对一切 $x\in\mathrm{dom}(f)$、$v\neq 0$，$g(t)=f(x+tv)$ 在其有效域的每个开区间上严格凸。证明与 15.1 相同，Jensen 里的 $\le$ 换成 $<$（$t_1\neq t_2$）。
 
@@ -1368,7 +1368,7 @@ $$
 
 ### 16.2 $m$-强凸：五条等价（用 $h=f-\frac m2\|\cdot\|_2^2$）
 
-$m>0$。下列在相应正则性下等价（$f$ 真，$\mathrm{dom}$ 凸）。内容定义就是最后一条。
+$m>0$。下列条件在相应正则性下互相等价（设 $f$ 为真函数且 $\mathrm{dom}$ 为凸集）：
 
 **（定义）** $h(x):=f(x)-\frac m2\|x\|_2^2$ 凸。
 
@@ -1452,7 +1452,7 @@ $$
 f(x)-f(x^*)\le\frac1{2m}\|\nabla f(x)\|_2^2.
 $$
 
-合起来即内容
+合起来即得上下界夹逼：
 
 $$
 \frac m2\|x-x^*\|_2^2\le f(x)-f(x^*)\le\frac1{2m}\|\nabla f(x)\|_2^2.
@@ -1465,7 +1465,7 @@ $$
 - **点式最大 / 上确界：** $g(x)=\max_{i\in I}f_i(x)$；更一般 $g(x)=\sup_{y\in Y}f(x,y)$，每个 $f(\cdot,y)$ 凸 $\Rightarrow g$ 凸。例：前 $r$ 大坐标之和 $x\mapsto\sum_{i=1}^r x_{[i]}$ 是若干线性函数的最大；支撑函数 $S_C(x)=\sup_{y\in C}y^\top x$；谱范数 $\sigma_1(X)=\sup_{\|u\|_2=\|v\|_2=1}u^\top Xv$。
 - **部分下确界：** $f(x,y)$ 联合凸、$C$ 凸 $\Rightarrow$ $g(x)=\inf_{y\in C}f(x,y)$ 凸（epi 是原 epi 的投影，凸集的投影凸）。注意 inf 可能取到 $-\infty$，需要真性另说。
 
-**内容问：一般复合 $h(g_1,\ldots,g_k)$ 何时凸？** 不是任意凸 $h$ 配凸 $g_i$ 都行。反例：$h(t)=t^2$ 凸，$g(x)=x^2-1$ 凸，但 $h(g(x))=(x^2-1)^2=x^4-2x^2+1$ 在 $0$ 附近凹（$f''(0)=-4<0$）。
+**一般复合 $h(g_1,\ldots,g_k)$ 何时保凸？** 并不是任意凸外层 $h$ 配上凸内层 $g_i$ 都能保凸。反例：$h(t)=t^2$ 凸，$g(x)=x^2-1$ 凸，但 $h(g(x))=(x^2-1)^2=x^4-2x^2+1$ 在 $0$ 附近凹（$f''(0)=-4<0$）。
 
 **充分条件：** $h$ 凸且**在每个坐标上非降**，每个 $g_i$ 凸，则 $h\circ g$ 凸。或者 $h$ 凸、每个 $g_i$ 仿射。可微时 Hessian 交叉项的符号需要 $h$ 的单调性来控制。
 
@@ -1503,7 +1503,7 @@ $$
 
    （上界：下降引理在 $x^*$ 处，$\nabla f(x^*)=0$；下界：用 $g$ 的凸性或对 $y=x-\frac1L\nabla f(x)$ 代入下降引理。）
 
-### 17.3 余强制（co-coercivity，内容蓝字）
+### 17.3 余强制（co-coercivity）
 
 若 $f$ 凸且 $\nabla f\in\mathrm{Lip}(L)$，则
 
@@ -1511,7 +1511,7 @@ $$
 \langle\nabla f(x)-\nabla f(y),x-y\rangle\ge\frac1L\|\nabla f(x)-\nabla f(y)\|_2^2.
 $$
 
-**证明。** 令 $f_1(z)=f(z)-\nabla f(x)^\top z$，则 $\nabla f_1(x)=0$，凸性推出 $x\in\arg\min f_1$。同样 $f_2(z)=f(z)-\nabla f(y)^\top z$ 在 $y$ 最小。两者的梯度仍 Lip $L$，用 17.2 的下界（「蓝字」）：
+**证明。** 令 $f_1(z)=f(z)-\nabla f(x)^\top z$，则 $\nabla f_1(x)=0$，凸性推出 $x\in\arg\min f_1$。同样 $f_2(z)=f(z)-\nabla f(y)^\top z$ 在 $y$ 最小。两者梯度仍满足 $\mathrm{Lip}(L)$，应用第 17.2 节的下界：
 
 $$
 \frac1{2L}\|\nabla f_1(y)\|_2^2\le f_1(y)-f_1(x),\qquad
@@ -1525,13 +1525,15 @@ f(y)-f(x)-\langle\nabla f(x),y-x\rangle+f(x)-f(y)-\langle\nabla f(y),x-y\rangle
 =\langle\nabla f(x)-\nabla f(y),x-y\rangle.
 $$
 
-**强凸 + 光滑（内容绿字：对 $h=f-\frac m2\|\cdot\|_2^2$ 写余强制）。** 设 $f$ 可微、$m$-强凸、$\nabla f\in\mathrm{Lip}(L)$，$L>m>0$。令
+**强凸 + 光滑（对 $h=f-\frac m2\|\cdot\|_2^2$ 写余强制）。** 设 $f$ 可微、$m$-强凸、$\nabla f\in\mathrm{Lip}(L)$，$L>m>0$。令
 
 $$
 h(x)=f(x)-\frac m2\|x\|_2^2.
 $$
 
-则 $h$ 凸（强凸定义），且 $\nabla h(x)=\nabla f(x)-mx$ 满足 $\nabla h\in\mathrm{Lip}(L-m)$。注意三角不等式只会给出 $\|\nabla h(x)-\nabla h(y)\|_2\le(L+m)\|x-y\|_2$，太松，不能直接减。正确理由：$\frac L2\|\cdot\|_2^2-f$ 凸（17.2）且 $f-\frac m2\|\cdot\|_2^2$ 凸，两式相加得 $\frac{L-m}2\|\cdot\|_2^2-h$ 凸，即 $\nabla h\in\mathrm{Lip}(L-m)$。等价地，Hessian 夹在 $mI$ 与 $LI$ 之间时，$\nabla^2 h$ 夹在 $0$ 与 $(L-m)I$ 之间。
+则 $h$ 凸（由强凸定义），且 $\nabla h(x)=\nabla f(x)-mx$ 满足 $\nabla h\in\mathrm{Lip}(L-m)$。注意不能直接用三角不等式，否则只会得到过松的 $(L+m)$ 上界。
+
+正确理由在于把两个凸函数相加：$\frac L2\|\cdot\|_2^2-f$ 凸（17.2 节）且 $f-\frac m2\|\cdot\|_2^2$ 凸，于是 $\frac{L-m}2\|\cdot\|_2^2-h$ 凸，即 $\nabla h\in\mathrm{Lip}(L-m)$（若 Hessian 存在，即 $mI\preceq\nabla^2 f\preceq LI\Rightarrow 0\preceq\nabla^2 h\preceq(L-m)I$）。
 
 对凸且 $\nabla h\in\mathrm{Lip}(L-m)$ 的 $h$ 用上面已证的余强制：
 
@@ -1577,7 +1579,7 @@ $$
 \ge\frac{mL}{m+L}\|x-y\|_2^2+\frac1{m+L}\|\nabla f(x)-\nabla f(y)\|_2^2.
 $$
 
-这是 Nesterov 估计里的标准插值不等式。内容绿字的用法就是这一段代数，没有别的输入。
+这就是 Nesterov 插值不等式，仅由余强制与上述代数变形即可直接推出。
 
 ---
 
@@ -1599,7 +1601,7 @@ $$
 
 示性函数：$x\in C$ 时 $\partial I_C(x)=N_C(x)$，否则 $\partial I_C(x)=\emptyset$。
 
-非凸例子（内容重点）：$f(x)=x^3$。则 $\partial f(0)=\emptyset$。
+非凸反例：$f(x)=x^3$ 在原点处的次微分为空集 $\partial f(0)=\emptyset$。
 
 **证明。** 若 $z\in\partial f(0)$，则对一切 $y\in\mathbb{R}$，$y^3\ge z y$。
 
@@ -1608,7 +1610,7 @@ $$
 
 于是 $z=0$。但 $y^3\ge 0$ 对一切 $y$ 不成立（取 $y=-1$）。矛盾。几何：过原点的直线无法把立方曲线整个托在上方。凸函数在连续点次微分非空（18.6），所以这个例子必须非凸。
 
-### 18.2 内容问号：$\partial\lvert x\rvert=?$
+### 18.2 示例：计算绝对值函数的次微分 $\partial\lvert x\rvert$
 
 对 $f(x)=\lvert x\rvert$（$x\in\mathbb{R}$）：
 
@@ -1631,7 +1633,7 @@ $x=0$：$z\in\partial f(0)$ $\iff$ $\lvert y\rvert\ge z y$ 对一切 $y$。
 
 故 $\partial\lvert 0\rvert=[-1,1]$。
 
-### 18.3 运算法则（含次微分和：内容重点条件）
+### 18.3 运算法则（含次微分和的连续性条件）
 
 $f$ 凸时：
 
@@ -1668,7 +1670,9 @@ $$
 \langle z,d\rangle+\beta r\ge\gamma\quad\forall(d,r)\in D.
 $$
 
-$C$ 在 $r$ 方向无上界：$\langle z,d\rangle+\beta r\le\gamma$ 对任意大的 $r$ 成立 $\Rightarrow\beta\le 0$。$D$ 在 $\mathrm{dom}\,\psi$ 上 $r$ 无下界：$\langle z,d\rangle+\beta r\ge\gamma$ 对任意小的 $r$ 成立 $\Rightarrow\beta\le 0$（若 $\beta>0$ 则 $r\to-\infty$ 使左边 $\to-\infty$）。若 $\beta=0$，则 $\langle z,d\rangle\le\gamma$ 对 $C$ 的 $d$-投影成立；连续性让该投影含 $0$ 的一个球，迫使 $z=0$，矛盾。故 $\beta<0$。除以 $\lvert\beta\rvert$ 可设 $\beta=-1$。再把 $d=0$、$r=0$（属于 $C\cap D$）代入，得 $\gamma=0$。于是
+$C$ 在 $r$ 方向无上界：$\langle z,d\rangle+\beta r\le\gamma$ 对任意大的 $r$ 成立，从而 $\beta\le 0$。同样，$D$ 在 $\mathrm{dom}\,\psi$ 上 $r$ 无下界：$\langle z,d\rangle+\beta r\ge\gamma$ 对任意小的 $r$ 成立，故 $\beta\le 0$（若 $\beta>0$ 则 $r\to-\infty$ 使左边 $\to-\infty$）。
+
+若 $\beta=0$，则 $\langle z,d\rangle\le\gamma$ 对 $C$ 的 $d$-投影成立；连续性让该投影含 $0$ 的一个球，迫使 $z=0$，矛盾。故 $\beta<0$。除以 $\lvert\beta\rvert$ 可设 $\beta=-1$。再把 $d=0$、$r=0$（属于 $C\cap D$）代入，得 $\gamma=0$。于是
 
 $$
 \varphi(d)\ge\langle z,d\rangle,\qquad
@@ -1679,11 +1683,11 @@ $$
 
 **仿射复合。** $z\in\partial f(Ax+b)$ $\Rightarrow$ $f(Ay+b)\ge f(Ax+b)+\langle z,A(y-x)\rangle=\cdots+\langle A^\top z,y-x\rangle$，故 $A^\top z\in\partial g(x)$。反向：令 $\varphi=g-f\circ(A\cdot+b)$ 在 $x$ 处次梯度为 $0$ 的部分用链式法则；或直接从定义，$A^\top\partial f(Ax+b)\subseteq\partial g(x)$ 已得，维数/连续性给出等号（$f$ 在 $Ax+b$ 连续即够）。
 
-**可分和。** $f(y)-f(x)=\sum_i\bigl(f_i(y_i)-f_i(x_i)\bigr)$。若 $z_i\in\partial f_i(x_i)$，则 $\langle z,y-x\rangle=\sum z_i(y_i-x_i)$ 拆开，得 $\supseteq$。反向：把其他坐标钉在 $x_{-i}$，一元限制的次微分是 $\partial f_i(x_i)$。
+**可分和。** $f(y)-f(x)=\sum_i\bigl(f_i(y_i)-f_i(x_i)\bigr)$。若 $z_i\in\partial f_i(x_i)$，则 $\langle z,y-x\rangle=\sum z_i(y_i-x_i)$ 拆开，得 $\supseteq$。反向：把其他坐标固定在 $x_{-i}$，一元限制的次微分是 $\partial f_i(x_i)$。
 
-### 18.4 HW：$\partial\|x\|_1$、$\partial\|x\|_2$、$\partial\|x\|_\infty$、$\partial\|X\|_*$
+### 18.4 常用范数的次微分：$\partial\|x\|_1$、$\partial\|x\|_2$、$\partial\|x\|_\infty$、$\partial\|X\|_*$
 
-题面不改：compute $\partial f$ with $f(x)=\|x\|_1$，$\|x\|_2$，$\|x\|_\infty$，$f(X)=\|X\|_*$。
+下面分别给出三类向量范数与矩阵核范数的次微分计算。
 
 **$\|x\|_1=\sum_i\lvert x_i\rvert$（可分和）。** 由 18.3，
 
@@ -1711,7 +1715,9 @@ $$
 
 即 $g$ 满足 $\mathrm{supp}(g)\subseteq I(x)$、$g_i x_i\ge 0$、$\|g\|_1=1$。$x=0$ 时所有 $f_i$ 活性，$\partial\|0\|_\infty=\mathrm{conv}\{\pm e_i\}=\{g:\|g\|_1\le 1\}$。
 
-**核范数。** 令 $X=U\mathrm{diag}(\sigma)V^\top$ 为紧 SVD（只含 $\sigma_i>0$）。对偶公式 $\|X\|_*=\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F$ 给出：$Y\in\partial\|X\|_*$ $\iff$ $\|Y\|_2\le 1$ 且 $\langle X,Y\rangle_F=\|X\|_*$。von Neumann：$\langle X,Y\rangle_F\le\sum\sigma_i(X)\sigma_i(Y)$，等号当且仅当 $X,Y$ 可同时被同一对正交阵对角化且奇异值同序。因而 $\sigma_i(Y)=1$ 在 $\sigma_i(X)>0$ 的位置，其余 $\sigma_j(Y)\le 1$。写成
+**核范数。** 令 $X=U\mathrm{diag}(\sigma)V^\top$ 为紧 SVD（只含 $\sigma_i>0$）。对偶公式 $\|X\|_*=\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F$ 给出：$Y\in\partial\|X\|_*$ 当且仅当 $\|Y\|_2\le 1$ 且 $\langle X,Y\rangle_F=\|X\|_*$。
+
+由 von Neumann 迹不等式，总有 $\langle X,Y\rangle_F\le\sum\sigma_i(X)\sigma_i(Y)$，等号成立当且仅当 $X,Y$ 可同时被同一对正交阵对角化且奇异值同序。因此 $\sigma_i(Y)=1$ 在 $\sigma_i(X)>0$ 的位置，其余奇异值满足 $\sigma_j(Y)\le 1$，记为：
 
 $$
 \partial\|X\|_*=\bigl\{UV^\top+W:U^\top W=0,\ WV=0,\ \|W\|_2\le 1\bigr\}.
@@ -1759,7 +1765,7 @@ $t$ 可任意大 $\Rightarrow\beta\ge 0$。若 $\beta=0$，则 $\langle g,y-x_0\
 
 **次梯度单调：** $\langle\xi-\eta,x-y\rangle\ge 0$ 对 $\xi\in\partial f(x)$、$\eta\in\partial f(y)$（把次梯度不等式对调相加）。
 
-**内容 Check：$f\in\mathrm{Lip}(L)$（相对 $\|\cdot\|$）$\iff$ 一切次梯度满足 $\|g\|_*\le L$。**
+**命题（Lipschitz 与有界次梯度等价）：$f\in\mathrm{Lip}(L)$（相对 $\|\cdot\|$）$\iff$ 一切次梯度满足 $\|g\|_*\le L$。**
 
 **证明 $\Rightarrow$。** 取 $g\in\partial f(x)$、$\|v\|=1$、$t>0$，$y=x+tv$。Lipschitz 给出 $f(y)-f(x)\le Lt$，次梯度给出 $f(y)-f(x)\ge t\langle g,v\rangle$，故 $\langle g,v\rangle\le L$。对一切 $\|v\|=1$ 取 sup：$\|g\|_*=\sup_{\|v\|\le 1}\langle g,v\rangle\le L$。
 
@@ -1771,7 +1777,7 @@ $$
 
 对调 $x,y$ 得另一侧，故 $\lvert f(y)-f(x)\rvert\le L\|y-x\|$。
 
-### 18.7 Bregman 距离
+### 18.7 Bregman 散度
 
 若 $\xi\in\partial f(x)$，
 
@@ -1798,7 +1804,7 @@ $$
 \|x-z\|_2^2=\|x-y\|_2^2+\|y-z\|_2^2-2\langle x-y,z-y\rangle.
 $$
 
-**Bregman 投影（内容 Check）。** $\Pi^{D_f}_C(z)=\arg\min_{x\in C}D_f^\xi(x,z)$。Check：$\forall z$，$D_f^\xi\bigl(y,\Pi^{D_f}_C(z)\bigr)\le D_f^\xi(y,z)$ 对一切 $y\in C$。
+**Bregman 投影三点不等式。** 记 $\Pi^{D_f}_C(z)=\arg\min_{x\in C}D_f^\xi(x,z)$，则对一切 $z$ 与一切 $y\in C$ 均有 $D_f^\xi\bigl(y,\Pi^{D_f}_C(z)\bigr)\le D_f^\xi(y,z)$。
 
 **证明。** 以下写可微情形（$\xi=\nabla f(z)$，$\Pi=\Pi^{D_f}_C(z)$）；非光滑时把 $\nabla f$ 换成对应次梯度，最优性仍是变分不等式。$C$ 凸，$\Pi$ 最小化 $x\mapsto D_f(x,z)=f(x)-f(z)-\langle\nabla f(z),x-z\rangle$，一阶条件（18.5 约束 Fermat）：
 
@@ -1857,7 +1863,7 @@ $$
 
 Young 给出 $f(x)\ge\sup_z\bigl(\langle z,x\rangle-f^*(z)\bigr)=:f^{**}(x)$，即 $f\ge f^{**}$。$f^{**}$ 是 $f$ 的**双共轭**，也是 $\le f$ 的最大闭凸函数（闭凸包）。
 
-**定理。** $f$ 真凸 lsc $\Rightarrow$ $f=f^{**}$。内容重点：$f\le f^{**}$ 由凸集分离定理（Young 已经给出另一向 $f\ge f^{**}$，合起来就是等号）。
+**定理（Fenchel–Moreau）。** 若 $f$ 为真凸 lsc 函数，则 $f=f^{**}$（Young 不等式已给出 $f\ge f^{**}$，反向 $f\le f^{**}$ 由凸集分离定理证得）。
 
 **证明。** Young 对一切 $z$ 给出 $f(x)\ge\langle z,x\rangle-f^*(z)$，对 $z$ 取 $\sup$ 即 $f\ge f^{**}$。以下证 $f\le f^{**}$。用反证：若某点 $x_0$ 有 $f^{**}(x_0)<f(x_0)$（允许 $f(x_0)=+\infty$），取 $\gamma$ 使
 
@@ -1953,7 +1959,7 @@ $f>0$ 且 $\log f$ 凹，即 $f(\theta x+(1-\theta)y)\ge f(x)^\theta f(y)^{1-\th
 
 则解集非空紧。若问题凸（$f$ 与 $C$ 都凸），解集还凸。若 $C$ 非空凸且 $f$ 严格拟凸，则解若存在必唯一。
 
-人话：连续函数在紧集上取到最小；强制把「无穷远」赶出下水平集，使下水平集紧。
+**直观理解。** 连续函数在紧集上能取到最小值；强制性会把「无穷远区域」排除在下水平集之外，从而保证下水平集紧致。
 
 ### 21.2 无约束二阶条件（$C=\mathbb{R}^n$，Hessian 存在）
 
@@ -1962,7 +1968,7 @@ $f>0$ 且 $\log f$ 凹，即 $f(\theta x+(1-\theta)y)\ge f(x)^\theta f(y)^{1-\th
 
 （必要：沿任意方向的一元限制在 $0$ 处有 $g'(0)=0$、$g''(0)\ge 0$。充分：Taylor 余项被正定二次型控制，邻域内 $f(x)>f(x^*)$。）
 
-### 21.3 内容 Check：相位恢复
+### 21.3 实例检验：相位恢复
 
 $$
 f(x)=\sum_{i=1}^n\bigl((a_i^\top x)^2-b_i^2\bigr)^2.
@@ -2025,9 +2031,9 @@ $$
 
 故 $g(\lambda,\nu)\le f(x)$。左边对 $(\lambda,\nu)$ 取 sup、右边对 $x\in C$ 取 inf：$d^*\le p^*$。差值 $p^*-d^*$ 叫对偶间隙。
 
-### 22.3 线性规划及其对偶（内容写法）
+### 22.3 线性规划及其对偶写法
 
-原问题 $\min a^\top x$ s.t. $Ax=b$、$x\ge 0$。Lagrangian 对 $x\ge 0$ 的 inf 有限当且仅当 $A^\top\nu+a\ge 0$，此时 $g=-b^\top\nu$（内容把等式乘子的符号写成 $\max -b^\top\nu$）。这是标准 LP 对偶的一种符号约定。
+原问题 $\min a^\top x$ s.t. $Ax=b$、$x\ge 0$。Lagrangian 对 $x\ge 0$ 的 inf 有限当且仅当 $A^\top\nu+a\ge 0$，此时按等式乘子符号约定可写为 $\max_{\nu}\{-b^\top\nu : A^\top\nu+a\ge 0\}$，这是标准 LP 对偶的常见等价形式。
 
 一般线性约束 $Ax\le b$、$Cx=d$ 时，
 
@@ -2051,11 +2057,11 @@ $$
 
 $f$ 真凸，$c_i$ 凸，可行集 $C$ 非空凸。
 
-**Slater 约束资格。** 存在 $x_0\in\mathrm{ri}(\mathrm{dom}(f))\cap C$ 使得对一切**非仿射**的 $c_i$ 有 $c_i(x_0)<0$（内容：$x_0\in\mathrm{reint}(\mathrm{dom}(f))\cap C$；仿射不等式只需 $\le 0$，已含在 $C$ 里）。
+**Slater 约束资格。** 存在 $x_0\in\mathrm{ri}(\mathrm{dom}(f))\cap C$（或记作 $\mathrm{reint}(\mathrm{dom}(f))$）使得对一切**非仿射**不等式 $c_i$ 有 $c_i(x_0)<0$（仿射不等式只需 $\le 0$，已由 $x_0\in C$ 满足）。
 
 **强对偶。** Slater $\Rightarrow$ $d^*=p^*$，且对偶最优乘子存在（只要 $p^*$ 有限）。
 
-### 23.2 强对偶：分离论证（内容重点 Slater）
+### 23.2 强对偶：分离超平面论证
 
 定义值域集合
 
@@ -2072,7 +2078,9 @@ $$
 
 **符号。** $\mathcal{A}$ 在每个 $u_i$ 方向含 $+\mathbb{R}_+$（把 $u_i$ 再加大仍属于 $\mathcal{A}$），故 $\lambda_i\ge 0$（否则 $u_i\to+\infty$ 左边 $\to-\infty$）。同理 $\mu\ge 0$。
 
-**Slater $\Rightarrow\mu>0$。** 若 $\mu=0$，则 $\lambda^\top u+\nu^\top v\ge 0$ 对一切 $\mathcal{A}$ 中的 $(u,v,\cdot)$。取 Slater 点 $x_0\in\mathrm{ri}(\mathrm{dom}(f))\cap C$，故 $Ax_0=b$、全体 $c_i(x_0)\le 0$，且非仿射的 $c_i(x_0)<0$。把 $u=c(x_0)$、$v=0$ 代入得 $\lambda^\top c(x_0)\ge 0$。但 $\lambda\ge 0$ 且 $c(x_0)\le 0$，故 $\lambda^\top c(x_0)=0$；非仿射坐标的 $c_i(x_0)<0$ 迫使这些 $\lambda_i=0$。剩下仿射不等式与等式：$\lambda_{\mathrm{aff}}^\top c_{\mathrm{aff}}(x)+\nu^\top(Ax-b)\ge 0$ 必须对 $\mathrm{ri}(\mathrm{dom})$ 里相对开的一块成立。仿射函数在相对开集上非负只能是恒等于 $0$，故 $\lambda_{\mathrm{aff}}=0$、$\nu=0$。于是 $(\lambda,\nu,\mu)=0$，矛盾。故 $\mu>0$。
+**Slater $\Rightarrow\mu>0$。** 若 $\mu=0$，则 $\lambda^\top u+\nu^\top v\ge 0$ 对一切 $\mathcal{A}$ 中的 $(u,v,\cdot)$ 成立。取 Slater 点 $x_0\in\mathrm{ri}(\mathrm{dom}(f))\cap C$，有 $Ax_0=b$、$c_i(x_0)\le 0$，且非仿射约束满足 $c_i(x_0)<0$。把 $u=c(x_0)$、$v=0$ 代入得 $\lambda^\top c(x_0)\ge 0$；结合 $\lambda\ge 0$ 与 $c(x_0)\le 0$，必有 $\lambda^\top c(x_0)=0$，于是所有非仿射坐标均迫使 $\lambda_i=0$。
+
+剩下的仿射不等式与等式部分满足 $\lambda_{\mathrm{aff}}^\top c_{\mathrm{aff}}(x)+\nu^\top(Ax-b)\ge 0$，且在 $\mathrm{ri}(\mathrm{dom})$ 内的相对开集上恒成立。仿射函数在相对开集上非负（并在相对内点取零）只能恒等于 $0$，从而推出 $\lambda_{\mathrm{aff}}=0$ 且 $\nu=0$。于是 $(\lambda,\nu,\mu)=0$，与分离向量非零矛盾，因此必有 $\mu>0$。
 
 **归一化。** 除以 $\mu$，仍记 $\lambda,\nu$。对任意 $x\in\mathrm{dom}(f)$ 取 $u=c(x)$、$v=Ax-b$、$t=f(x)$：
 
@@ -2082,7 +2090,7 @@ $$
 
 即 $g(\lambda,\nu)\ge p^*$。弱对偶另一向 $g\le p^*$，故 $d^*=p^*$，$(\lambda,\nu)$ 对偶最优。
 
-人话：Slater 的严格可行点把「竖直」分离（$\mu=0$）打死，分离超平面一定有函数值坐标，归一化后就是一组对偶可行乘子。仿射约束不需要严格可行，因为它们已经是「薄」的，相对内部就够。
+**直观理解。** Slater 条件里的严格可行点消除了「竖直」分离超平面（$\mu=0$）的可能，保证超平面必定带有目标函数轴的分量，归一化后自然给出对偶可行乘子。仿射约束自身边界是「平坦」的，因此只需处于相对内部即可。
 
 ### 23.3 凸问题的 KKT
 
@@ -2137,7 +2145,7 @@ $$
 T_C(x)=\Bigl\{d:\ \exists\, z_k\in C,\ z_k\to x,\ t_k\downarrow 0,\ \frac{z_k-x}{t_k}\to d\Bigr\}.
 $$
 
-人话：沿可行点列能逼近的方向。
+**直观理解。** 即沿可行点列能够逼近的所有切向方向。
 
 积极集 $A(x)=E\cup\{i\in I:c_i(x)=0\}$。**线性化可行方向锥**
 
@@ -2146,7 +2154,7 @@ F(x)=\bigl\{d:\ \nabla c_j(x)^\top d=0\ (j\in E),\quad
 \nabla c_i(x)^\top d\le 0\ (i\in A(x)\cap I)\bigr\}.
 $$
 
-始终有 $T_C(x)\subseteq F(x)$。反向 $T_C(x)=F(x)$ 叫做 Abadie 约束资格（ACQ），是导出 KKT 的最小几何假设之一。内容重点问的就是：何时 $T_C(x^*)=F_C(x^*)$。
+始终有 $T_C(x)\subseteq F(x)$。反向 $T_C(x)=F(x)$ 叫做 Abadie 约束资格（ACQ），是导出 KKT 的最小几何假设之一，核心问题正在于何时满足 $T_C(x^*)=F(x^*)$。
 
 **证明 $T\subseteq F$。** 取 $d\in T_C(x)$，即存在 $z_k\in C$、$t_k\downarrow 0$ 使 $(z_k-x)/t_k\to d$。对每个等式 $c_j(z_k)=0=c_j(x)$，
 
@@ -2177,7 +2185,7 @@ c_i(x^*)&\le 0,\quad c_j(x^*)=0,\\
 \end{aligned}
 $$
 
-（内容把等式乘子也写成 $\lambda$、下标从 $j=q$ 起，属排版；上式是标准写法。）
+（部分文献也会把等式乘子记作 $\lambda$ 且下标从 $j=q$ 续编；上式为区分别名的标准记法。）
 
 **为什么需要 $T=F$（Farkas）。** 局部最小 $\Rightarrow$ 沿一切切方向不能下降：$\langle\nabla f(x^*),d\rangle\ge 0$ 对一切 $d\in T_C(x^*)$。若 $T=F$，即
 
@@ -2225,33 +2233,33 @@ $$
 
 ---
 
-## 25. 对照表：内容 HW / 「?」/ Check 清单
+## 25. 本附录核心结论速查清单
 
-| 题目 | 本附录 |
-| ------ | -------- |
+| 主题 | 所在小节 |
+| ---- | -------- |
 | $\mathrm{tr}(CD)=\mathrm{tr}(DC)$，$\mathrm{tr}(QAQ^{-1})=\mathrm{tr}(A)$ | §1.4 |
 | 正交投影 $\iff P=P^\top$；最近点 | §3 |
-| $\ell_0$ 不是范数；$\ | x\ | _A$ 是范数 | §4.3, §4.5 |
-| $\ | A\ | _2=\max u^\top Av$；$\ | A\ | _2^2\le\ | A\ | _1\ | A\ | _\infty$ | §5.3 |
-| SVD Question：四条广义逆公理 | §6.1, §8 |
-| SVD 构造；Courant–Fischer HW | §6.3–6.5 |
-| 最佳线性编解码器 HW | §7 |
-| MP 存在唯一 | §8 |
+| $\ell_0$ 不是范数；$\lVert x\rVert_A$ 是范数 | §4.3, §4.5 |
+| $\lVert A\rVert_2=\max u^\top Av$；$\lVert A\rVert_2^2\le\lVert A\rVert_1\lVert A\rVert_\infty$ | §5.3 |
+| 四条 Moore–Penrose 广义逆公理 | §6.1, §8 |
+| SVD 构造；Courant–Fischer 变分原理 | §6.3–6.5 |
+| 最佳线性编解码器 = PCA | §7 |
+| Moore–Penrose 伪逆存在唯一 | §8 |
 | Eckart–Young 维数交错 | §9 |
-| 扰动 $\ | \delta x\ | /\ | x\ | \le\mathrm{Cond}(A)\ | \delta b\ | /\ | b\ | $ | §10 |
-| 核范数三角；变分 / 对偶 | §11 |
+| 扰动上界 $\lVert \delta x\rVert/\lVert x\rVert\le\mathrm{Cond}(A)\,\lVert \delta b\rVert/\lVert b\rVert$ | §10 |
+| 核范数三角不等式；变分 / 对偶公式 | §11 |
 | 核范数近端 = 奇异值软阈值 | §11.5 |
-| 梯度例子；$\nabla\log\det=X^{-1}$ | §12 |
+| 常用梯度字典；$\nabla\log\det=X^{-1}$ | §12 |
 | lsc $\iff$ 闭水平集 $\iff$ 闭上图 | §14 |
-| 零阶；$-\log\det$ 凸；一阶二阶 | §15 |
-| 严格凸平行条件 HW；强凸用 $h=f-\frac m2\ | \cdot\ | ^2$ | §16 |
-| 绿字：对 $h$ 写余强制 | §17.3 |
-| $\nabla f=0\iff\min$；余强制 | §17 |
-| $\partial\lvert x\rvert=?$；次微分和的连续点条件；HW $\partial\ | \cdot\ | _{1,2,\infty,*}$；$x^3$ 在 $0$ | §18 |
-| Check Lipschitz $\iff\ | g\ | _*\le L$；Bregman 投影 | §18.6–18.7 |
-| $f\le f^{**}$ 用分离定理 | §19.4 |
-| 相位恢复二阶 | §21.3 |
+| 零阶；$-\log\det$ 凸性；一阶二阶条件 | §15 |
+| 严格凸等价条件；强凸 $h=f-\frac m2\lVert \cdot\rVert^2$ | §16 |
+| 强凸光滑函数的余强制推导 | §17.3 |
+| $\nabla f=0\iff\min$；光滑余强制 | §17 |
+| $\partial\lvert x\rvert$、次微分和连续点条件、$\partial\lVert\cdot\rVert_{1,2,\infty,*}$ 与 $x^3$ 反例 | §18 |
+| Lipschitz 等价于 $\lVert g\rVert_*\le L$；Bregman 投影三点不等式 | §18.6–18.7 |
+| $f\le f^{**}$ 与凸集分离定理 | §19.4 |
+| 相位恢复二阶条件检验 | §21.3 |
 | Slater $\Rightarrow$ 强对偶；$N_C=\sum\mathrm{cone}(\partial c_i)+\mathcal{R}(A^\top)$ | §23 |
-| 何时 $T_C(x^*)=F_C(x^*)$（LICQ / MFCQ） | §24 |
+| 何时 $T_C(x^*)=F(x^*)$（LICQ / MFCQ） | §24 |
 
-读完本附录，Lec1 的 $\Pi$、$X^\dagger$、$\|\cdot\|_\Sigma$ 和 Lec2 的近端梯度、KKT，不应再有符号障碍。概率与集中不等式见附录 B。
+掌握本附录的投影 $\Pi$、伪逆 $X^\dagger$、加权范数 $\|\cdot\|_\Sigma$ 以及近端算子、KKT 条件后，即可顺畅阅读本系列关于线性模型与优化误差的推导。概率与集中不等式参考见 [概率与集中不等式附录](/blog/fods-probability-concentration/)。

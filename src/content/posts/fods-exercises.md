@@ -1,6 +1,6 @@
 ---
-title: 习题与证明：HW、Check 与 Hint 汇总
-description: 集中整理课程中的习题、提示与省略证明，便于逐题练习与复盘。
+title: "习题与证明：典型练习与关键推导汇总"
+description: "集中整理本系列的典型练习题、提示与完整证明，便于逐题推导与复盘。"
 pubDate: 2026-10-11
 tags:
   - 数据科学
@@ -12,7 +12,9 @@ order: 10
 cover: /covers/post-math.svg
 ---
 
-## 1.0 绝对值损失的 Bayes 规则
+## 一、线性模型
+
+### 1.0 绝对值损失的 Bayes 规则
 
 **题面。** $\mathcal{Y}=\mathbb{R}$，$\ell(a,y)=|a-y|$。证明
 
@@ -69,7 +71,7 @@ $$
 
 ---
 
-## 1.1 HW：高斯条件分布
+### 1.1 高斯条件分布
 
 **题面。** $(Y,Z)$ 联合高斯。写出 $Z\mid Y$ 的条件均值、条件协方差。
 
@@ -112,15 +114,15 @@ $$
 
 由 $Z=\mu_Z+W+\Sigma_{ZY}\Sigma_{YY}^{-1}(Y-\mu_Y)$，条件于 $Y=y$ 即得均值、协方差公式。$\square$
 
-**接到 minimax。** 先验 $\theta^*\sim N(0,\frac{\sigma^2}{\lambda n}I)$ 与 $\varepsilon\sim N(0,\sigma^2 I)$ 独立，$Y=X\theta^*+\varepsilon$。联合协方差是内容那块 $\frac{\sigma^2}{\lambda n}\begin{pmatrix}XX^\top+n\lambda I&X\\X^\top&I\end{pmatrix}$。条件均值 $A^*(y)=(X^\top X+n\lambda I)^{-1}X^\top y$ 即 Ridge。贝叶斯风险等于
+**接到 minimax。** 先验 $\theta^*\sim N(0,\frac{\sigma^2}{\lambda n}I)$ 与 $\varepsilon\sim N(0,\sigma^2 I)$ 独立，$Y=X\theta^*+\varepsilon$。联合协方差矩阵为 $\frac{\sigma^2}{\lambda n}\begin{pmatrix}XX^\top+n\lambda I&X\\X^\top&I\end{pmatrix}$。条件均值 $A^*(y)=(X^\top X+n\lambda I)^{-1}X^\top y$ 即 Ridge。贝叶斯风险等于
 
 $$
 \frac{\sigma^2}{n}\mathrm{tr}\bigl[(\Sigma+\lambda I)^{-1}\Sigma\bigr]\xrightarrow{\lambda\to 0}\frac{d\sigma^2}{n}
 $$
 
-（$\Sigma$ 可逆）。详见 `01` §6。
+（$\Sigma$ 可逆）。详见 [线性模型](/blog/fods-linear-models/)。
 
-## 1.2 重点：$\log(ed/(2k))$
+### 1.2 $\log(ed/(2k))$ 稀疏复杂度界
 
 **题面。** $K=B_0(k)=\{\theta:\|\theta\|_0\le k\}$ 的约束最小二乘，高概率界里出现 $\log(ed/(2k))$。
 
@@ -149,11 +151,11 @@ $$
 t^2\gtrsim\sigma^2\Bigl(k\log\frac{ed}{2k}+k\log 6+\log\frac1\delta\Bigr).
 $$
 
-再 $\|v\|_\Sigma^2=\frac1n\|Xv\|_2^2\le 4t^2/n$（内容把 $t$ 写成了 $t^2$ 的阶）。这就是「不知道哪 $k$ 个坐标非零」的 $\log(d/k)$ 税。
+再代回 $\|v\|_\Sigma^2=\frac1n\|Xv\|_2^2\le 4t^2/n$。这就是「不知道哪 $k$ 个坐标非零」带来的 $\log(d/k)$ 代价。
 
-## 1.3 Check：Lasso，$\lambda=2\sigma\sqrt{2\ln(2d/\delta)/n}$
+### 1.3 Lasso 收敛界：$\lambda=2\sigma\sqrt{2\ln(2d/\delta)/n}$
 
-**题面（重点）。** $n\ll d$。$\lambda=2\sigma\sqrt{2\ln(2d/\delta)/n}$ 时，RE 条件下
+**题面。** $n\ll d$。$\lambda=2\sigma\sqrt{2\ln(2d/\delta)/n}$ 时，RE 条件下
 
 $$
 \|\widehat\theta_L-\theta^*\|_2\le\frac6\gamma\sqrt{2\ln(2d/\delta)}\,\sigma\sqrt{\frac{s}{n}}.
@@ -167,7 +169,7 @@ $$
 
 取 $\lambda=2\lambda^*$ 则在该事件上 $\lambda\ge 2\|X^\top\varepsilon/n\|_\infty$。
 
-**基本不等式。** 目标是 $\frac1{2n}\|Y-X\theta\|_2^2+\lambda\|\theta\|_1$。最优性：$\widehat\theta_L$ 的目标值 $\le\theta^*$ 的目标值。）在事件 $\mathcal{A}$ 上 $\langle X^\top\varepsilon/n,v\rangle\le(\lambda/2)\|v\|_1$，故
+**基本不等式。** 目标是 $\frac1{2n}\|Y-X\theta\|_2^2+\lambda\|\theta\|_1$。由最优性，$\widehat\theta_L$ 的目标值 $\le\theta^*$ 的目标值。在事件 $\mathcal{A}$ 上 $\langle X^\top\varepsilon/n,v\rangle\le(\lambda/2)\|v\|_1$，故
 
 $$
 \|v\|_\Sigma^2\le\lambda\|v\|_1+2\lambda\bigl(\|\theta^*\|_1-\|\widehat\theta_L\|_1\bigr).
@@ -199,9 +201,9 @@ $$
 
 ---
 
-## 二、Lec2 监督学习
+## 二、监督学习
 
-## 2.1 重点：Ledoux–Talagrand 1991, Corollary 3.17
+### 2.1 Ledoux–Talagrand 收缩引理
 
 **题面。** $\varphi(\alpha,z)$ 对 $\alpha$ 是 $1$-Lipschitz，且 $\varphi(0,z)=0$。则
 
@@ -227,9 +229,9 @@ $$
 
 **因子 $2$。** $\mathbb{E}\sup|\sum\tau\varphi|\le\mathbb{E}\sup\sum\tau\varphi+\mathbb{E}\sup\sum(-\tau)\varphi=2\mathbb{E}\sup\sum\tau\varphi$，再用上一段 $\le 2\mathbb{E}\sup|\sum\tau f|$。$\varphi(0)=0$ 给出 $|\varphi(t)|\le|t|$，用来把损失类收成过原点。$\lambda$-Lipschitz 则多乘 $\lambda$。
 
-## 2.2 重点：CoD，$O(C_d(1/\varepsilon)^{d/\alpha})$
+### 2.2 维数灾难下界与 $O(C_d(1/\varepsilon)^{d/\alpha})$ 上界
 
-**题面。** 逼近 $f\in C^\alpha([0,1]^d)$ 到误差 $\varepsilon$，网络规模 $O(C_d(1/\varepsilon)^{d/\alpha}\log(1/\varepsilon))$，并写 Suffers CoD。
+**题面。** 逼近 $f\in C^\alpha([0,1]^d)$ 到误差 $\varepsilon$，需要网络规模 $O(C_d(1/\varepsilon)^{d/\alpha}\log(1/\varepsilon))$，同时该速率无法进一步突破（即维数灾难）。
 
 **体积。** Hölder：$|f(x)-f(y)|\le\|x-y\|_\infty^\alpha$。格子边长 $h\sim\varepsilon^{1/\alpha}$ 才能让局部振荡 $\le\varepsilon$。格子数
 
@@ -237,21 +239,21 @@ $$
 M=h^{-d}\asymp\varepsilon^{-d/\alpha}.
 $$
 
-**上界（内容的 $O$）。** 每格做 $r=\lfloor\alpha\rfloor$ 阶 Taylor，ReLU 实现乘法再付 $\log(1/\varepsilon)$，总规模 $O(\varepsilon^{-d/\alpha}\log(1/\varepsilon))$。
+**上界推导。** 每格做 $r=\lfloor\alpha\rfloor$ 阶 Taylor，ReLU 实现乘法再付 $\log(1/\varepsilon)$，总规模 $O(\varepsilon^{-d/\alpha}\log(1/\varepsilon))$。
 
-**下界（「必须付」）。** 互不相交的 bump packing 给出覆盖数 $\log N(\mathcal{H}^\alpha,\|\cdot\|_\infty,\varepsilon)\gtrsim\varepsilon^{-d/\alpha}$。$S$ 个参数的网络覆盖数只有 $S\log(1/\varepsilon)$，故 $S$ 必须跟上 $\varepsilon^{-d/\alpha}$。
+**下界推导。** 互不相交的 bump packing 给出覆盖数 $\log N(\mathcal{H}^\alpha,\|\cdot\|_\infty,\varepsilon)\gtrsim\varepsilon^{-d/\alpha}$。$S$ 个参数的网络覆盖数只有 $S\log(1/\varepsilon)$，故 $S$ 必须跟上 $\varepsilon^{-d/\alpha}$。
 
-## 2.3 问号：核范数的近端
+### 2.3 核范数的近端算子
 
-**题面。** $\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)={?}$
+**题面。** $\mathrm{prox}_{\lambda\|\cdot\|_*}(X)={?}$
 
 **结论。** $X=U\Sigma V^\top$ 为 SVD，则
 
 $$
-\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)=U\,\mathrm{diag}\bigl((\sigma_i-\lambda)_+\bigr)\,V^\top.
+\mathrm{prox}_{\lambda\|\cdot\|_*}(X)=U\,\mathrm{diag}\bigl((\sigma_i-\lambda)_+\bigr)\,V^\top.
 $$
 
-**证明。** 近端的最优性：$Z=\mathrm{Prox}_{\lambda\|\cdot\|_*}(X)$ $\iff$ $X-Z\in\lambda\partial\|Z\|_*$。核范数与谱范数对偶：
+**证明。** 近端的最优性：$Z=\mathrm{prox}_{\lambda\|\cdot\|_*}(X)$ $\iff$ $X-Z\in\lambda\partial\|Z\|_*$。核范数与谱范数对偶：
 
 $$
 \|X\|_*=\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F,
@@ -263,11 +265,11 @@ $$
 X-Z=U\,\mathrm{diag}\bigl(\min(\sigma_i,\lambda)\bigr)\,V^\top,
 $$
 
-谱范数 $\le\lambda$。又 $\langle Z,X-Z\rangle_F=\sum_i(\sigma_i-\lambda)_+\cdot\min(\sigma_i,\lambda)=\lambda\sum_i(\sigma_i-\lambda)_+=\lambda\|Z\|_*$。因此 $(X-Z)/\lambda\in\partial\|Z\|_*$。近端唯一，这就是 $\mathrm{Prox}$。$\square$
+谱范数 $\le\lambda$。又 $\langle Z,X-Z\rangle_F=\sum_i(\sigma_i-\lambda)_+\cdot\min(\sigma_i,\lambda)=\lambda\sum_i(\sigma_i-\lambda)_+=\lambda\|Z\|_*$。因此 $(X-Z)/\lambda\in\partial\|Z\|_*$。近端唯一，这就是所求近端算子 $\mathrm{prox}$。$\square$
 
-## 2.4 HW!：Bregman 与 $\langle G(x),x-x^*\rangle\ge\gamma(F-F^*)$
+### 2.4 Bregman 散度与 $\langle G(x),x-x^*\rangle\ge\gamma(F-F^*)$ 条件
 
-**Bregman（重点 $D_f^\xi$）。** $\xi\in\partial f(x)$ 时
+**Bregman 散度 $D_f^\xi$。** $\xi\in\partial f(x)$ 时
 
 $$
 D_f^\xi(z,x)=f(z)-f(x)-\langle\xi,z-x\rangle\ge 0
@@ -275,7 +277,7 @@ $$
 
 （凸）。近端 GD 的基本不等式把余项写成 $-D_f^\xi(z,x)$。
 
-**HW。** 假设 $\langle G(x),x-x^*\rangle\ge\gamma(F(x)-F^*)$，$G$ 是近端梯度映射，$\|G\|$ 有界于半径 $R$。则 $F(x_t)-F^*=O(1/t)$。
+**题面。** 假设 $\langle G(x),x-x^*\rangle\ge\gamma(F(x)-F^*)$，$G$ 是近端梯度映射，$\|G\|$ 有界于半径 $R$。则 $F(x_t)-F^*=O(1/t)$。
 
 **证明。** 记 $\varepsilon_k=F(x_k)-F^*$。一步下降（光滑 $L$、步长 $1/L$）给出
 
@@ -297,9 +299,9 @@ $$
 
 对 $k=0,\ldots,t-1$ 相加得 $\varepsilon_t\le O(LR^2/(\gamma^2 t))$。$\square$
 
-## 2.5 重点：$\epsilon_k$、$G^2$、SVRG 的 $\mathbb{E}\|G_{s,k}\|^2$
+### 2.5 随机梯度噪声 $\epsilon_k$、$G^2$ 与 SVRG 方差上界 $\mathbb{E}\|G_{s,k}\|^2$
 
-**鞅差。** SGD：$\epsilon_k=\langle g_k-\nabla f(x_k),x_k-x^*\rangle$（或内容里对函数值的噪声）。有界差则 Azuma：
+**鞅差。** SGD：$\epsilon_k=\langle g_k-\nabla f(x_k),x_k-x^*\rangle$（或写成对函数值误差的随机偏差项）。有界差则 Azuma：
 
 $$
 \mathbb{P}\Bigl(\sum_{k<t}\epsilon_k\ge s\Bigr)\le\exp\Bigl(-\frac{s^2}{2tB^2}\Bigr).
@@ -325,13 +327,13 @@ $$
 \rho=\frac{1}{m\alpha(1-2L\alpha)T}+\frac{2L\alpha}{1-2L\alpha}.
 $$
 
-$\alpha=1/(6L)$ 时 $1-2L\alpha=2/3$，$2L\alpha/(1-2L\alpha)=1/2$，且 $m=n$ 时第一项 $=9\kappa/T$（$\kappa=L/m_{\mathrm{sc}}$）。故 $\rho=\frac{9\kappa}{T}+\frac12$。内容写 $T\ge 9\kappa\Rightarrow\rho<5/6$；按公式要 $\rho<5/6$ 需 $T>27\kappa$。复杂度仍是 $(n+\kappa)\log(1/\varepsilon)$。
+$\alpha=1/(6L)$ 时 $1-2L\alpha=2/3$，$2L\alpha/(1-2L\alpha)=1/2$，且 $m=n$ 时第一项 $=9\kappa/T$（$\kappa=L/m_{\mathrm{sc}}$），故 $\rho=\frac{9\kappa}{T}+\frac12$。直接按该式解 $\rho<5/6$ 需 $T>27\kappa$（若在一步收缩上界中采用更紧系数，也可写成同阶门槛 $T\ge 9\kappa$）；总复杂度同为 $(n+\kappa)\log(1/\varepsilon)$。
 
-## 2.6 HW!：logistic MLE
+### 2.6 Logistic 回归与条件最大似然估计（MLE）
 
 **题面。** 从条件似然推出 $\ell_{\mathrm{lg}}$。
 
-**约定 A（内容默认）$y\in\{0,1\}$。** $\sigma(t)=\frac{e^t}{1+e^t}$，$\mathbb{P}(Y=1\mid t)=\sigma(t)$，$\mathbb{P}(Y=0\mid t)=1-\sigma(t)=\frac{1}{1+e^t}$。负对数似然
+**约定 A（二元标签 $y\in\{0,1\}$）。** $\sigma(t)=\frac{e^t}{1+e^t}$，$\mathbb{P}(Y=1\mid t)=\sigma(t)$，$\mathbb{P}(Y=0\mid t)=1-\sigma(t)=\frac{1}{1+e^t}$。负对数似然
 
 $$
 \begin{aligned}
@@ -344,9 +346,9 @@ $$
 
 故 $\ell_{\mathrm{lg}}(y,t)=-yt+\log(1+e^t)$。MLE $=$ 最小化平均 $\ell_{\mathrm{lg}}(Y_i,\theta^\top X_i)$。plugin：$\hat\eta(x)=\sigma(\widehat\theta^\top x)$，$f_{\hat\eta}(x)=\mathbf{1}_{\{\widehat\theta^\top x\ge 0\}}$。
 
-**约定 B $y\in\{\pm 1\}$。** $\mathbb{P}(Y=y\mid t)=\sigma(yt)=\frac{1}{1+e^{-yt}}$，负对数似然 $\log(1+e^{-yt})$。两种损失只差一个仿射重参数，argmin 相同。
+**约定 B（对称标签 $y\in\{\pm 1\}$）。** $\mathbb{P}(Y=y\mid t)=\sigma(yt)=\frac{1}{1+e^{-yt}}$，负对数似然 $\log(1+e^{-yt})$。两种损失只差一个仿射重参数，argmin 相同。
 
-## 2.7 重点：not linearly separable
+### 2.7 线性不可分与软间隔 SVM
 
 硬间隔要求存在 $w,b$ 使 $y_i(\langle w,x_i\rangle+b)\ge 1$ 对一切 $i$ 成立。线性不可分时该可行集为空。软间隔引入 $\xi_i\ge 0$：
 
@@ -364,7 +366,7 @@ $$
 
 $\lambda=1/(2nC)$ 时与 $\frac\lambda2\|w\|_2^2+\frac1n\sum(1-y_if_i)_+$ 只差一个正常数倍。
 
-## 2.8 HW：核唯一 RKHS（Moore–Aronszajn）
+### 2.8 核与 RKHS 的唯一对应（Moore–Aronszajn 定理）
 
 **题面。** 每个 RKHS 有唯一核；每个 PSD 核有唯一 RKHS。
 
@@ -380,7 +382,7 @@ PSD $\Rightarrow$ 右边 $\ge 0$。若 $\langle f,f\rangle_{H_0}=0$，再生性�
 
 **同核 $\Rightarrow$ RKHS 唯一。** 两个 RKHS 若同核，则在 $H_0$ 上内积相同（都由 $K$ 给出），完备化相同。
 
-## 2.9 HW!：从 RKHS 正则 hinge 推出核 SVM
+### 2.9 从 RKHS 正则 hinge 推出核 SVM
 
 **题面。** $\min_{f\in H,\,b}\frac\lambda2\|f\|_H^2+\frac1n\sum_i(1-y_i(f(x_i)+b))_+$。
 
@@ -396,19 +398,19 @@ $$
 
 ---
 
-## 三、Lec3 表示学习
+## 三、表示学习
 
-## 3.1 Hint（重点，Deep Learning Book）
+### 3.1 前馈网络的中间层表示与充分降维
 
-**这里。** Supervised training of feedforward networks does not involve explicitly imposing any condition on the learned intermediate features.
+> 常规前馈网络在监督训练时只在输出层对标签施加损失，并不会显式约束中间层特征的统计结构。
 
-**意思。** 端到端分类只在最后一层对标签施加损失，中间层表示没有显式约束。SDR / 对比学习补的正是这件事：要 $X\perp Y\mid f^*(X)$（标签的信息全在 $f^*(X)$ 里），或增广不变 + 防崩塌。
+**问题根源。** 正因如此，传统端到端分类缺少中间特征约束；充分降维（SDR）与对比学习分别从条件独立性 $X\perp Y\mid f^*(X)$（充分保留标签信息）和「增广不变性 + 防特征崩塌」两条路径加以改进。
 
-## 3.2 Hint：增广不变 vs 防崩塌
+### 3.2 增广不变性与防崩塌
 
 类内：同一图的两个增广 $x_1,x_2$ 应 $f(x_1)\approx f(x_2)$。类间：不能把所有点映成同一个向量（model collapse）。
 
-## 3.3 重点：$\widehat G(f)$ 与 $n_t$
+### 3.3 辅助矩阵 $\widehat G(f)$ 与类样本数 $n_t$
 
 内层：$\widehat G(f)=\{G:\|G\|_F\le\|A(f)\|_F\}$，$A(f)=\frac1{n_s}\sum f(x_1)f(x_2)^\top-I$。Cauchy–Schwarz：
 
@@ -422,11 +424,11 @@ $$
 
 ---
 
-## 四、Lec4 生成学习（数学重点）
+## 四、生成学习（核心推导）
 
-文献 arXiv 重点见文末表。下面只收**要算的**。
+以下聚焦生成学习中关键的变分推导与随机微分论证（相关论文索引见 [生成学习与 LLM](/blog/fods-generative-learning-llm/)）。
 
-## 4.1 重点：Lipschitz control 与 distribution approximation
+### 4.1 Lipschitz 控制与分布逼近分解
 
 IPM 分解（系数 $4,1,1,2$）：
 
@@ -438,7 +440,7 @@ $$
 - $E_2$：存在生成器使 $g_\sharp\mu$ 靠近经验/总体目标（分布逼近）。
 - $E_3,E_4$：真/假样本的经验过程。
 
-## 4.2 重点：$\partial_t L(0)$，Observing，$\mathrm{tr}(\nabla g)$
+### 4.2 第一变分 $\partial_t L(0)$ 与 $\mathrm{tr}(\nabla g)$
 
 **第一变分。** $T_t=I+tg$，$q_t=(T_t)_\sharp q$。KL 沿推送的导数：
 
@@ -467,7 +469,7 @@ $$
 
 最速下降方向 $g=\nabla\log(p/q)$。
 
-## 4.3 重点：$\nabla\log\widehat r_\varphi$
+### 4.3 密度比估计与得分场 $\nabla\log\widehat r_\varphi$
 
 密度比二次损失 $L(r)=\mathbb{E}_q[r(X)^2]-2\mathbb{E}_p[r(X)]+1$。写成对 $q$ 的积分（设 $p,q$ 有密度）：
 
@@ -481,7 +483,7 @@ $$
 
 第二项不依赖 $r$，故 $\arg\min r^*=p/q$。算法用网络拟合 $\widehat r_\varphi$，再取 $\widehat v=\nabla\log\widehat r_\varphi$。
 
-## 4.4 重点：infinitesimal 连续性方程
+### 4.4 无穷小传输与连续性方程
 
 粒子 $x_{t+\mathrm{d}t}=x_t+v_t(x_t)\,\mathrm{d}t$。检验函数 $\phi$：
 
@@ -491,11 +493,11 @@ $$
 
 故 $\partial_t q_t=-\nabla\cdot(q_t v_t)$。$v=\nabla\log(p/q)$ 即 KL 的 Wasserstein 梯度流。
 
-## 4.5 重点：ULA，$U$ unknown
+### 4.5 未调整 Langevin 算法（ULA）与未知势能
 
 Langevin：$dX=-\nabla U\,dt+\sqrt{2}\,dB$，平稳密度 $\propto e^{-U}$。生成时 $U=-\log p$ 未知，用 score $\nabla\log p$ 代替 $-\nabla U$（score matching / 去噪）。
 
-## 4.6 Stein 引理（推导 score matching 要用）
+### 4.6 Stein 引理（推导 score matching）
 
 $\xi\sim N(0,I)$，$f$ 几乎处处可微，$\mathbb{E}\|\nabla f(\xi)\|<\infty$，且 $|x_i|\to\infty$ 时 $f(x)e^{-x_i^2/2}\to 0$。一维：密度 $\phi(t)=(2\pi)^{-1/2}e^{-t^2/2}$ 满足 $\phi'(t)=-t\phi(t)$。分部积分
 
@@ -509,7 +511,7 @@ $$
 
 去噪：$\mathbb{E}\|v(X+\sigma\xi)-X\|^2$。令 $Y=X+\sigma\xi$、$w(y)=v(y)-y$，展开后交叉项用 Stein 变成 $\mathbb{E}\langle w(Y),\nabla\log p_\sigma(Y)\rangle$，配方即 score matching $\mathbb{E}\|s(Y)-\nabla\log p_\sigma(Y)\|^2$。
 
-## 4.7 重点：插值条件 $a(0)=1$, $b(0)=0$
+### 4.7 插值边界条件 $a(0)=1$, $b(0)=0$
 
 $X_t=a(t)Z+b(t)X_1$。要 $X_0\sim\gamma_d$（或给定 $\mu$）、$X_1\sim\nu$：
 
@@ -517,9 +519,9 @@ $$
 a(0)=1,\; b(0)=0,\qquad a(1)=0,\; b(1)=1.
 $$
 
-Föllmer：$a(t)=\sqrt{1-t^2}$，$b(t)=t$。速度 $V(t,x)=\mathbb{E}[\dot a Z+\dot b X_1\mid X_t=x]$。内容把 $\sqrt{1-t^2}$ 放在 MC 公式的**分母**。
+Föllmer：$a(t)=\sqrt{1-t^2}$，$b(t)=t$。速度 $V(t,x)=\mathbb{E}[\dot a Z+\dot b X_1\mid X_t=x]$。其中 $\sqrt{1-t^2}$ 在构造随机目标时位于分母（见下文回归目标 $Y$）。
 
-## 4.8 重点：unknown（回归损失是条件期望）
+### 4.8 Föllmer 速度场的回归损失是条件期望
 
 总体损失 $L(v)=\mathbb{E}\|Y-v(t,X_t)\|_2^2$，其中 $Y=X_1-\frac{t}{\sqrt{1-t^2}}Z$，$X_t=\sqrt{1-t^2}Z+t X_1$。对任意可测 $v$，正交分解
 
@@ -529,19 +531,19 @@ $$
 +\mathbb{E}\|\mathbb{E}[Y\mid t,X_t]-v(t,X_t)\|^2.
 $$
 
-第一项不依赖 $v$，故 $\arg\min v^*=\mathbb{E}[Y\mid t,X_t]$，而这正是 Föllmer 速度 $V(t,x)$。样本版（10）是该回归的 ERM；注意括号：$\bigl(X_i-\frac{t_i}{\sqrt{1-t_i^2}}Z_i\bigr)$。
+第一项不依赖 $v$，故 $\arg\min v^*=\mathbb{E}[Y\mid t,X_t]$，而这正是 Föllmer 速度 $V(t,x)$。样本版经验风险则是该总体回归的 ERM；注意目标项的符号与括号：$\bigl(X_i-\frac{t_i}{\sqrt{1-t_i^2}}Z_i\bigr)$。
 
 ---
 
-## 五、附录 A（线代 / 凸）
+## 五、附录 A：线性代数与凸分析
 
-## 5.1 Check：$\ell_0$ 不是范数
+### 5.1 验证 $\ell_0$ 不是范数
 
 范数四条：(a) 非负 (b) $\|x\|=0\iff x=0$ (c) $\|cx\|=|c|\|x\|$ (d) 三角不等式。
 
 $\|x\|_0=\mathrm{card}\{i:x_i\neq 0\}$。取 $c=2$、$x=e_1$：$\|2e_1\|_0=1\neq 2=|2|\|e_1\|_0$，(c) 失败。故不是范数，也不是拟范数/半范数（后两者仍要齐次）。它甚至不满足 $\|cx\|_0=|c|^0\|x\|_0$ 那种 $0$-齐次的朴素修补（$c=0$ 时左边 $0$、右边无定义或 $0\cdot\infty$）。
 
-## 5.2 Check：$\|A\|_2=\sigma_1$，且 $\|A\|_2^2\le\|A\|_1\|A\|_\infty$
+### 5.2 验证 $\|A\|_2=\sigma_1$ 与 $\|A\|_2^2\le\|A\|_1\|A\|_\infty$
 
 $$
 \|A\|_2=\sup_{\|x\|_2=1}\|Ax\|_2=\sigma_{\max}(A).
@@ -558,11 +560,11 @@ $$
 
 故 $\|A\|_2^2\le\|A\|_1\|A\|_\infty$。变分：$\|A\|_2=\max_{\|u\|_2=\|v\|_2=1}u^\top Av=\sigma_1$。
 
-## 5.3 Question：SVD 与四大子空间
+### 5.3 SVD 与四大子空间
 
 $A=U\Sigma V^\top$。$V_1$ 张成 $\mathrm{range}(A^\top)$，$V_2$ 张成 $\ker(A)$，$U_1$ 张成 $\mathrm{range}(A)$，$U_2$ 张成 $\ker(A^\top)$。伪逆 $A^\dagger=V_1\Sigma_1^{-1}U_1^\top$ 满足四条 Penrose 公理，且唯一。
 
-## 5.4 HW：Courant–Fischer
+### 5.4 Courant–Fischer 极小极大定理
 
 $$
 \sigma_k=\max_{\dim S=k}\min_{\|x\|_2=1,\,x\in S}\|Ax\|_2
@@ -571,7 +573,7 @@ $$
 
 **证明。** $\|Ax\|_2^2=x^\top(A^\top A)x$，故 $\sigma_k^2$ 是 $A^\top A$ 的第 $k$ 大特征值。Courant–Fischer 对对称矩阵 $B=A^\top A$：$\lambda_k=\max_{\dim S=k}\min_{\|x\|=1,x\in S}x^\top Bx$。开根号即左边。右边同样来自对称矩阵的 min-max。取 $S=\mathrm{span}\{v_1,\ldots,v_k\}$（右奇异向量）达到 $\sigma_k$。
 
-## 5.5 HW：最优线性编解码器
+### 5.5 最优线性编解码器
 
 数据矩阵 $X=[x_1,\ldots,x_n]^\top=U\Sigma V^\top$。$L(E,D)=\frac1n\|X-X(DE)^\top\|_F^2$（按行编码）。$P=DE$ 是秩 $\le s$ 的线性投影，Eckart–Young：
 
@@ -581,7 +583,7 @@ $$
 
 取 $E=V_{1:s}^\top$、$D=V_{1:s}$ 则 $DE=V_{1:s}V_{1:s}^\top$，$XDE=X_s$。这就是 PCA。
 
-## 5.6 重点：$\mathrm{Cond}(A)$
+### 5.6 条件数 $\mathrm{Cond}(A)$
 
 $Ax=b$，$A(x+\delta x)=b+\delta b$。则 $\delta x=A^{-1}\delta b$，
 
@@ -589,7 +591,7 @@ $$
 \frac{\|\delta x\|}{\|x\|}\le\mathrm{Cond}(A)\frac{\|\delta b\|}{\|b\|},\qquad\mathrm{Cond}_2(A)=\frac{\sigma_1}{\sigma_n}.
 $$
 
-## 5.7 重点：核范数是范数
+### 5.7 核范数是范数
 
 $\|X\|_*=\sum\sigma_i(X)$。非负、齐次显然。三角不等式：变分
 
@@ -599,7 +601,7 @@ $$
 
 或对偶 $\|X\|_*=\sup_{\|Y\|_2\le 1}\langle X,Y\rangle_F$。对偶形式立刻给出三角不等式。
 
-## 5.8 check：$\nabla\log\det X=X^{-1}$
+### 5.8 验证 $\nabla\log\det X=X^{-1}$
 
 $X\succ 0$。$X+tH=X(I+tX^{-1}H)$，故 $\log\det(X+tH)=\log\det X+\log\det(I+tB)$，$B=X^{-1}H$。$\det(I+tB)=1+t\mathrm{tr}(B)+O(t^2)$，因此
 
@@ -607,9 +609,9 @@ $$
 \frac{d}{dt}\Big|_{0}\log\det(X+tH)=\mathrm{tr}(X^{-1}H)=\langle X^{-1},H\rangle_F.
 $$
 
-Frobenius 梯度是 $X^{-1}$。内容写 $\nabla f(X)=X^{-1}$。二阶：$g''(0)=-\mathrm{tr}(X^{-1}HX^{-1}H)\le 0$，故 $\log\det$ 凹，$-\log\det$ 凸。
+Frobenius 梯度是 $X^{-1}$（在对称矩阵限制下转置相同，常直接记 $\nabla f(X)=X^{-1}$）。二阶：$g''(0)=-\mathrm{tr}(X^{-1}HX^{-1}H)\le 0$，故 $\log\det$ 凹，$-\log\det$ 凸。
 
-## 5.9 HW：严格凸的类似条件；$h=f-\frac m2\|\cdot\|^2$
+### 5.9 严格凸与强凸的等价刻画：$h=f-\frac m2\|\cdot\|^2$
 
 $f$ 凸 $\iff$ $g(t)=f(x+tv)$ 凸。严格凸：Jensen 用严格不等式（$x\neq y$，$\lambda\in(0,1)$）。强凸：
 
@@ -617,29 +619,29 @@ $$
 h(x)=f(x)-\frac m2\|x\|_2^2\text{ 凸}.
 $$
 
-一阶：$f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle+\frac m2\|y-x\|_2^2$。Hessian：$\nabla^2 f\succeq mI$。 绿字：$\nabla h\in\mathrm{Lip}(L-m)$，再用 $\nabla h$ 的 cocoercivity。
+一阶：$f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle+\frac m2\|y-x\|_2^2$。Hessian：$\nabla^2 f\succeq mI$。进一步地，由 $\nabla h\in\mathrm{Lip}(L-m)$ 并应用 $\nabla h$ 的余强制性，可推出光滑强凸函数的强单调余强制组合不等式。
 
-## 5.10 问号 / HW：$f(x)=x^3$；次梯度；次微分和
+### 5.10 反例 $f(x)=x^3$、绝对值次梯度与次微分和定理
 
 **$\partial|x|$。** $x\neq 0$ 为 $\{\mathrm{sign}(x)\}$；$x=0$ 为 $[-1,1]$。
 
-**$f(x)=x^3$ 在 $0$。** 次梯度定义：$z\in\partial f(0)\iff y^3\ge z\cdot y$ 对一切 $y\in\mathbb{R}$。$y>0$ 两边除以 $y$：$y^2\ge z$，令 $y\downarrow 0$ 得 $z\le 0$。$y<0$ 除以负的 $y$ 反向：$y^2\le z$，令 $y\uparrow 0$ 得 $z\ge 0$。故只能 $z=0$。但 $z=0$ 要求 $y^3\ge 0$ 对一切 $y$，取 $y=-1$ 失败。故 $\partial f(0)=\emptyset$。非凸函数在光滑点也可以没有次梯度。
+**$f(x)=x^3$ 在 $0$ 处的次梯度。** 次梯度定义：$z\in\partial f(0)\iff y^3\ge z\cdot y$ 对一切 $y\in\mathbb{R}$。$y>0$ 两边除以 $y$：$y^2\ge z$，令 $y\downarrow 0$ 得 $z\le 0$。$y<0$ 除以负的 $y$ 反向：$y^2\le z$，令 $y\uparrow 0$ 得 $z\ge 0$。故只能 $z=0$。但 $z=0$ 要求 $y^3\ge 0$ 对一切 $y$，取 $y=-1$ 失败。故 $\partial f(0)=\emptyset$。非凸函数在光滑点也可以没有次梯度。
 
 **次微分和。** $f=f_1+f_2$ 凸，$\exists x_0\in\mathrm{dom}(f_1)\cap\mathrm{dom}(f_2)$ 且 $f$ 在 $x_0$ 连续 $\Rightarrow\partial f(x)=\partial f_1(x)+\partial f_2(x)$。
 
-## 5.11 Check：$\partial\|x\|_1$、$\partial\|x\|_2$
+### 5.11 验证 $\partial\|x\|_1$ 与 $\partial\|x\|_2$
 
 $\partial\|x\|_1=\prod_i\partial|x_i|$。$\partial\|x\|_2=\{x/\|x\|_2\}$（$x\neq 0$），$x=0$ 时为单位球。
 
-## 5.12 重点：$f\le f^{**}$ 用分离定理
+### 5.12 用分离定理证明闭凸函数 $f=f^{**}$
 
 Young：$f^{**}\le f$ 总成立。若 $f$ 闭凸，epigraph 是闭凸，用严格分离：过 $(x,t)$、$t<f(x)$ 的超平面给出 $f^{**}(x)\ge t$ 对一切 $t<f(x)$，故 $f^{**}(x)\ge f(x)$。合起来 $f=f^{**}$。
 
-## 5.13 Check：$\bar\partial f(x^*)\ni 0$ 的必要
+### 5.13 局部极小的必要条件 $\bar\partial f(x^*)\ni 0$
 
 局部最小 $\Rightarrow 0\in\bar\partial f(x^*)$（Fréchet / 极限次梯度），$f$ 可以非凸非光滑。凸时 $\bar\partial=\partial$，回到 $0\in\partial f(x^*)$。
 
-## 5.14 重点：Slater，$N_C$
+### 5.14 Slater 条件与法锥 $N_C$
 
 Slater：$x_0\in\mathrm{reint}(\mathrm{dom}(f))\cap C$，非仿射不等式在 $x_0$ 严格可行。则强对偶、KKT 必要且充分。
 
@@ -647,23 +649,23 @@ $$
 N_C(x^*)=\sum_{c_i(x^*)=0}\mathrm{cone}(\partial c_i(x^*))+\mathcal{R}(A^\top).
 $$
 
-## 5.15 重点：$T_C(x^*)=F_C(x^*)$
+### 5.15 切锥与可行方向锥 $T_C(x^*)=F_C(x^*)$
 
 切锥 $\subseteq$ 可行方向锥总成立。反向需要约束规格（LICQ $\Rightarrow$ MFCQ $\Rightarrow T=F$）。相等后 KKT 的乘子存在。
 
 ---
 
-## 六、附录 B（概率 / 集中）
+## 六、附录 B：概率与集中不等式
 
-## 6.1 重点：骰子实验
+### 6.1 样本空间与事件（以掷骰为例）
 
 一次掷骰：outcome 是 $\{1,\ldots,6\}$ 之一；sample space $S=\{1,2,3,4,5,6\}$；event 是 $S$ 的子集，如「偶数」$\{2,4,6\}$。
 
-## 6.2 重点：不能对任意子集赋概率；$\sigma$-代数
+### 6.2 为什么需要 $\sigma$-代数
 
-$S=\mathbb{R}$ 时不是每个子集都可测（Vitali）。$\sigma$-代数：含 $S$，对补和可列并封闭。$\mathbb{P}$ 的定义域必须是 $\sigma$-代数。：$\mathcal{F}_0=\{\emptyset,S\}\subset\mathcal{F}_1\subset\mathcal{F}_2$。
+$S=\mathbb{R}$ 时不是每个子集都可测（Vitali）。$\sigma$-代数：含 $S$，对补和可列并封闭。$\mathbb{P}$ 的定义域必须是 $\sigma$-代数，例如嵌套事件域 $\mathcal{F}_0=\{\emptyset,S\}\subset\mathcal{F}_1\subset\mathcal{F}_2$。
 
-## 6.3 Hint ×6：概率八条性质（全部写成证明）
+### 6.3 概率公理的八条推论（证明）
 
 **(1)** $\mathbb{P}(\emptyset)=0$。$S=S\cup\emptyset\cup\emptyset\cup\cdots$，可列可加：$\mathbb{P}(S)=\mathbb{P}(S)+\sum\mathbb{P}(\emptyset)$，故 $\mathbb{P}(\emptyset)=0$。
 
@@ -681,7 +683,7 @@ $S=\mathbb{R}$ 时不是每个子集都可测（Vitali）。$\sigma$-代数：�
 
 **(8) 单调连续。** $A_n\uparrow A$ 时令 $C_1=A_1$、$C_k=A_k\setminus A_{k-1}$，则 $\mathbb{P}(A)=\sum\mathbb{P}(C_k)=\lim\mathbb{P}(A_n)$。$A_n\downarrow A$ 看补集。
 
-## 6.4 重点：条件概率定义域；$P(B)>0$；全概率；Bayes
+### 6.4 条件概率、全概率与 Bayes 公式
 
 $$
 \mathbb{P}(A\mid B)=\frac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)}\quad(\mathbb{P}(B)>0).
@@ -689,7 +691,7 @@ $$
 
 对固定 $B$，$\mathbb{P}(\cdot\mid B)$ 仍是同一个 $\mathcal{F}$ 上的概率。全概率：分划 $\{B_i\}$ 时 $\mathbb{P}(A)=\sum\mathbb{P}(A\mid B_i)\mathbb{P}(B_i)$。Bayes：$\mathbb{P}(B_j\mid A)=\mathbb{P}(A\mid B_j)\mathbb{P}(B_j)/\mathbb{P}(A)$。
 
-## 6.5 Hint：两两独立 $\neq$ 相互独立
+### 6.5 两两独立不蕴含相互独立
 
 样本空间 $\{\mathrm{HH},\mathrm{HT},\mathrm{TH},\mathrm{TT}\}$ 均匀。$A=\{\mathrm{HH},\mathrm{HT}\}$（第一次正），$B=\{\mathrm{HH},\mathrm{TH}\}$（第二次正），$C=\{\mathrm{HH},\mathrm{TT}\}$（两次相同）。$\mathbb{P}(A)=\mathbb{P}(B)=\mathbb{P}(C)=1/2$。
 
@@ -705,19 +707,19 @@ $$
 
 条件独立：若 $\mathbb{P}(B\cap C)>0$，则 $A\perp B\mid C\iff\mathbb{P}(A\mid B\cap C)=\mathbb{P}(A\mid C)$。由定义 $\mathbb{P}(A\cap B\mid C)=\mathbb{P}(A\mid C)\mathbb{P}(B\mid C)$ 两边同乘 $\mathbb{P}(C)$ 再除以 $\mathbb{P}(B\cap C)$ 即得。
 
-## 6.6 重点：RV 可测；$X=\pm 1$
+### 6.6 随机变量的可测性与 $X=\pm 1$ 示例
 
-$X$ 可测 $\iff$ $\{X\le t\}\in\mathcal{F}$ 对一切 $t$。例子 $P(X=1)=P(X=-1)=1/2$：原像 $\{X=1\}$、$\{X=-1\}$ 必须是事件。Borel $\sigma$-代数「理解成开集生成」即可（内容 Check）。
+$X$ 可测 $\iff$ $\{X\le t\}\in\mathcal{F}$ 对一切 $t$。例子 $P(X=1)=P(X=-1)=1/2$：原像 $\{X=1\}$、$\{X=-1\}$ 必须是事件；在实数轴上使用由开集生成的 Borel $\sigma$-代数即可。
 
-## 6.7 重点：a.s.；$g$ 的条件期望
+### 6.7 几乎必然成立与条件期望的 $L^2$ 投影
 
 $\mathbb{E}|X|=0\iff X=0$ a.s.。塔性质：$\mathbb{E}[\mathbb{E}[X\mid\mathcal{G}]]=\mathbb{E}[X]$。$L^2$：$g=\mathbb{E}[X\mid\mathcal{G}]$ 最小化 $\mathbb{E}(X-g)^2$。
 
-## 6.8 重点：高斯尾 $e^{-t^2/(2\sigma^2)}$
+### 6.8 高斯尾界 $e^{-t^2/(2\sigma^2)}$
 
 $Z\sim N(\mu,\sigma^2)$：Chernoff 给出 $\mathbb{P}(|Z-\mu|>t)\le 2\exp(-t^2/(2\sigma^2))$。Mills 更精：前因子 $\sqrt{2/\pi}\,(\sigma/t)$。
 
-## 6.9 HW!：覆盖数；$1/\varepsilon^d\le N(B_2,\varepsilon)\le(1+2/\varepsilon)^d$
+### 6.9 单位球覆盖数界 $1/\varepsilon^d\le N(B_2,\varepsilon)\le(1+2/\varepsilon)^d$
 
 记 $B=B_2(1)\subset\mathbb{R}^d$，$N=N(B,\|\cdot\|_2,\varepsilon)$。
 
@@ -729,12 +731,6 @@ $$
 |\mathcal{P}|\le\Bigl(\frac{1+\varepsilon/2}{\varepsilon/2}\Bigr)^d=\Bigl(1+\frac2\varepsilon\Bigr)^d.
 $$
 
-**下界。** $\varepsilon$-网的每个点覆盖一块半径 $\varepsilon$ 的球，这些球覆盖 $B$。把网的球限制在 $B$ 上，体积比给出 $N\cdot\mathrm{vol}(B_2(\varepsilon))\ge\mathrm{vol}(B_2(1))$，即 $N\ge\varepsilon^{-d}$。内容写 $1/\varepsilon^d\le N\le(1+2/\varepsilon)^d$。
+**下界。** $\varepsilon$-网的每个点覆盖一块半径 $\varepsilon$ 的球，这些球覆盖 $B$。把网的球限制在 $B$ 上，体积比给出 $N\cdot\mathrm{vol}(B_2(\varepsilon))\ge\mathrm{vol}(B_2(1))$，即 $N\ge\varepsilon^{-d}$。合起来即得双边估计 $1/\varepsilon^d\le N\le(1+2/\varepsilon)^d$。
 
-极大 packing 是网，且 $P(K,2\varepsilon)\le N(K,\varepsilon)\le P(K,\varepsilon)$。矩阵谱范数 HW：对 $\mathbb{S}^{d-1}$ 取 $\varepsilon$-网，把 $\sup_{\|u\|=\|v\|=1}u^\top X v$ 化成有限个次高斯，并集，见 `06` §20。
-
----
-
-## 七、只标红、不是习题（查阅用）
-
-这些重点是强调或文献，不必当习题交。证明/算法在对应这里。
+极大 packing 是网，且 $P(K,2\varepsilon)\le N(K,\varepsilon)\le P(K,\varepsilon)$。关于球面 $\mathbb{S}^{d-1}$ 上取 $\varepsilon$-网、再将矩阵谱范数 $\sup_{\|u\|=\|v\|=1}u^\top X v$ 化为有限次高斯并集界的应用推导，见 [数学附录 B](/blog/fods-probability-concentration/)。

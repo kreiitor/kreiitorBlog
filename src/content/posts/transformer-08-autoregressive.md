@@ -19,9 +19,9 @@ cover: /covers/series-deep-learning.svg
 
 ### 停止条件
 
-- eos token: end of sequence
-- 最大长度达到
-- 停止字符串：生成了特定的字符串
+- 遇到结束标记（EOS token，End of Sequence）；
+- 达到设定的最大生成长度；
+- 命中预设的停止字符串（stop strings）。
 
 ## 2. Token 采样策略
 
@@ -166,7 +166,7 @@ Decode 阶段每一步的耗时决定了 **TPOT（Time Per Output Token，每 To
 
 这就像银行叫号系统：传统方式是等一批人全办完才叫下一批，连续批处理是一个窗口空了就立刻叫下一个号。
 
-Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、TensorRT-LLM 等推理引擎广泛采用，极大地提升了 GPU 的利用率和系统吞吐。
+Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、TensorRT-LLM 等推理引擎广泛采用，显著提高了 GPU 利用率与系统吞吐。
 
 ---
 
@@ -182,31 +182,31 @@ Continuous Batching 由 Orca 系统首先提出，后来被 vLLM、SGLang、Tens
 
 ### 5.2 有无 KV Cache 的计算量对比
 
-设当前已生成序列长度为 nn，每个 token 经过 QKV 投影的单 token 计算量为 3dmodel^2（三个矩阵乘法），单个 Query 与所有缓存 Key/Value 交互的 Attention 计算量为 O(n⋅dmodel)。下面对比生成 NN 个 token 的累计代价（忽略层数 LL 这个公共因子）。
+设当前已生成序列长度为 $n$，每个 token 经过 QKV 投影的单 token 计算量为 $3d_{model}^2$（三个矩阵乘法），单个 Query 与所有缓存 Key/Value 交互的 Attention 计算量为 $O(n \cdot d_{model})$。下面对比生成 $N$ 个 token 的累计代价（忽略层数 $L$ 这个公共因子）。
 
-**❌ 无 KV Cache——每步把整个前缀（n 个 token）重新喂入模型**：
+**无 KV Cache——每步把整个前缀（$n$ 个 token）重新送入模型**：
 
-> 没有 KV cache，第 i 个 token 第 l 层的 kv 要重新算，那么就需要第 l-1 层的输出结果，那么第 l-1 层的全部计算走一遍
+不使用 KV Cache 时，要重新计算第 $i$ 个 token 在第 $l$ 层的 K 和 V，就必须先拿到第 $l-1$ 层的输出，进而把前 $l-1$ 层的全部计算重走一遍。
 
-每步有 n 个 Query，每个 Query 又要对 n 个 Key 做注意力，因此 Attention 计算量是 n2⋅d。
+每步有 $n$ 个 Query，每个 Query 又要对 $n$ 个 Key 做注意力，因此 Attention 计算量是 $n^2 \cdot d$。
 
 | 步骤      | QKV 投影计算量            | Attention 计算量   |
 | ------- | -------------------- | --------------- |
-| Step 1  | 1⋅3d2                | 12⋅d            |
-| Step 2  | 2⋅3d2                | 22⋅d            |
-| Step n  | n⋅3d2                | n2⋅d            |
-| 总计（N 步） | 3d2⋅N(N+1)/2=O(N2d2) | ∑n=1Nn2d=O(N3d) |
+| Step 1  | $1 \cdot 3d^2$                | $1^2 \cdot d$            |
+| Step 2  | $2 \cdot 3d^2$                | $2^2 \cdot d$            |
+| Step $n$  | $n \cdot 3d^2$                | $n^2 \cdot d$            |
+| 总计（$N$ 步） | $3d^2 \cdot \frac{N(N+1)}{2} = O(N^2 d^2)$ | $\sum_{n=1}^{N} n^2 d = O(N^3 d)$ |
 
-**⭕ 有 KV Cache——每步只计算 1 个新 token 的 QKV**：
+**有 KV Cache——每步只计算 1 个新 token 的 QKV**：
 
-每步只有 1 个 Query，与已缓存的 nn 个 K/V 做注意力。
+每步只有 1 个 Query，与已缓存的 $n$ 个 K/V 做注意力。
 
 | 步骤      | QKV 投影计算量    | Attention 计算量      |
 | ------- | ------------ | ------------------ |
-| Step n  | 1⋅3d2        | n⋅d（仍需和所有缓存 K 做内积） |
-| 总计（N 步） | N⋅3d2=O(Nd2) | O(N2d)             |
+| Step $n$  | $1 \cdot 3d^2$        | $n \cdot d$（仍需和所有缓存 K 做内积） |
+| 总计（$N$ 步） | $N \cdot 3d^2 = O(N d^2)$ | $O(N^2 d)$             |
 
-KV Cache 将 QKV 投影的总计算量从 O(N2d2) 降到了 O(Nd2)，节省 N 倍；Attention 总计算量从 O(N3d) 降到了 O(N2d)，同样节省 N 倍。在长序列下这是数量级的差异。
+KV Cache 将 QKV 投影的总计算量从 $O(N^2 d^2)$ 降到了 $O(N d^2)$，节省 $N$ 倍；Attention 总计算量从 $O(N^3 d)$ 降到了 $O(N^2 d)$，同样节省 $N$ 倍。在长序列下这是数量级的差异。
 
 ### 5.3 KV Cache 的数据结构
 
@@ -244,24 +244,25 @@ attn_output = attention(new_q, kv_cache[layer_i]['key'], kv_cache[layer_i]['valu
 
 KV Cache 的显存占用可以用一个通用公式计算：
 
-KV Cache 显存=2×L×n_kv×d_h×N×B×be
+$$
+\text{KV Cache 显存} = 2 \times L \times n_{kv} \times d_h \times N \times B \times b_e
+$$
 
 其中：
 
-- 2：K 和 V 各一份
-- L：层数（num_layers）
-- nkv​：KV 的头数（MHA 等于 num_heads，GQA 等于 num_kv_groups）
-- dh​：每个头的维度（head_dim）
-- N：序列长度（seq_len）
-- B：批大小（batch_size）
-- be​：每个元素的字节数，FP16 为 2 字节，FP8 为 1 字节
+- $2$：K 和 V 各一份
+- $L$：层数（`num_layers`）
+- $n_{kv}$：KV 的头数（MHA 等于 `num_heads`，GQA 等于 `num_kv_heads`）
+- $d_h$：每个头的维度（`head_dim`）
+- $N$：序列长度（`seq_len`）
+- $B$：批大小（`batch_size`）
+- $b_e$：每个元素的字节数，FP16 为 2 字节，FP8 为 1 字节
 
 以几种典型配置为例：
 
-|模型|层数|KV 头数|dhdh​|每 token KV Cache (FP16)|4K 序列长度|128K 序列长度|
+|模型|层数|KV 头数|$d_h$|每 token KV Cache (FP16)|4K 序列长度|128K 序列长度|
 |---|---|---|---|---|---|---|
 |LLaMA-2-7B (MHA)|32|32|128|512 KB|2 GB|64 GB|
-|LLaMA-2-7B (GQA-8)|32|8|128|128 KB|0.5 GB|16 GB|
 |LLaMA-3-8B (GQA-8)|32|8|128|128 KB|0.5 GB|16 GB|
 |LLaMA-2-70B (GQA-8)|80|8|128|320 KB|1.25 GB|40 GB|
 
@@ -285,7 +286,7 @@ KV Cache 有一个棘手的工程问题：**动态增长导致的显存碎片化
 
 PagedAttention 是 vLLM 推理引擎的核心创新，其思想直接来源于操作系统的**虚拟内存分页机制**。
 
-操作系统面对的问题和 KV Cache 管理几乎一模一样：不同进程需要不同大小的内存，随着进程的创建和销毁，物理内存中出现碎片。操作系统的解决方案是：不再给每个进程分配连续的物理内存，而是把物理内存划分为固定大小的「页」（page），通过页表将虚拟地址映射到不连续的物理页。
+操作系统面对的问题和 KV Cache 管理高度相似：不同进程需要不同大小的内存，随着进程的创建和销毁，物理内存中出现碎片。操作系统的解决方案是：不再给每个进程分配连续的物理内存，而是把物理内存划分为固定大小的「页」（page），通过页表将虚拟地址映射到不连续的物理页。
 
 PagedAttention 做的是同一件事：
 
@@ -305,7 +306,7 @@ Block Table A: [1, 3, 5]   ← 请求 A 的 KV 分散在 Block 1, 3, 5
 Block Table B: [2, 4, 7]   ← 请求 B 的 KV 分散在 Block 2, 4, 7
 ```
 
-PagedAttention 的效果非常显著：实验表明它可以将 KV Cache 的显存利用率从约 20-40% 提升到接近 100%，在相同显存下支持 2-4 倍的并发请求数。
+PagedAttention 的收益直接体现在资源利用上：在原论文评测中，它将 KV Cache 的显存利用率从约 20%–40% 提升到接近 100%，在相同显存下支持 2–4 倍的并发请求数。
 
 ### 6.2 Prefix Cache / Prompt Cache
 
@@ -332,11 +333,11 @@ KV Cache 量化的挑战在于：Attention 计算对 Key 的数值精度比较�
 
 从模型架构层面减少 KV Cache 的大小：
 
-- **MHA（Multi-Head Attention）**：每个注意力头都有独立的 K 和 V，KV 头数等于总头数
-- **MQA（Multi-Query Attention）**：所有注意力头共享一组 K 和 V，KV 头数为 1
-- **GQA（Grouped-Query Attention）**：每 GG 个头共享一组 K 和 V，KV 头数为 总头数/GG
+- **MHA（Multi-Head Attention）**：每个注意力头都有独立的 K 和 V，KV 头数等于总头数；
+- **MQA（Multi-Query Attention）**：所有注意力头共享一组 K 和 V，KV 头数为 1；
+- **GQA（Grouped-Query Attention）**：将总头数均分为 $g$ 组（如记作 GQA-$g$），每组内的 $Q$ 头共享同一组 K 和 V，KV 头数为 $g$。
 
-以 32 头模型为例：MHA 有 32 组 KV，GQA-8 有 4 组 KV（减少 8 倍），MQA 有 1 组 KV（减少 32 倍）。KV Cache 的大小与 KV 头数成正比，因此 GQA/MQA 对推理的显存节省效果非常显著。
+以 32 头模型为例：MHA 有 32 组 KV，GQA-8 将 32 个 Q 头分为 8 组（每组 4 个 Q 头共享 1 组 KV，显存减少 4 倍），MQA 只有 1 组 KV（减少 32 倍）。KV Cache 的大小与 KV 头数成正比，因此 GQA/MQA 能直接按比例缩减推理显存。
 
 ### 6.5 Sliding Window Attention
 
@@ -381,7 +382,7 @@ Prefill 完成后，将 KV Cache 传输到 Decode 池继续生成。这样两个
 
 如果小模型的猜测准确率较高（比如 70-80% 的 token 能被接受），一次验证就能确认多个 token，等效于一步生成了多个 token，将 Decode 吞吐提升数倍。
 
-关键约束是：投机解码必须保证生成结果与大模型独立生成完全一致（从概率分布意义上），不会牺牲质量。
+关键约束是：投机解码在数学上保证输出 token 的边缘概率分布与大模型独立生成严格等价，不损失输出质量。
 
 ### 7.3 Tensor Parallelism 在推理中的应用
 
@@ -425,7 +426,7 @@ Prefill 完成后，将 KV Cache 传输到 Decode 池继续生成。这样两个
 
 ## 总结
 
-1. **语言模型本质**：建模条件概率分布 P(xt∣x1,…,xt−1)
+1. **语言模型目标**：建模条件概率分布 $P(x_t \mid x_1, \dots, x_{t-1})$
 2. **自回归循环**：逐步预测 + 采样 + 追加，直到停止条件
 3. **采样策略**：Temperature 控制随机性，Top-K/Top-P 控制候选范围
 4. **Prefill 阶段**：并行处理 prompt，Compute Bound，决定 TTFT

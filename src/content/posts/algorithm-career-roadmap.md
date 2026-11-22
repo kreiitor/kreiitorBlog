@@ -12,9 +12,9 @@ category: knowledge
 cover: /covers/post-learning-path.svg
 ---
 
-“前沿算法岗”是一类岗位，不是单一岗位：Research Engineer、ML Engineer、LLM/多模态算法、训练系统、评测与后训练。共同点是能训练、能评测、能分析结果，不只是调用模型。
+“前沿算法岗”包含多个细分方向，常见岗位有 Research Engineer、ML Engineer、LLM / 多模态算法、训练系统、评测与后训练。它们的共同要求是能完成模型训练与评测，并分析实验结果，而不只是调用现成模型。
 
-相关文档：
+延伸阅读：
 
 - [就业方向规划与学习路线](/blog/career-planning-learning-roadmap/)
 
@@ -23,7 +23,7 @@ cover: /covers/post-learning-path.svg
 当前公开岗位大致分几类：
 
 - 预训练、后训练、RLHF：大规模训练和实验设计。
-- 评测（evals）：设计数据集、指标、回归测试，判断模型能力。
+- 评测（eval）：设计数据集、指标、回归测试，判断模型能力。
 - 推理与部署：推理优化、服务化、性能分析。
 - 多模态：视觉、语音、视频与文本的联合建模。
 - 训练基础设施：分布式训练、显存优化、数据流水线。
@@ -37,16 +37,16 @@ cover: /covers/post-learning-path.svg
 3. **PyTorch**：数据加载、模型定义、训练循环、反向传播、checkpoint。
 4. **LLM/Transformer**：tokenizer、attention、预训练、SFT、LoRA、评测。
 5. **系统能力**：GPU、显存、吞吐、多卡训练、推理服务。
-6. **实验能力**：读论文、复现、对比实验、ablation、失败分析。
-7. **表达**：写文档、讲清 trade-off、汇报结果。
+6. **实验能力**：读论文、复现、对比实验、消融实验、失败分析。
+7. **表达**：写文档、讲清权衡取舍、汇报结果。
 
-很多人以为算法岗只看数学，实际筛人时工程基本功和实验能力同样重要。不会调试、不会复现、不会组织代码，数学再好也很难推进项目。
+算法岗筛人时，工程基本功和实验能力与数学基础同样关键。如果缺少调试、复现和代码组织能力，项目往往很难推进。
 
 ## 阶段路线
 
 ### 0–2 个月：能写能跑
 
-- Python、Git、Linux、Numpy。
+- Python、Git、Linux、NumPy。
 - 能写中等长度脚本，会管理代码，能读改训练脚本。
 
 ### 2–4 个月：基础 ML/DL
@@ -65,11 +65,11 @@ cover: /covers/post-learning-path.svg
 
 至少做三类项目：
 
-1. 从零实现一个小 Transformer。
-2. 一个 LoRA/SFT + 评测项目。
+1. 一个从零实现的小 Transformer 项目。
+2. 一个 LoRA/SFT 与评测项目。
 3. 一个推理优化或部署项目。
 
-项目要有完整 repo、实验记录、结果分析和失败复盘，不是只有一个 notebook。
+每个项目都应包含完整代码仓库、实验记录、结果分析和失败复盘，而不只是一个 notebook。
 
 ### 10–18 个月：选方向
 
@@ -87,8 +87,8 @@ cover: /covers/post-learning-path.svg
 - 完整流程：数据、训练、验证、结果、误差分析。
 - 对比实验：和 baseline 差多少，为什么。
 - 工程痕迹：配置、日志、checkpoint、复现命令、README。
-- 明确主题：mini Transformer、LoRA/SFT、eval、推理优化。
-- 能讲 trade-off：效果 vs 显存、速度 vs 精度、数据量 vs 收益。
+- 明确主题：小规模 Transformer、LoRA/SFT、评测与推理优化。
+- 能讲权衡取舍：效果与显存、速度与精度、数据量与收益之间的关系。
 
 只有“跑通一个开源模型”不算项目，除非你能说清楚改了什么、为什么改、结果是否可信。
 
@@ -103,14 +103,14 @@ cover: /covers/post-learning-path.svg
 - 纯零基础到能投应用型 AI/LLM 岗：9–15 个月。
 - 到比较像前沿实验室候选人：18–36 个月。
 
-有计算机背景、Python 基础、数学基础和项目经验的人会快很多。时间会因基础不同而差很多，真正拉开差距的是持续输出项目、文档和实验记录。
+有计算机背景、Python 基础、数学基础和项目经验的人上手会快得多。准备周期会因基础不同而有明显差异，真正拉开差距的是持续输出项目、文档和实验记录。
 
 ## 资源
 
 - [Dive into Deep Learning](https://d2l.ai/chapter_preliminaries/index.html)：系统打底。
 - [PyTorch Learn the Basics](https://docs.pytorch.org/tutorials/beginner/basics/intro.html)：补框架使用。
 - [Hugging Face LLM Course](https://huggingface.co/learn/llm-course/chapter1/1)：Transformer/LLM 主线。
-- [OpenAI Research Engineer](https://openai.com/careers/research-engineer-san-francisco/)、[OpenAI Residency](https://openai.com/residency/)、[Anthropic Jobs](https://www.anthropic.com/jobs)、[DeepMind Careers](https://deepmind.google/careers/)：看岗位要求，不用背 JD。
+- [OpenAI Research Engineer](https://openai.com/careers/research-engineer-san-francisco/)、[OpenAI Residency](https://openai.com/residency/)、[Anthropic Jobs](https://www.anthropic.com/jobs)、[DeepMind Careers](https://deepmind.google/careers/)：用来参考岗位要求，不必机械背诵岗位描述。
 
 ## 常见误区
 

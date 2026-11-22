@@ -20,7 +20,7 @@ featured: true
 
 | 层 | 选择 | 原因 |
 | --- | --- | --- |
-| 框架 | Astro | 默认输出静态页面，内容集合适合 Markdown |
+| 框架 | Astro | 默认输出静态页面，内容集合适合管理 Markdown 文档 |
 | 样式 | Tailwind CSS + 自定义令牌 | 快速搭布局，同时保留自己的视觉系统 |
 | 搜索 | Pagefind | 构建期生成索引，不需要搜索服务 |
 | 公式 | KaTeX + MathML | 阅读页渲染公式，同时保留可访问副本 |
@@ -61,13 +61,13 @@ featured: true
 - 封面使用 SVG，分享预览使用同名 1200×630 PNG；
 - 中文字体按站点语料生成子集，构建时不需要下载外部字体；
 - 画廊保留原图，同时生成 WebP/AVIF 候选图，用 `<picture>` 按视口选择；
-- 图片声明宽高，首屏图片使用 `fetchpriority`，其余懒加载。
+- 图片声明宽高，首屏图片设置 `fetchpriority="high"`，其余懒加载。
 
 这些资源都由脚本生成并提交，部署时不需要额外的图片服务或字体 CDN。
 
 ## 部署
 
-推送到 `main` 或 `master` 后，GitHub Actions 依次执行单元检查、Astro 检查和生产构建，再把 `dist/` 发布到 GitHub Pages。
+推送到 `main` 或 `master` 后，GitHub Actions 依次执行单元测试、Astro 类型检查和生产构建，再把 `dist/` 发布到 GitHub Pages。
 
 站点域名和子目录通过 `SITE_URL` 与 `BASE_PATH` 控制，因此同一套代码可以部署在根域名，也可以部署在仓库子目录。
 
@@ -81,12 +81,12 @@ featured: true
 - 需要登录的内容后台；
 - 外部字体或图片 CDN。
 
-不是不能用，是当前规模下收益抵不过维护成本。等内容量或协作真的涨上来，再评估。
+不是不能用，是当前规模下收益抵不过维护成本。等内容规模或协作需求真正增长后，再评估是否引入。
 
 ## 维护清单
 
 - 新增文章：复制模板，补 frontmatter，运行检查与构建。
 - 新增学习专题：先建系列文件，再给章节填 `series` 和 `order`。
-- 新增照片：放入 JPEG，更新 `photos` 数组，运行 `npm run gallery:prepare`。
+- 新增照片：放入 JPEG，更新画廊照片清单数据（`src/data/photos.ts`），运行 `npm run gallery:prepare`。
 - 更新字体：运行 `npm run fonts:prepare`，检查清单与页面实际加载。
 - 发布前：`npm run check && npm run test:unit && npm run build`，并在预览中检查搜索、公式和移动端。

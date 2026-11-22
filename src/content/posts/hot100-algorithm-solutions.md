@@ -10,7 +10,7 @@ category: knowledge
 cover: /covers/research/algorithm.webp
 ---
 
-本文按题目顺序整理 Hot 100 中的 53 道题，覆盖哈希、双指针、滑动窗口、数组、矩阵、链表、二叉树和图。每题列出题目要求、示例、解题思路，以及 C++ 与 Python 实现，并说明代码中值得留意的语言特性与易混点。代码按 LeetCode 提交接口编写；部分 C++ 使用 C++20，独立运行时需按代码补充标准库头文件或 Python 导入。
+本文按专题分类整理 Hot 100 中的 53 道题，覆盖哈希、双指针、滑动窗口、数组、矩阵、链表、二叉树和图。每题列出题目要求、示例、解题思路，以及 C++ 与 Python 实现，并说明代码中值得留意的语言特性与易混点。代码按 LeetCode 提交接口编写；部分 C++ 使用 C++20，独立运行时需按代码补充标准库头文件或 Python 导入。
 
 ## 两数之和
 
@@ -230,7 +230,7 @@ class Solution:
 - `nums[r], nums[l] = nums[l], nums[r]` 先求出右侧两个旧值，再同时完成赋值，不需要临时变量。
 - 返回类型 `None` 对应题目要求原地修改；答案留在传入的列表中。
 
-## 盛水最多的容器
+## 盛最多水的容器
 
 **题目描述：** 给定非负整数数组 `height`，`height[i]` 表示横坐标 `i` 处竖线的高度。任选两条不同竖线，与横轴围成容器；容器不能倾斜，返回它能盛的最大水量。
 
@@ -507,7 +507,7 @@ class Solution:
 - 用 `if ch in seen` 检查字典键后再取 `seen[ch]`，避免把下标 `0` 的真假误判为不存在。
 - 字典记录的是最近下标，不是窗口中所有字符；覆盖旧下标即可。
 
-## 找到字符串中所有字母的异位词
+## 找到字符串中所有字母异位词
 
 **题目描述：** 给定只含小写英文字母的字符串 `s` 和非空字符串 `p`，返回 `s` 中所有与 `p` 字母种类及出现次数完全相同的连续子串起始下标。
 
@@ -1029,17 +1029,17 @@ public:
         for(int i=1;i<n;++i){
             ans[i] = ans[i-1]*nums[i-1];
         }
-        int subfix = 1;
+        int suffix = 1;
         for(int i=n-1;i>-1;--i){
-            ans[i] *= subfix;
-            subfix *= nums[i];
+            ans[i] *= suffix;
+            suffix *= nums[i];
         }
         return ans;
     }
 };
 ```
 **C++ 知识点：**
-- `ans` 先保存前缀积，第二趟用 `subfix` 累积后缀积并乘回；这样无需再建一个后缀数组。
+- `ans` 先保存前缀积，第二趟用 `suffix` 累积后缀积并乘回；这样无需再建一个后缀数组。
 - 乘积使用 `int`，正确性依赖题目保证中间结果和答案处于该类型范围内。
 
 ### Python 代码
@@ -1050,10 +1050,10 @@ class Solution:
         ans = [1]*n
         for i in range(1,n):
             ans[i] = ans[i-1]*nums[i-1]
-        subfix = 1
+        suffix = 1
         for i in range(n-1,-1,-1):
-            ans[i] = ans[i]*subfix
-            subfix *= nums[i]
+            ans[i] = ans[i]*suffix
+            suffix *= nums[i]
         return ans
 ```
 **Python 知识点：**
@@ -1638,7 +1638,7 @@ public:
 ```
 **C++ 知识点：**
 - 循环条件同时检查 `fast->next` 和 `fast->next->next`，保证每次快指针前进两步时不会解引用空指针。
-- 反转第二半会修改原链表；若调用方要求结构不变，比较后还需再反转一次恢复。
+- 反转后半段链表会修改原链表；若调用方要求结构不变，比较后还需再反转一次恢复。
 
 ### Python 代码
 ```python
@@ -1647,7 +1647,7 @@ public:
 #     def __init__(self, val=0, next=None):
 #         self.val = val
 #         self.next = next
-class Solution:#简单来说,一共有三步,找到中间(靠左)节点,反转后面节点,同时遍历前半和后半
+class Solution:  # 分三步：找到前半段尾节点、反转后半段链表、同时遍历前后两半比较
     def NodeofFirstHalf(self, head):
         fast, slow = head, head
         while(fast.next is not None and fast.next.next is not None):
@@ -4152,7 +4152,7 @@ class Solution:
 class Solution {
 public:
     bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
-        // 首先是构建出图,使用领接表(加上额外的每个节点入度统计),判断构建出来的图是不是DAG,使用的kahn算法
+        // 用邻接表建反向图（课程 -> 先修课）并统计每个节点的入度，使用 Kahn 算法检测环
         vector<vector<int>> graph(numCourses,vector<int>());
         vector<int> indegree(numCourses,0);
         for(auto requi:prerequisites){
@@ -4171,7 +4171,7 @@ public:
         while(!qu.empty()){
             int cur_course = qu.front();
             qu.pop();
-            count++;// 这个课程学完了,把后续的入度降低
+            count++;// 当前节点出队，降低其反向邻接节点的入度
             for(int i:graph[cur_course]){
                 indegree[i]--;
                 if(indegree[i]==0){
@@ -4193,19 +4193,19 @@ public:
 class Solution:
     def canFinish(self, numCourses: int, prerequisites: list[list[int]]) -> bool:
         edge = len(prerequisites)
-        # 建图,领接表和每个节点的入度,领接表存放学完这个课程之后解锁的课程
+        # 用邻接表存反向边（课程 u 指向其先修课 v）并统计 v 的入度
         graph = [[] for _ in range(numCourses)]
         indegree = [0]*numCourses
         for u,v in prerequisites:
             graph[u].append(v)
             indegree[v] += 1
-        # 将入度为零的加入队列中
+        # 将入度为零的节点加入队列中
         qu = deque()
         count = 0
         for i in range(numCourses):
             if indegree[i]==0:
                 qu.append(i)
-        # 遍历队列,出队列的时候就当做已学完
+        # 遍历队列，出队节点计数后降低其邻接先修课的入度
         while qu:
             cur = qu.popleft()
             count += 1

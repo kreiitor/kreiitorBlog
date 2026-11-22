@@ -11,7 +11,7 @@ order: 7
 cover: /covers/series-deep-learning.svg
 ---
 
-decoder-only 在架构上实现简洁，对工程友好，通用能力也最好，成了绝对主流。
+Decoder-only 架构实现简洁、对工程友好，在通用生成任务上表现突出，成为大模型的主流选择。
 
 ## 1. Decoder Block 完整数据流
 
@@ -32,6 +32,7 @@ decoder-only 在架构上实现简洁，对工程友好，通用能力也最好�
 ## 2. 完整 PyTorch 实现 Decoder Block
 
 ```python
+import math
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -93,7 +94,7 @@ class MaskedMultiHeadSelfAttention(nn.Module):
 		K = K.transpose(1,2)
 		V = V.transpose(1,2)
 		# 计算注意力分数
-		attn_scores = Q @ K.transpose(-1, -2) / torch.sqrt(self.head_dim)
+		attn_scores = Q @ K.transpose(-1, -2) / math.sqrt(self.head_dim)
 		# 加入因果掩码
 		masked = torch.triu(
 			torch.full((N,N), float('-inf'), device=x.device), diagonal=1)
@@ -145,12 +146,13 @@ class SwiGLUFFN(nn.Module):
 		return down
 ```
 
-## 3. 参数量手撕
+## 3. 参数量计算
 
-token embedding -> decoder block -> 最后的 RMSNorm 和 LM 头
-### token embedding
+从 Token Embedding 到 Decoder Block 再到最后的 RMSNorm 和 LM Head：
 
-token -> id：一个词表，参数量为 $V\times d_{model}$
+### Token Embedding
+
+token -> id：一个词表映射矩阵，参数量为 $V \times d_{model}$。
 
 ### 单个 Decoder Block
 
@@ -170,58 +172,58 @@ token -> id：一个词表，参数量为 $V\times d_{model}$
 
 参数量为 $d_{model}+V\times d_{model}$
 
-## 4. 计算量（FLOPS）手撕
+## 4. 计算量（FLOPs）估算
 
 ### 线性层
 
-> 其中线性层和 FFN 中的 N 分别是四次投影中投影矩阵的参数量和 FFN 中三个矩阵的参数量
+设四次投影矩阵的总参数量为 $N_{\text{attn}} = 4 d_{model}^2$，FFN 三个矩阵的总参数量为 $N_{\text{ffn}} = 3 d_{model} d_{ff}$，非嵌入线性层合计参数量为 $N = N_{\text{attn}} + N_{\text{ffn}}$（其中 $s$ 为序列长度）：
 
 #### 四次投影
 
-$4\times 2\times d_{model}^2\times s =  2Ns$
+$4 \times 2 \times d_{model}^2 \times s = 2 N_{\text{attn}} s$
 
 #### FFN 层
 
-$3\times 2\times s\times d_{model}\times d_{ff}=2Ns$
+$3 \times 2 \times s \times d_{model} \times d_{ff} = 2 N_{\text{ffn}} s$
 
 ### 注意力层
 
-> 注意力层是 $QK^T$ 和 $AV$，其中 $A=softmax\left(\frac{QK^T}{d_k}\right)$
+注意力层包含 $QK^T$ 和 $AV$ 两次乘法，其中 $A = \operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)$：
 
-$FLOPS = 2\times 2\times d_{model}\times s^2 \times h=4hd_{model}s^2$
+$\text{FLOPs} = 2 \times 2 \times d_k \times s^2 \times h = 4 d_{model} s^2$
 
-==🟣序列长度较低时，线性层计算量占主导，用 2Ns 估计就够了；序列长度增大后，注意力部分的计算量逐渐成为主导，不能忽略==
+序列长度较短时，线性层计算量占主导，用 $2Ns$ 估计即可；序列长度增大后，注意力部分的平方项 $4 d_{model} s^2$ 逐渐成为主导，不能忽略。
 
 ## 5. 显存规划
 
 ### 模型权重显存
 
-模型权重显存取决于参数多少和存储的数据类型：显存 = 参数量 \* 数据类型字节数
+模型权重显存取决于参数多少和存储的数据类型：`显存 = 参数量 × 数据类型字节数`。
 
 ### 训练状态下的显存
 
-> 以混合精度训练为例：BF16 权重加 FP32 优化器，显存分四部分
+以 BF16 权重配合 FP32 优化器的混合精度训练为例，显存占用分为四部分：
 
 - 模型权重（BF16）
 	- $2N$
 - 梯度（形状与权重一致，BF16）
 	- $2N$
-- 优化器状态（随优化器改变），以 Adam\AdamW 为例
+- 优化器状态（随优化器改变），以 Adam / AdamW 为例
 	- FP32 参数副本：防止梯度太小、BF16 捕获不到，4N
 	- 一阶梯度动量：梯度的指数移动平均，4N
 	- 二阶梯度动量：梯度平方的指数移动平均，4N
 - 激活值（动态部分）
 	- 在反向传播时仍要重复利用的部分，前向传播时算完就保存下来复用。
-	- 大概是 $kBsdL$，其中 k 是常数，跟模型架构、是否并行有关，也与是否开启 activation checkpoint 等相关
-	- 计算过程中张量大多是 (B,s,d) 形状的，参数量就是 $Bsd$，再乘层数、乘需要同时保留的份数，收成一个经验常数
+	- 大概是 $kBsdL$，其中 $k$ 是常数，跟模型架构、是否并行有关，也与是否开启 activation checkpoint 等相关。
+	- 计算过程中张量大多是 `(B, s, d)` 形状，单个张量的元素数量为 $Bsd$，再乘层数和需要同时保留的份数，收成一个经验常数。
 
 ### 推理状态下的显存
 
-推理不需要梯度和优化器状态，但要考虑 KV cache。
+推理不需要梯度和优化器状态，但要考虑 KV Cache。
 
 - 模型权重
-- KV cache：每个 token 每次要缓存 K、V 各一个张量
-	- $2\times h_{kv} \times L \times Bsd \times bytes\_per\_ele$
+- KV Cache：每个 token 每次要缓存 K、V 各一个张量
+	- $2 \times h_{kv} \times d_h \times L \times B \times s \times \text{bytes\_per\_ele}$
 
 ### 自我检验清单
 

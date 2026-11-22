@@ -12,27 +12,25 @@ order: 9
 cover: /covers/post-math.svg
 ---
 
-这份附录是给**完全零基础**的同学写的。目标不是把你变成测度论专家，而是让你以后看见 $\mathbb{E}$、$\mathrm{Var}$、$\sim N$、次高斯、Hoeffding、Bernstein、覆盖数时，知道它们从哪来、怎么用、证明卡在哪一步。
+本附录面向测度与概率论基础尚待系统化的读者，目标是把统计学习理论中频繁出现的 $\mathbb{E}$、$\mathrm{Var}$、正态分布、次高斯、Hoeffding、Bernstein 与覆盖数讲透，梳理它们的来源、适用边界以及证明关键。
 
-你会得到：
+涵盖内容包括：
 
-1. 为什么「成功次数 / 总次数」当概率不够用，公理怎么补；
-2. $\sigma$-代数、概率空间 $(S,\mathcal{F},\mathbb{P})$ 是什么（用点名例子当例子）；
-3. 条件概率、Bayes、独立（含两两独立但非相互独立的反例）；
-4. 随机变量、分布函数、密度、PMF、定律（pushforward）；
-5. 期望、方差、MGF、$L^p$、条件期望的塔性质；
-6. 高斯尾与次高斯 $\Leftrightarrow$ 指数尾（两边都证）；
-7. Hoeffding 引理 / 不等式、次指数、Bernstein、McDiarmid；
-8. 有限最大值、凸多面体顶点、覆盖数的体积证明；
-9. 这些工具如何接到 Lec1 的并集界和 Lec2 的 Dudley。
+1. 为什么「成功次数 / 总次数」作为概率定义不够用，以及公理化如何补全；
+2. $\sigma$-代数与概率空间 $(S,\mathcal{F},\mathbb{P})$ 的具体直观模型；
+3. 条件概率、Bayes 公式与独立性（含两两独立但非相互独立的反例）；
+4. 随机变量、分布函数、密度、PMF 与推前分布（pushforward）；
+5. 期望、方差、MGF、$L^p$ 范数与条件期望的塔性质；
+6. 高斯尾界与「次高斯 $\Leftrightarrow$ 指数尾」的双向证明；
+7. Hoeffding 引理 / 不等式、次指数、Bernstein 与 McDiarmid 不等式；
+8. 有限最大值、凸多面体顶点与覆盖数的体积界证明；
+9. 这些工具如何衔接线性模型中的并集界与泛化界中的 Dudley 积分。
 
-内容上所有 **Hint** 都写成完整证明。内容后几页公式挤在一起，已对照 PDF 补全。
-
-需要的预备：高中集合（并、交、补）、求和、一点定积分。不会 $\sigma$-代数也可以从第 0 节读。
+文中对所有关键引理与命题都给出了完整证明过程。需要的预备知识仅限集合运算（并、交、补）、求和与基本微积分。
 
 ---
 
-## 0. 先用抛硬币把语言钉死
+## 0. 从抛硬币到概率语言
 
 问：一枚公平硬币朝上是正面的概率是多少？直觉说 $\frac12$。要把这句话变成数学，需要几个词。
 
@@ -40,12 +38,12 @@ cover: /covers/post-math.svg
 |----|------|----------|
 | **试验 / 实验** experiment | 观察某个现象的过程 | 抛一次硬币 |
 | **结果** outcome | 一次试验看到的东西 | 正面 $H$ 或反面 $T$ |
-| **一次试验** trial | 实验的一次重复 | 你刚才那一抛 |
+| **一次试验** trial | 实验的一次重复 | 单次抛掷 |
 | **样本空间** $S$ 或 $\Omega$ | 所有可能结果的集合 | $S=\{H,T\}$ |
 | **事件** event | 样本空间的一个子集 | $\{H\}$（「朝上是正面」） |
 | **事件发生** | 实际结果落在这个子集里 | 抛出 $H$ 则 $\{H\}$ 发生 |
 
-再看掷骰子（内容重点：What is the outcome / sample space / event?）。一次试验 = 掷一枚公平六面骰。
+再看掷骰子试验（区分 outcome / sample space / event 三个概念）：一次试验为掷一枚公平六面骰。
 
 | 问 | 答 |
 |----|----|
@@ -55,7 +53,7 @@ cover: /covers/post-math.svg
 
 假设结果是 $3$。则：$A$ 发生，$C$ 发生，$A\cap C=\{3\}$ 发生，$B$ 没发生，$A\cup B=\{1,3,5,6\}$ 发生。朴素赋值 $\mathbb{P}(A)=3/6=1/2$，$\mathbb{P}(B)=\mathbb{P}(C)=1/6$。
 
-**人话：** 事件就是「我们关心的那一类结果」。概率是给每个事件打一个 $0$ 到 $1$ 的分，表示它有多容易发生。
+**直观理解。** 事件就是「我们关心的那一类结果」；概率则是给每个事件赋予一个 $[0,1]$ 之间的度量，刻画其发生的难易程度。
 
 ---
 
@@ -82,7 +80,7 @@ $$
 1. **只适用于有限样本空间。** 往 $[0,1]$ 上随机扔一个点，「落在 $[0,1/2]$」的概率该是 $\frac12$，但 $|[0,1]|=\infty$，$|A|/|S|$ 没有意义。可列无限也麻烦：自然数上「每个点等可能」会迫使每个单点概率为 $0$，可列可加又迫使总概率为 $0$，矛盾。
 2. **默认所有结果等可能。** 偏硬币 $\mathbb{P}(\{H\})=0.9$ 完全合理，但 $|\{H\}|/|S|=\frac12$，对不上。
 
-还有第三件内容在 说的事：就算你放弃「数个数」，想对 $S$ 的**每一个**子集都指定满足下面三条公理的 $\mathbb{P}$，当 $S$ 不可数时，这样的 $\mathbb{P}$ **一般不存在**（Vitali 不可测集）。所以必须先规定：哪些子集才允许被问「概率是多少」。这就是 $\sigma$-代数。
+还有第三层根本障碍：即使放弃「计数」做法，想强行对 $S$ 的**每一个**子集都定义满足三条公理的 $\mathbb{P}$，当 $S$ 不可数时，这样的概率测度往往**不存在**（即 Vitali 不可测集）。因此必须先划定哪些子集有资格被赋予概率，这就是 $\sigma$-代数。
 
 ---
 
@@ -118,23 +116,23 @@ $$
 
 由 De Morgan，$\mathcal{F}$ 对可列交也封闭：$\bigcap_j A_j=\bigl(\bigcup_j A_j^c\bigr)^c$。有限并、有限交当然也封闭。
 
-**人话：** $\sigma$-代数 =「你被允许谈论的那些事件」。它在「补」和「可列并」下关上门，避免问出没有定义的概率。
+**直观理解。** $\sigma$-代数就是「允许讨论概率的事件集合」，它在求补与可列并运算下保持封闭，避免问出无定义的事件概率。
 
-### 2.3 点名例子
+### 2.3 集合划分示例
 
-令 $S=\{\mathrm{St}1,\ldots,\mathrm{St}33\}$ 为本班 $33$ 名同学（带学号）。
+令 $S=\{\mathrm{St}1,\ldots,\mathrm{St}33\}$ 为某组 $33$ 名编号个体。
 
-- $\mathcal{F}_0:=\{\emptyset,S\}$：什么都不知道。只能说「没人」或「全班」。
-- $\mathcal{F}_1:=\{\emptyset,\ \text{boys},\ \text{girls},\ S\}$：只知道性别。
-- $\mathcal{F}_2:=2^S$（幂集，所有子集）：知道每个人是谁。
+- $\mathcal{F}_0:=\{\emptyset,S\}$：最粗的划分，只能区分「无个体」或「全体」。
+- $\mathcal{F}_1:=\{\emptyset,\ \text{boys},\ \text{girls},\ S\}$：仅能区分二元分组属性。
+- $\mathcal{F}_2:=2^S$（幂集，所有子集）：能够分辨到每个具体个体。
 
-**补全：它们确实是 $\sigma$-代数。**
+**验证：它们都构成 $\sigma$-代数。**
 
 $\mathcal{F}_0$：$\emptyset^c=S$，$S^c=\emptyset$，并只有 $\emptyset$ 或 $S$。
-$\mathcal{F}_1$：boys 与 girls 互补（假设按性别二分、无第三类），它们的并是 $S$、交是 $\emptyset$。可列并重复取仍在这四个里。
-$\mathcal{F}_2$：任意子集的补、并还是子集。
+$\mathcal{F}_1$：boys 与 girls 互补（二分划分），它们的并是 $S$、交是 $\emptyset$，可列并重复取仍落在这四个集合内。
+$\mathcal{F}_2$：任意子集的补与并仍在幂集中。
 
-信息量：$\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$。$\sigma$-代数越大，能分辨的事件越细。
+信息量层级满足 $\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$：$\sigma$-代数越大，能够分辨的事件就越精细。
 
 ### 2.4 概率与概率空间
 
@@ -144,9 +142,9 @@ $S$ 是样本空间，$\mathcal{F}$ 是其上 $\sigma$-代数。映射 $\mathbb{
 - $\mathbb{P}(S)=1$；
 - 可列可加：$A_j$ 两两不交时 $\mathbb{P}(\bigcup_j A_j)=\sum_j\mathbb{P}(A_j)$。
 
-三元组 $(S,\mathcal{F},\mathbb{P})$ 称为**概率空间**。内容原话：这是我们谈论一切随机性的平台。
+三元组 $(S,\mathcal{F},\mathbb{P})$ 称为**概率空间**，它构成了讨论一切随机性的基础定义平台。
 
-定义域必须是 $\sigma$-代数，否则 (A3) 左边的并可能根本不在定义域里。类比：函数 $1/x$ 不能在 $0$ 处取值（内容重点 domain）。
+定义域必须是 $\sigma$-代数，否则 (A3) 左端的并集可能根本不在定义域里；正如同函数 $1/x$ 在 $x=0$ 处无定义，概率测度也只能在合法事件域上取值。
 
 更精确：若坚持 $\mathbb{P}$ 对 $S$ 的**任意子集**都有定义且满足 (A1)–(A3)，当 $S=[0,1]$（或任何不可数完备度量空间）时这样的 $\mathbb{P}$ **一般不存在**——Vitali 不可测集用选择公理造出，Lebesgue 测度无法在其上既平移不变又 $\sigma$-可加。所以必须先规定「哪些子集允许被问概率」，这就是 $\sigma$-代数。三个例子 $\mathcal{F}_0\subset\mathcal{F}_1\subset\mathcal{F}_2$ 都是合法定义域；选哪个取决于你愿意分辨多细的事件。
 
@@ -223,7 +221,7 @@ $$
 \sum_{j=1}^\infty\mathbb{P}(A_j).
 $$
 
-**证明（内容没写 Hint，这里补全）。** 不交化：令 $B_1=A_1$，
+**证明。** 先做不交化：令 $B_1=A_1$，
 
 $$
 B_n\;=\;A_n\setminus\bigcup_{i=1}^{n-1}A_i
@@ -238,7 +236,7 @@ $$
 \le\sum_n\mathbb{P}(A_n).
 $$
 
-有限个同样（后面补空集）。这就是 Lec1 里「并集界」$\mathbb{P}(\bigcup E_i)\le\sum\mathbb{P}(E_i)$。$\square$
+有限个事件的并同样适用（在后面补上空集即可）。这就是线性模型与集中界中反复使用的**并集界** $\mathbb{P}(\bigcup E_i)\le\sum\mathbb{P}(E_i)$。$\square$
 
 ### (8) 连续性
 
@@ -294,7 +292,7 @@ $$
 
 - 若你是女生：$A\cap B=\emptyset$，$\mathbb{P}(A\cap B)/\mathbb{P}(B)=0$，你不可能被点到。
 
-**人话：** 已知 $B$ 发生，等于把样本空间缩到 $B$，再重新归一化。
+**直观理解。** 条件于 $B$ 发生，等价于把样本空间缩减到事件 $B$，再按 $\mathbb{P}(B)$ 重新归一化。
 
 ### 4.2 定义
 
@@ -304,9 +302,9 @@ $$
 \mathbb{P}(A\mid B)\;:=\;\frac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)}.
 $$
 
-### 4.3 $\mathbb{P}(\,\cdot\mid B)$ 仍是 $\mathcal{F}$ 上的概率（定义域还是 $\mathcal{F}$）
+### 4.3 $\mathbb{P}(\,\cdot\mid B)$ 仍是 $\mathcal{F}$ 上的概率
 
-内容重点强调 $\mathbb{P}(B)>0$，并且 $\mathbb{P}(\,\cdot\mid B)$ 是**同一个** $\sigma$-代数 $\mathcal{F}$ 上的概率（不是改到 $B$ 的子集上去）。分母 $\mathbb{P}(B)>0$ 保证除法合法；分子 $\mathbb{P}(A\cap B)$ 有定义是因为 $\mathcal{F}$ 对交封闭。
+这里需要强调 $\mathbb{P}(B)>0$，并且 $\mathbb{P}(\,\cdot\mid B)$ 依然定义在**同一个** $\sigma$-代数 $\mathcal{F}$ 上（而非仅缩到 $B$ 的子集上）。分母 $\mathbb{P}(B)>0$ 保证除法合法，分子 $\mathbb{P}(A\cap B)$ 有定义则是因为 $\mathcal{F}$ 对交封闭。
 
 非负显然。$\mathbb{P}(S\mid B)=\mathbb{P}(B)/\mathbb{P}(B)=1$。若 $A_j$ 两两不交，则 $A_j\cap B$ 两两不交，
 
@@ -423,7 +421,7 @@ $$
 
 掷两枚公平骰子，$D_1,D_2$。令 $A=\{D_1=1\}$，$B=\{D_2=1\}$，$C=\{D_1+D_2=5\}$。
 
-**补全：$A\perp B$，但 $A$ 与 $C$ 相依；给定 $C$ 后 $A,B$ 不独立。**
+**验证：$A\perp B$，但 $A$ 与 $C$ 相依；给定 $C$ 后 $A,B$ 不独立。**
 
 $\mathbb{P}(A)=\mathbb{P}(B)=\frac16$，$\mathbb{P}(A\cap B)=\frac1{36}=\mathbb{P}(A)\mathbb{P}(B)$，故 $A\perp B$。
 $C=\{(1,4),(2,3),(3,2),(4,1)\}$，$\mathbb{P}(C)=\frac4{36}=\frac19$。
@@ -443,7 +441,7 @@ $$
 \mathbb{P}(A\cap B\mid C)=\mathbb{P}(A\mid C)\mathbb{P}(B\mid C).
 $$
 
-### 5.4 Hint：$A\perp B\mid C\ \Leftrightarrow\ \mathbb{P}(A\mid C\cap B)=\mathbb{P}(A\mid C)$
+### 5.4 条件独立的等价刻画：$A\perp B\mid C\ \Leftrightarrow\ \mathbb{P}(A\mid C\cap B)=\mathbb{P}(A\mid C)$
 
 （默认 $\mathbb{P}(C\cap B)>0$，从而 $\mathbb{P}(C)>0$。）
 
@@ -456,7 +454,7 @@ $$
 
 反之，由 $\mathbb{P}(A\cap B\cap C)=\mathbb{P}(A\mid C\cap B)\mathbb{P}(B\cap C)=\mathbb{P}(A\mid C)\mathbb{P}(B\cap C)$，两边除以 $\mathbb{P}(C)$ 即得条件独立。$\square$
 
-**人话：** 条件独立是因果/图模型的基本语言。无条件独立可以变成条件相依（两骰子之和），无条件相依也可以变成条件独立。后一个内容的例子：随机选一周中的一天，
+**直观理解。** 条件独立是因果与图模型的基本语言：无条件独立事件可以在条件化后变得相依（两骰子之和），无条件相依事件也可以在条件化后变得独立。例如随机选取一周中的一天，设
 
 $$
 A=\{\text{不是周一}\},\quad
@@ -482,7 +480,7 @@ $$
 
 **朴素说法：** 随机变量（RV）是 $X:S\to\mathbb{R}$，给每个结果一个数。$\mathbb{P}(X=x)=\mathbb{P}(\{s:X(s)=x\})$——这要求 $\{s:X(s)=x\}\in\mathcal{F}$。
 
-两枚硬币：$S=\{HH,HT,TH,TT\}$，赢利 $Y(HH)=2$，$Y(HT)=Y(TH)=0$，$Y(TT)=-2$。则 $\mathbb{P}(Y=\pm 2)=\frac14$，$\mathbb{P}(Y=0)=\frac12$。若 $X_i$ 是第 $i$ 枚的赢利，则 $Y=X_1+X_2$。$n$ 枚时 $Y=\sum_{i=1}^n X_i$。**人话：** 事件不好加减，数字可以；这就是为什么要随机变量。
+两枚硬币：$S=\{HH,HT,TH,TT\}$，赢利 $Y(HH)=2$，$Y(HT)=Y(TH)=0$，$Y(TT)=-2$。则 $\mathbb{P}(Y=\pm 2)=\frac14$，$\mathbb{P}(Y=0)=\frac12$。若 $X_i$ 是第 $i$ 枚的赢利，则 $Y=X_1+X_2$；$n$ 枚时 $Y=\sum_{i=1}^n X_i$。事件本身不便直接作代数加减，数值化的随机变量使期望、方差与线性运算成为可能。
 
 ### 6.2 正式定义：可测
 
@@ -494,7 +492,7 @@ $$
 
 只要求「$X\le t$」这类事件可测，则所有 Borel 集合（开集生成的 $\sigma$-代数 $\mathcal{B}(\mathbb{R})$）的原像都可测。这保证 $\mathbb{P}(X\le t)$、$\mathbb{P}(a<X\le b)$ 都有定义。
 
-**补全：硬币上的 $X$ 是 RV。**
+**验证：抛硬币映射 $X$ 是合法随机变量。**
 
 $$
 X^{-1}((-\infty,t])
@@ -524,7 +522,7 @@ $$
 
 ### 6.3 定律（law）= pushforward
 
-对 Borel 集 $A\in\mathcal{B}(\mathbb{R})$（内容说「先把 $\mathcal{B}$ 理解成开集生成的那些集合」），定义
+对 Borel 集 $A\in\mathcal{B}(\mathbb{R})$（可将 $\mathcal{B}(\mathbb{R})$ 理解为由开集生成的最小 $\sigma$-代数），定义
 
 $$
 \mathbb{P}_X(A)\;:=\;\mathbb{P}\bigl(X^{-1}(A)\bigr)\;=\;\mathbb{P}(X\in A).
@@ -532,7 +530,7 @@ $$
 
 则 $\mathbb{P}_X$ 是 $(\mathbb{R},\mathcal{B}(\mathbb{R}))$ 上的概率。称 $\mathbb{P}_X$ 为 $X$ 的**定律 / 分布**，记 $X\sim\mathbb{P}_X$。
 
-内容 的交换图：
+相应的交换图关系为：
 
 $$
 \begin{array}{ccc}
@@ -546,7 +544,7 @@ $$
 \mathbb{P}_X(A)=\mathbb{P}\bigl(X^{-1}(A)\bigr).
 $$
 
-**人话：** 引入 RV 之后，原来在抽象 $(S,\mathcal{F},\mathbb{P})$ 上的问题，变成实线上 $(\mathbb{R},\mathcal{B},\mathbb{P}_X)$ 的问题。这就是 pushforward（前推测度）。Lec4 里 $f_{\sharp}\mu$ 是同一件事。
+**直观理解。** 引入随机变量后，抽象概率空间 $(S,\mathcal{F},\mathbb{P})$ 上的事件就转化为实轴 $(\mathbb{R},\mathcal{B},\mathbb{P}_X)$ 上的分布问题——这就是推前测度（pushforward），生成模型中 $f_{\sharp}\mu$ 的概念与之完全相同。
 
 ### 6.4 分布函数、PMF、密度
 
@@ -603,13 +601,13 @@ $$
 
 用了 $1-x\le e^{-x}$。令 $M\to\infty$，指数 $\to e^{-\infty}=0$，故 $\mathbb{P}(B_N^c)=0$，$\mathbb{P}(B_N)=1$。再令 $N\to\infty$。$\square$
 
-第一引理在 Lec2 里保证「坏事件只发生有限次」；第二引理说明独立时发散就几乎必然发生无穷次。
+第一引理在泛化误差分析中保证「坏事件至多发生有限次」；第二引理则说明独立事件概率级数发散时几乎必然发生无穷次。
 
 ---
 
 ## 8. 期望、方差、MGF、$L^p$
 
-### 8.1 期望怎么定义（小白版）
+### 8.1 期望的基本定义（直观梳理）
 
 离散（绝对收敛时）：$\mathbb{E}[X]=\sum_i x_i\,p_X(x_i)$。
 有密度：$\mathbb{E}[X]=\int_{-\infty}^\infty x f_X(x)\,dx$。
@@ -688,7 +686,7 @@ $$
 
 **证明（Fubini）。** $\int_0^\infty\mathbb{P}(X>x)\,dx=\int_0^\infty\mathbb{E}[\mathbf{1}_{X>x}]\,dx=\mathbb{E}\int_0^\infty\mathbf{1}_{X>x}\,dx=\mathbb{E}\int_0^X dt=\mathbb{E}X$。$\square$
 
-内容对有密度的情形用换序：$\int_0^\infty(1-F(x))\,dx=\int_0^\infty\int_x^\infty f(t)\,dt\,dx=\int_0^\infty f(t)\bigl(\int_0^t dx\bigr)dt=\int_0^\infty t f(t)\,dt$。
+对有密度的情形也可用积分换序验证：$\int_0^\infty(1-F(x))\,dx=\int_0^\infty\int_x^\infty f(t)\,dt\,dx=\int_0^\infty f(t)\bigl(\int_0^t dx\bigr)dt=\int_0^\infty t f(t)\,dt$。
 
 **一般（可正可负）：**
 
@@ -720,10 +718,10 @@ $$
 \mathbb{E}\bigl[\mathbf{1}_{\{Y\in B\}}\mathbb{E}[X\mid Y]\bigr]=\mathbb{E}\bigl[\mathbf{1}_{\{Y\in B\}}X\bigr].
 $$
 
-$g$ 可测时 $\mathbb{E}[X\mid g(Y)]$ 理解为对 $\sigma(g(Y))$ 条件。内容列出的性质（存在时）：
+$g$ 可测时 $\mathbb{E}[X\mid g(Y)]$ 理解为对 $\sigma(g(Y))$ 取条件。常见性质如下（在相关期望存在时成立）：
 
-| 性质 | 式子 | 人话 |
-|------|------|------|
+| 性质 | 式子 | 直观含义 |
+|------|------|----------|
 | 常数 | $\mathbb{E}[a\mid Y]=a$ | 非随机的东西不用估 |
 | 线性 | $\mathbb{E}[aX+bZ\mid Y]=a\mathbb{E}[X\mid Y]+b\mathbb{E}[Z\mid Y]$ | 条件期望是线性投影 |
 | 正性 | $X\ge 0\Rightarrow\mathbb{E}[X\mid Y]\ge 0$ | |
@@ -770,9 +768,9 @@ $\mu=\mathbb{E}Z$，$\sigma^2=\mathrm{Var}(Z)$。标准正态：$\mu=0,\sigma^2=
 
 标准化：若 $Z\sim N(\mu,\sigma^2)$，则 $(Z-\mu)/\sigma\sim N(0,1)$。
 
-### 10.2 Mills 尾（内容的 $\sqrt{2/\pi}$ 界）
+### 10.2 Mills 尾界（$\sqrt{2/\pi}$ 上界）
 
-内容：
+对 $X\sim N(\mu,\sigma^2)$：
 
 $$
 \mathbb{P}\bigl(|X-\mu|>t\bigr)
@@ -780,7 +778,7 @@ $$
 \sqrt{\frac{2}{\pi}}\,\frac{\sigma}{t}\,\exp\Bigl(-\frac{t^2}{2\sigma^2}\Bigr),\qquad t>0.
 $$
 
-（内容把 $\sigma/t$ 挤在分母上，对照 PDF 后的正确缩放就是这一式。）
+（注意此处前置因子是 $\sigma/t$，$t$ 在分母而 $\sigma$ 在分子，量纲无误。）
 
 **证明。** 先证 $Z\sim N(0,1)$。对 $x\ge t>0$ 有 $x/t\ge 1$，且 $\frac{d}{dx}e^{-x^2/2}=-x e^{-x^2/2}$，故
 
@@ -802,7 +800,7 @@ $$
 
 一般 $X\sim N(\mu,\sigma^2)$：$\mathbb{P}(|X-\mu|>t)=\mathbb{P}(|Z|>t/\sigma)$，代入即得 $\sqrt{2/\pi}\,(\sigma/t)\,e^{-t^2/(2\sigma^2)}$。$\square$
 
-这个界在 $t\to 0$ 时炸掉（右边 $\to\infty$），所以小 $t$ 时用平凡界 $1$ 即可。内容重点里的指数正是 $e^{-t^2/(2\sigma^2)}$（前面的 $\sqrt{2/\pi}\,\sigma/t$ 是 Mills 比）。后面 Chernoff 给出不带 $1/t$、处处有效的同指数界 $\mathbb{P}(|X-\mu|>t)\le 2e^{-t^2/(2\sigma^2)}$。
+这个界在 $t\to 0$ 时发散（右边 $\to\infty$），因此小 $t$ 时改用平凡上界 $1$ 即可；指数衰减的主项仍是 $e^{-t^2/(2\sigma^2)}$（前置因子 $\sqrt{2/\pi}\,\sigma/t$ 即 Mills 比）。下文由 Chernoff 界可导出不带 $1/t$、对一切 $t>0$ 处处有效的同指数上界 $\mathbb{P}(|X-\mu|>t)\le 2e^{-t^2/(2\sigma^2)}$。
 
 ### 10.3 MGF
 
@@ -855,7 +853,7 @@ $$
 u^\top X\;\sim\;\mathrm{subG}(\sigma^2).
 $$
 
-即：**每个一维投影都是同样参数的次高斯。** Lec1 里 $\tilde\varepsilon=\Phi^\top\varepsilon$ 用的就是这个。
+即：**每个一维投影都是同样参数的次高斯。** 在线性回归高概率误差界中分析旋转噪声 $\tilde\varepsilon=\Phi^\top\varepsilon$ 时，使用的正是这一投影不变性。
 
 $X\in\mathbb{R}^{m\times n}$ 称为 $X\sim\mathrm{subG}_{m\times n}(\sigma^2)$，若 $\mathbb{E}[X]=0$ 且对一切 $u\in\mathbb{S}^{m-1}$、$v\in\mathbb{S}^{n-1}$，
 
@@ -937,9 +935,9 @@ $k=1$：$\Gamma(1/2)=\sqrt{\pi}$，故 $\mathbb{E}|X|\le\sqrt{2}\,\sigma\cdot\sq
 
 ### 12.4 指数尾 $\Rightarrow$ 次高斯（积分尾推 MGF）
 
-内容结论：若 $\mathbb{P}(|X|>t)\le 2\exp(-t^2/(2\sigma^2))$，则 $X\sim\mathrm{subG}(8\sigma^2)$（定义里还要 $\mathbb{E}X=0$；若未中心化，对 $X-\mathbb{E}X$ 做同一件事，因为 $\mathbb{E}|X|<\infty$）。
+若 $\mathbb{E}[X]=0$ 且 $\mathbb{P}(|X|>t)\le 2\exp(-t^2/(2\sigma^2))$，则存在绝对常数 $C$ 使 $X\sim\mathrm{subG}(C\sigma^2)$（例如可取 $C=8$ 或 $10$；若未中心化，对 $X-\mathbb{E}X$ 处理即可，因指数尾保证 $\mathbb{E}|X|<\infty$）。
 
-下面把「积分尾 $\to$ MGF」写全，并处理内容最后一步对小 $s$ 偏松的问题。
+下面从「尾积分推 MGF」写出严密推导，并指出常见直接用矩级数时在小 $s$ 处的一个细节。
 
 **第一步：中心化后 Taylor 从二次开始。** $\mathbb{E}X=0$ 时 $e^{sX}$ 的一阶项期望为 $0$，故
 
@@ -996,9 +994,9 @@ $$
 
 令 $\tau=\sigma s\ge 1$。右边 $=1+2\sqrt{2\pi}\,\tau\,e^{\tau^2/2}$。而 $e^{4\tau^2}$ 在 $\tau\ge 1$ 时远大于它（$\tau=1$：左边 $\approx 8.3$，右边 $e^4\approx 54$）。故 $\mathbb{E}[e^{sX}]\le\exp(4\sigma^2 s^2)$。
 
-两段合并：$\mathbb{E}[e^{sX}]\le\exp(5\sigma^2 s^2)=\exp\bigl((10\sigma^2)s^2/2\bigr)$，即 $X\sim\mathrm{subG}(10\sigma^2)$。内容写 $\mathrm{subG}(8\sigma^2)$，来自下面的矩级数（常数不重要，后面只用「某个常数倍的 $\sigma^2$」）。
+两段合并得 $\mathbb{E}[e^{sX}]\le\exp(5\sigma^2 s^2)=\exp\bigl((10\sigma^2)s^2/2\bigr)$，即 $X\sim\mathrm{subG}(10\sigma^2)$（文献中也常给出 $\mathrm{subG}(8\sigma^2)$ 等同阶常数；后续使用只依赖方差代理与 $\sigma^2$ 同阶这一性质）。
 
-**内容上的矩级数。** 他们用 $e^{sX}\le\sum |s|^k|X|^k/k!$（含 $k=1$）以及 12.3，再按偶/奇 $k=2m$ / $2m+1$ 拆开：
+**矩级数证法的常见疏漏。** 若直接套绝对矩展开 $e^{sX}\le\sum |s|^k|X|^k/k!$（保留了 $k=1$ 项）并结合 12.3 节，按偶/奇项 $k=2m$ 与 $k=2m+1$ 拆开：
 
 $$
 \begin{aligned}
@@ -1022,7 +1020,7 @@ $$
 \sum_{m\ge 1}\frac{a^m m!}{(2m)!}\le e^{a}-1,\qquad a=2\sigma^2 s^2,
 $$
 
-从而 $\le 1+2\bigl(1+\sqrt{2\sigma^2 s^2}\bigr)(e^{2\sigma^2 s^2}-1)$。内容最后写 $\le e^{4\sigma^2 s^2}$。这一步对**很小的 $s$** 并不自动成立（右边二次、左边若保留 $k=1$ 的绝对矩会冒出 $O(|s|)$）。正确做法就是上面「从 $k=2$ 开始 + 分段」。结论不变：尾条件 $\Rightarrow$ 次高斯，方差代理 $O(\sigma^2)$。
+从而得到 $\le 1+2\bigl(1+\sqrt{2\sigma^2 s^2}\bigr)(e^{2\sigma^2 s^2}-1)$；但这里若直接放缩成 $\le e^{4\sigma^2 s^2}$，在**极小的 $s$** 处并不严格成立（右侧是 $O(s^2)$，而若保留了 $k=1$ 项则会冒出 $O(|s|)$）。正确的处理是上面的「消去一阶项、从 $k=2$ 起分段估计」，由此同样严格推出次高斯性与 $O(\sigma^2)$ 方差代理。
 
 ---
 
@@ -1070,7 +1068,7 @@ $$
 \mathbb{P}\bigl(|\bar X|>t\bigr)\;\le\;2\exp\Bigl(-\frac{n t^2}{2\sigma^2}\Bigr).
 $$
 
-**人话：** 独立次高斯平均之后，方差代理除以 $n$，尾以 $e^{-n t^2}$ 消失。这是 Lec1「$\sigma^2 d/n$」里 $1/n$ 的概率来源。
+**直观理解。** 独立次高斯平均之后，方差代理除以 $n$，尾以 $e^{-n t^2}$ 衰减——这也是线性回归超额风险 $\sigma^2 d/n$ 中 $1/n$ 速度的概率根源。
 
 ---
 
@@ -1086,7 +1084,7 @@ $$
 
 特别地 $X\sim\mathrm{subG}\bigl((b-a)^2/4\bigr)$（因为定义里是 $e^{\sigma^2 s^2/2}$，所以 $\sigma^2/2=(b-a)^2/8$）。
 
-下面给两个完整证明：用户要的凸组合，以及内容的指数倾斜。
+下面给出两种证明路线：凸组合上界与指数倾斜方差。
 
 #### 证法 A（凸组合：$e^{sx}$ 不超过端点线性）
 
@@ -1129,7 +1127,7 @@ $$
 
 这里 $v=pe^{u}/(1-p+pe^{u})\in(0,1)$，而 $v(1-v)\le 1/4$。Taylor：$\varphi(u)=\varphi''(\xi)u^2/2\le u^2/8$。故 $\mathbb{E}[e^{sX}]\le\exp(s^2(b-a)^2/8)$。$\square$
 
-#### 证法 B（内容：cumulant 的二阶导 = 倾斜方差）
+#### 证法 B（对数 MGF 的二阶导 = 倾斜分布方差）
 
 令 $\psi(s)=\log\mathbb{E}[e^{sX}]$。则 $\psi(0)=\log 1=0$，$\psi'(0)=\mathbb{E}X=0$，且
 
@@ -1168,7 +1166,7 @@ $$
 =e^{s^2/2},
 $$
 
-因为 $(2k)!\ge 2^k k!$。故噪声水平 $1$。Lec2 的 Rademacher 复杂度用的就是它。
+因为 $(2k)!\ge 2^k k!$，因此 Rademacher 变量的次高斯方差代理参数为 $1$，这也是泛化理论中 Rademacher 复杂度集中性的基础。
 
 ### 14.3 Hoeffding 不等式（完整）
 
@@ -1196,7 +1194,7 @@ $$
 
 等价地，对和 $S=\sum_i X_i$：$\mathbb{P}(S-\mathbb{E}S>u)\le\exp\bigl(-2u^2/\sum(b_i-a_i)^2\bigr)$（$u=nt$）。
 
-内容还写了向量版：对 $w=u\mathbf{1}$ 不必；对任意 $u\in\mathbb{R}^n$，
+其一般向量形式（对任意系数向量 $u\in\mathbb{R}^n$，不必局限于全 $1$ 向量 $\mathbf{1}$）：
 
 $$
 \mathbb{E}\bigl[e^{s u^\top X}\bigr]
@@ -1248,7 +1246,7 @@ $$
 =2^{1-k}\lambda^k k!.
 $$
 
-内容用更松的 $2(\lambda/2)^k k\Gamma(k)\le\lambda^k k!$（$k\Gamma(k)=k!$，且 $2^{1-k}\le 1$ 对 $k\ge 1$ 在 $k=1$ 时是 $1$，对 $k\ge 2$ 更小；他们写 $\le\lambda^k k\Gamma(k)=\lambda^k k!$）。
+（按更松的上界亦可写成 $2(\lambda/2)^k k\Gamma(k)\le\lambda^k k!$，即注意到 $k\Gamma(k)=k!$ 且对一切 $k\ge 1$ 有 $2^{1-k}\le 1$。）
 
 MGF：$\mathbb{E}X=0$ 故从 $k=2$ 起，
 
@@ -1269,7 +1267,7 @@ $$
 \mathbb{E}[e^{sX}]\;\le\;\exp\bigl(s^2\lambda^2/2\bigr),\qquad\forall\,|s|\le\frac1\lambda.
 $$
 
-与次高斯的差别：MGF 界**只要求在一个对称区间上**成立。两个次高斯的乘积、次高斯的平方（中心化后）是次指数：若 $X\sim\mathrm{subG}(\sigma^2)$，则 $Z=X^2-\mathbb{E}[X^2]\sim\mathrm{subE}(4\sigma)$（细节见 HDP / Vershynin；本课后面用平方损失时会碰到）。
+与次高斯的差别：MGF 界**只要求在一个对称区间上**成立。两个次高斯的乘积、次高斯的平方（中心化后）是次指数：若 $X\sim\mathrm{subG}(\sigma^2)$，则 $Z=X^2-\mathbb{E}[X^2]\sim\mathrm{subE}(4\sigma)$（细节见 Vershynin《High-Dimensional Probability》；在平方损失泛化界推导中会用到）。
 
 ### 15.4 Bernstein（独立次指数的平均）
 
@@ -1301,7 +1299,7 @@ $$
 
 即 $\exp\bigl(-\frac n2(t^2\wedge t)\bigr)$。负向同样。$\square$
 
-**人话：** 偏差 $t$ 小时像次高斯（$e^{-n t^2}$），$t$ 大时退化成指数尾（$e^{-nt}$）。Laplace 平均就是这样。
+**直观理解。** 偏差 $t$ 较小时尾部行为像次高斯（$e^{-n t^2}$），$t$ 较大时退化为指数尾（$e^{-nt}$）；Laplace 分布随机变量的均值正呈现这种两段行为。
 
 ### 15.5 Bernstein：有界 RV 的方差感知版
 
@@ -1440,7 +1438,7 @@ U_i-L_i
 \end{aligned}
 $$
 
-（独立性：给定前 $i-1$ 个坐标并把第 $i$ 个钉死，后面 $X_{i+1:n}$ 的条件律就是自己的边际。）被积函数绝对值 $\le c_i$，故积分 $\le c_i$。$\square$
+（独立性：给定前 $i-1$ 个坐标并固定第 $i$ 个坐标后，后面 $X_{i+1:n}$ 的条件分布就是其边缘分布。）被积函数绝对值 $\le c_i$，故积分 $\le c_i$。$\square$
 
 ### 16.4 条件 Hoeffding + 迭代
 
@@ -1529,7 +1527,7 @@ $$
 
 $Y$ 对 $\pm X_i$ 共 $2N$ 项。
 
-内容最后写 $Y-\mathbb{E}[Y]\sim\mathrm{subG}(\sigma^2)$。严格说：仅由「每个 $X_i$ 次高斯」**不能**推出 $\max$ 中心化后有完全相同的方差代理（可以任意相关；$\psi_2$ 范数其实是 $\sigma\sqrt{\log N}$ 量级）。能无条件写下的是：均值已经是 $\sigma\sqrt{\log N}$，再往上走 $u$ 的概率 $\le 2N e^{-(\mathbb{E}Y+u)^2/(2\sigma^2)}$，对数只进均值、涨落仍是一个次高斯那么宽。这正是下一节覆盖数论证、以及 Lec2 Dudley 的输入。
+需要留意：仅由「每个 $X_i$ 次高斯」**不能**直接推出 $\max$ 中心化后仍具有完全相同的方差代理 $Y-\mathbb{E}[Y]\sim\mathrm{subG}(\sigma^2)$（因为变量间可以任意相关，$\psi_2$ 范数实际上是 $\sigma\sqrt{\log N}$ 量级）。能够无条件写出的是：最大值期望已有 $\sigma\sqrt{2\log N}$ 的偏移，再向上超出 $u$ 的概率满足 $\le 2N e^{-(\mathbb{E}Y+u)^2/(2\sigma^2)}$，从而对数项只进入均值、尾部涨落仍保持次高斯尺度。这正是下一节覆盖数论证与 Dudley 熵积分所需的输入。
 
 ---
 
@@ -1569,7 +1567,7 @@ $$
 
 因此 $\max_{\theta\in P}\theta^\top X=\max_{1\le i\le N}(v^i)^\top X$，化成有限最大值。
 
-**$\ell_1$ 球。** $B_1=\{x\in\mathbb{R}^d:\|x\|_1\le 1\}$ 的顶点是 $\{\pm e_j\}_{j=1}^d$，共 $2d$ 个。这就是 Lec1 约束 LS / Lasso 里「并集界打在 $2d$ 个坐标上、多一个 $\log d$」的几何来源。
+**$\ell_1$ 球。** $B_1=\{x\in\mathbb{R}^d:\|x\|_1\le 1\}$ 的顶点是 $\{\pm e_j\}_{j=1}^d$，共 $2d$ 个——这正是约束最小二乘与 Lasso 分析中「并集界打在 $2d$ 个坐标顶点上、进而引入 $\log d$ 因子」的几何根源。
 
 ---
 
@@ -1581,7 +1579,7 @@ $K\subset\mathbb{R}^d$，距离 $d(\cdot,\cdot)$。集合 $\mathcal{N}$ 称为 $
 
 **覆盖数** $N(K,d,\varepsilon)$：最小 $\varepsilon$-网的基数。欧氏球上常写 $N(B_2,\|\cdot\|_2,\varepsilon)$。
 
-内容先用一个稍松的界：$N(B_2,\|\cdot\|_2,\varepsilon)\le(3/\varepsilon)^d$（$\varepsilon\le 1$ 时由下面的 $(1+2/\varepsilon)^d\le(3/\varepsilon)^d$ 得到）。
+欧氏单位球上常用的较松上界为 $N(B_2,\|\cdot\|_2,\varepsilon)\le(3/\varepsilon)^d$（当 $\varepsilon\le 1$ 时由下文的体积界 $(1+2/\varepsilon)^d\le(3/\varepsilon)^d$ 直接推得）。
 
 ### 19.2 packing vs covering
 
@@ -1648,7 +1646,7 @@ $$
 
 由命题 2，$N\le P\le(1+2/\varepsilon)^d$。$\square$
 
-$\varepsilon=\frac12$ 时 $N(B_2,\frac12)\le 5^d$；内容用 $(3/\varepsilon)^d$ 写成 $6^d$。Lec1 高概率 OLS 用的是 $5^r$ 这一档。
+$\varepsilon=\frac12$ 时 $N(B_2,\frac12)\le 5^d$（若用较松的 $(3/\varepsilon)^d$ 则写作 $6^d$）；最小二乘高概率界中的指数因子正源自 $5^r$ 这一档覆盖数上界。
 
 ### 19.4 欧氏球上的最大值
 
@@ -1697,7 +1695,7 @@ $$
 \le 6^d\exp\Bigl(-\frac{u^2}{2\sigma^2}\Bigr).
 $$
 
-$u^2/(2\sigma^2)\ge d\log 6+\log(1/\delta)$（用 $\sqrt{A+B}\ge\sqrt{A}$ 的反向：$(a+b)^2\ge a^2+b^2$，$a=2\sigma\sqrt{d}$，$a^2/(2\sigma^2)=2d\ge d\log 6$ 因为 $\log 6<2$；交叉项再吸收 $\log(1/\delta)$）。内容把这件事缩写成「$\le\delta$」。更干净的写法：取 $u=\sigma\sqrt{2\log(6^d/\delta)}$，则并集界恰好 $\delta$，再
+注意 $u^2/(2\sigma^2)\ge d\log 6+\log(1/\delta)$（利用 $(a+b)^2\ge a^2+b^2$，令 $a=2\sigma\sqrt{d}$，则 $a^2/(2\sigma^2)=2d\ge d\log 6$，因 $\log 6<2$），由此即可保证失败概率不超过 $\delta$。更简洁的等价参数化是直接取 $u=\sigma\sqrt{2\log(6^d/\delta)}$，使并集界恰好为 $\delta$，再用
 
 $$
 u\le\sigma\sqrt{2d\log 6}+\sigma\sqrt{2\log(1/\delta)}\le 2\sigma\sqrt{d}+\sigma\sqrt{2\log(1/\delta)},
@@ -1705,13 +1703,13 @@ $$
 
 从而 $\max_{B_2}\le 2u\le 4\sigma\sqrt{d}+2\sigma\sqrt{2\log(1/\delta)}$。$\square$
 
-这就是 Lec1 第 5.3 节「$\|\tilde\varepsilon\|_2=\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u$」的网论证。
+这就是分析旋转噪声欧氏范数 $\|\tilde\varepsilon\|_2=\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u$ 时所用的标准 $\varepsilon$-网论证。
 
 ---
 
-## 20. HW：次高斯矩阵的算子范数
+## 20. 次高斯矩阵的算子范数上界
 
-**题目。** $X\sim\mathrm{subG}_{m\times n}(\sigma^2)$。则存在绝对常数 $C$，对任意 $t>0$，
+**定理。** 设 $X\sim\mathrm{subG}_{m\times n}(\sigma^2)$。则存在绝对常数 $C$，对任意 $t>0$，
 
 $$
 \|X\|_2\;\le\; C\sigma\bigl(\sqrt{m}+\sqrt{n}+t\bigr)
@@ -1759,15 +1757,15 @@ $$
 
 ---
 
-## 21. 核对：次高斯 MGF、Hoeffding / Bernstein 分母（对照内容）
+## 21. 关键常数核对：MGF、Hoeffding 与 Bernstein 分母
 
-**次高斯。** 内容：$\mathbb{E}[X]=0$ 且 $\mathbb{E}[e^{sX}]\le\exp(\sigma^2 s^2/2)$（对一切 $s\in\mathbb{R}$），记 $X\sim\mathrm{subG}(\sigma^2)$。Chernoff 在 $s=t/\sigma^2$ 处给出
+**次高斯定义与尾界。** 若 $\mathbb{E}[X]=0$ 且 $\mathbb{E}[e^{sX}]\le\exp(\sigma^2 s^2/2)$（对一切 $s\in\mathbb{R}$），记 $X\sim\mathrm{subG}(\sigma^2)$；在 $s=t/\sigma^2$ 处套用 Chernoff 界给出
 
 $$
 \mathbb{P}(|X|>t)\le 2\exp\Bigl(-\frac{t^2}{2\sigma^2}\Bigr).
 $$
 
-指数里的 $2$ 在分母，来自 MGF 里的 $1/2$。若把定义改成 $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2}$（无 $1/2$），尾会变成 $e^{-t^2/4\sigma^2}$，**不是**内容。
+指数分母中的系数 $2$ 直接来自 MGF 上界里的因子 $1/2$。部分文献将定义写作 $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2}$（省去 $1/2$），对应尾界便会变成 $e^{-t^2/(4\sigma^2)}$，阅读推导时须注意这一常数差异。
 
 **Hoeffding 引理。** $\mathbb{E}e^{sX}\le e^{s^2(b-a)^2/8}$，因此 $\sigma^2/2=(b-a)^2/8$，即 $X\sim\mathrm{subG}((b-a)^2/4)$。$8$ 来自区间上方差 $\le((b-a)/2)^2$ 再积分两次。
 
@@ -1785,38 +1783,38 @@ $$
 
 ---
 
-## 22. 地图：这些工具怎样接到 Lec1 和 Lec2
+## 22. 工具地图：如何衔接后续统计学习推导
 
-把附录 B 想象成工具箱，课上真正拧的螺丝钉只有几颗。
+把附录 B 视为集中不等式工具箱，统计学习推导中高频调用的核心机制集中在以下几个连接点。
 
-**Lec1 并集界（有限 / 顶点）。**
+**有限集合与顶点上的并集界（线性模型）。**
 
-- OLS 高概率：$\|X(\widehat\theta-\theta^*)\|_2\le 2\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u$。一维投影是次高斯 $\Rightarrow$ 第 12 节的尾；$\sup$ 在球上 $\Rightarrow$ 第 19.4 节的 $\frac12$-网 + 并集；覆盖数 $5^r$ 或 $6^r$ $\Rightarrow$ $\sigma(\sqrt{r}+\sqrt{\log(1/\delta)})$。
+- OLS 高概率界：$\|X(\widehat\theta-\theta^*)\|_2\le 2\sup_{\|u\|_2\le 1}\tilde\varepsilon^\top u$。一维投影是次高斯 $\Rightarrow$ 第 12 节的尾；$\sup$ 在球上 $\Rightarrow$ 第 19.4 节的 $\frac12$-网 + 并集；覆盖数 $5^r$ 或 $6^r$ $\Rightarrow$ $\sigma(\sqrt{r}+\sqrt{\log(1/\delta)})$。
 - 约束 LS，$K=B_1$：第 18 节，最大值在 $2d$ 个顶点，并集出 $\sqrt{\log d}$。
 - Lasso 的 $\lambda\sim\sigma\sqrt{\log(d/\delta)/n}$：$d$ 个坐标的次高斯尾 + 并集。
 
-**Lec2 Dudley（无限函数类）。**
+**无限函数类上的链式分解（Dudley 积分）。**
 
 经验过程 $\sup_{f\in\mathcal{F}}|L(f)-\widehat L(f)|$ 不再是有限个次高斯的 max。做法：
 
 1. 对称化之后变成 Rademacher 复杂度 $\mathbb{E}\sup_{f\in\mathcal{F}}n^{-1}\sum_i\varepsilon_i f(Z_i)$（$\varepsilon_i$ 是第 14.2 节的 Rademacher，$\mathrm{subG}(1)$）；
 2. 对函数类用覆盖数 $N(\mathcal{F},\|\cdot\|_\infty,\varepsilon)$ 或经验 $L^2$ 覆盖数，把 $\sup$ 换成网上的有限 max（第 17 节：$\mathbb{E}\max\le\sigma\sqrt{\log N}$）；
-3. 不同尺度的网一层层逼近，积分 $\int_0^\infty\sqrt{\log N(\mathcal{F},\varepsilon)}\,d\varepsilon$ ——这就是 **Dudley 熵积分**。第 19 节的体积界 $N(B_2,\varepsilon)\le(1+2/\varepsilon)^d$ 给出「$d$ 维球的熵是 $d\log(1/\varepsilon)$」，积分之后正是 $\sqrt{d/n}$ 这一档，和 Lec1 对上。
+3. 不同尺度的网逐层逼近并积分 $\int_0^\infty\sqrt{\log N(\mathcal{F},\varepsilon)}\,d\varepsilon$——即 **Dudley 熵积分**。第 19 节的体积界 $N(B_2,\varepsilon)\le(1+2/\varepsilon)^d$ 表明 $d$ 维球的覆盖熵为 $d\log(1/\varepsilon)$ 量级，积分后恰给出熟悉的 $\sqrt{d/n}$ 泛化速率。
 
 McDiarmid 则保证：Rademacher 复杂度作为 $Z_1,\ldots,Z_n$ 的函数，自己也集中在均值附近（有界差分 $c_i=O(1/n)$）。
 
-**一句话：** 并集界管「有限个名字」；覆盖数把「无穷个名字」减成「有限个 $\varepsilon$-代表」；次高斯管每个代表的尾；Dudley 把所有尺度加起来。
+**总览：** 并集界负责有限个事件；覆盖数把无限类约化为有限个 $\varepsilon$-代表；次高斯界控制单个代表的尾部偏差；Dudley 积分把多尺度离散网格串联起来。
 
 ---
 
-## 23. 你应该记住的一张表
+## 23. 集中不等式速查表
 
-| 工具 | 假设 | 结论（数量级） | 用在哪 |
-|------|------|----------------|--------|
-| 并集界 | 任意事件 | $\mathbb{P}(\cup E_i)\le\sum\mathbb{P}(E_i)$ | 全程 |
-| Markov / Chernoff | 非负 / MGF | $\mathbb{P}(X>t)\le e^{-st}M(s)$ | 所有集中 |
-| 高斯 Mills | $N(\mu,\sigma^2)$ | $\mathbb{P}(|X-\mu|>t)\lesssim(\sigma/t)e^{-t^2/(2\sigma^2)}$ | 精确尾 |
-| 次高斯 | $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2/2}$ | $\mathbb{P}(|X|>t)\le 2e^{-t^2/(2\sigma^2)}$ | Lec1 噪声 |
+| 工具 | 假设 | 结论（数量级） | 典型用途 |
+|------|------|----------------|----------|
+| 并集界 | 任意事件 | $\mathbb{P}(\cup E_i)\le\sum\mathbb{P}(E_i)$ | 有限事件合并 |
+| Markov / Chernoff | 非负 / MGF | $\mathbb{P}(X>t)\le e^{-st}M(s)$ | 所有集中界起点 |
+| 高斯 Mills | $N(\mu,\sigma^2)$ | $\mathbb{P}(|X-\mu|>t)\lesssim(\sigma/t)e^{-t^2/(2\sigma^2)}$ | 精确高斯尾 |
+| 次高斯 | $\mathbb{E}e^{sX}\le e^{\sigma^2 s^2/2}$ | $\mathbb{P}(|X|>t)\le 2e^{-t^2/(2\sigma^2)}$ | 次高斯噪声项 |
 | 独立和 | $X_i\sim\mathrm{subG}(\sigma^2)$ i.i.d. | $\bar X\sim\mathrm{subG}(\sigma^2/n)$ | 均值集中 |
 | Hoeffding 引理 | $X\in[a,b]$，$\mathbb{E}X=0$ | $\mathrm{subG}((b-a)^2/4)$ | 有界 RV |
 | Hoeffding 不等式 | 独立、有界 | $\mathbb{P}(|\bar X-\mu|>t)\le 2e^{-2n^2 t^2/\sum(b_i-a_i)^2}$ | 经验均值 |
@@ -1826,6 +1824,4 @@ McDiarmid 则保证：Rademacher 复杂度作为 $Z_1,\ldots,Z_n$ 的函数，�
 | 凸多面体 | 顶点 $N$ 个 | max 在顶点，同上 | $B_1$、Lasso |
 | 覆盖数 | $B_2\subset\mathbb{R}^d$ | $1/\varepsilon^d\le N\le(1+2/\varepsilon)^d$ | 网论证、Dudley |
 
-读完本附录前半，可以去 `01_Lec1`。读完后半，Lec1 的高概率段和 `02a_Lec2` 的对称化 / Dudley 不再是黑盒。
-
-下一份：若还没读附录 A，去 [05_附录A_线性代数微积分凸分析](/blog/fods-linear-algebra-calculus-convexity/)；否则继续 [02a_Lec2_统计误差](/blog/fods-statistical-error/)。
+相关推导衔接：[线性代数与凸分析附录](/blog/fods-linear-algebra-calculus-convexity/)（最小二乘与优化预备）与 [统计误差与泛化界](/blog/fods-statistical-error/)（Rademacher 复杂度与 Dudley 熵积分）。

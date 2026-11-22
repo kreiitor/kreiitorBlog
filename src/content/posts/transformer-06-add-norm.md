@@ -11,7 +11,7 @@ order: 6
 cover: /covers/series-deep-learning.svg
 ---
 
-## 1. 为什么残差连接
+## 1. 为什么需要残差连接
 
 1. 深度学习训练依赖反向传播，从损失出发按链式法则连乘，而乘法对数值很敏感。
 	- 各个因子小于 1 时，模型一深，梯度传到后面就接近消失
@@ -21,7 +21,7 @@ cover: /covers/series-deep-learning.svg
 
 ## 2. 残差连接
 
-> 子结构的最终输出等于它的输出加上它的输入
+残差块的输出等于输入本身加上子层的变换输出。
 
 ### 2.1 残差连接对梯度影响
 
@@ -57,9 +57,7 @@ $$
 x_{l+1}=F_l(x_l),\qquad
 \delta_l^{\text{plain}}=\delta_L\prod_{i=l}^{L-1}J_i.
 $$
-普通网络梯度是纯乘性链式乘积；残差网络则多出了单位阵 $I$。
-
-==这样，无论后面那些残差块梯度组合出的数值是什么，反向传播时总有一个单位矩阵 I 可以传到深层==
+普通网络梯度是纯乘性链式乘积；残差网络则多出了单位阵 $I$。**无论后续残差块梯度组合出的数值是什么，反向传播时总有一个单位矩阵 $I$ 可以直传深层。**
 
 ### 2.2 PyTorch 实现 Add & Norm
 ```python
@@ -106,43 +104,46 @@ $$
 其中 $\gamma$ 学习缩放，$\beta$ 学习偏移（因为对 $x$ 做了中心化）。
 - 这里的 $\mu,\sigma$ 沿批次维度求解：同一批内、同一个特征维度作为一组，算出均值和方差，再用它归一化
 
-==缺陷==
-- 大模型时代不好用：训练时批次够大，统计量还算准；推理时批次是 1，这个统计量基本失效。
+**缺陷**
+
+- 大模型时代不适用：训练时批次较大，批内统计量相对准确；推理时批次为 1，统计量基本失效。
 - 训练和推理必须用两套统计量，行为不统一。
-- CV 时代处理的是 (B, d) 数据，现在是 (B, N, d)，序列长度不一，padding 会引入无意义的偏差。
+- CV 时代处理的是 `(B, d)` 数据，而序列数据是 `(B, N, d)`，序列长度不一，padding 会引入无意义的偏差。
 
 ### 3.2 LayerNorm（Transformer 原始实现）
 
 $$
-LayerNorm(x) = \gamma \cdot \frac{x-\mu}{\sqrt{\sigma^2 +\epsilon}}+\beta
+\operatorname{LayerNorm}(x) = \gamma \cdot \frac{x-\mu}{\sqrt{\sigma^2 +\epsilon}}+\beta
 $$
-这里改成按隐藏维度归一化
+这里改成按隐藏维度归一化：
 
-==优势==
+**优势**
+
 - 按隐藏维度归一化，序列长度不一没有影响。
 - 训练和推理使用同一套计算逻辑：不受批次差别影响，单个 token 也能独立归一化。
 
 ### 3.3 RMSNorm（现代大模型的新主流）
 
 $$
-RMSNorm(x) = \gamma \cdot \frac{x}{RMS(x)}
+\operatorname{RMSNorm}(x) = \gamma \cdot \frac{x}{\operatorname{RMS}(x)}
 $$
-其中 $RMS(x)=\sqrt{\frac{1}{d} \sum_{i=1}^{d}x_i^2}$
+其中 $\operatorname{RMS}(x)=\sqrt{\frac{1}{d} \sum_{i=1}^{d}x_i^2}$。
 
 简化有两处：
-1. 去掉中心化，不再计算均值
-2. 去掉 $\beta$ 这个可学习参数：不再中心化，也就没有偏移项要学
+1. 去掉中心化，不再计算均值；
+2. 去掉 $\beta$ 这个可学习参数：不再中心化，也就没有偏移项要学。
 $$
-RMS(x)=mean(x^2)=var(x)+mean(x)^2
+\operatorname{RMS}(x)^2 = \operatorname{mean}(x^2) = \operatorname{var}(x) + \operatorname{mean}(x)^2
 $$
-当 $x$ 的均值接近 0 时，RMS(x) 近似等于标准差，RMSNorm 和 LayerNorm 的行为基本一致。
-- 实验表明，深层 Transformer 中各层特征向量的均值通常接近 0，这支持了 RMS 近似的有效性
+当 $x$ 的均值接近 0 时，$\operatorname{RMS}(x)$ 近似等于标准差，RMSNorm 和 LayerNorm 的行为基本一致。实验表明，深层 Transformer 中各层特征向量的均值通常接近 0，这支持了 RMS 近似的有效性。
 
-==为什么能替代 LayerNorm==
-- 归一化的作用是控制数值的尺度、做缩放，除以 RMS 就够了
+**为什么能替代 LayerNorm**
 
-==优势==
-- 效果基本不变，计算和工程实现更轻便
+归一化的作用是控制数值尺度、做缩放，除以 RMS 已足够完成缩放。
+
+**优势**
+
+效果基本不变，计算和工程实现更轻便。
 
 ### 3.4 三种归一化方法对比
 
@@ -160,24 +161,27 @@ $$
 ## 4. Pre-Norm vs Post-Norm：归一化时机的路线之争
 
 实践中，归一化的位置有两种流派：一种放在进入子结构之前，一种放在子结构输出之后。这两种选择对反向传播的梯度流影响较大，写法分别是：
-pre:$out = x + sublayer(norm(x))$
-post:$out = x + norm(sublayer(x))$
+
+- Pre-Norm：$\operatorname{out} = x + \operatorname{sublayer}(\operatorname{norm}(x))$
+- Post-Norm：$\operatorname{out} = \operatorname{norm}(x + \operatorname{sublayer}(x))$
+
 两边的梯度流：
-pre:
+
+Pre-Norm：
 $$
 \frac{\partial \mathcal{L}}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L} \prod_{k=l}^{L-1} \left[ I + \frac{\partial (F_k(\text{LN}_k(x_k)))}{\partial x_k} \right]
 $$
-post:
+Post-Norm：
 $$
 \frac{\partial \mathcal{L}}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L} \prod_{k=l}^{L-1} \left[ \frac{\partial \text{LN}_k}{\partial (x_k + F_k)} \cdot \left( I + \frac{\partial F_k}{\partial x_k} \right) \right]
 $$
-pre 路线和前面的残差作用类似，仍然保留一条通往深层的「捷径」，可以防止梯度消失和爆炸，训练稳定性更强。
+Pre-Norm 路线和前面的残差作用类似，仍然保留一条通往深层的「捷径」，可以防止梯度消失和爆炸，训练稳定性更强。
 
-post 的连乘里多出一个系数项，数值稳定性较差，训练相对不稳定。
+Post-Norm 的连乘里多出一个系数项，数值稳定性较差，训练相对不稳定。
 
-实验里，Post 在训练收敛充分时效果比 pre 略好，但训练稳定性让这个优势很难在实际训练中拿到。大语言模型训练一次代价很大，pre 靠训练稳定性成了主流。
+实验里，Post-Norm 在训练收敛充分时效果比 Pre-Norm 略好，但训练稳定性让这个优势很难在实际训练中拿到。大语言模型训练一次代价很大，Pre-Norm 靠训练稳定性成了主流。
 
-DeepNorm 在 post 的基础上给残差连接的输入 $x$ 加上调节参数 $\alpha$，试图复现 pre 的训练稳定性。但 pre 的训练本来就稳定，社区实践多，实现也简洁，没必要再引入新参数。
+DeepNorm 在 Post-Norm 的基础上给残差连接的输入 $x$ 加上调节参数 $\alpha$，试图复现 Pre-Norm 的训练稳定性。但 Pre-Norm 本身训练稳定、社区实践多、实现也简洁，无需额外引入调节参数。
 
 ## 5. CUDA 优化视角
 
@@ -196,7 +200,7 @@ LayerNorm 的数学不复杂，在 GPU 上高效实现却有讲究。它是一�
 第二遍：再次遍历 d 个元素，用 mean 和 variance 对每个元素做归一化
 ```
 
-这意味着特征向量的数据要从 HBM（高带宽显存）读**两次**。dmodel=4096 甚至 8192 的大模型，每个 token 的特征向量有 4096-8192 个 float16 元素，绝对大小只有 8-16 KB。但 LayerNorm 在每个 Transformer Block 里调用两次（Attention 前一次，FFN 前一次），模型又有几十个 Block，再乘上 batch 和序列长度，累计的 HBM 访问量相当可观。
+这意味着特征向量的数据要从 HBM（高带宽显存）读**两次**。$d_{model}=4096$ 甚至 8192 的大模型，每个 token 的特征向量有 4096-8192 个 float16 元素，绝对大小只有 8-16 KB。但 LayerNorm 在每个 Transformer Block 里调用两次（Attention 前一次，FFN 前一次），模型又有几十个 Block，再乘上 batch 和序列长度，累计的 HBM 访问量相当可观。
 
 **Welford 算法与在线计算**
 
@@ -204,8 +208,7 @@ LayerNorm 的数学不复杂，在 GPU 上高效实现却有讲究。它是一�
 
 **RMSNorm 的优势**
 
-RMSNorm 去掉了均值计算，只需要计算 $\sum x^2$。reduction 从两个（sum 和 sum of squares）变成一个（sum of squares），kernel 实现更简单，计算量也更少，**数值稳定性问题也更少**。
->reduction 需要跨线程协作、通信，比较「贵」
+RMSNorm 去掉了均值计算，只需要计算 $\sum x^2$。reduction 从两个（sum 和 sum of squares）变成一个（sum of squares），kernel 实现更简单，计算量也更少，**数值稳定性问题也更少**（reduction 需要跨线程协作和同步通信，调度开销较高）。
 
 ### 5.2 Residual Add + LayerNorm 融合
 
@@ -241,8 +244,8 @@ next_input = LayerNorm(h)  # 下一个子层的输入需要先归一化
 
 FP16 的有效精度约 3.3 位十进制数（11 位尾数），可表示的最小正数约 6e-8，最大值约 65504。在归一化计算中：
 
-1. **求和时的精度损失**：当 dmodel=4096 时，∑x 涉及 4096 个数的累加。如果这些数的量级相近且符号一致，累加结果可能远大于单个元素，导致精度不足。更严重的是，$∑x^2$ 中的平方操作会放大数值范围，可能溢出 FP16 的表示范围（65504）。
-2. **方差计算的灾难性抵消**：$Var(x)=mean(x^2)−mean(x)^2$，当方差较小时，这是一个「大数减大数」的操作，会导致灾难性的精度损失。
+1. **求和时的精度损失**：当 $d_{model}=4096$ 时，$\sum x$ 涉及 4096 个数的累加。如果这些数的量级相近且符号一致，累加结果可能远大于单个元素，导致精度不足。更严重的是，$\sum x^2$ 中的平方操作会放大数值范围，可能溢出 FP16 的表示范围（65504）。
+2. **方差计算的灾难性抵消**：$\operatorname{Var}(x)=\operatorname{mean}(x^2)-\operatorname{mean}(x)^2$，当方差较小时，这是一个「大数减大数」的操作，会导致灾难性的精度损失。
 
 **工程解决方案**
 
@@ -272,7 +275,7 @@ for (int i = 0; i < d; i++) {
 
 BF16（Brain Floating Point 16）的指数位更多（8 位 vs FP16 的 5 位），动态范围与 FP32 一致，大幅降低了溢出风险。代价是尾数位更少（7 位 vs FP16 的 10 位），单个数值的精度略低。在归一化场景里，BF16 不容易溢出，FP32 fallback 也更少，越来越多的大模型训练因此选 BF16 而非 FP16。
 
-### 自检清单
+### 自我检验清单
 
 - **基础概念**：梯度消失和梯度爆炸的根本原因是什么？为什么深度与这个问题正相关？
 - **残差连接**：写出残差连接的反向传播公式，解释为什么它包含一个「恒等捷径」。

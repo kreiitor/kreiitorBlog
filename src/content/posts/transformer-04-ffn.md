@@ -15,13 +15,13 @@ cover: /covers/series-deep-learning.svg
 
 FFN 就是用一个升维矩阵把输入升到高维，在高维空间里做非线性激活，再用降维矩阵降回来。
 
-标准的 FFN 里 $d_{ff}$ 是 $d_{model}$ 的 4 倍，激活函数常用 ReLU 或 GELU。前者有神经元死亡和零点处不光滑两个问题。
+标准的 FFN 里 $d_{ff}$ 是 $d_{model}$ 的 4 倍，激活函数常用 ReLU 或 GELU。前者（ReLU）存在神经元死亡和零点处不光滑两个问题。
 
 先升维再降维的作用：
 
-- 高维特征更容易线性可分，类似 SVM 的核方法。
-- 高维中的激活函数更灵活，可以选择更多通道去激活或抑制，表达能力更强。
-- 降维是信息压缩，迫使模型保留重要信息，让它「理解」什么更重要。
+- 高维特征更容易线性可分，类似 SVM 的核方法；
+- 高维中的激活函数更灵活，可以选择更多通道去激活或抑制，表达能力更强；
+- 降维相当于信息压缩，迫使网络筛选并保留关键特征。
 
 ## 2. 标准 FFN 的 PyTorch 实现
 
@@ -30,7 +30,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-class standardFFN(nn.Module):
+class StandardFFN(nn.Module):
 	def __init__(self, d_model, d_ff, activation='relu'):
 		super().__init__()
 		# 超参数
@@ -120,27 +120,23 @@ $$
 - 负半轴仍有较小的值产出，不会造成神经元死亡
 - **概率化门控，信息保留更精细**
 
-缺点：计算量较大，但相比 GEMM 可以忽略不计。
+相比 ReLU，指数与双曲正切运算略复杂，但耗时远小于 GEMM，在整体计算中占比极低。
 
 ### 3.3 Swish
 
 $$
-Swish(x)=x\sigma(\beta x)=\frac{x}{1+\exp(-\beta x)}
+\operatorname{Swish}(x)=x\sigma(\beta x)=\frac{x}{1+\exp(-\beta x)}
 $$
 
 其中 $\beta$ 是可学习或固定的参数，取值为 1 时记为 SiLU。
 
-这构成一种自门控：sigmoid 给出 0–1 的门控值，乘以 $x$ 后融入了输入本身的信息，由输入值控制信息通过量。
-
-优点：
-
-- 光滑可微
+这构成一种自门控：sigmoid 给出 0–1 的门控值，乘以 $x$ 后融入了输入本身的信息，由输入值控制信息通过量，且处处光滑可微。
 
 ### 3.4 对比总结
 
 | 特性    | ReLU           | GELU        | Swish/SiLU       |
 | ----- | -------------- | ----------- | ---------------- |
-| 公式    | max⁡(0,x)      | x⋅Φ(x)      | x⋅σ(x)           |
+| 公式    | $\max(0, x)$   | $x \cdot \Phi(x)$ | $x \cdot \sigma(x)$ |
 | 输出范围  | [0,+∞)         | ≈[−0.17,+∞) | ≈[−0.278,+∞)     |
 | 零点可微  | 否              | 是           | 是                |
 | 单调性   | 是              | 否（近似单调）     | 否                |
@@ -173,7 +169,7 @@ SwiGLU 只是把 sigmoid 换成了 Swish，实验上验证了这种替换的效�
 
 优点：
 
-- 模型自主学习门控强度。之前的激活函数对所有维度施加统一的门控，这里每个维度的强度都可以单独决策，学习能力更强。
+- 模型自主学习门控强度。之前的激活函数对所有维度施加统一的门控，而 SwiGLU 允许对每个隐藏维度单独控制门控强度，学习能力更强。
 - 原来梯度只有内容路径，现在增加了门控路径，参数的更新信号更加丰富。
 
 ### 4.3 SwiGLU 的 PyTorch 实现
@@ -212,21 +208,21 @@ FFN 的参数量在整个 Transformer Block 中占据主导地位。准确计算
 
 以 $d_{model}=4096$ 为例，分别计算两种 FFN 结构的参数量。
 
-**标准 FFN（dff=4×dmodel=16384）**
+**标准 FFN（$d_{ff}=4 \times d_{model}=16384$）**
 
 | 参数矩阵   | 形状            | 参数量                    |
 | ------ | ------------- | ---------------------- |
-| Wup   | (4096, 16384) | 67,108,864             |
-| Wdown  | (16384, 4096) | 67,108,864             |
+| $W_{up}$   | (4096, 16384) | 67,108,864             |
+| $W_{down}$ | (16384, 4096) | 67,108,864             |
 | **合计** |               | **134,217,728 (134M)** |
 
-**SwiGLU FFN（dff=8/3×dmodel≈10922，实际取 11008）**
+**SwiGLU FFN（$d_{ff}=8/3 \times d_{model} \approx 10922$，实际取 11008）**
 
 | 参数矩阵   | 形状            | 参数量                    |
 | ------ | ------------- | ---------------------- |
-| Wgate  | (4096, 11008) | 45,088,768             |
-| Wup   | (4096, 11008) | 45,088,768             |
-| Wdown  | (11008, 4096) | 45,088,768             |
+| $W_{gate}$ | (4096, 11008) | 45,088,768             |
+| $W_{up}$   | (4096, 11008) | 45,088,768             |
+| $W_{down}$ | (11008, 4096) | 45,088,768             |
 | **合计** |               | **135,266,304 (135M)** |
 
 ### 5.2 对比分析
@@ -234,26 +230,26 @@ FFN 的参数量在整个 Transformer Block 中占据主导地位。准确计算
 | 对比维度             | 标准 FFN      | SwiGLU FFN         |
 | ---------------- | ----------- | ------------------ |
 | 权重矩阵数量           | 2           | 3                  |
-| 中间维度             | 4×dmodel   | 8/3×dmodel        |
-| 总参数量             | 8×dmodel^2 | 3×dmodel×8/3dmodel |
-| 以 dmodel=4096 计算 | 134M        | 135M               |
+| 中间维度             | $4 \times d_{model}$   | $8/3 \times d_{model}$        |
+| 总参数量             | $8 \times d_{model}^2$ | $3 \times d_{model} \times \frac{8}{3} d_{model}$ |
+| 以 $d_{model}=4096$ 计算 | 134M        | 135M               |
 | GEMM 次数（前向）      | 2           | 3                  |
 | 激活函数             | 全局施加        | 门控选择性施加            |
 
-**两种结构的总参数量几乎相同**（8×dmodel^2），SwiGLU 靠门控机制取得了更好的效果。代价是前向传播需要 3 次 GEMM 而非 2 次，计算量略有增加。
+**两种结构的总参数量几乎相同**（$8 \times d_{model}^2$），SwiGLU 靠门控机制取得了更好的效果。代价是前向传播需要 3 次 GEMM 而非 2 次，计算量略有增加。
 
 ### 5.3 与 Attention 模块的参数量对比
 
 | 模块                           | 参数量             | 占 Block 比例 |
 | ---------------------------- | --------------- | ---------- |
-| Self-Attention (WQ,WK,WV,WO) | 4×dmodel^2=67M  | ~33%       |
-| FFN（标准或 SwiGLU）              | 8×dmodel^2=135M | ~67%       |
-| LayerNorm ×2                 | 4×dmodel=16K    | <0.01%     |
-| **单 Block 合计**               |                 | **~201M**  |
+| Self-Attention ($W_Q, W_K, W_V, W_O$) | $4 \times d_{model}^2 = 67\text{M}$  | ~33%       |
+| FFN（标准或 SwiGLU）              | $8 \times d_{model}^2 \approx 134\text{–}135\text{M}$ | ~67%       |
+| LayerNorm ×2                 | $4 \times d_{model} = 16\text{K}$    | <0.01%     |
+| **单 Block 合计**               |                 | **~201–202M**  |
 
 FFN 的参数量约为 Attention 的 2 倍，占单个 Block 参数总量的约 2/3。任何针对 FFN 的优化（并行切分、量化、专家化）都会显著影响整体效率。
 
-## 6. 为什么 SwiGLU 使用近似 8/3 的 $d_{model}$ 作为高维
+## 6. 为什么 SwiGLU 取约 $8/3 \cdot d_{model}$ 作为中间维度
 
 ### 6.1 标准 FFN 为什么使用 4x
 
@@ -264,7 +260,7 @@ FFN 的参数量约为 Attention 的 2 倍，占单个 Block 参数总量的约 
 
 - SwiGLU 多了一个门控矩阵，要让总参数量保持不变，系数就得取 8/3。
 
-工程上先对 8/3·$d_{model}$ 取整，再向上取到 128 或 256 的倍数——tensor core 偏好 8 的倍数。
+工程上先对 $\frac{8}{3} d_{model}$ 取整，再向上对齐到 128 或 256 的倍数——Tensor Core 要求矩阵维度至少为 8 的倍数，而内存对齐与多卡并行切分通常偏好 128 或 256 的倍数。
 
 ## 7. 张量并行：切分 FFN
 
@@ -312,12 +308,12 @@ MoE 的关键组件是**路由器**（Router / Gate），它决定每个 token �
 
 最常见的路由方式是 Top-K 路由：$g(x)=\operatorname{softmax}(xW_r)$。
 
-其中 $W_r$ 是路由器权重矩阵，形状为 (d_model, n_experts)。它把每个 token 的表示映射到 n_experts 维的概率分布，概率最大的 K 个专家被选中。
+其中 $W_r$ 是路由器权重矩阵，形状为 `(d_model, n_experts)`。它把每个 token 的表示映射到 `n_experts` 维的概率分布，概率最大的 $K$ 个专家被选中。
 
 最终输出是被选中专家输出的加权和：
 
 $$
-MoE(x)=\sum_{i\in TopK}g_i(x)⋅Expert_i(x)
+\operatorname{MoE}(x)=\sum_{i\in \text{TopK}} g_i(x) \cdot \operatorname{Expert}_i(x)
 $$
 
 权重 $g_i(x)$ 会重归一化到和为 1，使输出尺度与单个 FFN 一致。
@@ -333,10 +329,10 @@ MoE 训练中的一个棘手问题是**负载不均衡**——路由器可能倾
 在训练目标中加入一项额外的损失函数，惩罚负载不均匀的情况。常见形式是：
 
 $$
-L_{aux}=α⋅n_{experts}⋅\sum_{i=1}^{n_{experts}}f_i \cdot p_i
+L_{\text{aux}}=\alpha \cdot n_{\text{experts}} \cdot \sum_{i=1}^{n_{\text{experts}}} f_i \cdot p_i
 $$
 
-其中 $f_i$ 是专家 i 实际接收的 token 比例，$p_i$ 是路由器分配给专家 i 的平均概率，α 是平衡系数。所有专家负载均匀时，该损失取最小值。
+其中 $f_i$ 是专家 $i$ 实际接收的 token 比例，$p_i$ 是路由器分配给专家 $i$ 的平均概率，$\alpha$ 是平衡系数。所有专家负载均匀时，该损失取最小值。
 
 **容量因子（Capacity Factor）**
 
@@ -344,7 +340,7 @@ $$
 
 **Expert Choice 路由**
 
-与传统的 token-choose-expert（由 token 选择专家）不同，Expert Choice 让每个专家主动选择要处理的 top-k 个 token。这天然保证每个专家处理相同数量的 token，从根本上解决负载不均衡的问题。
+与传统的 token-choose-expert（由 token 选择专家）不同，Expert Choice 让每个专家主动选择要处理的 top-k 个 token。这从路由机制上保证了每个专家的负载完全均衡（但在自回归解码阶段存在不能跨未来位置选择 token 的限制）。
 
 ### 8.4 AI Infra 关联：Expert Parallelism
 
@@ -362,31 +358,31 @@ GPU 执行计算的基本单位是 kernel：每次从 CPU 调度一个 kernel �
 
 FFN 的前向传播包含多个步骤：GEMM、激活函数、逐元素乘法等。如果每个步骤都作为独立的 kernel 执行，中间结果就需要反复在 HBM 和寄存器/SRAM 之间搬运。对于 SwiGLU FFN，一次前向传播的逐元素操作包括：
 
-1. Swish 激活：gate=x_gate⋅σ(x_gate)（涉及 sigmoid 和逐元素乘法）
-2. 门控乘法：hidden=gate⊗up
+1. Swish 激活：`gate = x_gate * σ(x_gate)`（涉及 sigmoid 和逐元素乘法）
+2. 门控乘法：`hidden = gate ⊗ up`
 
-如果分开执行，gate 向量需要写入 HBM 后再读回来做乘法。融合后，这些操作可以在一个 kernel 内完成——gate 的中间结果驻留在寄存器中，直接与 up 相乘，完全不经过 HBM。
+如果分开执行，`gate` 向量需要写入 HBM 后再读回来做乘法。融合后，这些操作可以在一个 kernel 内完成——`gate` 的中间结果驻留在寄存器中，直接与 `up` 相乘，完全不经过 HBM。
 
 ### 9.2 FFN 中的典型融合场景
 
 **场景一：Swish 激活 + 门控乘法融合**
 
-将 `Swish(gate) * up` 融合为一个 kernel。两个 (N,dff) 的输入产生一个 (N,dff) 的输出，HBM 读写量从 4 次降为 3 次（读 2 次 + 写 1 次，省去了 Swish 中间结果的写入和读回）。
+将 `Swish(gate) * up` 融合为一个 kernel。两个 `(N, d_ff)` 的输入产生一个 `(N, d_ff)` 的输出，HBM 读写量从 5 次（读 3 次 + 写 2 次）降为 3 次（读 2 次 + 写 1 次），省去了 Swish 中间结果的写入和读回。
 
 **场景二：GEMM + 激活融合（Epilogue Fusion）**
 
-在 GEMM kernel 的「收尾阶段」（epilogue）中嵌入激活函数。以 Wgate 的 GEMM 为例，标准流程是：
+在 GEMM kernel 的「收尾阶段」（epilogue）中嵌入激活函数。以 $W_{gate}$ 的 GEMM 为例，标准流程是：
 
-1. kernel A: xgate=xWgate，写入 HBM
-2. kernel B: gate=Swish(xgate)，从 HBM 读出 xgate 并写回 gate
+1. kernel A：`x_gate = x @ W_gate`，写入 HBM
+2. kernel B：`gate = Swish(x_gate)`，从 HBM 读出 `x_gate` 并写回 `gate`
 
 融合后，在 GEMM kernel 的最后一步（将结果写回 HBM 之前），直接在寄存器中对每个输出元素施加 Swish，然后写入 HBM。这样只需一个 kernel 和一次 HBM 写入。
 
 cuBLAS 和 CUTLASS 等 GEMM 库都提供了 epilogue fusion 的接口，支持在 GEMM 输出后拼接自定义的逐元素操作。
 
-**场景三：Wgate 和 Wup 的 GEMM 合并**
+**场景三：$W_{gate}$ 和 $W_{up}$ 的 GEMM 合并**
 
-Wgate 和 Wup 的输入都是同一个 $x$，把两个矩阵沿列方向拼成 (dmodel, 2×dff) 的大矩阵，执行一次大 GEMM，再把输出切成 gate 和 up 两部分。两次 GEMM 并成一次，减少 kernel launch 开销；大 GEMM 的 GPU 利用率通常也优于两个小 GEMM。
+$W_{gate}$ 和 $W_{up}$ 的输入都是同一个 $x$，把两个矩阵沿列方向拼成 `(d_model, 2 * d_ff)` 的大矩阵，执行一次大 GEMM，再把输出切成 `gate` 和 `up` 两部分。两次 GEMM 并成一次，减少 kernel launch 开销；大 GEMM 的 GPU 利用率通常也优于两个小 GEMM。
 
 ```python
 # 分开执行（2 次 GEMM launch）：

@@ -1,5 +1,5 @@
 ---
-title: "实际项目构造及跨翻译单元实现"
+title: "多文件项目结构与跨翻译单元符号共享"
 description: "从多文件项目的编译、链接和跨翻译单元边界出发，整理头文件、符号可见性与工程组织方式。"
 pubDate: 2026-10-26
 tags:
@@ -91,7 +91,7 @@ std::string g_appName = "MyApp";
 // ===== src/network.cpp =====
 #include "config.h"
 
-void sendRequest() {
+void SendRequest() {
     // 使用其他翻译单元定义的变量
     for (int i = 0; i < g_maxRetries; ++i) {
         // ...
@@ -151,9 +151,9 @@ const std::string& GetAppName() { return appName; }
 
 ---
 
-### 方法 3：单例模式（Meyer's Singleton）
+### 方法 3：单例模式（Meyers' Singleton）
 
-这是 C++ 中最优雅的全局访问方式，利用**局部静态变量**解决跨翻译单元的初始化顺序问题：
+利用**局部静态变量**实现的单例模式，可以解决跨翻译单元的初始化顺序问题：
 
 ```cpp
 // ===== include/config.h =====
@@ -188,7 +188,7 @@ private:
 // ===== src/network.cpp =====
 #include "config.h"
 
-void sendRequest() {
+void SendRequest() {
     // 跨翻译单元访问
     int retries = Config::Instance().GetMaxRetries();
 }
@@ -198,7 +198,7 @@ void sendRequest() {
 
 - `static Config inst` 是**局部静态变量**，第一次调用 `Instance()` 时才初始化
 
-- C++11 标准保证线程安全，编译器会插入同步机制
+- C++11 标准保证局部静态变量的初始化过程线程安全，编译器会插入同步机制（对象成员的后续并发读写仍需自行同步）
 
 - 不存在「静态初始化顺序灾难」，因为初始化被延迟到**运行时首次使用**
 
@@ -278,21 +278,21 @@ int main() {
 |陷阱|原因|解决|
 |:--|:--|:--|
 |**头文件中定义变量**|`#include` 导致多个翻译单元重复定义|头文件里只放 `extern` 声明；定义放在单个 `.cpp`|
-|**初始化顺序依赖**|翻译单元 A 的全局变量依赖翻译单元 B 的全局变量|改用局部静态变量（Meyer's Singleton）延迟初始化|
+|**初始化顺序依赖**|翻译单元 A 的全局变量依赖翻译单元 B 的全局变量|改用局部静态变量（Meyers' Singleton）延迟初始化|
 |**多线程竞争**|多个线程同时读写全局变量|加锁（`std::mutex`），或用原子类型|
-|**DLL 边界问题**|跨动态库使用全局变量，每个 DLL 有自己副本|显式导出/导入符号（`__declspec(dllexport/dllimport)`）|
+|**DLL 边界问题**|跨动态库使用全局变量，每个 DLL 可能各自持有一份副本|显式导出/导入符号（Windows 下用 `__declspec(dllexport/dllimport)`，GCC/Clang 下可用可见性属性控制）|
 
 ---
 
 ## 选型建议
 
-实际项目中，代码必然拆成多个翻译单元。跨翻译单元共享变量，靠的是**链接器在多个 `.o` 文件之间匹配同名符号**。
+实际项目中，代码通常会拆成多个翻译单元。跨翻译单元共享变量，靠的是**链接器在多个 `.o` 文件之间匹配同名符号**。
 
 - **小型项目/底层代码**：用 `extern` 全局变量
 
 - **一般工程代码**：用函数接口封装
 
-- **需要全局唯一实例**：用 Meyer's Singleton（局部静态变量）
+- **需要全局唯一实例**：用 Meyers' Singleton（局部静态变量）
 
 - **大型/可测试项目**：用依赖注入，减少全局状态
 
