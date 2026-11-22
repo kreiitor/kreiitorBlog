@@ -5,10 +5,3 @@ export function formatDate(value: Date) {
 		day: 'numeric',
 	}).format(value);
 }
-
-export function formatYearMonth(value: Date) {
-	return new Intl.DateTimeFormat('zh-CN', {
-		year: 'numeric',
-		month: 'short',
-	}).format(value);
-}

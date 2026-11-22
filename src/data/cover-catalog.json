@@ -1,7 +1,0 @@
-[
-  { "id": "research", "label": "研究与评测", "family": "article", "description": "用于模型评测、实验设计和研究问题。" },
-  { "id": "reading", "label": "论文与阅读", "family": "article", "description": "用于论文阅读、研究方法与知识整理。" },
-  { "id": "math", "label": "数学与学习", "family": "series", "description": "用于数学概念、概率与优化专题。" },
-  { "id": "systems", "label": "系统与基础设施", "family": "series", "description": "用于软件系统、数据与 AI 基础设施。" },
-  { "id": "algorithm", "label": "算法与编程", "family": "article", "description": "用于算法结构、编程语言与工程工具。" }
-]

@@ -117,16 +117,16 @@ const srcset = (photo: typeof photos[number], format: 'avif' | 'webp') =>
 <style>
  .gallery-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 32px; align-items: start; }
  .photo-card { margin-bottom: 32px; }
- .photo-frame { display: block; padding: 10px; background: var(--color-surface); border: 1px solid var(--color-blossom-line); border-radius: var(--radius-card); cursor: zoom-in; box-shadow: var(--shadow-whisper); }
+ .photo-frame { display: block; padding: 10px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-card); cursor: zoom-in; box-shadow: var(--shadow-whisper); }
  .photo-frame picture { display: block; border-radius: var(--radius-inner); background: var(--color-surface-soft); overflow: hidden; }
- .photo-frame:hover { border-color: var(--color-blossom); box-shadow: var(--shadow-soft); }
+ .photo-frame:hover { border-color: var(--color-line-strong); box-shadow: var(--shadow-soft); }
  .photo-frame { transition: border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-slow) var(--ease-out-expo); }
  .photo-frame img { width: 100%; height: auto; display: block; border-radius: var(--radius-inner); opacity: 0; scale: 1.015; transition: opacity var(--dur-slower) var(--ease-smooth),scale var(--dur-slower) var(--ease-out-expo); }
  .photo-frame.is-loaded img { opacity: 1; scale: 1; }
  @media (hover: hover) { .photo-frame:hover img { scale: 1.012; } }
  figcaption { padding: 12px 2px 0; color: var(--color-ink-soft); font-size: 14px; }
  :global(html.photo-is-open) { overflow: hidden; }
- .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-blossom-line); border-radius: 16px; background: var(--color-surface); color: var(--color-ink); }
+ .photo-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px,calc(100% - 32px)); max-height: 94dvh; padding: 12px 20px; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); color: var(--color-ink); }
  .photo-dialog[open] { display: flex; flex-direction: column; }
  .photo-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
  .photo-toolbar,.photo-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; font-size: 14px; }

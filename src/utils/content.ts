@@ -5,11 +5,7 @@ import { resolveCover } from './covers';
 export type PostEntry = CollectionEntry<'posts'>;
 export type ProjectEntry = CollectionEntry<'projects'>;
 
-export type UpdateEntry =
-	| { type: 'post'; title: string; summary: string; href: string; pubDate: Date; tags: string[] }
-	| { type: 'project'; title: string; summary: string; href: string; pubDate: Date; tags: string[] };
-
-export function sortByPubDate<T extends { data: { pubDate: Date } }>(items: T[]) {
+function sortByPubDate<T extends { data: { pubDate: Date } }>(items: T[]) {
 	return [...items].sort((left, right) => right.data.pubDate.valueOf() - left.data.pubDate.valueOf());
 }
 
@@ -19,18 +15,6 @@ export function getPublishedPosts(posts: PostEntry[]) {
 
 export function getProjects(projects: ProjectEntry[]) {
 	return sortByPubDate(projects);
-}
-
-export function getFeaturedPosts(posts: PostEntry[], limit = 3) {
-	return getPublishedPosts(posts)
-		.filter((post) => post.data.featured)
-		.slice(0, limit);
-}
-
-export function getFeaturedProjects(projects: ProjectEntry[], limit = 3) {
-	return getProjects(projects)
-		.filter((project) => project.data.featured)
-		.slice(0, limit);
 }
 
 export function countProseWords(markdown: string) {
@@ -46,7 +30,7 @@ export function countProseWords(markdown: string) {
 	return han + latin;
 }
 
-export function estimateReadingTime(text: string) {
+function estimateReadingTime(text: string) {
 	const hanCharacters = (text.match(/\p{Script=Han}/gu) ?? []).length;
 	const latinWords = (text.replace(/\p{Script=Han}/gu, ' ').match(/[A-Za-z0-9_]+/g) ?? []).length;
 	return Math.max(1, Math.ceil((hanCharacters + latinWords) / 300));
@@ -159,26 +143,4 @@ export function getRelatedPosts(post: PostEntry, posts: PostEntry[], limit = 3):
 		)
 		.slice(0, limit)
 		.map((item) => item.candidate);
-}
-
-export function getLatestUpdates(posts: PostEntry[], projects: ProjectEntry[], limit = 5): UpdateEntry[] {	const merged: UpdateEntry[] = [
-		...getPublishedPosts(posts).map((post) => ({
-			type: 'post' as const,
-			title: post.data.title,
-			summary: post.data.description,
-			href: `/blog/${post.id}/`,
-			pubDate: post.data.pubDate,
-			tags: post.data.tags,
-		})),
-		...getProjects(projects).map((project) => ({
-			type: 'project' as const,
-			title: project.data.title,
-			summary: project.data.summary,
-			href: `/projects/${project.id}/`,
-			pubDate: project.data.pubDate,
-			tags: project.data.tags,
-		})),
-	];
-
-	return merged.sort((left, right) => right.pubDate.valueOf() - left.pubDate.valueOf()).slice(0, limit);
 }

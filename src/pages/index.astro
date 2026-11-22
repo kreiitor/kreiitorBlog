@@ -95,9 +95,9 @@ const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
       <a href={withBase('/notes/')} class="zen-btn zen-btn-primary">翻阅长卷 <Icon name="arrow" size={15}/></a>
       <a href={withBase('/blog/')} class="zen-btn zen-btn-secondary">全部札记</a>
       <ul class="socials" aria-label="联系与订阅">
-       <li><a href={siteConfig.socialLinks[0].href} target="_blank" rel="noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.030-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a></li>
-       <li><a href={`mailto:${siteConfig.email}`} aria-label="Email"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg></a></li>
-       <li><a href={withBase('/rss.xml')} aria-label="RSS 订阅"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.3" fill="currentColor"/></svg></a></li>
+       <li><a href={siteConfig.socialLinks[0].href} target="_blank" rel="noreferrer" aria-label="GitHub"><Icon name="github" size={17}/></a></li>
+       <li><a href={`mailto:${siteConfig.email}`} aria-label="Email"><Icon name="mail" size={17}/></a></li>
+       <li><a href={withBase('/rss.xml')} aria-label="RSS 订阅"><Icon name="rss" size={17}/></a></li>
       </ul>
      </div>
      <p class="hero-stats">

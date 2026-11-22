@@ -61,16 +61,15 @@ src/content/posts/      札记、长卷章节与闲笔
 src/content/series/     长卷（学习专题）
 src/content/projects/   项目
 src/data/site.ts        身份与导航配置
-src/data/cover-catalog.json  封面元数据
 src/pages/              页面路由
 src/components/         页面组件
 src/styles/global.css   颜色、间距、字体层级与组件样式
 src/styles/fonts.css    自托管字体声明
 public/covers/research/ 主题封面 WebP 与同名分享 PNG
 public/figures/         正文自绘 SVG 插图
-public/gallery/         隐藏画廊的原图与优化候选图
-docs/templates/         文章、章节、专题、项目模板
-docs/cover-catalog.html 离线封面选图册
+public/gallery/         画廊原图与优化图
+docs/font-manifest.json 字体子集清单
+firebase.json           Firebase Hosting 静态托管配置
 scripts/                构建、资源生成与校验脚本
 ```
 
@@ -135,7 +134,7 @@ cover: /covers/research/research.webp
 ---
 ```
 
-必填字段是 `title`、`summary`、`pubDate`、`tags`、`status`、`featured`。`status` 取“规划中”“进行中”或“已完成”。`repoUrl`、`demoUrl`、`cover` 可选；没有公开地址时直接省略，不要写占位链接。`featured` 是保留的精选标记，当前首页不展示项目列表。
+必填字段是 `title`、`summary`、`pubDate`、`tags`、`status`、`featured`。`status` 取“规划中”“进行中”或“已完成”。`repoUrl`、`demoUrl`、`cover` 可选；没有公开地址时直接省略，不要写占位链接。`featured` 是保留的精选标记；当前首页第四排按时间展示近期研究项目，不依据此字段筛选。
 
 项目没有草稿字段。未准备发布的 Markdown 文件可以放在内容目录中，但文件名必须以 `_` 开头；加载器会忽略这类文件。
 
@@ -159,16 +158,16 @@ cover: /covers/research/research.webp
 
 ### 写作与发布
 
-1. 从 `docs/templates/article.md`、`chapter.md`、`series.md` 或 `project.md` 复制起始文件。
+1. 参考上文对应类型的 frontmatter 模板在 `src/content/` 下新建 Markdown 文件。
 2. 修改 frontmatter 与正文，完成前保持草稿状态（文章）或使用 `_` 前缀（项目 / 系列）。
-3. 运行 `npm run check`、`npm run test:unit`、`npm run build`，并在 `npm run preview` 中检查实际页面。
+3. 批次收尾时运行 `npm run verify`（包含类型检查、单元测试与生产构建/站点检查），并在 `npm run preview` 中检查实际页面。
 4. 确认改动范围后提交并推送；构建本身不会提交或发布。
 
 新增或修改正文后，如果出现字体子集未覆盖的生僻字，浏览器会使用系统宋体回退。内容定稿后可以统一更新字体子集，见下文“字体”。
 
 ## 首页与阅读功能
 
-首页顺序为：导言主卡与「近况 · 武汉」状态卡首排、支持按标签筛选的精密札记索引与 2×2 真实照片切片及最新闲笔、3 部长卷专著书架、近 12 个月写作柱状图与来信卡片。各块按发布日期与画廊数据自动生成。
+首页顺序为：导言主卡与「近况 · 武汉」状态卡首排、支持按标签筛选的精密札记索引与 2×2 真实照片切片及最新闲笔、3 部长卷专著书架、近期研究项目概览、近 12 个月写作柱状图与来信卡片。各块按发布日期与画廊数据自动生成。
 
 每篇文章完整渲染在同一页面，保留正文、MathML、原地址和章节锚点。文章页提供 h2/h3 目录、浏览器查找、复制、打印和阅读进度；阅读记录需要读者主动开启，只保存在本机 `localStorage`。顶部搜索或 `Ctrl/Cmd K` 打开快捷搜索，查询与完整搜索页共享；`Escape` 关闭并恢复焦点。
 
@@ -176,7 +175,7 @@ cover: /covers/research/research.webp
 
 ## 画廊（隐藏页）
 
-画廊 `/gallery/` 不进导航，只从关于页连点三次右侧标志进入；`#photo-N` 直接打开对应照片。原图放在 `public/gallery/`。文件名可以使用中文，但应避免空格和特殊符号；**优化脚本只处理 `.jpg` / `.jpeg`**，新增照片请使用 JPEG。
+画廊 `/gallery/` 不进顶部主导航，可从首页「闲笔」2×2 照片网格或关于页连点三次右侧标志进入；`#photo-N` 直接打开对应照片。原图放在 `public/gallery/`。文件名可以使用中文，但应避免空格和特殊符号；**优化脚本只处理 `.jpg` / `.jpeg`**，新增照片请使用 JPEG。
 
 新增一张照片：
 
@@ -202,17 +201,24 @@ cover: /covers/research/research.webp
 - 学习专题的 `cover` 同时用于专题卡片、目录和分享预览；章节分享图优先使用自己的 `cover`，没有时继承专题封面。
 - 站点页面目前不显示任何封面：文章、学习专题和项目的卡片与详情页都只用文字排版，`cover` 只用于分享预览图。
 
-选择封面时打开 [离线选图册](docs/cover-catalog.html)，按用途筛选、搜索并复制 `cover: /covers/research/…webp`。选图册内嵌图片，不需要启动网站或联网。
+可选封面清单（仅用于社交分享预览图）：
 
-封面使用柔和色块和抽象线条表达主题，浅色与深色界面使用同一张图片。新增封面时将 WebP 放入 `public/covers/research/`，在 `src/data/cover-catalog.json` 登记，再运行：
+| 路径 | 用途 | 适用场景 |
+| --- | --- | --- |
+| `/covers/research/research.webp` | 研究与评测 | 模型评测、实验设计与研究问题 |
+| `/covers/research/reading.webp` | 论文与阅读 | 论文阅读、研究方法与知识整理 |
+| `/covers/research/math.webp` | 数学与学习 | 数学概念、概率与优化专题 |
+| `/covers/research/systems.webp` | 系统与基础设施 | 软件系统、数据与 AI 基础设施 |
+| `/covers/research/algorithm.webp` | 算法与编程 | 算法结构、编程语言与工程工具 |
+
+修改 Logo 或新增封面 WebP 后运行：
 
 ```sh
-npm run art:prepare
-npm run check
-npm run build
+npm run brand:prepare
+npm run verify
 ```
 
-`art:prepare` 会同步品牌标记、favicon、封面的同名分享 PNG、站点分享图与离线选图册，不会重新绘制或覆盖封面。只更新选图册时运行 `npm run covers:catalog`。
+`brand:prepare` 会从 `public/logo.svg` 同步生成 `favicon.svg`、`avatar.svg`、`favicon.ico`、站点分享图以及 `public/covers/research/` 中每张 WebP 对应的 1200×630 分享 PNG。
 
 ## 字体
 
@@ -250,16 +256,33 @@ GitHub Pages 通过同名仓库 Variables 覆盖 `PUBLIC_GISCUS_REPO`、`PUBLIC_
 
 ## 部署
 
+### GitHub Pages
+
 推送到 `main` 或 `master` 会执行 `.github/workflows/deploy.yml`。在 GitHub 仓库 Settings → Pages 选择 GitHub Actions。
 
 工作流会运行 `npm run verify`（单元测试 + 生产构建 + 类型检查）并部署 `dist/`。站点域名与子目录由仓库变量 `SITE_URL` 和 `BASE_PATH` 调整；未设置时使用 GitHub Pages 默认地址和仓库名。
 
+### Firebase Hosting（Google 免费静态部署）
+
+根目录已配置 [`firebase.json`](firebase.json)（发布目录 `dist`，启用 `cleanUrls` 与 `trailingSlash`，并为 `/_astro/**` 与 `/gallery/optimized/**` 设置长效缓存）。Spark 免费套餐提供 **10 GB** 托管存储与 **10 GB/月** 传输流量及自动 HTTPS。
+
+首次绑定项目并部署：
+
+```powershell
+npx -y firebase-tools@latest login
+npx -y firebase-tools@latest use <PROJECT_ID>          # 或 projects:create 创建新项目
+$env:SITE_URL = "https://<PROJECT_ID>.web.app"
+$env:BASE_PATH = "/"
+npm run verify
+npx -y firebase-tools@latest deploy --only hosting
+```
+
+本地调试后记得清理环境变量（`Remove-Item Env:SITE_URL, Env:BASE_PATH`）。
+
 ## 文档与资产
 
-- `docs/templates/`：文章、学习章节、学习专题、项目四个起始模板。
-- `docs/cover-catalog.html`：离线封面选图册，由 `npm run covers:catalog` 生成。
 - `docs/font-manifest.json`：字体子集的大小与哈希记录，由 `npm run fonts:prepare` 更新。
-- 历史设计、审查和性能记录已删除；如需回溯，请查看 Git 历史。
+- 其余内容模板与封面清单均整合在本文件中，历史设计稿与审查流水账已删除；如需回溯请查看 Git 历史。
 
 ## 许可
 

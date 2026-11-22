@@ -27,7 +27,8 @@ const tocEntries = toc.map(heading => {
  if (heading.depth === 2) currentParent = heading.slug;
  return { ...heading, parent: heading.depth === 3 ? currentParent : undefined };
 });
-const group = post.data.series ? getLearningSeries(await getCollection('series'), await getCollection('posts')).find(item => item.entry.id === post.data.series) : undefined;
+const allPosts = await getCollection('posts');
+const group = post.data.series ? getLearningSeries(await getCollection('series'), allPosts).find(item => item.entry.id === post.data.series) : undefined;
 const section = sections[post.data.category];
 const seriesHref = group ? `/notes/${group.entry.id}/` : section.href;
 const chapterIndex = group?.chapters.findIndex(item => item.id === post.id) ?? -1;
@@ -36,7 +37,7 @@ const nextChapter = group?.chapters[chapterIndex + 1];
 const previous = previousChapter ? { href: `/blog/${previousChapter.id}/`, title: previousChapter.data.title, label: '上一章' } : undefined;
 const next = nextChapter ? { href: `/blog/${nextChapter.id}/`, title: nextChapter.data.title, label: '下一章' } : undefined;
 const shareCover = resolveCover(post.data.cover ?? (group ? group.entry.data.cover ?? DEFAULT_SERIES_COVER : getPostCover(post)));
-const related = getRelatedPosts(post, await getCollection('posts'), 3);
+const related = getRelatedPosts(post, allPosts, 3);
 ---
 <BaseLayout title={post.data.title} description={post.data.description} image={shareCover} type="article" publishedTime={post.data.pubDate} updatedTime={post.data.updatedDate} tags={post.data.tags} searchWeight={1} compactFooter section={post.data.category}>
  <section class="page-shell reading-shell">
