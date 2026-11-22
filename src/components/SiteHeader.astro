@@ -5,10 +5,9 @@ import Icon from './Icon.astro';
 import brandSvg from '../../public/logo.svg?raw';
 interface Props { currentPath: string; section?: string; }
 const { currentPath, section } = Astro.props;
-// 三个栏目的文章都在 /blog/ 下，所以文章页靠 section 指明归属，列表页才按路径判断。
 const active = (item: { href: string; section?: string }) => section ? item.section === section : item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href);
 ---
-<header class="site-header" data-over-hero={currentPath === '/' ? 'true' : undefined}>
+<header class="site-header">
  <div class="page-shell header-inner">
   <a href={withBase('/')} class="brand" title="首页">
    <span class="brand-mark" aria-hidden="true" set:html={brandSvg}/>
@@ -20,19 +19,19 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
   </nav>
   <div class="header-actions">
    <a href={withBase('/search/')} class="header-search" aria-label="搜索文章" data-search-link>
-    <Icon name="search" size={20}/>
-    <span>搜索</span><kbd aria-hidden="true">⌘ K</kbd>
+    <Icon name="search" size={16}/>
+    <span>搜索</span><kbd aria-hidden="true">⌘K</kbd>
    </a>
    <button type="button" class="theme-toggle" data-theme-toggle aria-label="主题：浅色" title="主题：浅色">
-    <svg class="icon-light" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
-    <svg class="icon-dark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+    <svg class="icon-light" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+    <svg class="icon-dark" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
    </button>
    <a href={siteConfig.socialLinks[0].href} class="header-github" target="_blank" rel="noreferrer" aria-label="GitHub 主页">
-    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+    <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.86c-2.78.6-3.37-1.18-3.37-1.18-.45-1.15-1.11-1.45-1.11-1.45-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
    </a>
    <details class="mobile-menu">
     <summary aria-label="展开导航" aria-expanded="false"><span class="menu-icon menu-icon-open"><Icon name="menu"/></span><span class="menu-icon menu-icon-close"><Icon name="close"/></span></summary>
-    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/archive/')}>归档</a></nav>
+    <nav aria-label="移动端导航">{navLinks.map(item => <a href={withBase(item.href)} aria-current={active(item) ? 'page' : undefined}>{item.label}</a>)}<a href={withBase('/projects/')}>研究项目</a><a href={withBase('/archive/')}>归档</a></nav>
    </details>
   </div>
  </div>
@@ -65,13 +64,11 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
   if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
  });
 
- // 两态循环：浅色 ⇄ 深色。首次访问由 BaseLayout 按系统偏好写入存储，
- // 之后按钮只在这两个显式值之间切换（语义见 BaseLayout 的防闪白脚本）。
  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach(btn => {
   btn.addEventListener('click', () => {
    const cur = btn.getAttribute('data-pref') === 'dark' ? 'dark' : 'light';
    const next = cur === 'dark' ? 'light' : 'dark';
-   try { localStorage.setItem('theme', next); } catch { /* 隐私模式下存储不可用，仍就地切换生效 */ }
+   try { localStorage.setItem('theme', next); } catch {}
    const root = document.documentElement;
    root.classList.add('theme-switching');
    if (typeof window.__applyTheme === 'function') window.__applyTheme(next);
@@ -79,71 +76,61 @@ const active = (item: { href: string; section?: string }) => section ? item.sect
    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
   });
  });
- // 首帧同步按钮状态（head 内联脚本执行时按钮还不存在）
  if (typeof window.__applyTheme === 'function') window.__applyTheme();
 </script>
 <style>
- .site-header { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb,var(--color-paper) 82%,transparent); border-bottom: 1px solid var(--color-line); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); transition: background-color var(--dur-slow) var(--ease-smooth),border-color var(--dur-slow) var(--ease-smooth); view-transition-name: site-header; }
- /* 首页主视觉上方：透明底，与主视觉连成一张纸；离开主视觉后由 Motion.astro 去掉 data-over-hero。 */
- .site-header[data-over-hero="true"] { background: transparent; border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
- /* 高度固定：滚动越过阈值时改变高度会让整页内容跳动。 */
- .header-inner { height: var(--header-height); display: flex; justify-content: space-between; align-items: center; gap: 30px; }
- .brand { display: flex; gap: 12px; align-items: center; color: var(--color-ink); }
- .brand-mark { display: flex; align-items: center; transition: transform var(--dur-slow) var(--ease-out-expo); }
- .brand-mark :global(svg) { width: 32px; height: 32px; display: block; }
+ /* Warm Porcelain Sticky Header */
+ .site-header { position: sticky; top: 0; z-index: 40; background: var(--color-glass); border-bottom: 1px solid var(--color-line); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); transition: background-color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth),box-shadow var(--dur-base) var(--ease-smooth); view-transition-name: site-header; }
+ .site-header[data-scrolled="true"] { background: var(--color-glass-strong); box-shadow: 0 6px 20px -14px var(--color-head-shadow); }
+ .header-inner { height: var(--header-height); display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+ .brand { display: flex; gap: 11px; align-items: center; color: var(--color-ink); }
+ .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--color-line); background: var(--color-surface); box-shadow: var(--shadow-whisper); transition: transform var(--dur-slow) var(--ease-out-expo),border-color var(--dur-base); }
+ .brand-mark :global(svg) { width: 22px; height: 22px; display: block; }
  .brand-mark :global(.brand-ink) { fill: var(--color-ink); transition: fill var(--dur-base); }
- .brand-mark :global(.brand-accent) { fill: var(--color-accent); }
+ .brand-mark :global(.brand-accent) { fill: var(--color-vermilion); }
  .brand-mark :global(.brand-far-wing) { transition: fill-opacity var(--dur-base); }
- .brand:is(:hover,:focus-visible) .brand-mark { transform: translateY(-2px) rotate(-4deg); }
- .brand:is(:hover,:focus-visible) .brand-mark :global(.brand-far-wing) { fill-opacity: .75; }
- .brand-name { display: flex; align-items: baseline; font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: .08em; line-height: 1.2; }
- .brand-subtitle { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--color-line-strong); color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; letter-spacing: .08em; white-space: nowrap; }
- .desktop-nav { display: flex; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--color-boundary); border-radius: 999px; background: color-mix(in srgb,var(--color-surface) 55%,transparent); }
- .desktop-nav a { position: relative; z-index: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px; color: var(--color-ink-soft); font-size: 14px; font-weight: 500; transition: color var(--dur-base) var(--ease-smooth); }
- .desktop-nav a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-hover); opacity: 0; transform: scale(.85); transition: opacity var(--dur-base),transform var(--dur-base) var(--ease-out-expo); }
- .desktop-nav a:is(:hover,:focus-visible) { color: var(--color-ink); }
- .desktop-nav a:is(:hover,:focus-visible)::before { opacity: 1; transform: none; }
- /* 暗色下不再把当前项整块反相成近白色亮块，改用抬起的表面 + 朱砂字。 */
- .desktop-nav a[aria-current] { color: var(--color-nav-current-ink); font-weight: 600; }
- .desktop-nav a[aria-current]::before { background: var(--color-nav-current-bg); opacity: 1; transform: none; }
+ .brand:is(:hover,:focus-visible) .brand-mark { transform: translateY(-1px) rotate(-4deg); border-color: var(--color-accent); }
+ .brand-name { display: flex; align-items: baseline; font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; }
+ .brand-subtitle { margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--color-line-strong); color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; white-space: nowrap; }
+ .desktop-nav { display: flex; gap: 4px; align-items: center; padding: 4px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-whisper); }
+ .desktop-nav a { position: relative; z-index: 0; display: inline-flex; align-items: center; min-height: 34px; padding: 0 15px; border-radius: 999px; color: var(--color-ink-soft); font-size: 13.5px; font-weight: 500; transition: color var(--dur-base) var(--ease-smooth),background-color var(--dur-base) var(--ease-smooth); }
+ .desktop-nav a:is(:hover,:focus-visible) { color: var(--color-ink); background: var(--color-surface-soft); }
+ .desktop-nav a[aria-current] { color: var(--color-nav-current-ink); background: var(--color-nav-current-bg); font-weight: 600; }
  .header-actions { display: flex; align-items: center; gap: 6px; }
- .header-search { display: flex; min-width: 44px; justify-content: center; min-height: 40px; gap: 10px; align-items: center; padding: 0 8px 0 14px; border: 1px solid var(--color-boundary); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base); }
- .header-search:hover { color: var(--color-ink); border-color: var(--color-line-strong); background: var(--color-surface); }
- kbd { padding: 1px 7px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-surface-soft); font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-muted); }
- .header-github,.theme-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 999px; color: var(--color-ink-soft); transition: color var(--dur-base),background-color var(--dur-base); }
- .header-github:hover,.theme-toggle:hover { color: var(--color-ink); background: var(--color-surface-hover); }
- /* 两态主题切换：data-pref 未设置时默认显示浅色图标，避免 JS 未跑时按钮空白。 */
- .theme-toggle svg { display: none; }
+ .header-search { display: flex; min-width: 44px; justify-content: center; min-height: 38px; gap: 8px; align-items: center; padding: 0 8px 0 14px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-whisper); color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base); }
+ .header-search:hover { color: var(--color-ink); border-color: var(--color-accent); background: var(--color-surface-soft); }
+ kbd { padding: 1px 7px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface-soft); font-family: var(--font-mono); font-size: 10.5px; color: var(--color-ink-muted); }
+ .header-github,.theme-toggle { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-whisper); color: var(--color-ink-soft); transition: color var(--dur-base),background-color var(--dur-base),border-color var(--dur-base); }
+ .header-github:hover,.theme-toggle:hover { color: var(--color-accent-strong); border-color: var(--color-accent); background: var(--color-surface-soft); }
+ .theme-toggle svg { display: none; transition: transform var(--dur-slow) var(--ease-out-expo); }
  .theme-toggle .icon-light { display: block; }
  .theme-toggle[data-pref="light"] .icon-dark,
  .theme-toggle[data-pref="dark"] .icon-light { display: none; }
  .theme-toggle[data-pref="dark"] .icon-dark { display: block; }
  .theme-toggle:active svg { transform: rotate(-30deg) scale(.9); }
- .theme-toggle svg { transition: transform var(--dur-slow) var(--ease-out-expo); }
  .mobile-menu { display: none; }
  .menu-backdrop { display: none; }
  @media (max-width: 900px) {
-  .header-inner { gap: 16px; }
-  .brand-name { font-size: 18px; } .brand-mark :global(svg) { width: 28px; height: 28px; }
+  .header-inner { gap: 12px; }
+  .brand-name { font-size: 17px; }
   .desktop-nav,.header-search span,kbd,.header-github { display: none; }
-  .header-search { padding: 0; border: 0; min-height: 44px; }
-  .header-actions { gap: 2px; }
+  .header-search { padding: 0; border-color: var(--color-line); min-height: 40px; width: 40px; }
+  .header-actions { gap: 6px; }
   .mobile-menu { display: block; }
-  .mobile-menu summary { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 10px; cursor: pointer; list-style: none; border-radius: 999px; transition: background-color var(--dur-base) var(--ease-smooth); }
-  .mobile-menu summary:hover { background: var(--color-surface-hover); }
+  .mobile-menu summary { display: flex; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-glass-strong); cursor: pointer; list-style: none; transition: background-color var(--dur-base) var(--ease-smooth); }
+  .mobile-menu summary:hover { background: var(--color-surface); }
   .mobile-menu summary::-webkit-details-marker { display: none; }
   .mobile-menu .menu-icon { display: flex; align-items: center; justify-content: center; }
   .mobile-menu .menu-icon-close { display: none; }
   .mobile-menu[open] .menu-icon-open { display: none; }
   .mobile-menu[open] .menu-icon-close { display: flex; }
-  .site-header:has(.mobile-menu[open]) .menu-backdrop { display: block; position: absolute; top: 100%; left: 0; width: 100%; height: calc(100dvh - var(--header-height)); background: var(--color-overlay); z-index: -1; }
-  .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100dvh - var(--header-height)); overflow-y: auto; overscroll-behavior: contain; padding: 8px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-soft); animation: menuSlide var(--dur-base) var(--ease-out-expo); }
-  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; min-height: 52px; border-bottom: 1px solid var(--color-line); font-family: var(--font-display); font-size: 18px; transition: color var(--dur-base) var(--ease-smooth),padding-left var(--dur-base) var(--ease-out-expo); }
-  .mobile-menu nav a::after { content: '→'; color: var(--color-ink-muted); font-family: var(--font-sans); font-size: 14px; }
+  .site-header:has(.mobile-menu[open]) .menu-backdrop { display: block; position: absolute; top: 100%; left: 0; width: 100%; height: calc(100dvh - var(--header-height)); background: var(--color-overlay); backdrop-filter: blur(8px); z-index: -1; }
+  .mobile-menu nav { position: absolute; top: 100%; z-index: 1; left: 0; width: 100%; max-height: calc(100dvh - var(--header-height)); overflow-y: auto; overscroll-behavior: contain; padding: 12px max(24px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); background: var(--color-paper); border-bottom: 1px solid var(--color-line); box-shadow: var(--shadow-lift); animation: menuSlide var(--dur-base) var(--ease-out-expo); }
+  .mobile-menu nav a { display: flex; align-items: center; justify-content: space-between; min-height: 52px; border-bottom: 1px solid var(--color-line); font-family: var(--font-display); font-size: 17px; font-weight: 600; transition: color var(--dur-base) var(--ease-smooth),padding-left var(--dur-base) var(--ease-out-expo); }
+  .mobile-menu nav a::after { content: '→'; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 13px; }
   .mobile-menu nav a:is(:hover,:focus-visible) { color: var(--color-accent); padding-left: 4px; }
   .mobile-menu nav a[aria-current] { color: var(--color-accent); }
  }
- /* 420 是极窄屏的内容级微调，不是布局档位；其余宽度阈值只用 600 / 900 / 1100。 */
  @media (max-width: 420px) { .brand-subtitle { display: none; } }
  @keyframes menuSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 </style>

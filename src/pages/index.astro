@@ -2,525 +2,552 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
-import HeroScenery from '../components/HeroScenery.astro';
 import { siteConfig } from '../data/site';
-import { getPublishedPosts, getTagSummaries } from '../utils/content';
+import { photos } from '../data/photos';
+import { countProseWords, getProjects, getPublishedPosts, getReadingTime, getTagSummaries } from '../utils/content';
 import { getLearningSeries } from '../utils/series';
 import { formatDate } from '../utils/date';
 import { withBase } from '../utils/url';
-import avatarSvg from '../../public/avatar.svg?raw';
 import { sections } from '../data/sections';
 
 const posts = await getCollection('posts');
 const publishedPosts = getPublishedPosts(posts);
 const series = getLearningSeries(await getCollection('series'), posts);
-const seriesTitle = new Map(series.map(item => [item.entry.id, item.entry.data.title]));
-const articles = publishedPosts.filter(post => post.data.category === 'knowledge').slice(0, 6);
-const notes = publishedPosts.filter(post => post.data.category === 'course').slice(0, 6);
-const jottings = publishedPosts.filter(post => post.data.category === 'writing').slice(0, 3);
-const tags = getTagSummaries(posts, await getCollection('projects')).slice(0, 6);
+const projects = getProjects(await getCollection('projects'));
 
-// 字数：汉字逐字计，拉丁字母按词计。去掉代码块和标记，只统计内容。
-const words = publishedPosts.reduce((sum, post) => {
- let body = post.body ?? '';
- // 去掉代码块内容（<code>...</code> 和 <pre>...</pre>）
- body = body.replace(/<(code|pre)[^>]*>[\s\S]*?<\/\1>/g, '');
- // 去掉 HTML 标签
- body = body.replace(/<[^>]+>/g, '');
- const han = (body.match(/\p{Script=Han}/gu)?.length ?? 0);
- const eng = (body.match(/\b[a-zA-Z]+\b/g)?.length ?? 0);
- return sum + han + eng;
-}, 0);
-const firstDate = publishedPosts.at(-1)?.data.pubDate;
-const stats: { value: number; unit: string; prefix?: string; since?: string }[] = [
- { value: publishedPosts.length, unit: '篇' },
- { value: Math.round(words / 10000), unit: '万字', prefix: '约 ' },
- ...(firstDate ? [{ value: Math.max(1, Math.ceil((Date.now() - firstDate.getTime()) / 864e5)), unit: '天', since: firstDate.toISOString() }] : []),
-];
+const allArticles = publishedPosts.filter(post => post.data.category === 'knowledge');
+const jottings = publishedPosts.filter(post => post.data.category === 'writing');
+const latestJotting = jottings[0];
+const tags = getTagSummaries(posts, projects).slice(0, 6);
 
-// 时间线：最近 12 个月，每月一个点，大小随篇数变化。
+const knowledgeTagCounts = new Map<string, number>();
+for (const post of allArticles) {
+ for (const tag of post.data.tags) {
+  knowledgeTagCounts.set(tag, (knowledgeTagCounts.get(tag) ?? 0) + 1);
+ }
+}
+const topKnowledgeTags = [...knowledgeTagCounts.entries()]
+ .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
+ .slice(0, 3)
+ .map(([tag]) => tag);
+
+const visibleNoteIds = new Set<string>(allArticles.slice(0, 6).map(post => post.id));
+for (const tag of topKnowledgeTags) {
+ for (const post of allArticles.filter(item => item.data.tags.includes(tag)).slice(0, 6)) {
+  visibleNoteIds.add(post.id);
+ }
+}
+const homeNotePool = allArticles.filter(post => visibleNoteIds.has(post.id));
+
+const words = publishedPosts.reduce((sum, post) => sum + countProseWords(post.body ?? ''), 0);
+const wordsTenK = Math.max(1, Math.round(words / 10000));
+const homePhotos = photos.slice(0, 4);
+const stem = (file: string) => file.replace(/\.jpe?g$/i, '');
+
 const now = new Date();
 const months = Array.from({ length: 12 }, (_, i) => {
  const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
- const items = publishedPosts.filter(post => post.data.pubDate.getUTCFullYear() === date.getFullYear() && post.data.pubDate.getUTCMonth() === date.getMonth());
- return { label: `${date.getMonth() + 1}月`, year: date.getFullYear(), anchor: items.length ? `#m-${date.getFullYear()}-${date.getMonth() + 1}` : '', count: items.length, latest: items[0] };
+ const items = publishedPosts.filter(
+  post => post.data.pubDate.getUTCFullYear() === date.getFullYear() && post.data.pubDate.getUTCMonth() === date.getMonth(),
+ );
+ return {
+  label: `${date.getMonth() + 1}月`,
+  year: date.getFullYear(),
+  anchor: items.length ? `#m-${date.getFullYear()}-${date.getMonth() + 1}` : '',
+  count: items.length,
+  latest: items[0],
+ };
 });
 const peak = Math.max(1, ...months.map(month => month.count));
-// 和柱状图同一个窗口：最近 12 个月，而不是自然年。
 const yearCount = months.reduce((sum, month) => sum + month.count, 0);
 const latest = publishedPosts[0];
-// 头像内联而不是 <img>，鹤纹才能跟随主题取色；去掉 title 与 id，避免和页头标志重复。
-const avatarMark = avatarSvg.replace(/ role="img" aria-labelledby="logo-title"/, '').replace(/<title[^>]*>.*?<\/title>/s, '').replace(/<style>.*?<\/style>/s, '');
-const typed = ['札记', '长卷', '闲笔', '可复用的知识'];
-// 首屏背景里的纸鹤：位置、大小、速度各不相同，负延迟让它们在首帧就已经在半途，不会一起从左边起飞。
-const cranes = [
- { y: 14, size: 26, dur: 62, delay: -8, rise: -6, opacity: .16, bob: 5.2 },
- { y: 26, size: 16, dur: 78, delay: -41, rise: -4, opacity: .11, bob: 4.4 },
- { y: 58, size: 34, dur: 70, delay: -27, rise: -9, opacity: .12, bob: 6.1 },
- { y: 72, size: 18, dur: 88, delay: -63, rise: -5, opacity: .1, bob: 4.8 },
- { y: 38, size: 22, dur: 94, delay: -12, rise: -7, opacity: .13, bob: 5.6 },
- { y: 84, size: 14, dur: 66, delay: -50, rise: -3, opacity: .09, bob: 4.1 },
- { y: 8, size: 12, dur: 84, delay: -72, rise: -2, opacity: .08, bob: 3.8 },
-];
-// 列表右栏只放「月-日」：等宽、短，同一列里不会一行「6 天前」一行完整日期。跨年的才带年份。
 const pad = (n: number) => String(n).padStart(2, '0');
-const shortDate = (date: Date) => `${date.getUTCFullYear() === now.getFullYear() ? '' : `${date.getUTCFullYear()}-`}${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+const shortDate = (date: Date) => `${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
 ---
 <BaseLayout>
- <!-- 必须在首屏解析前同步执行：同一会话第二次进首页时，入场动画在首帧之前就关掉。 -->
  <script is:inline>
   try {
    if (sessionStorage.getItem('welcomed')) document.documentElement.dataset.welcomed = '';
    else sessionStorage.setItem('welcomed', '1');
   } catch {}
  </script>
+
  <div class="home-page" data-pagefind-ignore>
-  <section class="intro" data-home-hero>
-   <div class="ambient" aria-hidden="true">
-    <span class="blob blob-warm"></span><span class="blob blob-ink"></span><span class="grid"></span>
-    <HeroScenery/>
-    <div class="flock">
-     <svg width="0" height="0" class="flock-defs"><symbol id="crane" viewBox="0 0 64 64"><path d="M19 40 32 32 45 40 32 51zM20.5 39 32 33 15 5zM17 39.5 29 49 8 20zM47 39.5 35 49 59 22z" fill="currentColor"/><path d="M32 33 43.5 39 49 5z" fill="currentColor" fill-opacity=".5"/><path d="M8 20 12.5 22.5 4 30z" fill="var(--color-accent)"/></symbol></svg>
-     {cranes.map(crane => <span class="crane" style={`--y:${crane.y}%;--s:${crane.size}px;--dur:${crane.dur}s;--delay:${crane.delay}s;--rise:${crane.rise}vh;--o:${crane.opacity};--bob:${crane.bob}s`}><svg viewBox="0 0 64 64"><use href="#crane"/></svg></span>)}
+  <!-- Row 1: Hero Bento (Left 1.85fr Intro + Right 1fr Status Card) -->
+  <section class="page-shell bento-hero reveal" style="--d:0" aria-label="站点导言与近况">
+   <div class="porcelain-card hero-main">
+    <div class="hero-top">
+     <div class="hero-kicker-row">
+      <span class="eyebrow">KREIITOR · AI4SE &amp; PERSONAL ARCHIVE</span>
+      <span class="hero-issue">{siteConfig.location.split('，')[0]} · {issueCode}</span>
+     </div>
+     <h1 class="hero-title">
+      把读过的、试过的与生活里的光，<br />安静地收在同一处<span class="hero-seal" aria-hidden="true">。</span>
+     </h1>
+     <p class="hero-bio">
+      我是 <strong>{siteConfig.author}</strong>，{siteConfig.role}。白天在论文、程序分析与实验复现里整理秩序，晚上也留给做饭、两只小猫和旅途里的照片。
+     </p>
+    </div>
+
+    <div class="hero-foot">
+     <div class="hero-actions">
+      <a href={withBase('/notes/')} class="zen-btn zen-btn-primary">翻阅长卷 <Icon name="arrow" size={15}/></a>
+      <a href={withBase('/blog/')} class="zen-btn zen-btn-secondary">全部札记</a>
+      <ul class="socials" aria-label="联系与订阅">
+       <li><a href={siteConfig.socialLinks[0].href} target="_blank" rel="noreferrer" aria-label="GitHub"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.030-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a></li>
+       <li><a href={`mailto:${siteConfig.email}`} aria-label="Email"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg></a></li>
+       <li><a href={withBase('/rss.xml')} aria-label="RSS 订阅"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.3" fill="currentColor"/></svg></a></li>
+      </ul>
+     </div>
+     <p class="hero-stats">
+      <span>{String(series.length).padStart(2, '0')} 卷</span>
+      <i aria-hidden="true">·</i>
+      <span>{publishedPosts.length} 篇</span>
+      <i aria-hidden="true">·</i>
+      <span>约 {wordsTenK} 万字</span>
+     </p>
     </div>
    </div>
-   <div class="hero-copy">
-    <div class="avatar reveal" style="--d:0"><span class="avatar-disc" aria-hidden="true" set:html={avatarMark}/></div>
-    <h1 class="greeting reveal" style="--d:1"><span class="word" style="--w:0">Hi,</span> <span class="word" style="--w:1">我是</span> <b class="name word" style="--w:2">kreiitor<svg class="brush" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9c34-5 72-7 110-6 30 1 58 3 84 1" pathLength="1"/></svg></b></h1>
-    <p class="claim reveal" style="--d:2">把读过的、试过的，写成<span class="typed" data-typed={JSON.stringify(typed)} aria-hidden="true"><span data-typed-text>{typed.at(-1)}</span><span class="caret"></span></span><span class="sr-only">札记、长卷与闲笔</span></p>
-    <p class="role reveal" style="--d:3"><span>{siteConfig.role}</span><span class="role-divider" aria-hidden="true"> · </span><span class="role-details">AI 工程 · 程序分析 · 实验复现</span></p>
-    <p class="motto reveal" style="--d:4">「{siteConfig.tagline}。」</p>
-    <p class="stats reveal" style="--d:5">{stats.map((item, index) => <>{index > 0 && <i aria-hidden="true">·</i>}<span>{item.prefix}<b data-count={item.value} data-since={item.since}>{item.value}</b> {item.unit}</span></>)}</p>
-    <ul class="socials reveal" style="--d:6" aria-label="联系与订阅">
-     <li><a href="https://github.com/kreiitor" aria-label="GitHub"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.030-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a></li>
-     <li><a href={`mailto:${siteConfig.email}`} aria-label="Email"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg></a></li>
-     <li><a href={withBase('/rss.xml')} aria-label="RSS 订阅"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.3" fill="currentColor"/></svg></a></li>
-     <li><a href={withBase('/search/')} aria-label="搜索"><Icon name="search" size={19}/></a></li>
-    </ul>
-   </div>
-   <a class="scroll-cue reveal" style="--d:7" href="#recent" aria-label="向下浏览三个栏目"><span></span></a>
+
+   <aside class="porcelain-card now-card">
+    <div class="now-head">
+     <h2>近况 · 武汉</h2>
+     <span class="now-status"><i aria-hidden="true"></i>记录中</span>
+    </div>
+    <div class="now-list">
+     {siteConfig.nowItems.map(item => (
+      item.href ? (
+       <a href={withBase(item.href)} class:list={['now-item', { 'is-life': item.tone === 'life' }]}>
+        <span class="now-label">{item.label}</span>
+        <span class="now-text">{item.text}</span>
+       </a>
+      ) : (
+       <div class:list={['now-item', { 'is-life': item.tone === 'life' }]}>
+        <span class="now-label">{item.label}</span>
+        <span class="now-text">{item.text}</span>
+       </div>
+      )
+     ))}
+    </div>
+    <div class="now-foot">
+     <span>「{siteConfig.tagline}」</span>
+     <a href={withBase('/about/')} class="now-link">关于我 →</a>
+    </div>
+   </aside>
   </section>
 
-  <section class="page-shell recent" id="recent">
-   <div class="column">
-    <header class="sec-head"><p><span>01</span>零散的知识与教训</p><h2>{sections.knowledge.label}</h2></header>
-    <ol class="feed">
-     {articles.map((post, index) => <li class="feed-item">
-      <a href={withBase(`/blog/${post.id}/`)}>
-       <span class="feed-no">{String(index + 1).padStart(2, '0')}</span>
-       <span class="feed-title">{post.data.title}</span>
-       <span class="feed-meta">{post.data.tags.slice(0, 2).join(' · ')}</span>
-       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time>
-      </a>
-     </li>)}
+  <!-- Row 2: Research Tabular Notes + Life Gallery & Jotting -->
+  <section class="page-shell bento-mid reveal" style="--d:1" id="recent">
+   <div class="porcelain-card notes-panel">
+    <header class="panel-head">
+     <div>
+      <p class="eyebrow">01 / FIELD NOTES</p>
+      <h2>{sections.knowledge.label}</h2>
+     </div>
+     <div class="home-tag-filters" role="group" aria-label="按标签筛选近期札记" data-home-filters>
+      <button type="button" data-home-tag="all" aria-pressed="true">全部</button>
+      {topKnowledgeTags.map(tag => (
+       <button type="button" data-home-tag={tag} aria-pressed="false">{tag}</button>
+      ))}
+     </div>
+    </header>
+
+    <ol class="feed" data-home-feed>
+     {homeNotePool.map((post, idx) => (
+      <li class="feed-item" data-home-note data-tags={post.data.tags.join('|')} hidden={idx >= 6}>
+       <a href={withBase(`/blog/${post.id}/`)}>
+        <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time>
+        <span class="feed-title">{post.data.title}</span>
+        <span class="feed-tag">{post.data.tags[0]}</span>
+        <span class="feed-read">{getReadingTime(post)} min</span>
+       </a>
+      </li>
+     ))}
     </ol>
-    <a class="more" href={withBase(sections.knowledge.href)}>全部札记 <Icon name="arrow" size={15}/></a>
+
+    <div class="panel-foot">
+     <span class="panel-meta">零散的知识与工程记录 · 共 {allArticles.length} 篇</span>
+     <a class="more" href={withBase(sections.knowledge.href)}>全部札记 <Icon name="arrow" size={15}/></a>
+    </div>
    </div>
-   <div class="column">
-    <header class="sec-head"><p><span>02</span>成体系的学习笔记</p><h2>{sections.course.label}</h2></header>
-    <ol class="feed feed-notes">
-     {notes.map(post => <li class="feed-item">
-      <a href={withBase(`/blog/${post.id}/`)}>
-       <span class="feed-title">{post.data.title}</span>
-       <span class="feed-meta">{seriesTitle.get(post.data.series ?? '') ?? sections.course.label}</span>
-       <time class="feed-time" datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time>
+
+   <div class="porcelain-card life-panel">
+    <header class="panel-head">
+     <div>
+      <p class="eyebrow life-eyebrow">02 / LIFE &amp; FRAMES</p>
+      <h2>{sections.writing.label}</h2>
+     </div>
+     <a href={withBase('/gallery/')} class="panel-link">全部 {photos.length} 张 →</a>
+    </header>
+
+    <div class="life-gallery">
+     {homePhotos.map((p, idx) => (
+      <a href={withBase(`/gallery/#photo-${idx + 1}`)} class="life-photo-tile" aria-label={`查看照片：${p.title}`}>
+       <picture>
+        <source type="image/avif" srcset={withBase(`/gallery/optimized/${stem(p.file)}-480.avif`)} />
+        <source type="image/webp" srcset={withBase(`/gallery/optimized/${stem(p.file)}-480.webp`)} />
+        <img src={withBase(`/gallery/${p.file}`)} alt={p.title} width={p.width} height={p.height} loading="lazy" decoding="async" />
+       </picture>
+       <span class="life-photo-cap">
+        <span class="life-photo-title">{p.title}</span>
+        <span class="life-photo-no">0{idx + 1}</span>
+       </span>
       </a>
-     </li>)}
-    </ol>
-    <a class="more" href={withBase(sections.course.href)}>{series.length} 卷 <Icon name="arrow" size={15}/></a>
-   </div>
-  </section>
+     ))}
+    </div>
 
-  <section class="page-shell jottings" aria-labelledby="home-jottings">
-   <header class="sec-head"><p><span>03</span>日常的片刻</p><h2 id="home-jottings">{sections.writing.label}</h2></header>
-   <ol class="jotting-feed">
-     {jottings.map(post => <li><a href={withBase(`/blog/${post.id}/`)}><time datetime={post.data.pubDate.toISOString()} title={formatDate(post.data.pubDate)}>{shortDate(post.data.pubDate)}</time><span>{post.data.title}</span></a></li>)}
-     {jottings.length === 0 && <li class="jotting-empty">还没有写下什么。</li>}
-   </ol>
-   <a class="more" href={withBase(sections.writing.href)}>全部闲笔 <Icon name="arrow" size={15}/></a>
-  </section>
-
-  <section class="page-shell timeline" data-timeline>
-   <header class="sec-head"><p><span>04</span>时间</p><h2>笔耕不辍</h2><span class="sec-aside">近一年 <b>{yearCount}</b> 篇</span></header>
-   <ol class="months">
-    {months.map((month, index) => <li style={`--s:${month.count ? (.18 + Math.sqrt(month.count / peak) * .82).toFixed(3) : 0};--i:${index}`} class:list={{ 'is-empty': !month.count, 'is-now': index === months.length - 1 }}>
-     <a href={`${withBase('/archive/')}${month.anchor}`} aria-label={`${month.year} 年 ${month.label}：${month.count} 篇`}>
-      <span class="bar" aria-hidden="true"><span class="count">{month.count || ''}</span></span>
-      <span class="month" aria-hidden="true">{month.label}</span>
-      {month.count > 0 && <span class="tip" aria-hidden="true">{month.count} 篇{month.latest && ` · ${month.latest.data.title}`}</span>}
+    {latestJotting ? (
+     <a href={withBase(`/blog/${latestJotting.id}/`)} class="life-essay-card">
+      <div class="life-essay-meta">
+       <span>{sections.writing.label}</span>
+       <time datetime={latestJotting.data.pubDate.toISOString()}>{formatDate(latestJotting.data.pubDate)}</time>
+      </div>
+      <h3>{latestJotting.data.title}</h3>
+      <p>{latestJotting.data.description}</p>
      </a>
-    </li>)}
-   </ol>
-   {latest && <p class="latest">近作 · <a href={withBase(`/blog/${latest.id}/`)}>{latest.data.title}</a></p>}
-   <p class="year"><a href={withBase('/archive/')}>翻阅完整时间线 <Icon name="arrow" size={14}/></a></p>
+    ) : (
+     <div class="life-essay-card is-empty"><p>还没有写下闲笔。</p></div>
+    )}
+
+    <div class="panel-foot">
+     <span class="panel-meta">生活片刻与随手拍</span>
+     <a class="more" href={withBase(sections.writing.href)}>全部闲笔 <Icon name="arrow" size={15}/></a>
+    </div>
+   </div>
   </section>
 
-  <section class="page-shell outro">
-   <header class="sec-head"><p><span>05</span>来信</p></header>
-   <p class="greet" data-greet><span>你好，</span><span>欢迎来信。</span></p>
-   <div class="outro-links">
-    <a href={`mailto:${siteConfig.email}`}><b>写一封信</b><span>{siteConfig.email}</span><Icon name="arrow" size={18}/></a>
-    <a href={withBase('/rss.xml')}><b>订阅更新</b><span>RSS，不错过每一篇。</span><Icon name="arrow" size={18}/></a>
+  <!-- Row 3: 03 / 长卷 · Three Monograph Volumes -->
+  <section class="page-shell monographs-section reveal" style="--d:2" aria-labelledby="home-series">
+   <header class="shelf-head">
+    <div>
+     <p class="eyebrow">03 / MONOGRAPHS</p>
+     <h2 id="home-series">{sections.course.label}</h2>
+    </div>
+    <a class="more" href={withBase(sections.course.href)}>全部 {series.length} 卷 <Icon name="arrow" size={15}/></a>
+   </header>
+
+   <div class="monographs-grid">
+    {series.map((item, idx) => (
+     <a href={withBase(`/notes/${item.entry.id}/`)} class="porcelain-card monograph-card">
+      <div class="monograph-top">
+       <span class="monograph-vol">VOL.{String(idx + 1).padStart(2, '0')}</span>
+       <span class="monograph-count">{item.chapters.length} 篇</span>
+      </div>
+      <h3>{item.entry.data.title}</h3>
+      {item.entry.data.englishTitle && <p class="monograph-en">{item.entry.data.englishTitle}</p>}
+      <p class="monograph-desc">{item.entry.data.description}</p>
+      <span class="monograph-foot">按章节阅读 <Icon name="arrow" size={14}/></span>
+     </a>
+    ))}
    </div>
-   <nav class="topic-row" aria-label="常见话题">{tags.map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>{item.tag}</a>)}<a href={withBase('/projects/')}>项目</a></nav>
+  </section>
+
+  <!-- Row 4: 04 / 研究项目 -->
+  {projects.length > 0 && (
+   <section class="page-shell projects-section reveal" style="--d:3" aria-labelledby="home-projects">
+    <header class="shelf-head">
+     <div>
+      <p class="eyebrow">04 / PROJECTS</p>
+      <h2 id="home-projects">研究项目</h2>
+     </div>
+     <a class="more" href={withBase('/projects/')}>全部项目 <Icon name="arrow" size={15}/></a>
+    </header>
+    <div class="home-projects-grid">
+     {projects.slice(0, 2).map((project, idx) => (
+      <a href={withBase(`/projects/${project.id}/`)} class="porcelain-card home-project-card">
+       <div class="monograph-top">
+        <span class="monograph-vol">PRJ.{String(idx + 1).padStart(2, '0')}</span>
+        <span class:list={['home-project-status', { 'is-done': project.data.status === '已完成' }]}>{project.data.status}</span>
+       </div>
+       <h3>{project.data.title}</h3>
+       <p class="monograph-desc">{project.data.summary}</p>
+       <div class="home-project-tags">
+        {project.data.tags.slice(0, 3).map(tag => <span>{tag}</span>)}
+       </div>
+      </a>
+     ))}
+    </div>
+   </section>
+  )}
+
+  <!-- Row 5: Minimalist 12-Month Rhythm + Correspondence -->
+  <section class="page-shell bento-foot reveal" style="--d:4">
+   <div class="porcelain-card timeline-panel" data-timeline>
+    <header class="panel-head">
+     <div>
+      <p class="eyebrow">05 / WRITING RHYTHM</p>
+      <h2>近一年记录</h2>
+     </div>
+     <span class="panel-meta">{yearCount} 篇 / 12 个月</span>
+    </header>
+    <ol class="months">
+     {months.map((month, index) => (
+      <li style={`--s:${month.count ? (.16 + Math.sqrt(month.count / peak) * .84).toFixed(3) : 0};--i:${index}`} class:list={{ 'is-empty': !month.count, 'is-now': index === months.length - 1 }}>
+       <a href={`${withBase('/archive/')}${month.anchor}`} aria-label={`${month.year} 年 ${month.label}：${month.count} 篇`}>
+        <span class="bar" aria-hidden="true"><span class="count">{month.count || ''}</span></span>
+        <span class="month" aria-hidden="true">{month.label}</span>
+        {month.count > 0 && <span class="tip" aria-hidden="true">{month.count} 篇{month.latest && ` · ${month.latest.data.title}`}</span>}
+       </a>
+      </li>
+     ))}
+    </ol>
+    <div class="panel-foot timeline-foot">
+     {latest && <p class="latest">近作 · <a href={withBase(`/blog/${latest.id}/`)}>{latest.data.title}</a></p>}
+     <a class="more" href={withBase('/archive/')}>完整时间线 <Icon name="arrow" size={14}/></a>
+    </div>
+   </div>
+
+   <div class="porcelain-card outro-panel">
+    <div>
+     <p class="eyebrow">06 / CORRESPONDENCE</p>
+     <h2 class="outro-greet">你好，欢迎来信。</h2>
+     <p class="outro-desc">如果某篇笔记或做法碰巧对你有用，随时写信聊聊。</p>
+    </div>
+
+    <div class="outro-actions">
+     <a href={`mailto:${siteConfig.email}`} class="outro-action">
+      <span class="outro-action-label">写一封信</span>
+      <span class="outro-action-val">{siteConfig.email}</span>
+     </a>
+     <a href={withBase('/rss.xml')} class="outro-action">
+      <span class="outro-action-label">RSS 订阅</span>
+      <span class="outro-action-val">不错过新文章</span>
+     </a>
+    </div>
+
+    <nav class="topic-row" aria-label="常见话题">
+     {tags.slice(0, 5).map(item => <a href={withBase(`/tags/${encodeURIComponent(item.tag)}/`)}>{item.tag}</a>)}
+     <a href={withBase('/projects/')} class="topic-projects">研究项目</a>
+    </nav>
+   </div>
   </section>
  </div>
 </BaseLayout>
+
 <script>
- const day = 24 * 60 * 60 * 1000;
- const since = document.querySelector<HTMLElement>('[data-since]');
- if (since?.dataset.since) {
-  const start = Date.parse(since.dataset.since);
-  if (Number.isFinite(start)) since.textContent = String(Math.max(1, Math.ceil((Date.now() - start) / day)));
- }
- import { enhanceAnchor } from '../utils/smooth-scroll';
-
- const hero = document.querySelector<HTMLElement>('[data-home-hero]');
- const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
- const welcomed = 'welcomed' in document.documentElement.dataset;
- const stagger = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stagger')) || 80;
-
- const cue = document.querySelector<HTMLAnchorElement>('.scroll-cue');
- if (cue) enhanceAnchor(cue);
-
- // 统计数字从 0 数到目标值，用 ease-out 收尾；先按最终位数锁住宽度，数字跳动时统计条不变宽。
- // 和统计条自己的入场（第 5 拍）对齐开始。
- if (!still && !welcomed) {
-  document.querySelectorAll<HTMLElement>('.stats b[data-count]').forEach((node, index) => {
-   const target = Number(node.textContent);
-   if (!Number.isFinite(target) || target <= 0) return;
-   node.style.setProperty('--digits', `${String(target).length}ch`);
-   const begin = performance.now() + stagger * (5 + index * 1.5), length = 1400;
-   node.textContent = '0';
-   const tick = (now: number) => {
-    const t = Math.min(1, Math.max(0, (now - begin) / length));
-    node.textContent = String(Math.round(target * (1 - (1 - t) ** 4)));
-    if (t < 1) requestAnimationFrame(tick);
-   };
-   requestAnimationFrame(tick);
-  });
- }
-
- // 首屏离开视口时暂停背景里的常驻动画，滚回来再继续。
- if (hero && 'IntersectionObserver' in window) {
-  new IntersectionObserver(([entry]) => {
-   if (entry.isIntersecting) delete hero.dataset.paused;
-   else hero.dataset.paused = '';
-  }).observe(hero);
- }
-
- // 指针显影与视差：点阵只在指针附近出现，光团和纸鹤按远近反向轻移。每帧最多写一次自定义属性。
- if (hero && matchMedia('(hover: hover) and (prefers-reduced-motion: no-preference)').matches) {
-  let pending = false, x = 0, y = 0;
-  hero.addEventListener('pointermove', event => {
-   const rect = hero.getBoundingClientRect();
-   x = (event.clientX - rect.left) / rect.width; y = (event.clientY - rect.top) / rect.height;
-   if (pending) return;
-   pending = true;
-   requestAnimationFrame(() => {
-    pending = false;
-    hero.style.setProperty('--px', x.toFixed(3)); hero.style.setProperty('--py', y.toFixed(3));
-    hero.dataset.lit = '';
-   });
-  }, { passive: true });
-  hero.addEventListener('pointerleave', () => delete hero.dataset.lit);
- }
-
- // 静态文案恒为最终词：SSR、无脚本、减少动效、同会话回访、动画终态读到的是同一句话。
- // 打字只是首次访问时盖在这句话上的视觉层，从空串打起，结束回到最终词。
- const typed = document.querySelector<HTMLElement>('[data-typed]');
- const text = typed?.querySelector<HTMLElement>('[data-typed-text]');
- const reduced = matchMedia('(prefers-reduced-motion: reduce)');
- if (typed?.dataset.typed && text && !reduced.matches && !welcomed) {
-  const words: string[] = JSON.parse(typed.dataset.typed);
-  const final = words.at(-1) ?? '';
-  let index = 0, length = 0, deleting = false, timer = 0;
-  const finish = () => {
-   text.textContent = final;
-   delete typed.dataset.typing;
-   typed.dataset.done = '';
-  };
-  typed.dataset.typing = '';
-  text.textContent = '';
-  const step = () => {
-   if (reduced.matches) { window.clearTimeout(timer); finish(); return; }
-   const word = words[index];
-   if (!word) { finish(); return; }
-   if (deleting) {
-    length = Math.max(0, length - 1);
-    text.textContent = word.slice(0, length);
-    if (length === 0) { deleting = false; index += 1; }
-   } else {
-    length = Math.min(word.length, length + 1);
-    text.textContent = word.slice(0, length);
-    if (length === word.length) {
-     if (index === words.length - 1) { finish(); return; }
-     deleting = true;
-     timer = window.setTimeout(step, 800);
-     return;
+ const filterGroup = document.querySelector<HTMLElement>('[data-home-filters]');
+ const noteItems = Array.from(document.querySelectorAll<HTMLLIElement>('[data-home-note]'));
+ if (filterGroup && noteItems.length) {
+  const buttons = Array.from(filterGroup.querySelectorAll<HTMLButtonElement>('[data-home-tag]'));
+  const applyFilter = (tag: string) => {
+   let shown = 0;
+   for (const item of noteItems) {
+    const match = tag === 'all' || (item.dataset.tags ?? '').split('|').includes(tag);
+    if (match && shown < 6) {
+     item.hidden = false;
+     shown += 1;
+    } else {
+     item.hidden = true;
     }
    }
-   timer = window.setTimeout(step, deleting ? 50 : 80);
+   for (const btn of buttons) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.homeTag === tag));
+   }
   };
-  timer = window.setTimeout(step, stagger * 8);
-  reduced.addEventListener('change', event => {
-   if (event.matches) { window.clearTimeout(timer); finish(); }
+  filterGroup.addEventListener('click', event => {
+   const target = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-home-tag]');
+   if (!target) return;
+   applyFilter(target.dataset.homeTag ?? 'all');
   });
  }
 </script>
+
 <style>
- /* ===== 首页统一系统 =====
-    节奏：区块间距 --gap；所有区块共用一个 .sec-head（编号 · 英文眉题 · 中文标题）。
-    色彩：朱砂只落在首屏的打字词、当月柱和来信的落款上；编号、分隔线、悬停都用墨色深浅。
-    动效：入场 .reveal 只播一次；首屏占满一屏，所以背景有慢速常驻层（纸鹤、光团、头像绕行点），离开视口即暂停；滚动联动全部交给 animation-timeline。 */
- .home-page { --gap: 120px; position: relative; isolation: isolate; overflow-x: clip; padding-bottom: 0; }
-
- /* ---------- 首屏 ---------- */
- /* 首屏只放欢迎：正好占满一屏视口（扣掉页头），栏目从第二屏开始。内容略高于正中，视觉重心更稳。 */
- /* --px/--py 由脚本写在 .intro 上，后代只读不声明，否则会被子元素的默认值盖住。 */
- .intro { --px: .5; --py: .4; position: relative; isolation: isolate; display: grid; place-items: center; min-height: max(520px,calc(100svh - var(--header-height))); padding: 40px 24px 112px; text-align: center; }
- .ambient { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
- /* 两团光：暖的朱砂偏左上，冷的墨色偏右下，各自慢慢游走，像纸面上移动的天光。
-    用 blur 代替长距离渐变：8 位色深下大面积浅渐变会出现色带，模糊后的实心椭圆过渡更平。
-    只动 transform，模糊层由合成器搬运，不重新栅格化。 */
- .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
- .blob-warm { left: 18%; top: -12%; width: min(640px,80vw); aspect-ratio: 1.6; background: color-mix(in srgb,var(--color-accent) 7%,transparent); animation: wander-a 26s ease-in-out infinite alternate; }
- .blob-ink { right: 8%; bottom: -6%; width: min(520px,70vw); aspect-ratio: 1.4; background: color-mix(in srgb,var(--color-counterpoint) 7%,transparent); animation: wander-b 32s ease-in-out infinite alternate; }
-
- /* 千羽：几只纸鹤在背景里从左往右慢慢飞过，一边轻轻起伏。外层管横向位移，内层管起伏和振翅，互不干扰。 */
- /* 鹤群在文字栏背后淡出：遮罩挖掉首屏正中，鹤从两侧飞过，不会压在字上。 */
- .flock { position: absolute; inset: 0; color: var(--color-ink); -webkit-mask-image: radial-gradient(min(400px,46vw) 230px at 50% 46%,transparent 62%,#000); mask-image: radial-gradient(min(400px,46vw) 230px at 50% 46%,transparent 62%,#000); }
- .flock-defs { position: absolute; }
- .crane { position: absolute; left: 0; top: var(--y); width: var(--s); opacity: var(--o); translate: -10vw 0; animation: fly var(--dur) linear var(--delay) infinite; }
- .crane svg { display: block; width: 100%; height: auto; animation: bob var(--bob) ease-in-out infinite alternate; transform-origin: 50% 60%; }
- .crane:nth-child(odd) svg { animation-direction: alternate-reverse; }
- /* 视差：越大的鹤越近，随指针移动得越多；光团最远，几乎不动。 */
- .flock { translate: calc((var(--px) - .5) * -28px) calc((var(--py) - .5) * -18px); transition: translate calc(var(--dur-slower) * 1.6) var(--ease-out-expo); }
- .blob-warm,.blob-ink { translate: calc((var(--px) - .5) * 14px) calc((var(--py) - .5) * 10px); transition: translate calc(var(--dur-slower) * 2.2) var(--ease-out-expo); }
- [data-paused] :is(.blob,.crane,.crane svg),[data-paused] .avatar::after { animation-play-state: paused; }
- /* 细点阵只在指针附近显影，像手电照过纸面。 */
- .grid { position: absolute; inset: 0; background-image: radial-gradient(var(--color-grid-dot) 1px,transparent 1.4px); background-size: 24px 24px; opacity: .9; -webkit-mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); mask-image: radial-gradient(260px 260px at calc(var(--px) * 100%) calc(var(--py) * 100%),#000,transparent 70%); transition: opacity var(--dur-slow); }
- .intro:not([data-lit]) .grid { opacity: 0; }
-
- .hero-copy { width: min(100%,760px); }
- .avatar { position: relative; display: flex; justify-content: center; margin-bottom: 26px; }
- .avatar-disc { position: relative; z-index: 1; display: grid; place-items: center; width: 92px; height: 92px; border: 1px solid var(--color-line); border-radius: 50%; background: var(--color-surface); box-shadow: 0 10px 30px -14px var(--shadow-tint-strong); transition: transform var(--dur-slow) var(--ease-out-expo); }
- .avatar:hover .avatar-disc { transform: rotate(-6deg); }
- .avatar-disc :global(svg) { width: 64%; height: 64%; }
- .avatar-disc :global(.brand-ink) { fill: var(--color-ink); }
- .avatar-disc :global(.brand-accent) { fill: var(--color-accent); }
- /* 头像外一圈发丝线，上面一颗朱砂小点沿着圆慢慢绕行。旋转的是整圈，圆本身没有可见的转动。 */
- .avatar::before { content: ''; position: absolute; left: 50%; top: 50%; width: 106px; height: 106px; margin: -53px 0 0 -53px; border: 1px solid var(--color-line); border-radius: 50%; }
- .avatar::after { content: ''; position: absolute; left: 50%; top: 50%; width: 106px; height: 106px; margin: -53px 0 0 -53px; border-radius: 50%; background: radial-gradient(circle at 50% 0,var(--color-accent) 0 2.5px,transparent 3px); animation: orbit 18s linear infinite; }
- /* 汉字是全角字面，不收字距；只有拉丁名字略收紧。 */
- .greeting { font-size: clamp(34px,1.4rem + 2.4vw,52px); line-height: 1.22; letter-spacing: 0; }
- .greeting b { font-weight: 600; letter-spacing: -.01em; }
- /* 标题逐词浮现：标题是首屏最大的元素（LCP），所以不从全透明、不加模糊起步，只让词依次从下方升起；
-    名字最后落下并带出一笔朱砂。 */
- .greeting.reveal { animation: none; }
- .word { display: inline-block; animation: word-rise var(--dur-enter) var(--ease-out-expo) both; animation-delay: calc(var(--stagger) * (1 + var(--w))); }
- .name { position: relative; }
- .brush { position: absolute; left: -2%; right: -2%; bottom: -.08em; width: 104%; height: .26em; overflow: visible; pointer-events: none; }
- .brush path { fill: none; stroke: var(--color-accent); stroke-width: 3.2; stroke-linecap: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; animation: brush var(--dur-slower) var(--ease-smooth) calc(var(--stagger) * 5) forwards; vector-effect: non-scaling-stroke; }
- .claim { margin-top: 18px; color: var(--color-ink-soft); font-size: clamp(17px,.9rem + .5vw,21px); line-height: 1.7; }
- /* 底色贴着字走（background 而不是固定宽度的伪元素），宽度留给最长的词，打字时行不跳。
-    预留宽度写在 CSS 里而不是等脚本加上，首帧就定好，避免这一行横移一次。 */
- .typed { display: inline-block; color: var(--color-accent-strong); text-align: left; }
- @media (scripting: enabled) and (prefers-reduced-motion: no-preference) { :root:not([data-welcomed]) .typed { min-width: 6.4em; } }
- .typed [data-typed-text] { padding-inline: .08em; background: linear-gradient(transparent 62%,color-mix(in srgb,var(--color-accent) 13%,transparent) 62% 92%,transparent 92%); }
- /* 光标只在脚本真的打字时出现；无脚本、减少动效、同会话回访都看不到一个静止的光标。 */
- .caret { display: none; width: 1.5px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: currentColor; animation: blink 1s steps(1) infinite; }
- [data-typing] .caret { display: inline-block; }
- .role { margin-top: 14px; color: var(--color-ink-soft); font-size: 14px; }
- .motto { margin-top: 16px; color: var(--color-ink-muted); font-family: var(--font-display); font-size: 15px; letter-spacing: .06em; }
- .stats { display: inline-flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 24px; padding: 8px 18px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); color: var(--color-ink-muted); font-size: 13px; }
- .stats b { display: inline-block; min-width: var(--digits,auto); color: var(--color-ink); font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; text-align: center; }
- .stats i { font-style: normal; color: var(--color-line-strong); }
- .socials { display: flex; justify-content: center; gap: 6px; margin-top: 20px; padding: 0; list-style: none; }
- .socials a { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--color-ink-soft); transition: color var(--dur-base),translate var(--dur-slow) var(--ease-spring); }
- .socials a::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--color-surface-hover); scale: .4; opacity: 0; transition: scale var(--dur-slow) var(--ease-spring),opacity var(--dur-base); }
- .socials a :global(svg) { position: relative; }
- .socials a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
- .socials a:focus-visible { translate: 0 -3px; }
- .socials a:is(:hover,:focus-visible)::before { scale: 1; opacity: 1; }
- .scroll-cue { position: absolute; bottom: 28px; left: 50%; display: grid; place-items: center; width: 44px; height: 44px; translate: -50% 0; }
- /* 欢迎屏占满一屏，下方内容看不见，箭头需要轻轻招手；入场结束后才开始。 */
- /* 压在青海波上，描边要深一档才看得见。 */
- .scroll-cue span { width: 9px; height: 9px; border-right: 1.5px solid var(--color-ink-soft); border-bottom: 1.5px solid var(--color-ink-soft); rotate: 45deg; animation: cue 2.4s var(--ease-smooth) calc(var(--stagger) * 12) infinite; transition: border-color var(--dur-base); }
- .scroll-cue:is(:hover,:focus-visible) span { border-color: var(--color-ink); }
-
- /* ---------- 共用区块标题 ---------- */
- .sec-head { position: relative; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 16px; }
- .sec-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg,var(--color-ink) 0 64px,var(--color-line-strong) 64px); transform-origin: left; }
- .sec-head p { display: flex; align-items: baseline; gap: 10px; flex-basis: 100%; color: var(--color-ink-muted); font-size: 12.5px; letter-spacing: .08em; }
- .sec-head p span { color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 12px; font-style: normal; }
- .sec-head h2 { font-size: clamp(22px,1rem + .8vw,28px); line-height: 1.25; }
- .sec-aside { margin-left: auto; color: var(--color-ink-muted); font-size: 13px; }
- .sec-aside b { color: var(--color-ink); font-family: var(--font-mono); font-size: 15px; }
- /* ---------- 近期 ---------- */
- /* 根元素已有 scroll-padding-top（页头 + 32px）；区块自带 72px 上内边距，再往回收 32px，栏目标题正好落在页头下方。 */
- .recent { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 72px; padding-top: 72px; scroll-margin-top: -32px; }
- .column { min-width: 0; }
- .feed { margin: 6px 0 0; padding: 0; list-style: none; }
- .feed-item a { position: relative; isolation: isolate; display: grid; grid-template-columns: 28px minmax(0,1fr) auto; grid-template-areas: 'no title time' '. meta time'; gap: 3px 10px; align-items: baseline; min-height: 76px; padding: 15px 10px; margin-inline: -10px; border-radius: 10px; transition: translate var(--dur-slow) var(--ease-out-expo); }
- .feed-notes .feed-item a { grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'title time' 'meta time'; }
- .feed-item + .feed-item a::after { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: var(--color-line); transition: opacity var(--dur-base); }
- /* 悬停底色：一块纸面略深的底，不再铺朱砂渐变。 */
- .feed-item a::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--color-surface-soft); opacity: 0; transform: scaleX(.98); transform-origin: left; transition: opacity var(--dur-base),transform var(--dur-slow) var(--ease-out-expo); }
- .feed-item a:focus-visible { translate: 6px 0; }
- .feed-item a:is(:hover,:focus-visible)::before { opacity: 1; transform: none; }
- .feed-item:hover + .feed-item a::after,.feed-item a:hover::after { opacity: 0; }
- .feed-no { grid-area: no; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; transition: color var(--dur-base); }
- .feed-title { grid-area: title; min-width: 0; font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.55; overflow-wrap: anywhere; transition: color var(--dur-base); }
- .feed-meta { grid-area: meta; min-width: 0; color: var(--color-ink-muted); font-size: 12px; overflow-wrap: anywhere; }
- .feed-time { grid-area: time; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
- .feed-item a:is(:hover,:focus-visible) .feed-no { color: var(--color-ink); }
- .feed-item a:is(:hover,:focus-visible) .feed-title { color: var(--color-accent-strong); }
- .more { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 10px; color: var(--color-ink-soft); font-size: 13px; font-weight: 600; }
- .more::after { content: ''; position: absolute; left: 0; right: 24px; bottom: 10px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
- .more:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
- .more:is(:hover,:focus-visible)::after { transform: none; }
- .more :global(svg),.year :global(svg),.outro-links :global(svg) { transition: translate var(--dur-slow) var(--ease-spring); }
- /* 位移类悬停只给真有指针悬停的设备；触屏轻点后从 bfcache 返回，元素不会停在偏移状态。 */
- @media (hover: hover) {
-  .socials a:hover { translate: 0 -3px; }
-  .feed-item a:hover { translate: 6px 0; }
-  .more:hover :global(svg),.year a:hover :global(svg) { translate: 4px 0; }
-  .outro-links a:hover { translate: 0 -2px; }
-  .outro-links a:hover :global(svg) { translate: 4px 0; }
-  .topic-row a:hover { translate: 0 -2px; }
-  .months a:hover .bar { scale: 1.08 1.06; }
-  .months:hover .bar { filter: opacity(.55); }
-  .months a:hover .bar { filter: none; }
+ .home-page { padding-top: 28px; overflow-x: clip; }
+ .porcelain-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  transition: border-color var(--dur-base) var(--ease-smooth), box-shadow var(--dur-slow) var(--ease-out-expo), translate var(--dur-slow) var(--ease-out-expo);
  }
 
- /* ---------- 闲笔：几行短句 ---------- */
- .jottings { margin-top: var(--gap); }
- .jotting-feed { max-width: 640px; margin: 6px 0 0; padding: 0; list-style: none; }
- .jotting-feed a { display: grid; grid-template-columns: 96px minmax(0,1fr); gap: 16px; align-items: baseline; min-height: 56px; padding: 15px 0; border-bottom: 1px solid var(--color-line); }
- .jotting-feed time { color: var(--color-ink-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
- .jotting-feed span { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.55; transition: color var(--dur-base); }
- .jotting-feed a:is(:hover,:focus-visible) span { color: var(--color-accent-strong); }
- .jotting-empty { padding: 15px 0; color: var(--color-ink-muted); font-size: 13px; }
+ /* ---------- Row 1: Hero Bento ---------- */
+ .bento-hero { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+ .hero-main { padding: 34px 36px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+ .hero-kicker-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+ .hero-issue { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+ .hero-title { margin-top: 16px; font-size: clamp(26px, 1.35rem + 1.3vw, 36px); line-height: 1.3; letter-spacing: -.015em; text-wrap: balance; }
+ .hero-seal { color: var(--color-vermilion); }
+ .hero-bio { margin-top: 14px; max-width: 56ch; color: var(--color-ink-soft); font-size: 15px; line-height: 1.82; }
+ .hero-bio strong { color: var(--color-ink); font-weight: 600; }
+ .hero-foot { padding-top: 18px; border-top: 1px solid var(--color-line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; }
+ .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+ .socials { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+ .socials a { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface); color: var(--color-ink-soft); transition: color var(--dur-base), border-color var(--dur-base), background-color var(--dur-base); }
+ .socials a:is(:hover,:focus-visible) { color: var(--color-accent-strong); border-color: var(--color-accent); background: var(--color-accent-soft); }
+ .hero-stats { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+ .hero-stats i { font-style: normal; color: var(--color-line-strong); }
 
- /* ---------- 时间线：柱高即篇数 ---------- */
- .timeline { margin-top: var(--gap); }
- .months { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 6px; height: 168px; margin: 28px 0 0; padding: 0; list-style: none; }
+ /* Status Card (近况 · 武汉) */
+ .now-card { padding: 26px 26px 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
+ .now-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+ .now-head h2 { font-size: 19px; line-height: 1.3; }
+ .now-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-accent-strong); font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+ .now-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); }
+ .now-list { display: flex; flex-direction: column; gap: 10px; }
+ .now-item { display: flex; flex-direction: column; gap: 3px; padding: 11px 14px; border-radius: var(--radius-inner); background: var(--color-surface-soft); border: 1px solid transparent; transition: border-color var(--dur-base), background-color var(--dur-base); }
+ .now-item.is-life { background: var(--color-warm-soft); }
+ a.now-item:is(:hover,:focus-visible) { border-color: var(--color-line-strong); }
+ .now-label { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; }
+ .now-item.is-life .now-label { color: var(--color-warm); font-weight: 600; }
+ .now-text { color: var(--color-ink); font-size: 13.5px; font-weight: 600; line-height: 1.5; }
+ .now-foot { padding-top: 12px; border-top: 1px solid var(--color-line); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--color-ink-muted); }
+ .now-link { color: var(--color-accent-strong); font-weight: 600; white-space: nowrap; }
+ .now-link:hover { color: var(--color-accent); }
+
+ /* ---------- Shared Bento Panel Chrome ---------- */
+ .panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--color-line); }
+ .panel-head h2 { margin-top: 2px; font-size: 21px; line-height: 1.25; }
+ .panel-meta { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+ .panel-link { color: var(--color-accent-strong); font-size: 13px; font-weight: 600; white-space: nowrap; }
+ .panel-link:hover { color: var(--color-accent); }
+ .panel-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--color-line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+ .more { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; color: var(--color-accent-strong); font-size: 13px; font-weight: 600; }
+ .more:is(:hover,:focus-visible) { color: var(--color-accent); }
+ .more :global(svg) { transition: translate var(--dur-base) var(--ease-out-expo); }
+ @media (hover: hover) { .more:hover :global(svg) { translate: 3px 0; } }
+
+ /* ---------- Row 2: Notes Table + Life Gallery ---------- */
+ .bento-mid { display: grid; grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr); gap: 18px; margin-top: 20px; align-items: stretch; }
+ .notes-panel,.life-panel { padding: 26px 28px 22px; display: flex; flex-direction: column; }
+ .home-tag-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+ .home-tag-filters button { min-height: 30px; padding: 2px 11px; border: 1px solid var(--color-line); border-radius: 999px; background: transparent; color: var(--color-ink-muted); font-size: 12px; font-weight: 500; transition: background-color var(--dur-base), border-color var(--dur-base), color var(--dur-base); }
+ .home-tag-filters button:hover { color: var(--color-ink); border-color: var(--color-line-strong); }
+ .home-tag-filters button[aria-pressed="true"] { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); font-weight: 600; }
+
+ .feed { margin: 4px 0 12px; padding: 0; list-style: none; flex: 1; }
+ .feed-item + .feed-item:not([hidden]) { border-top: 1px solid var(--color-line); }
+ .feed-item a { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto 52px; align-items: center; gap: 12px; padding: 15px 10px; margin-inline: -10px; border-radius: var(--radius-inner); transition: background-color var(--dur-base) var(--ease-smooth); }
+ .feed-item a:is(:hover,:focus-visible) { background: var(--color-surface-soft); }
+ .feed-time { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .feed-title { min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--color-ink); line-height: 1.5; overflow-wrap: anywhere; transition: color var(--dur-base); }
+ .feed-item a:is(:hover,:focus-visible) .feed-title { color: var(--color-accent-strong); }
+ .feed-tag { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+ .feed-read { color: var(--color-accent-strong); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+ /* Life Gallery Panel */
+ .life-eyebrow { color: var(--color-warm); }
+ .life-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+ .life-photo-tile { position: relative; display: block; aspect-ratio: 4/3; overflow: hidden; border: 1px solid var(--color-line); border-radius: var(--radius-inner); background: var(--color-surface-soft); }
+ .life-photo-tile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ @media (hover: hover) { .life-photo-tile:hover img { transform: scale(1.03); } }
+ .life-photo-cap { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 4px 9px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-surface); color: var(--color-ink); font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px; transition: border-color var(--dur-base); }
+ .life-photo-tile:is(:hover,:focus-visible) .life-photo-cap { border-color: var(--color-accent); }
+ .life-photo-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .life-photo-no { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; flex-shrink: 0; }
+
+ .life-essay-card { display: block; margin-top: 14px; margin-bottom: 12px; padding: 14px 16px; border: 1px solid var(--color-line); border-radius: var(--radius-inner); background: var(--color-paper); transition: border-color var(--dur-base), background-color var(--dur-base); }
+ a.life-essay-card:is(:hover,:focus-visible) { border-color: var(--color-line-strong); background: var(--color-surface-soft); }
+ .life-essay-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--color-warm); }
+ .life-essay-meta time { color: var(--color-ink-muted); }
+ .life-essay-card h3 { margin-top: 4px; font-size: 16px; line-height: 1.4; }
+ .life-essay-card p { margin-top: 4px; color: var(--color-ink-soft); font-size: 13px; line-height: 1.68; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+ .life-essay-card.is-empty p { margin-top: 0; color: var(--color-ink-muted); }
+
+ /* ---------- Row 3: Monographs Shelf ---------- */
+ .monographs-section { margin-top: 36px; }
+ .shelf-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+ .shelf-head h2 { margin-top: 2px; font-size: 22px; line-height: 1.25; }
+ .monographs-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+ .monograph-card { display: flex; flex-direction: column; padding: 24px 26px; border-top: 2px solid var(--color-accent); }
+ @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .monograph-card:hover { translate: 0 -2px; border-color: var(--color-line-strong); border-top-color: var(--color-accent); box-shadow: var(--shadow-lift); }
+ }
+ .monograph-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+ .monograph-vol { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+ .monograph-count { padding: 2px 10px; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent-strong); font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+ .monograph-card h3 { margin-top: 14px; font-size: 20px; line-height: 1.35; transition: color var(--dur-base); }
+ .monograph-card:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); }
+ .monograph-en { margin-top: 4px; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; }
+ .monograph-desc { margin-top: 12px; color: var(--color-ink-soft); font-size: 13.5px; line-height: 1.75; }
+ .monograph-foot { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 16px; color: var(--color-accent-strong); font-size: 13px; font-weight: 600; }
+
+ /* ---------- Row 4: Projects ---------- */
+ .projects-section { margin-top: 36px; }
+ .home-projects-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+ .home-project-card { display: flex; flex-direction: column; padding: 24px 26px; }
+ @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .home-project-card:hover { translate: 0 -2px; border-color: var(--color-line-strong); box-shadow: var(--shadow-lift); }
+ }
+ .home-project-card h3 { margin-top: 12px; font-size: 19px; line-height: 1.35; transition: color var(--dur-base); }
+ .home-project-card:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); }
+ .home-project-status { padding: 2px 10px; border-radius: 999px; background: var(--color-warm-soft); color: var(--color-warm); font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+ .home-project-status.is-done { background: var(--color-sage-soft); color: var(--color-sage); }
+ .home-project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 14px; }
+ .home-project-tags span { padding: 2px 9px; border-radius: 999px; background: var(--color-surface-soft); color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; }
+
+ /* ---------- Row 5: Rhythm + Correspondence ---------- */
+ .bento-foot { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; margin-top: 28px; align-items: stretch; }
+ .timeline-panel,.outro-panel { padding: 24px 26px 22px; display: flex; flex-direction: column; }
+ .months { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; height: 150px; margin: 22px 0 12px; padding: 0; list-style: none; background-image: repeating-linear-gradient(to right, var(--color-line) 0 4px, transparent 4px 10px); background-size: 100% 1px; background-position: 0 calc(100% - 76px); background-repeat: no-repeat; }
  .months li { position: relative; min-width: 0; }
- .months a { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; padding-bottom: 26px; color: var(--color-ink-muted); font-size: 12px; }
- .months a::before { content: ''; position: absolute; left: 0; right: 0; bottom: 26px; height: 1px; background: var(--color-line-strong); }
- /* 滚动入场动画占用 transform 和 opacity；悬停改用独立的 scale 与 filter，两者叠加而不互相覆盖。 */
- .bar { position: relative; display: block; width: min(100%,34px); height: calc(var(--s) * 118px + 4px); border-radius: 6px 6px 2px 2px; background: color-mix(in srgb,var(--color-ink) 16%,transparent); transform-origin: bottom; transition: scale var(--dur-slow) var(--ease-spring),filter var(--dur-base),background-color var(--dur-base); }
- .is-empty .bar { height: 4px; background: var(--color-line-strong); }
+ .months a { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; padding-bottom: 26px; color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; }
+ .months a::before { content: ''; position: absolute; left: 0; right: 0; bottom: 26px; height: 1px; background: var(--color-line); }
+ .bar { position: relative; display: block; width: min(100%, 22px); height: calc(var(--s) * 96px + 4px); border-radius: 4px 4px 0 0; background: var(--color-line-strong); transition: scale var(--dur-slow) var(--ease-spring), background-color var(--dur-base); }
+ .is-empty .bar { height: 2px; border-radius: 1px; background: var(--color-line); opacity: 1; }
  .is-now .bar { background: var(--color-accent); }
- .is-now .bar::after { content: ''; position: absolute; left: 50%; top: -12px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--color-accent); }
- .count { position: absolute; left: 50%; bottom: calc(100% + 4px); translate: -50% 0; color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 11px; opacity: 0; transition: opacity var(--dur-base),translate var(--dur-slow) var(--ease-out-expo); }
- .is-now .count { bottom: calc(100% + 18px); }
+ .count { position: absolute; left: 50%; bottom: calc(100% + 4px); translate: -50% 0; color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 12px; opacity: 0; transition: opacity var(--dur-base), translate var(--dur-base) var(--ease-out-expo); }
  .month { position: absolute; bottom: 0; }
- .is-now .month { color: var(--color-accent-strong); font-weight: 600; }
- .months a:focus-visible .bar { scale: 1.08 1.06; }
- .months a:is(:hover,:focus-visible) .bar { background: color-mix(in srgb,var(--color-ink) 32%,transparent); }
- .is-now a:is(:hover,:focus-visible) .bar { background: var(--color-accent); }
- .months a:is(:hover,:focus-visible) .count { opacity: 1; translate: -50% -3px; }
- .tip { position: absolute; z-index: 3; bottom: calc(100% + 8px); left: 50%; width: max-content; max-width: 230px; padding: 7px 11px; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-soft); font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; translate: -50% 6px; opacity: 0; visibility: hidden; transition: opacity var(--dur-base),translate var(--dur-slow) var(--ease-out-expo),visibility var(--dur-base); }
+ .is-now .month { color: var(--color-accent-strong); font-weight: 700; }
+ .months a:is(:hover,:focus-visible) .bar { background: var(--color-accent); scale: 1.06 1.04; }
+ .months a:is(:hover,:focus-visible) .count { opacity: 1; translate: -50% -2px; }
+ .tip { position: absolute; z-index: 3; bottom: calc(100% + 10px); left: 50%; width: max-content; max-width: 220px; padding: 8px 12px; border: 1px solid var(--color-line-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-soft); font-family: var(--font-sans); font-size: 12px; line-height: 1.5; text-align: center; white-space: normal; translate: -50% 6px; opacity: 0; visibility: hidden; transition: opacity var(--dur-base), translate var(--dur-base) var(--ease-out-expo), visibility var(--dur-base); }
  .months a:is(:hover,:focus-visible) .tip { opacity: 1; visibility: visible; translate: -50% 0; }
  .months li:first-child .tip { left: 0; translate: 0 6px; }
  .months li:first-child a:is(:hover,:focus-visible) .tip { translate: 0 0; }
  .months li:last-child .tip { left: auto; right: 0; translate: 0 6px; }
  .months li:last-child a:is(:hover,:focus-visible) .tip { translate: 0 0; }
- /* 触屏没有 hover：点按聚焦时也给提示，否则 601px 以上的平板看不到柱子的说明。 */
  @media (hover: none) {
   .months a:focus .tip { opacity: 1; visibility: visible; translate: -50% 0; }
   .months li:first-child a:focus .tip,.months li:last-child a:focus .tip { translate: 0 0; }
  }
- .latest,.year { color: var(--color-ink-muted); font-size: 13px; }
- .latest { margin-top: 20px; }
- .year { margin-top: 4px; }
- .latest a,.year a { color: var(--color-ink-soft); }
- .latest a:is(:hover,:focus-visible),.year a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
- .year a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+ .latest { color: var(--color-ink-muted); font-size: 13px; }
+ .latest a { color: var(--color-ink-soft); }
+ .latest a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
 
- /* ---------- 来信 ---------- */
- .outro { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); align-items: end; gap: 28px 72px; margin-top: var(--gap); }
- .outro .sec-head { grid-column: 1 / -1; width: 100%; }
- .outro { justify-items: stretch; }
- .greet { display: flex; flex-direction: column; font-family: var(--font-display); font-size: clamp(30px,1.2rem + 2vw,46px); font-weight: 600; line-height: 1.3; }
- /* 大字标题改用墨色：朱砂只留给当前项、品牌标记和时间线当月柱。 */
- .greet span:last-child { color: var(--color-ink); }
- .outro-links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
- .outro-links a { position: relative; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-areas: 'title icon' 'text icon'; align-items: center; gap: 4px 12px; min-width: 0; padding: 18px 20px; border: 1px solid var(--color-line); border-radius: 14px; overflow: hidden; transition: border-color var(--dur-base),translate var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow); }
- .outro-links a::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-surface-soft); opacity: 0; transition: opacity var(--dur-slow); }
- .outro-links a { isolation: isolate; }
- .outro-links b { grid-area: title; font-size: 15px; }
- .outro-links span { grid-area: text; color: var(--color-ink-muted); font-size: 12px; overflow-wrap: anywhere; }
- .outro-links :global(svg) { grid-area: icon; color: var(--color-ink-muted); }
- .outro-links a:is(:hover,:focus-visible) { border-color: var(--color-line-strong); }
- .outro-links a:focus-visible { translate: 0 -2px; }
- .outro-links a:is(:hover,:focus-visible)::before { opacity: 1; }
- .outro-links a:is(:hover,:focus-visible) b,.outro-links a:is(:hover,:focus-visible) :global(svg) { color: var(--color-accent-strong); }
- .outro-links a:focus-visible :global(svg) { translate: 4px 0; }
- .topic-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
- .topic-row a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),border-color var(--dur-base),background-color var(--dur-base),translate var(--dur-slow) var(--ease-spring); }
+ .outro-panel { justify-content: space-between; gap: 18px; }
+ .outro-greet { margin-top: 6px; font-size: 24px; line-height: 1.3; }
+ .outro-desc { margin-top: 8px; color: var(--color-ink-soft); font-size: 14px; line-height: 1.75; }
+ .outro-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+ .outro-action { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 14px 16px; border: 1px solid var(--color-line); border-radius: var(--radius-inner); background: var(--color-paper); transition: border-color var(--dur-base), background-color var(--dur-base); }
+ .outro-action:is(:hover,:focus-visible) { border-color: var(--color-accent); background: var(--color-surface-soft); }
+ .outro-action-label { color: var(--color-ink); font-size: 14px; font-weight: 600; }
+ .outro-action-val { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
+ .topic-row { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; border-top: 1px solid var(--color-line); }
+ .topic-row a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); color: var(--color-ink-soft); font-size: 12.5px; transition: border-color var(--dur-base), background-color var(--dur-base), color var(--dur-base); }
  .topic-row a:is(:hover,:focus-visible) { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); }
- .topic-row a:focus-visible { translate: 0 -2px; }
+ .topic-row .topic-projects { color: var(--color-accent-strong); border-color: var(--color-line-strong); font-weight: 600; }
 
- /* ---------- 入场与滚动联动 ---------- */
- .reveal { animation: hero-enter var(--dur-enter) var(--ease-out-expo) both; animation-delay: calc(var(--d) * var(--stagger)); }
- /* 同一会话里再回首页（从文章返回、刷新）时直接显示最终状态：不重播入场、不再打字、不重数数字。 */
- :global(:root[data-welcomed]) :is(.reveal,.word) { animation: none; }
- :global(:root[data-welcomed]) .brush path { animation: none; stroke-dashoffset: 0; }
- @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-   .sec-head::after { animation: draw linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
-   .sec-head h2 { animation: slide linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
-   .bar { animation: grow linear both; animation-timeline: view(); animation-range: entry calc(var(--i) * 4%) entry 100%; }
-   .greet span { animation: slide linear both; animation-timeline: view(); animation-range: entry 0% entry 90%; }
-   .greet span:last-child { animation-range: entry 15% entry 100%; }
-   /* 首屏滚走时轻轻淡出，幅度小到不影响往回滚时的阅读。 */
-   .hero-copy { animation: recede linear both; animation-timeline: scroll(root); animation-range: 0 520px; }
-  }
+ /* ---------- Entrance Animation (First Session Visit Only) ---------- */
+ .reveal { animation: bento-enter var(--dur-enter) var(--ease-out-expo) both; animation-delay: calc(var(--d) * var(--stagger)); }
+ :global(:root[data-welcomed]) .reveal { animation: none; }
+ @keyframes bento-enter { from { opacity: 0; translate: 0 8px; } }
+
+ /* ---------- Responsive Breakpoints (600 / 900 / 1100) ---------- */
+ @media (max-width: 1100px) {
+  .bento-hero { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+  .outro-actions { grid-template-columns: minmax(0, 1fr); }
  }
-
- @keyframes hero-enter { from { opacity: 0; translate: 0 12px; } }
- @keyframes blink { 50% { opacity: 0; } }
- @keyframes draw { from { transform: scaleX(0); } }
- @keyframes slide { from { opacity: .15; translate: 0 18px; } }
- @keyframes grow { from { transform: scaleY(.05); opacity: .3; } }
- @keyframes recede { to { opacity: .6; translate: 0 24px; } }
- @keyframes word-rise { from { opacity: .3; translate: 0 .35em; } }
- @keyframes brush { to { stroke-dashoffset: 0; } }
- @keyframes wander-a { to { transform: translate(14vw,8vh) scale(1.12); } }
- @keyframes wander-b { to { transform: translate(-12vw,-10vh) scale(.92); } }
- @keyframes fly { to { translate: 110vw var(--rise); } }
- @keyframes bob { from { transform: translateY(-6px) rotate(-3deg) scaleY(.96); } to { transform: translateY(6px) rotate(3deg) scaleY(1.04); } }
- @keyframes orbit { to { rotate: 360deg; } }
- @keyframes cue { 0%,100% { translate: 0 0; opacity: .55; } 50% { translate: 0 6px; opacity: 1; } }
-
  @media (max-width: 900px) {
-  .home-page { --gap: 88px; }
-  .recent { grid-template-columns: minmax(0,1fr); gap: 56px; }
-  .outro { grid-template-columns: minmax(0,1fr); }
+  .bento-hero,.bento-mid,.monographs-grid,.home-projects-grid,.bento-foot { grid-template-columns: minmax(0, 1fr); }
+  .hero-main { padding: 28px 26px; }
  }
  @media (max-width: 600px) {
-  .home-page { --gap: 72px; }
-  .intro { min-height: max(480px,calc(100svh - var(--header-height))); padding: 32px 20px 96px; }
-  .recent { padding-top: 56px; }
-  .avatar-disc { width: 78px; height: 78px; }
-  .avatar::before { width: 92px; height: 92px; margin: -46px 0 0 -46px; }
-  .role { max-width: 28em; margin-inline: auto; }
-  .role-divider { display: none; }
-  .role-details { display: block; }
-  .feed-item a { grid-template-columns: 24px minmax(0,1fr) auto; gap: 3px 7px; }
-  .feed-notes .feed-item a { grid-template-columns: minmax(0,1fr) auto; }
-  .months { grid-template-columns: repeat(12,minmax(0,1fr)); gap: 3px; height: 140px; }
-  .bar { height: calc(var(--s) * 92px + 4px); border-radius: 4px 4px 1px 1px; }
-  .month { font-size: 10.5px; }
+  .home-page { padding-top: 18px; }
+  .hero-main,.now-card,.notes-panel,.life-panel,.monograph-card,.home-project-card,.timeline-panel,.outro-panel { padding: 20px; }
+  .hero-title { font-size: clamp(23px, 6.2vw, 26px); }
+  .feed-item a { grid-template-columns: 48px minmax(0, 1fr); gap: 6px 10px; padding: 13px 6px; margin-inline: -6px; }
+  .feed-tag,.feed-read { display: none; }
+  .months { gap: 4px; height: 132px; }
+  .bar { width: min(100%, 16px); height: calc(var(--s) * 80px + 4px); }
+  .month { font-size: 11px; }
   .tip { display: none; }
-  .outro-links { grid-template-columns: minmax(0,1fr); }
-  .jotting-feed a { grid-template-columns: 84px minmax(0,1fr); gap: 12px; }
+  .outro-actions { grid-template-columns: minmax(0, 1fr); }
  }
- @media (prefers-reduced-motion: reduce) {
-  .caret,.flock,.avatar::after { display: none; }
-  .brush path { stroke-dashoffset: 0; animation: none; }
+ @media (pointer: coarse) {
+  .home-tag-filters button { min-height: 36px; }
+  .topic-row a { min-height: 40px; }
  }
 </style>

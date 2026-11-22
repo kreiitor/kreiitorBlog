@@ -1,25 +1,30 @@
-// 完整验证：npm run check && npm run test:unit && npm run build 的并行版本。
-// 类型检查、单元测试和构建互不依赖，三者同时跑；构建自带的 postbuild（锚点、搜索索引、站点检查）随构建完成。
-// 任何一步失败都让整体失败，并打印该步的输出尾部。
+// 完整验证：单元测试与 Astro（构建 + 类型检查）两条线并行执行。
+// build 与 check 串行共享 .astro/ 缓存，避免并行写入 data-store.json 冲突。
 import { spawn } from 'node:child_process';
 
-const steps = [
-	['类型检查', 'npm run check --silent'],
-	['单元测试', 'npm run test:unit --silent'],
-	['构建与站点检查', 'npm run build --silent'],
-];
-
 const started = performance.now();
-const run = ([label, command]) => new Promise(resolve => {
+const env = { ...process.env, FORCE_COLOR: '0', ASTRO_TELEMETRY_DISABLED: '1' };
+const run = (label, command) => new Promise(resolve => {
 	const begin = performance.now();
-	const child = spawn(command, { shell: true, env: { ...process.env, FORCE_COLOR: '0' } });
+	const child = spawn(command, { shell: true, env });
 	let output = '';
 	child.stdout.on('data', chunk => { output += chunk; });
 	child.stderr.on('data', chunk => { output += chunk; });
 	child.on('close', code => resolve({ label, code, output, seconds: (performance.now() - begin) / 1000 }));
 });
 
-const results = await Promise.all(steps.map(run));
+const astroTrack = async () => {
+	const buildResult = await run('构建与站点检查', 'npm run build --silent');
+	const checkResult = await run('类型检查', 'npm run check --silent');
+	return [checkResult, buildResult];
+};
+
+const [unitResult, astroResults] = await Promise.all([
+	run('单元测试', 'npm run test:unit --silent'),
+	astroTrack(),
+]);
+
+const results = [astroResults[0], unitResult, astroResults[1]];
 for (const { label, code, output, seconds } of results) {
 	const summary = output.trim().split('\n').filter(line => /errors|pass |fail |checks passed|Site checks/.test(line)).slice(-2).join(' | ');
 	console.log(`${code === 0 ? '✓' : '✗'} ${label.padEnd(8, '　')} ${seconds.toFixed(1).padStart(5)}s  ${summary}`);

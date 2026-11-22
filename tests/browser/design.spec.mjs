@@ -1,27 +1,28 @@
 import { test, expect } from '@playwright/test';
 
-test('Home presents 札记 and 长卷 in date order, then 闲笔', async ({ page }) => {
+test('Home presents Bento status, filterable 札记, real gallery 闲笔, and 3 长卷 monographs', async ({ page }) => {
  await page.goto('');
  await page.evaluate(() => document.fonts.ready);
+ await expect(page.locator('.hero-title')).toBeVisible();
+ await expect(page.locator('.now-card')).toBeVisible();
  const recent = page.locator('#recent');
  await expect(recent.getByRole('heading', { name: '札记' })).toBeVisible();
- await expect(recent.getByRole('heading', { name: '长卷' })).toBeVisible();
- await expect(recent.locator('.column').first().locator('.feed-item')).toHaveCount(6);
- await expect(recent.locator('.column').last().locator('.feed-item')).toHaveCount(6);
- const links = await recent.locator('.feed-item a').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
- expect(new Set(links).size).toBe(12);
- for (const column of await recent.locator('.column').all()) {
-  const dates = await column.locator('time').evaluateAll(nodes => nodes.map(node => Date.parse(node.dateTime)));
-  expect(dates).toEqual([...dates].sort((a, b) => b - a));
- }
- // 首屏只放欢迎：栏目从第二屏开始，紧接在首屏之后，不留整屏空白。
- const recentTop = await recent.evaluate(node => node.getBoundingClientRect().top - innerHeight);
- expect(recentTop).toBeGreaterThanOrEqual(-1);
- expect(recentTop).toBeLessThan(150);
- await expect(page.locator('.timeline .months a')).toHaveCount(12);
- const jottings = page.locator('.jottings');
- await expect(jottings.getByRole('heading', { name: '闲笔' })).toBeVisible();
- await expect(jottings.locator('.jotting-feed a')).not.toHaveCount(0);
+ await expect(recent.getByRole('heading', { name: '闲笔' })).toBeVisible();
+ const visibleNotes = recent.locator('.feed-item:visible');
+ await expect(visibleNotes).toHaveCount(6);
+ const dates = await visibleNotes.locator('time').evaluateAll(nodes => nodes.map(node => Date.parse(node.dateTime)));
+ expect(dates).toEqual([...dates].sort((a, b) => b - a));
+ const tagBtn = recent.locator('[data-home-tag]:not([data-home-tag="all"])').first();
+ const selectedTag = await tagBtn.getAttribute('data-home-tag');
+ await tagBtn.click();
+ await expect(tagBtn).toHaveAttribute('aria-pressed', 'true');
+ const filteredTags = await visibleNotes.evaluateAll(nodes => nodes.map(n => (n.dataset.tags ?? '').split('|')));
+ expect(filteredTags.length).toBeGreaterThan(0);
+ for (const tags of filteredTags) expect(tags).toContain(selectedTag);
+ await expect(recent.locator('.life-gallery a[href*="/gallery/#photo-"]')).toHaveCount(4);
+ await expect(recent.locator('.life-essay-card')).toBeVisible();
+ await expect(page.locator('.monographs-grid .monograph-card')).toHaveCount(3);
+ await expect(page.locator('.timeline-panel .months a')).toHaveCount(12);
 });
 
 test('Mobile 札记 keeps articles in the first screen and filters by tag', async ({ page }) => {
@@ -64,20 +65,21 @@ test('Home fits narrow and wide viewports without horizontal overflow', async ({
   await page.goto('');
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-  await expect(page.getByRole('heading', { name: /我是 kreiitor/ })).toBeVisible();
-  await expect(page.locator('#recent .feed-item').first()).toBeVisible();
+  await expect(page.locator('.hero-title')).toBeVisible();
+  await expect(page.locator('#recent .feed-item:visible').first()).toBeVisible();
  }
 });
 
-test('Home typing completes once and respects reduced motion', async ({ page }) => {
- await page.emulateMedia({ reducedMotion: 'no-preference' });
- await page.goto('');
- await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识', { timeout: 8000 });
- // 静态文案不随动态偏好改变：减少动效时仍是同一句最终词，只是不播打字动画。
+test('Home entrance respects reduced motion without animations', async ({ page }) => {
  await page.emulateMedia({ reducedMotion: 'reduce' });
- await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识');
- await expect(page.locator('.caret')).toBeHidden();
- await expect(page.locator('.claim .sr-only')).toHaveText('札记、长卷与闲笔');
+ await page.goto('');
+ await expect(page.locator('.hero-title')).toBeVisible();
+ const anim = await page.locator('.bento-hero').evaluate(e => {
+  const s = getComputedStyle(e);
+  return { name: s.animationName, dur: s.animationDuration };
+ });
+ const toMs = v => v.endsWith('ms') ? parseFloat(v) : parseFloat(v) * 1000;
+ expect(anim.name === 'none' || toMs(anim.dur) <= 1).toBe(true);
 });
 
 test('Topic aliases keep their canonical page and matching entries', async ({ page }) => {
@@ -117,10 +119,10 @@ test('Home remains readable without JavaScript', async ({ browser, baseURL }) =>
  try {
   const page = await context.newPage();
   await page.goto(baseURL);
-  await expect(page.locator('[data-typed-text]')).toHaveText('可复用的知识');
-  await expect(page.locator('.caret')).toBeHidden();
-  await expect(page.locator('#recent .feed-item').first()).toBeVisible();
+  await expect(page.locator('.hero-title')).toBeVisible();
+  await expect(page.locator('#recent .feed-item:visible')).toHaveCount(6);
   await expect(page.locator('.feed-time').first()).not.toBeEmpty();
+  await expect(page.locator('.life-gallery')).toBeVisible();
  } finally {
   await context.close();
  }

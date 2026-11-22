@@ -85,7 +85,7 @@ test('Reduced motion and mobile navigation retain keyboard access',async({page})
  // 减少动态效果：断言「面向用户意图」的结果——动画不产生可见时长，
  // 而不是绑死某一种实现（当前用时长归零以保留 animationend/transitionend；
  // 早期用 animation:none。两者都满足，故断言同时接受）。
- const anim=await page.locator('.hero-copy').evaluate(e=>{const s=getComputedStyle(e);return{name:s.animationName,dur:s.animationDuration,tr:s.transitionDuration};});
+ const anim=await page.locator('.bento-hero').evaluate(e=>{const s=getComputedStyle(e);return{name:s.animationName,dur:s.animationDuration,tr:s.transitionDuration};});
  const toMs=v=>v.endsWith('ms')?parseFloat(v):parseFloat(v)*1000;
  expect(anim.name==='none'||toMs(anim.dur)<=1).toBe(true);
  expect(anim.tr.split(',').every(v=>toMs(v.trim())<=1)).toBe(true);

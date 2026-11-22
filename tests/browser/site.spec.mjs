@@ -32,13 +32,13 @@ test('札记 lists only knowledge posts and keeps tag filter and paging across r
  while(await next.isEnabled()) {
   await next.click();
   currentPage++;
+  await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(String(currentPage));
   await expect(rows).toHaveCount(Math.min(12,total-visited.size));
   const links=await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')));
   for(const href of links) {
    expect(visited.has(href),`Article ${href} must appear on only one page`).toBe(false);
    visited.add(href);
   }
-  await expect.poll(()=>new URL(page.url()).searchParams.get('page')).toBe(String(currentPage));
   await page.reload();
   await expect(rows).toHaveCount(links.length);
   expect(await rows.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))).toEqual(links);
@@ -126,10 +126,10 @@ test('Back to top reaches the document start',async({page})=>{
  await page.locator('[data-back-to-top]').click();
  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
 });
-test('Viewport boundaries retain readable content without horizontal page scrolling',async({page},info)=>{
+test('Viewport boundaries retain readable content without horizontal page scrolling',async({page})=>{
  test.setTimeout(120000);
- // 收敛后的三条边界两侧各取一个值，外加常见笔记本宽度。
- for(const width of info.project.name==='mobile'?[320,390,600]:[600,601,900,901,1024,1100,1101,1440]) {
+ // 收敛后的三条边界两侧各取一个值，外加移动端与常见笔记本宽度。
+ for(const width of [320,390,600,601,900,901,1024,1100,1101,1440]) {
   await page.setViewportSize({width,height:1000});
   await page.goto('');await page.evaluate(()=>document.fonts.ready);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);

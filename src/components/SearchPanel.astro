@@ -182,11 +182,11 @@ const topics = getTagSummaries(posts,[]).slice(0,6);
  .search-form input { font-size: 16px; }
  .search-panel > [data-search-root]:first-child .search-form { margin-top: 0; }
  .search-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--color-ink-soft); }
- .search-suggestions button { min-height: 44px; border: 1px solid var(--color-blossom-line); border-radius: 999px; padding: 5px 12px; }
- .search-suggestions button:hover { background: var(--color-accent-soft); }
+ .search-suggestions button { min-height: 40px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-surface); padding: 4px 12px; }
+ .search-suggestions button:hover { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); }
  .search-status { border-top: 1px solid var(--color-blossom-line); margin-top: 28px; padding-top: 20px; font-size: 13px; color: var(--color-ink-soft); }
  .search-types { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
- .search-types button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),background-color var(--dur-base),border-color var(--dur-base); }
+ .search-types button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); color: var(--color-ink-soft); font-size: 13px; transition: color var(--dur-base),background-color var(--dur-base),border-color var(--dur-base); }
  .search-types button span { font-size: 12px; opacity: .75; font-variant-numeric: tabular-nums; }
  .search-types button:hover { color: var(--color-ink); border-color: var(--color-line-strong); }
  .search-types button[aria-pressed="true"] { color: var(--color-on-primary); background: var(--color-primary); border-color: var(--color-primary); }

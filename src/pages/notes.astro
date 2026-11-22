@@ -22,7 +22,7 @@ const rest = series.filter(group => group !== lead);
    <div class="notes-lead-card"><SeriesCard series={lead} headingLevel="h2"/></div>
   </section>}
   <section class="page-shell editorial-section notes-index">
-   <SectionHeading kicker="目录" title="全部长卷" description="可以从第一篇开始，也可以按章节挑着读。"/>
+   <SectionHeading kicker="目录" title="其余长卷" description="可以从第一篇开始，也可以按章节挑着读。"/>
    <div class="notes-rows">{rest.map(item => <SeriesCard series={item} presentation="index" headingLevel="h3"/>)}</div>
    {series.length === 0 && <p class="section-description">学习笔记正在整理中。</p>}
   </section>
@@ -31,7 +31,6 @@ const rest = series.filter(group => group !== lead);
 <style>
  .notes-lead { margin-top: 48px; }
  .notes-lead .eyebrow { margin-bottom: 14px; }
- .notes-lead-card :global(.series-card) { padding-bottom: 26px; }
  .notes-lead-card :global(.series-heading :is(h2,h3)) { font-size: clamp(26px,1.2rem + 1vw,32px); }
  .notes-lead-card :global(.series-description) { max-width: 46em; font-size: 15.5px; }
  .notes-index :global(.section-heading) { border-bottom: 0; }

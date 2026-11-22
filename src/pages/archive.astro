@@ -59,10 +59,10 @@ const labels = Object.fromEntries(Object.entries(sections).map(([key, item]) => 
  .archive-nav ol { margin: 0; padding: 0; list-style: none; }
  .archive-nav a { display: grid; grid-template-columns: 44px minmax(0,1fr) 24px; align-items: center; gap: 10px; min-height: 34px; color: var(--color-ink-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
  /* 柱长 = 当月篇数 / 最多一个月的篇数。 */
- .archive-nav-bar { height: 4px; border-radius: 2px; background: var(--color-line-strong); transform: scaleX(max(var(--share),.06)); transform-origin: left; transition: background-color var(--dur-base) var(--ease-smooth); }
+ .archive-nav-bar { height: 4px; border-radius: 999px; background: var(--color-line-strong); transform: scaleX(max(var(--share),.06)); transform-origin: left; transition: background var(--dur-base) var(--ease-smooth); }
  .archive-nav-count { text-align: right; }
  .archive-nav a:hover { color: var(--color-ink); }
- .archive-nav a[aria-current] { color: var(--color-ink); font-weight: 600; }
+ .archive-nav a[aria-current] { color: var(--color-accent-strong); font-weight: 600; }
  .archive-nav a[aria-current] .archive-nav-bar { background: var(--color-accent); }
  .archive-year + .archive-year { margin-top: 48px; }
  .archive-year-heading { display: flex; align-items: baseline; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-line); }
@@ -87,7 +87,7 @@ const labels = Object.fromEntries(Object.entries(sections).map(([key, item]) => 
   .archive-nav-year { display: flex; align-items: center; gap: 12px; }
   .archive-nav-year > p { margin: 0; font-size: 16px; }
   .archive-nav ol { display: flex; gap: 6px; }
-  .archive-nav a { display: inline-flex; gap: 6px; min-height: 40px; padding: 0 12px; border: 1px solid var(--color-line); border-radius: 999px; white-space: nowrap; }
+  .archive-nav a { display: inline-flex; gap: 6px; min-height: 40px; padding: 0 12px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-surface); white-space: nowrap; }
   .archive-nav-bar { display: none; }
   .archive-row { gap: 10px; grid-template-columns: 40px minmax(0,1fr); }
   .archive-category { display: none; }

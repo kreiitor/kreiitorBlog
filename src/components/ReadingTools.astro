@@ -336,9 +336,9 @@
 </script>
 <style is:global>
  /* 「继续阅读」浮在视口底部居中，不占正文排版；跳转或关闭后不再出现。 */
- .reading-resume { position: fixed; left: 50%; bottom: 24px; z-index: 35; display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 18px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-lift); color: var(--color-ink-soft); font-size: 13px; white-space: nowrap; translate: -50% 0; transition: opacity var(--dur-base) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo); }
+ .reading-resume { position: fixed; left: 50%; bottom: 24px; z-index: 35; display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 16px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-surface); box-shadow: var(--shadow-lift); color: var(--color-ink-soft); font-size: 13px; white-space: nowrap; translate: -50% 0; transition: opacity var(--dur-base) var(--ease-smooth),translate var(--dur-slow) var(--ease-out-expo); }
  @starting-style { .reading-resume { opacity: 0; translate: -50% 12px; } }
- .reading-resume button { min-height: 40px; padding: 0 14px; border-radius: 999px; color: var(--color-ink); font-weight: 600; }
+ .reading-resume button { min-height: 38px; padding: 0 14px; border-radius: var(--radius-control); color: var(--color-ink); font-weight: 600; }
  .reading-resume [data-memory-resume] { background: var(--color-primary); color: var(--color-on-primary); }
  .reading-resume [data-memory-resume]:hover { background: var(--color-primary-strong); }
  .reading-resume .reading-resume-close { min-width: 40px; padding: 0; color: var(--color-ink-muted); font-weight: 400; }
@@ -369,9 +369,9 @@
  .rich-content .katex-display.is-overflowing { text-align: left; }
  .rich-content .katex.is-overflowing { display: inline-block; vertical-align: middle; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 4px; }
  .rich-content .is-overflowing:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
- .code-copy { position: absolute; top: 10px; right: 12px; min-height: 34px; padding: 4px 14px; font-family: var(--font-sans); font-size: 12px; line-height: 1.5; border: 1px solid var(--color-blossom-line); border-radius: 999px; color: var(--color-ink-soft); background: var(--color-surface); }
+ .code-copy { position: absolute; top: 8px; right: 12px; min-height: 32px; padding: 3px 12px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 999px; color: var(--color-ink-soft); background: var(--color-surface-soft); }
  .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
  .rich-content :is(pre,table).is-scrollable { box-shadow: inset -18px 0 14px -14px var(--color-ink-muted); }
  .rich-content :is(pre,table).is-scrollable:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
- @media (pointer: coarse) { .code-copy { min-height: 44px; } }
+ @media (pointer: coarse) { .code-copy { top: 5px; min-height: 44px; } }
 </style>

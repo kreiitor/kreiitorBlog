@@ -79,16 +79,16 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
 </script>
 <style>
  .learning-layout { display: grid; grid-template-columns: 330px minmax(0,1fr); gap: 60px; margin-top: 30px; align-items: start; }
- .course-intro { position: sticky; top: calc(var(--header-height) + 28px); padding: 28px; border: 1px solid var(--color-line); border-radius: 22px; background: var(--color-surface); box-shadow: var(--shadow-soft); }
- .course-emblem { color: var(--color-ink-soft); display: grid; place-items: center; width: 48px; height: 48px; margin-top: 22px; border: 1px solid var(--color-blossom-line); border-radius: 50%; background: var(--color-surface); }
+ .course-intro { position: sticky; top: calc(var(--header-height) + 28px); padding: 26px; border: 1px solid var(--color-line); border-top: 2px solid var(--color-accent); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-soft); }
+ .course-emblem { color: var(--color-accent); display: grid; place-items: center; width: 44px; height: 44px; margin-top: 16px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-accent-soft); }
  .course-intro h1 { font-size: 28px; line-height: 1.3; margin-top: 12px; text-wrap: balance; }
  .course-intro h1 > span { display: block; }
  .course-english { font-family: var(--font-editorial); font-style: italic; font-size: 17px; line-height: 1.4; color: var(--color-accent); margin-top: 8px; }
  .course-description { margin-top: 25px; font-size: 14px; line-height: 1.9; color: var(--color-ink-soft); }
  .course-facts { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--text-caption); margin: 20px 0; color: var(--color-ink-soft); }
  .course-progress { display: grid; gap: 8px; margin: -4px 0 20px; color: var(--color-ink-soft); font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
- .course-progress-track { display: block; height: 3px; border-radius: 3px; background: var(--color-line); overflow: hidden; }
- .course-progress-track > span { display: block; height: 100%; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slower) var(--ease-out-expo); }
+ .course-progress-track { display: block; height: 4px; border-radius: 999px; background: var(--color-line); overflow: hidden; }
+ .course-progress-track > span { display: block; height: 100%; border-radius: 999px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slower) var(--ease-out-expo); }
  .course-intro .zen-btn { width: 100%; }
  .source-note { margin-top: 23px; font-size: var(--text-caption); line-height: 1.9; color: var(--color-ink-soft); }
  .series-overview { margin-bottom: 30px; }
@@ -96,8 +96,8 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  /* 行与行只靠底线分隔，悬停不加圆角底色（圆角会在分隔线两端露出弯角）；
     左侧一根短竖线标出悬停行，强调色只落在当前行。 */
  .chapter-row { position: relative; padding: 20px 0; border-bottom: 1px solid var(--color-line); display: grid; grid-template-columns: 36px minmax(0,1fr) auto; gap: 15px; align-items: start; }
- .chapter-row::before { content: ''; position: absolute; left: -16px; top: 22px; bottom: 22px; width: 2px; border-radius: 2px; background: var(--color-accent); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out-expo); }
- .chapter-row::after { content: ''; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: var(--color-sage); transform: scaleX(var(--chapter-progress,0)); transform-origin: left; opacity: .7; }
+ .chapter-row::before { content: ''; position: absolute; left: -16px; top: 22px; bottom: 22px; width: 2.5px; border-radius: 999px; background: var(--color-accent); transform: scaleY(0); transition: transform var(--dur-base) var(--ease-out-expo); }
+ .chapter-row::after { content: ''; position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; border-radius: 999px; background: var(--color-sage); transform: scaleX(var(--chapter-progress,0)); transform-origin: left; opacity: .8; }
  .chapter-row:is(:hover,:focus-visible)::before,.chapter-row[data-next]::before { transform: scaleY(1); }
  .chapter-number { font-family: var(--font-mono); font-size: 14px; color: var(--color-ink-muted); line-height: 1.9; font-variant-numeric: tabular-nums; transition: color var(--dur-base); }
  .chapter-row:is(:hover,:focus-visible) .chapter-number { color: var(--color-accent); }

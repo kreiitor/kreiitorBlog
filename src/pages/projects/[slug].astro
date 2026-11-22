@@ -10,7 +10,6 @@ import { withBase } from '../../utils/url';
 import { resolveCover } from '../../utils/covers';
 import { siteConfig } from '../../data/site';
 import 'katex/dist/katex.min.css';
-import '../../styles/code-fonts.css';
 export async function getStaticPaths() { return getProjects(await getCollection('projects')).map(project => ({ params:{ slug:project.id }, props:{ project } })); }
 const { project } = Astro.props;
 const { Content } = await render(project);

@@ -22,7 +22,7 @@ for (const source of sources) {
 const researchCovers = (await readdir('public/covers/research')).filter(file => file.endsWith('.webp'));
 for (const file of researchCovers) {
  const source = `public/covers/research/${file}`;
- const image = await sharp(source).resize(1200, 630, { fit: 'contain', background: '#f6f3ec' }).png({ compressionLevel: 9 }).toBuffer();
+ const image = await sharp(source).resize(1200, 630, { fit: 'contain', background: '#f4f3ef' }).png({ compressionLevel: 9 }).toBuffer();
  await writeAsset(source.replace(/\.webp$/, '.png'), image);
 }
 console.log(`Prepared ${sources.length + researchCovers.length} sharing images at 1200×630.`);

@@ -41,15 +41,15 @@ const avatarMark = avatarSvg.replace(/<style>.*?<\/style>/s, '').replace(/ aria-
  }
 </script>
 <style>
- .hello-dot { color: var(--color-accent); }
+ .hello-dot { color: var(--color-vermilion); }
  .about-layout { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 110px; margin-top: 55px; }
  .about-copy h2 { font-size: clamp(28px,1.2rem + 1.4vw,40px); line-height: 1.45; margin: 16px 0 26px; }
  .about-copy > p:not(.eyebrow) { max-width: 40em; font-size: 16px; color: var(--color-ink-soft); line-height: 1.9; margin-top: 18px; }
- .profile-note { position: sticky; top: calc(var(--header-height) + 32px); align-self: start; padding: 32px; border: 1px solid var(--color-line); border-radius: 22px; background: var(--color-surface); box-shadow: var(--shadow-soft); }
- .profile-logo { display: grid; place-items: center; width: 80px; height: 80px; border-radius: 18px; background: var(--color-surface-soft); }
+ .profile-note { position: sticky; top: calc(var(--header-height) + 32px); align-self: start; padding: 28px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-soft); }
+ .profile-logo { display: grid; place-items: center; width: 76px; height: 76px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface-soft); box-shadow: inset 0 0 0 3px var(--color-surface); }
  .profile-logo :global(svg) { width: 60%; height: 60%; }
  .profile-logo :global(.brand-ink) { fill: var(--color-ink); }
- .profile-logo :global(.brand-accent) { fill: var(--color-accent); }
+ .profile-logo :global(.brand-accent) { fill: var(--color-vermilion); }
  .profile-note h2 { font-family: var(--font-editorial); font-size: 30px; margin-top: 20px; }
  .profile-note > p:not(.eyebrow) { font-size: var(--text-caption); color: var(--color-ink-soft); margin-top: 8px; }
  .profile-rule { border-top: 1px solid var(--color-blossom-line); margin: 26px 0; }

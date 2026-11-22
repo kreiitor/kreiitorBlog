@@ -6,35 +6,60 @@ interface Props { series: LearningSeries; compact?: boolean; presentation?: 'car
 const { series, compact = false, presentation = 'card', headingLevel: Heading = 'h3' } = Astro.props;
 const { entry, chapters } = series;
 const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
+const isLead = presentation === 'card' && !compact;
 ---
-<a href={withBase(`/notes/${entry.id}/`)} class:list={['zen-card','series-card',{'series-compact':compact,'series-index':presentation === 'index' && !compact}]} data-series={entry.id}>
- <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'Structured learning'}</p><Heading>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
- <p class="series-description">{entry.data.description}</p>
- <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
+<a href={withBase(`/notes/${entry.id}/`)} class:list={['zen-card','series-card',{'series-lead':isLead,'series-compact':compact,'series-index':presentation === 'index' && !compact}]} data-series={entry.id}>
+ {isLead && <div class="series-monograph-plate" aria-hidden="true">
+  <span class="plate-badge"><span class="plate-glyph">{entry.data.emblem ?? '§'}</span></span>
+  <span class="plate-meta">{chapters.length} 篇</span>
+ </div>}
+ <div class="series-body">
+  <div class="series-heading"><span class="series-emblem" aria-hidden="true"><Icon name={entry.data.icon} size={24}/></span><div><p class="eyebrow">{entry.data.englishTitle ?? 'Structured learning'}</p><Heading>{titleParts ? <><span>{titleParts[1]}</span><span class="series-subtitle">{titleParts[2]}</span></> : entry.data.title}</Heading></div><span class="series-arrow" aria-hidden="true"><Icon name="arrow"/></span></div>
+  <p class="series-description">{entry.data.description}</p>
+  <div class="series-bottom"><span>{chapters.length} 篇笔记{entry.data.facts && ` · ${entry.data.facts}`}</span><span>按章节阅读 <span aria-hidden="true">→</span></span></div>
+ </div>
 </a>
 <style>
- .series-card { display: flex; flex-direction: column; padding: 2px 0 22px; }
- .series-card:not(.series-index) { border-radius: var(--radius-card); background: var(--color-surface-soft); }
- .series-card:not(.series-index) > * { margin-inline: 24px; }
- .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; margin-top: 20px; }
+ .series-card { display: flex; flex-direction: column; }
+ .series-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+ /* Porcelain Monograph Lead Card */
+ .series-lead { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 28px; align-items: stretch; padding: 26px 28px; border: 1px solid var(--color-line); border-top: 2px solid var(--color-accent); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-soft); }
+ .series-monograph-plate {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  min-height: 184px; padding: 18px; border-radius: var(--radius-inner); border: 1px solid var(--color-line);
+  background: var(--color-surface-soft);
+ }
+ .plate-badge {
+  display: grid; place-items: center; width: 68px; height: 68px;
+  border-radius: 14px; border: 1px solid var(--color-line-strong);
+  background: var(--color-surface); box-shadow: var(--shadow-whisper);
+ }
+ .plate-glyph {
+  font-family: var(--font-editorial); font-size: 34px; font-style: italic; line-height: 1;
+  color: var(--color-accent);
+ }
+ .plate-meta {
+  padding: 2px 10px; border-radius: 999px;
+  border: 1px solid var(--color-line); background: var(--color-surface);
+  color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+ }
+
+ .series-heading { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; }
  .series-heading > div { min-width: 0; }
  .series-heading .eyebrow { font-size: 11.5px; overflow-wrap: anywhere; }
  .series-heading :is(h2,h3) { margin-top: 8px; font-size: 24px; line-height: 1.3; }
  .series-heading :is(h2,h3) > span { display: block; }
  .series-heading .series-subtitle { margin-top: 6px; color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 15px; font-weight: 500; text-wrap: balance; }
  .series-card:not(.series-compact) .series-emblem { display: none; }
- .series-emblem { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-surface-soft); color: var(--color-ink-soft); transition: transform var(--dur-slow) var(--ease-out-expo); }
- .series-card:hover .series-emblem { transform: rotate(-6deg); }
- .series-arrow { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-boundary); border-radius: 50%; color: var(--color-ink); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
- .series-card:is(:hover,:focus-visible) .series-arrow { transform: rotate(-45deg); background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
- .series-description { margin-block: 14px 18px; color: var(--color-ink-soft); font-size: 14.5px; line-height: 1.8; }
- .series-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px dashed var(--color-line-strong); color: var(--color-ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
- .series-bottom > span:last-child { color: var(--color-ink); font-weight: 600; }
- @media (max-width: 600px) { .series-card:not(.series-index) > * { margin-inline: 20px; } .series-heading :is(h2,h3) { font-size: 21px; } .series-card:not(.series-compact) .series-heading .eyebrow { display: none; } .series-card:not(.series-compact) .series-heading :is(h2,h3) { margin-top: 0; } }
+ .series-emblem { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface-soft); color: var(--color-accent); }
+ .series-arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-line-strong); border-radius: 50%; color: var(--color-ink); background: var(--color-surface-soft); transition: transform var(--dur-base) var(--ease-out-expo),background-color var(--dur-base),color var(--dur-base),border-color var(--dur-base); }
+ .series-card:is(:hover,:focus-visible) .series-arrow { transform: translateX(3px); background: var(--color-accent); border-color: var(--color-accent); color: var(--color-on-accent); }
+ .series-description { margin-block: 14px 18px; color: var(--color-ink-soft); font-size: 15px; line-height: 1.85; }
+ .series-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--color-line); color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+ .series-bottom > span:last-child { color: var(--color-accent-strong); font-family: var(--font-sans); font-weight: 600; }
 
  .series-compact { padding: 18px 20px; }
- .series-compact > * { margin-inline: 0 !important; }
- .series-compact .series-heading { display: flex; align-items: center; gap: 14px; margin-top: 0; }
+ .series-compact .series-heading { display: flex; align-items: center; gap: 14px; }
  .series-compact .series-heading > div { flex: 1; }
  .series-compact .series-heading .eyebrow,.series-compact .series-description { display: none; }
  .series-compact .series-heading :is(h2,h3) { margin-top: 0; font-size: 19px; }
@@ -43,30 +68,38 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .series-compact .series-bottom { margin-top: 10px; padding-top: 0; border-top: 0; }
  .series-compact .series-bottom > span:last-child { display: none; }
 
- .series-index { display: grid; grid-template-columns: minmax(180px,260px) minmax(0,1fr) 150px; align-items: center; gap: 32px; padding: 28px 0; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; overflow: visible; }
- .series-index::after { display: none; }
- .series-index > * { min-width: 0; margin: 0 !important; }
+ /* Clean Porcelain Index Rows */
+ .series-index { position: relative; padding: 24px 14px; margin-inline: -14px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: var(--radius-card); background: transparent; box-shadow: none; overflow: visible; transition: background-color var(--dur-base); }
+ .series-index .series-body { display: grid; grid-template-columns: minmax(180px,240px) minmax(0,1fr) minmax(180px,210px); align-items: center; gap: 28px; }
  .series-index .series-heading { display: block; }
  .series-index .series-heading .eyebrow,.series-index .series-arrow { display: none; }
- .series-index .series-heading :is(h2,h3) { margin-top: 0; font-size: 23px; transition: color var(--dur-base); }
+ .series-index .series-heading :is(h2,h3) { margin-top: 0; font-size: 22px; transition: color var(--dur-base); }
  .series-index .series-heading .series-subtitle { margin-top: 4px; font-size: 15px; }
- .series-index .series-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; }
- .series-index .series-bottom { flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px; padding: 0; border: 0; text-align: right; line-height: 1.8; }
+ .series-index .series-description { margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; }
+ .series-index .series-bottom { flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px; margin: 0; padding: 0; border: 0; text-align: right; line-height: 1.65; }
  .series-index .series-bottom > span:last-child { white-space: nowrap; }
- .series-index:is(:hover,:focus-visible) { translate: none; box-shadow: none; border-color: var(--color-line-strong); }
- .series-index:is(:hover,:focus-visible) :is(h2,h3),.series-index:is(:hover,:focus-visible) .series-bottom > span:last-child { color: var(--color-accent); }
- @media (min-width: 1101px) { .series-index { grid-template-columns: minmax(200px,280px) minmax(0,1fr) 160px; } }
+ .series-index:is(:hover,:focus-visible) { translate: none; box-shadow: none; background: var(--color-surface); }
+ .series-index:is(:hover,:focus-visible) :is(h2,h3) { color: var(--color-accent-strong); }
+ @media (min-width: 1101px) { .series-index .series-body { grid-template-columns: minmax(200px,260px) minmax(0,1fr) minmax(190px,220px); } }
+ @media (max-width: 900px) {
+  .series-lead { grid-template-columns: 156px minmax(0, 1fr); gap: 22px; padding: 22px 24px; }
+ }
  @media (min-width: 601px) and (max-width: 900px) {
-  .series-index { grid-template-columns: minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
+  .series-index .series-body { grid-template-columns: minmax(0,1fr) 130px; column-gap: 24px; row-gap: 10px; }
   .series-index .series-heading { grid-column: 1; grid-row: 1; }
   .series-index .series-description { grid-column: 1; grid-row: 2; -webkit-line-clamp: 2; }
   .series-index .series-bottom { grid-column: 2; grid-row: 1 / span 2; }
  }
  @media (max-width: 600px) {
-  .series-index { grid-template-columns: minmax(0,1fr); gap: 16px 18px; padding: 22px 0; }
-  .series-index .series-heading { grid-column: 1; grid-row: 1; }
+  .series-lead { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 20px; }
+  .series-monograph-plate { display: none; }
+  .series-heading :is(h2,h3) { font-size: 21px; }
+  .series-card:not(.series-compact) .series-heading .eyebrow { display: none; }
+  .series-card:not(.series-compact) .series-heading :is(h2,h3) { margin-top: 0; }
+  .series-index { padding: 22px 0; margin-inline: 0; }
+  .series-index .series-body { grid-template-columns: minmax(0,1fr); gap: 14px; }
   .series-index .series-heading :is(h2,h3) { font-size: 20px; }
-  .series-index .series-description { grid-column: 1 / -1; -webkit-line-clamp: 2; }
-  .series-index .series-bottom { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; text-align: left; }
+  .series-index .series-description { -webkit-line-clamp: 2; }
+  .series-index .series-bottom { flex-direction: row; justify-content: space-between; text-align: left; }
  }
 </style>

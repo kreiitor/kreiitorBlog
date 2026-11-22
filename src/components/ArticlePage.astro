@@ -14,7 +14,6 @@ import { withBase } from '../utils/url';
 import { resolveCover } from '../utils/covers';
 import { sections } from '../data/sections';
 import 'katex/dist/katex.min.css';
-import '../styles/code-fonts.css';
 interface Props { post: PostEntry; }
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
@@ -46,15 +45,18 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
    <article data-pagefind-body data-reading-article data-article-slug={post.id} data-article-title={post.data.title} data-article-description={post.data.description} data-article-type={section.label} data-pagefind-meta="slug[data-article-slug], title[data-article-title], description[data-article-description], type[data-article-type]">
     <header class="article-header">
      <span data-pagefind-meta="type" class="sr-only">{section.label}</span>
-     <p class="eyebrow">{group ? `${group.entry.data.title} · 第 ${chapterIndex + 1} 篇` : section.label}</p>
+     <p class="eyebrow"><svg class="article-crane" viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><path d="M19 40 32 32 45 40 32 51zM20.5 39 32 33 15 5zM17 39.5 29 49 8 20zM47 39.5 35 49 59 22z" fill="currentColor"/><path d="M32 33 43.5 39 49 5z" fill="currentColor" fill-opacity=".5"/><path d="M8 20 12.5 22.5 4 30z" fill="var(--color-vermilion)"/></svg>{group ? `${group.entry.data.title} · 第 ${chapterIndex + 1} 篇` : section.label}</p>
      <h1 data-pagefind-meta="title" data-pagefind-weight="8">{post.data.title}</h1>
      <p class="article-summary" data-pagefind-meta="description">{post.data.description}</p>
-     <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">·</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">·</span><span>{getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <><span aria-hidden="true">·</span><span>更新于 {formatDate(post.data.updatedDate)}</span></>}</div>
-     <div class="article-tags">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
+     <div class="article-dossier">
+      <div class="card-meta"><span>kreiitor</span><span aria-hidden="true">/</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span aria-hidden="true">/</span><span>{getReadingTime(post)} 分钟阅读</span>{post.data.updatedDate && <><span aria-hidden="true">/</span><span>更新于 {formatDate(post.data.updatedDate)}</span></>}</div>
+      <div class="article-tags">{post.data.tags.map(tag => <TagLink tag={tag}/>)}</div>
+     </div>
     </header>
     <ReadingTools/>
     <details class="mobile-toc" data-pagefind-ignore><summary><span class="mobile-toc-label">目录</span><span class="mobile-toc-current" data-toc-current>{toc.length} 个小节</span></summary><nav aria-label="文章目录">{toc.map(h => <a href={`#${h.slug}`} class={h.depth === 3 ? 'toc-h3' : undefined} data-toc-link><MathLabel text={h.text}/></a>)}</nav></details>
     <div class="rich-content article-body"><Content/></div>
+    <div class="article-colophon" data-pagefind-ignore aria-hidden="true"><span class="colophon-rule"></span><span class="colophon-mark"><span class="colophon-seal"></span><span class="colophon-name">千羽</span></span><span class="colophon-rule"></span></div>
     <ReadingMemory/>
     {group && <div class="chapter-progress" data-pagefind-ignore><span>{group.entry.data.title} · 第 {chapterIndex + 1} / {group.chapters.length} 篇</span><span class="chapter-progress-track" aria-hidden="true">{group.chapters.map((_, index) => <span class:list={{ 'is-past': index < chapterIndex, 'is-current': index === chapterIndex }}></span>)}</span></div>}
     {(previous || next) && <nav class:list={["chapter-nav", {"chapter-nav-single": !previous || !next}]} data-pagefind-ignore aria-label="继续阅读"><div>{previous && <a href={withBase(previous.href)}><span>← {previous.label}</span><strong>{previous.title}</strong></a>}</div><div>{next && <a href={withBase(next.href)}><span>{next.label} →</span><strong>{next.title}</strong></a>}</div></nav>}
@@ -67,26 +69,33 @@ const related = getRelatedPosts(post, await getCollection('posts'), 3);
 </BaseLayout>
 <style>
  .reading-shell { padding-top: 36px; }
- .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+ .article-header .eyebrow { display: flex; align-items: center; gap: 8px; }
+ .article-crane { flex-shrink: 0; color: var(--color-ink-soft); }
+ .article-dossier { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding-top: 16px; border-top: 1px solid var(--color-line); }
+ .article-colophon { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 60px 0 28px; color: var(--color-ink-muted); font-family: var(--font-display); font-size: 12.5px; letter-spacing: .2em; }
+ .colophon-rule { flex: 0 1 84px; height: 1px; background: var(--color-line-strong); }
+ .colophon-mark { display: inline-flex; align-items: center; gap: 8px; }
+ .colophon-seal { width: 6px; height: 6px; border-radius: 50%; background: var(--color-vermilion); }
+ .article-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0; }
  .article-tags :global(.zen-tag) { padding: 2px 10px; font-size: 12px; }
  .chapter-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 40px; }
- .chapter-nav a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 18px 20px; border: 1px solid var(--color-line); border-radius: 14px; font-size: 12.5px; transition: border-color var(--dur-base),background-color var(--dur-base); }
- .chapter-nav a:hover { border-color: var(--color-line-strong); background: var(--color-surface); }
+ .chapter-nav a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 18px 22px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); box-shadow: var(--shadow-whisper); font-size: 12.5px; transition: border-color var(--dur-base),background-color var(--dur-base),box-shadow var(--dur-base); }
+ .chapter-nav a:hover { border-color: var(--color-accent); background: var(--color-surface-soft); box-shadow: var(--shadow-soft); }
  .chapter-nav a:hover strong { color: var(--color-accent-strong); }
- .chapter-nav strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.6; transition: color var(--dur-base); }
- .chapter-nav span { color: var(--color-ink-muted); }
+ .chapter-nav strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.55; transition: color var(--dur-base); }
+ .chapter-nav span { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 11.5px; }
  .chapter-nav > div:last-child { text-align: right; }
  .chapter-nav-single { grid-template-columns: 1fr; }
  .chapter-nav-single > div:empty { display: none; }
  .chapter-nav-single > div:last-child { text-align: left; }
  .toc-series { margin-top: 20px; color: var(--color-ink) !important; font-weight: 600; }
  .mobile-toc summary { display: flex; align-items: center; gap: 12px; min-width: 0; }
- .mobile-toc-label { flex-shrink: 0; padding: 1px 10px; border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-ink-soft); font-size: 12px; }
+ .mobile-toc-label { flex-shrink: 0; padding: 2px 10px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 11.5px; }
  .mobile-toc-current { min-width: 0; overflow: hidden; color: var(--color-ink); text-overflow: ellipsis; white-space: nowrap; }
  .chapter-progress { display: grid; gap: 10px; margin-bottom: 18px; color: var(--color-ink-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
  .chapter-progress-track { display: flex; gap: 4px; }
- .chapter-progress-track > span { flex: 1; height: 3px; border-radius: 3px; background: var(--color-line); }
- .chapter-progress-track > .is-past { background: var(--color-line-strong); }
+ .chapter-progress-track > span { flex: 1; height: 4px; border-radius: 999px; background: var(--color-line); }
+ .chapter-progress-track > .is-past { background: var(--color-accent-2); opacity: .65; }
  .chapter-progress-track > .is-current { background: var(--color-accent); }
  .mobile-toc nav a { display: flex; align-items: center; min-width: 0; min-height: 44px; padding-block: 4px; overflow-wrap: anywhere; }
  .mobile-toc a:not(.toc-h3) { color: var(--color-ink); font-weight: 500; }

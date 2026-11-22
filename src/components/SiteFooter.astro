@@ -11,11 +11,12 @@ const groups: { title: string; links: FooterLink[] }[] = [
 ];
 const built = new Date().toISOString().slice(0, 10);
 ---
-<footer class:list={['site-footer','wash', { 'site-footer-compact': compact }]}>
+<footer class:list={['site-footer', { 'site-footer-compact': compact }]}>
+ <div class="footer-rule" aria-hidden="true"></div>
  <div class="page-shell">
   <div class="footer-panel">
    <div class="footer-brand">
-    <p class="footer-name">{siteConfig.author}<span class="footer-dot" aria-hidden="true"></span></p>
+    <p class="footer-name">千羽<span class="footer-dot" aria-hidden="true"></span><span class="footer-en">senbazuru</span></p>
     <p class="footer-motto">{siteConfig.tagline}。</p>
     <p class="footer-note">关于 AI、软件工程与学习的长期记录。</p>
    </div>
@@ -33,31 +34,31 @@ const built = new Date().toISOString().slice(0, 10);
  </div>
 </footer>
 <style>
- .site-footer { margin-top: 120px; padding: 48px 0 24px; }
- :global(.home-page) + .site-footer,:global(main:has(.home-page)) + .site-footer { margin-top: 72px; }
- .footer-panel { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 40px 64px; padding: 36px 0 28px; border-top: 1px solid var(--color-line-strong); }
- .footer-name { display: inline-flex; align-items: baseline; gap: 4px; color: var(--color-ink); font-family: var(--font-display); font-size: 24px; font-weight: 600; line-height: 1.2; }
- .footer-dot { width: 6px; height: 6px; border-radius: 1px; background: var(--color-accent); }
- .footer-motto { margin-top: 10px; color: var(--color-ink-soft); font-size: 14px; }
+ .site-footer { position: relative; margin-top: 96px; padding: 0 0 28px; }
+ :global(.home-page) + .site-footer,:global(main:has(.home-page)) + .site-footer { margin-top: 64px; }
+ .footer-rule { height: 1px; background: var(--color-line); }
+ .footer-panel { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: 40px 64px; padding: 44px 0 32px; }
+ .footer-name { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink); font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.2; }
+ .footer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-vermilion); }
+ .footer-en { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .1em; }
+ .footer-motto { margin-top: 12px; color: var(--color-ink-soft); font-size: 14.5px; }
  .footer-note { margin-top: 6px; color: var(--color-ink-muted); font-size: 13px; }
  .footer-links { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
- .footer-label { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; color: var(--color-ink-muted); font-size: 12.5px; }
- .footer-label span { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 11.5px; }
+ .footer-label { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; color: var(--color-ink-muted); font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+ .footer-label span { color: var(--color-accent); font-family: var(--font-mono); font-size: 11px; }
  .footer-links ul { margin: 0; padding: 0; list-style: none; }
- .footer-links a { position: relative; display: inline-flex; align-items: center; min-height: 36px; color: var(--color-ink-soft); font-size: 14px; transition: color var(--dur-base) var(--ease-smooth); }
- .footer-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 8px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out-expo); }
+ .footer-links a { position: relative; display: inline-flex; align-items: center; min-height: 36px; color: var(--color-ink-soft); font-size: 13.5px; transition: color var(--dur-base) var(--ease-smooth); }
  .footer-links a:is(:hover,:focus-visible) { color: var(--color-accent-strong); }
- .footer-links a:is(:hover,:focus-visible)::after { transform: none; }
- .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding-top: 6px; border-top: 1px solid var(--color-line); color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 12px; }
+ .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding-top: 14px; border-top: 1px solid var(--color-line); color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 11.5px; }
  .footer-bottom .text-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-ink-soft); font-family: var(--font-sans); font-weight: 500; }
- .footer-bottom .text-link:hover { color: var(--color-ink); }
+ .footer-bottom .text-link:hover { color: var(--color-accent); }
  .site-footer-compact { margin-top: 80px; }
- .site-footer-compact .footer-panel { padding-block: 28px 22px; }
+ .site-footer-compact .footer-panel { padding-block: 32px 24px; }
  @media (max-width: 900px) { .footer-panel { grid-template-columns: minmax(0,1fr); } }
  @media (max-width: 600px) {
-  .site-footer { margin-top: 80px; }
-  .footer-panel,.site-footer-compact .footer-panel { padding-block: 26px 22px; }
+  .site-footer { margin-top: 72px; }
+  .footer-panel,.site-footer-compact .footer-panel { padding-block: 28px 22px; }
   .footer-links { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-  .footer-links a { font-size: 13.5px; }
+  .footer-links a { font-size: 13px; }
  }
 </style>

@@ -1,28 +1,28 @@
-/* Match the site's warm dark surfaces and moss-green actions inside Giscus. */
+/* Loaded inside the Giscus iframe; matched to the Warm Obsidian dark theme. */
 @import url("https://giscus.app/themes/dark.css");
 main {
- --color-canvas-default: #2c251d;
- --color-canvas-subtle: #211c16;
- --color-canvas-inset: #1a1611;
- --color-canvas-overlay: #372e24;
- --color-fg-default: #f4ebdc;
- --color-fg-muted: #d8c8b2;
- --color-fg-subtle: #b9a78e;
- --color-fg-on-emphasis: #fffcf5;
- --color-border-default: #7b6a55;
- --color-border-muted: #4b3f32;
- --color-control-line: #9c876d;
- --color-accent-fg: #a9c89a;
- --color-accent-emphasis: #4f7444;
- --color-accent-muted: #34412c;
- --color-accent-subtle: #34412c;
- --color-btn-primary-bg: #4f7444;
- --color-btn-primary-border: #4f7444;
- --color-btn-primary-hover-bg: #405f37;
- --color-btn-primary-hover-border: #405f37;
- --color-btn-primary-text: #fffcf5;
+ --color-canvas-default: #1a1a18;
+ --color-canvas-subtle: #121211;
+ --color-canvas-inset: #161614;
+ --color-canvas-overlay: #232320;
+ --color-fg-default: #eeede9;
+ --color-fg-muted: #c8c6be;
+ --color-fg-subtle: #9d9a91;
+ --color-fg-on-emphasis: #121211;
+ --color-border-default: #43413b;
+ --color-border-muted: #2b2a27;
+ --color-control-line: #726f67;
+ --color-accent-fg: #b4d2e3;
+ --color-accent-emphasis: #8cb4cb;
+ --color-accent-muted: #253b4a;
+ --color-accent-subtle: #192730;
+ --color-btn-primary-bg: #8cb4cb;
+ --color-btn-primary-border: #8cb4cb;
+ --color-btn-primary-hover-bg: #b4d2e3;
+ --color-btn-primary-hover-border: #b4d2e3;
+ --color-btn-primary-text: #121211;
  color-scheme: dark;
 }
 .gsc-comment-box, .gsc-main textarea { border-color: var(--color-control-line); }
-.gsc-main { font-family: Georgia, "Songti SC", "Microsoft YaHei", serif; }
-.gsc-comment-box, .gsc-comment { border-radius: 16px; }
+.gsc-main { font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+.gsc-comment-box, .gsc-comment { border-radius: 14px; }
