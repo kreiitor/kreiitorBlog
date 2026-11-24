@@ -33,8 +33,10 @@ test('Duplicate headings keep distinct anchors when the whole article renders as
  assert.deepEqual(ids,slugs);
 });
 test('Exact Chinese title matches outrank broad full-text hits without losing C++ symbols',()=>{
- const rows=[{title:'表示学习：降维与分布匹配'},{title:'模型架构：Transformer 的计算与存储账'},{title:'线性模型：从最小二乘到 Lasso'}];
+ const rows=[{title:'表示学习：降维与分布匹配',tags:['表示学习']},{title:'模型架构：Transformer 的计算与存储账',tags:['Transformer','AI Infra']},{title:'线性模型：从最小二乘到 Lasso',tags:['FODS']}];
  assert.equal(rankSearchEntries(rows,'线性模型')[0].title,rows[2].title);
+ assert.equal(rankSearchEntries(rows,'Transformer 计算')[0].title,rows[1].title);
+ assert.equal(rankSearchEntries(rows,'AI Infra')[0].title,rows[1].title);
  assert.ok(titleMatchScore('C++ 工程实践','C++')>0);
  assert.equal(titleMatchScore('从代码出发','C++'),0);
  assert.equal(titleMatchScore('AI Infra：系统设计','ai infra'),3);

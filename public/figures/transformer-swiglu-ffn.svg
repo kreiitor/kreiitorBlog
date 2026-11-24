@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 260" width="800" height="260" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>标准 FFN 与 SwiGLU 双分支门控结构对比</title>
+  <desc>左侧展示标准 FFN 单路先升维后激活再降维的两矩阵流；右侧展示 SwiGLU 将输入分拆至门控与值两条并行投影，经逐元素相乘后再降维，从而解释为何中间维缩至 8/3d 仍维持 8d² 总参数。</desc>
+  <defs>
+    <marker id="arr-f" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-fa" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="258" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Left panel: Standard FFN -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">标准 FFN · 单路两矩阵（2 × 4d²）</text>
+
+  <text x="28" y="138" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">x (d)</text>
+  <path d="M 68 134 L 98 134" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+
+  <rect x="100" y="98" width="70" height="72" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="116" y="128" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_up</text>
+  <text x="112" y="148" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">d → 4d</text>
+
+  <path d="M 170 134 L 194 134" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+  <rect x="196" y="114" width="60" height="40" rx="6" fill="#f4f3ef" stroke="#d4d1c8" stroke-width="1.1"/>
+  <text x="206" y="138" font-size="10.5" fill="#18181b">GELU</text>
+
+  <path d="M 256 134 L 280 134" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+  <rect x="282" y="98" width="70" height="72" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="292" y="128" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_down</text>
+  <text x="294" y="148" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">4d → d</text>
+
+  <text x="28" y="212" font-size="9.5" fill="#57575e">2 次矩阵乘，固定形态激活函数统一过滤</text>
+
+  <!-- Divider -->
+  <line x1="376" y1="24" x2="376" y2="232" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Right panel: SwiGLU FFN -->
+  <text x="402" y="34" font-size="12.5" font-weight="600" fill="#2f5268">SwiGLU · 双路门控（3 × 8d²/3 = 8d²）</text>
+
+  <text x="402" y="138" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">x (d)</text>
+  <!-- Split top branch (Gate) -->
+  <path d="M 442 134 L 462 134 L 462 88 L 484 88" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
+  <!-- Split bottom branch (Value) -->
+  <path d="M 442 134 L 462 134 L 462 180 L 484 180" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+
+  <!-- Gate projection + SiLU -->
+  <rect x="486" y="66" width="84" height="44" rx="6" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.4"/>
+  <text x="498" y="85" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">W_gate</text>
+  <text x="498" y="101" font-size="9.5" fill="#1e3a4c">+ SiLU 门控</text>
+
+  <!-- Up projection -->
+  <rect x="486" y="158" width="84" height="44" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="502" y="177" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_up</text>
+  <text x="498" y="193" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">d → 8/3 d</text>
+
+  <!-- Converge to Hadamard Multiply circle -->
+  <path d="M 570 88 L 622 88 L 622 122" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
+  <path d="M 570 180 L 622 180 L 622 146" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+
+  <circle cx="622" cy="134" r="12" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
+  <path d="M 617 129 L 627 139 M 627 129 L 617 139" fill="none" stroke="#2f5268" stroke-width="1.5"/>
+  <text x="614" y="114" font-size="9.5" fill="#2f5268">逐维门控</text>
+
+  <!-- Down projection -->
+  <path d="M 634 134 L 664 134" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
+  <rect x="666" y="100" width="96" height="68" rx="6" fill="#ffffff" stroke="#2f5268" stroke-width="1.3"/>
+  <text x="684" y="130" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_down</text>
+  <text x="684" y="148" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">8/3 d → d</text>
+
+  <text x="402" y="218" font-size="9.5" fill="#2f5268">3 次矩阵乘，中间维缩窄仍保持总参数量守恒</text>
+</svg>

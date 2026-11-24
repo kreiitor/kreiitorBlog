@@ -383,6 +383,8 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
  .site-header,.site-footer,.article-layout > aside,.back-link,.mobile-toc,.reading-memory,.reading-resume,.footnote-preview,.figure-viewer,.reading-progress,.comments-panel,.back-to-top,.chapter-nav,.code-copy,.heading-anchor,.theme-toggle { display: none !important; }
  .page-shell { width: 100%; }
  .article-layout { display: block; }
+ .rich-content figure,.code-frame,.rich-content pre,.rich-content blockquote,.rich-content table { break-inside: avoid; page-break-inside: avoid; }
+ .rich-content figure img { filter: none !important; }
  .rich-content .katex-display,.rich-content .katex.is-overflowing { overflow: visible !important; }
  .rich-content pre { white-space: pre-wrap; overflow-wrap: anywhere; padding-top: 28px; }
  .rich-content table { overflow: visible; }

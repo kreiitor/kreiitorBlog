@@ -313,7 +313,9 @@
   link.addEventListener('focus', () => showNote(link));
   if (hoverCapable) link.addEventListener('pointerleave', hideNote);
   link.addEventListener('blur', hideNote);
+  enhanceAnchor(link, () => { clearTimeout(noteTimer); notePopover.hidden = true; });
  });
+ body?.querySelectorAll<HTMLAnchorElement>('[data-footnote-backref]').forEach(link => enhanceAnchor(link));
  notePopover.addEventListener('pointerenter', () => clearTimeout(noteTimer));
  notePopover.addEventListener('pointerleave', hideNote);
  document.addEventListener('keydown', event => { if (event.key === 'Escape') notePopover.hidden = true; });
@@ -370,6 +372,7 @@
  @starting-style { .figure-viewer[open] { opacity: 0; scale: .97; } }
  .figure-viewer::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
  .figure-viewer img { min-height: 0; max-width: 100%; max-height: calc(94dvh - 120px); margin: 0 auto; object-fit: contain; cursor: zoom-out; }
+ :root[data-theme="dark"] .figure-viewer img[src$=".svg"] { border-radius: 12px; border: 1px solid var(--color-line-strong); filter: brightness(.93) contrast(1.03); }
  .figure-viewer p { color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 14px; line-height: 1.8; }
  .figure-viewer-close { align-self: flex-end; min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 14px; }
  .figure-viewer-close:hover { background: var(--color-accent-soft); }

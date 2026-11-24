@@ -238,6 +238,11 @@ FFN 的参数量在整个 Transformer Block 中占据主导地位。准确计算
 
 **两种结构的总参数量几乎相同**（$8 \times d_{model}^2$），SwiGLU 靠门控机制取得了更好的效果。代价是前向传播需要 3 次 GEMM 而非 2 次，计算量略有增加。
 
+<figure>
+  <img src="/figures/transformer-swiglu-ffn.svg" width="800" height="260" alt="标准 FFN 与 SwiGLU 双分支门控结构对比：标准 FFN 单路经过 W_up 与 W_down；SwiGLU 分拆门控与值两路并在缩窄至 8/3 d 的中间维上保持 8d² 总参数" />
+  <figcaption>左右对照两条计算支路：左边标准 FFN 只走单一升维通道；右边 SwiGLU 从输入分出 W_gate 与 W_up 两路相乘，虽然多了一次矩阵乘，中间维收窄到 8/3d 后总参数量恰好持平。</figcaption>
+</figure>
+
 ### 5.3 与 Attention 模块的参数量对比
 
 | 模块                           | 参数量             | 占 Block 比例 |

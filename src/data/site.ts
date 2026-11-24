@@ -14,8 +14,8 @@ export const siteConfig = {
 		{ label: 'Email', href: 'mailto:kreiitor@foxmail.com' },
 	],
 	nowItems: [
-		{ label: '正在研究', text: 'Repo-level Issue Localization', tone: 'study' as const },
-		{ label: '长卷更新', text: 'Transformer 原理 · 8 篇整理完成', tone: 'study' as const },
+		{ label: '正在研究', text: 'Repo-level Issue Localization', tone: 'study' as const, href: '/projects/issue-localization-benchmark/' },
+		{ label: '长卷更新', text: 'Transformer 原理 · 8 篇整理完成', tone: 'study' as const, href: '/notes/transformer/' },
 		{ label: '手边生活', text: '20 道家常菜顺序 · 两只小猫', tone: 'life' as const, href: '/jottings/' },
 	],
 };

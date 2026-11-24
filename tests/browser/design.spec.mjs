@@ -72,13 +72,19 @@ test('Home fits narrow and wide viewports without horizontal overflow', async ({
 
 test('Inline technical SVG diagrams load cleanly without overflow on narrow screens', async ({ page }) => {
  await page.setViewportSize({ width: 390, height: 844 });
- for (const route of ['blog/transformer-02-architecture/', 'blog/git-glossary/']) {
+ for (const route of ['blog/transformer-02-architecture/', 'blog/transformer-04-ffn/', 'blog/git-glossary/', 'blog/ssh-cli-agent-guide/']) {
   await page.goto(route);
   const figureImg = page.locator('.article-body figure img[src$=".svg"]').first();
   await expect(figureImg).toBeVisible();
   expect(await figureImg.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
  }
+});
+
+test('Site exposes RSS autodiscovery and clickable homepage status links', async ({ page }) => {
+ await page.goto('');
+ await expect(page.locator('head link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute('href', /rss\.xml$/);
+ await expect(page.locator('.now-list a.now-item')).toHaveCount(3);
 });
 
 test('Secondary pages adapt cleanly across phone and narrow tablet widths without overflow', async ({ page }) => {

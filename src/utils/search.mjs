@@ -6,7 +6,9 @@ export function titleMatchScore(title, query) {
  if (!needle) return 0;
  if (text === needle) return 4;
  if (text.startsWith(needle)) return 3;
- return text.includes(needle) ? 2 : 0;
+ if (text.includes(needle)) return 2;
+ const terms = String(query).trim().split(/\s+/).map(normalizeSearchText).filter(Boolean);
+ return terms.length > 1 && terms.every(term => text.includes(term)) ? 2 : 0;
 }
 export function rankSearchEntries(entries, query) {
  return entries.map((entry, index) => ({ entry, index, score: searchEntryScore(entry, query) }))
@@ -21,7 +23,7 @@ export function searchEntryScore(entry, query) {
  if (!terms.length) return 0;
  const title = titleMatchScore(entry.title, query);
  if (title) return title + 2;
- const summary = normalizeSearchText(`${entry.title ?? ''} ${entry.description ?? ''}`);
+ const summary = normalizeSearchText(`${entry.title ?? ''} ${entry.description ?? ''} ${(entry.tags ?? []).join(' ')}`);
  if (terms.every(term => summary.includes(term))) return 2;
  const content = normalizeSearchText(entry.content);
  return terms.every(term => content.includes(term)) ? 1 : 0;
