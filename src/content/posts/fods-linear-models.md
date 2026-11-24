@@ -1215,6 +1215,11 @@ $$
 
 这是凸问题（可用近端梯度求解，见[优化误差](/blog/fods-optimization-error/)），不必枚举子集。
 
+<figure>
+  <img src="/figures/fods-ridge-lasso-geometry.svg" width="800" height="280" alt="二维参数空间中 Lasso 的 L1 菱形边界与 Ridge 的 L2 圆盘边界和损失等高线的几何切点对比">
+  <figcaption>同心椭圆以无约束 OLS 解为中心向外扩张：左图 ℓ₁ 菱形的尖角优先在坐标轴上迎上等高线，使另一维系数恰好归零；右图 ℓ₂ 圆盘平滑无棱角，切点落在象限内部。</figcaption>
+</figure>
+
 ### 8.1 慢速率（只靠 $\|\theta^*\|_1$，不对 $X$ 作相关假设）
 
 由最优性，$\widehat\theta_L$ 的目标值 $\le\theta^*$ 的目标值：

@@ -14,33 +14,33 @@
   <!-- Left panel: 2D phase rotation -->
   <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">二维子空间的几何旋转</text>
 
-  <!-- Coordinate axes centered at (180, 165) -->
-  <circle cx="180" cy="165" r="78" fill="#ffffff" stroke="#e4e2db" stroke-width="1.1"/>
-  <path d="M 88 165 L 274 165 M 180 74 L 180 250" fill="none" stroke="#d4d1c8" stroke-width="1"/>
-  <text x="278" y="168" font-size="9.5" fill="#71717a">x₂ᵢ</text>
-  <text x="148" y="80" font-size="9.5" fill="#71717a">x₂ᵢ₊₁</text>
+  <!-- Coordinate circle centered at (168, 174), r=76 -> y spans 98..250 -->
+  <circle cx="168" cy="174" r="76" fill="#ffffff" stroke="#e4e2db" stroke-width="1.1"/>
+  <path d="M 78 174 L 260 174 M 168 84 L 168 256" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+  <text x="266" y="177" font-size="9.5" fill="#71717a">x₂ᵢ</text>
+  <text x="136" y="88" font-size="9.5" fill="#71717a">x₂ᵢ₊₁</text>
 
   <!-- Base q vector -->
-  <path d="M 180 165 L 252 145" fill="none" stroke="#a1a1aa" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arr-dark)"/>
-  <text x="256" y="148" font-size="9.5" fill="#57575e">q (未旋转)</text>
+  <path d="M 168 174 L 240 154" fill="none" stroke="#a1a1aa" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arr-dark)"/>
+  <text x="246" y="157" font-size="9.5" fill="#57575e">q (未旋转)</text>
 
   <!-- Relative angle sector highlighted in #2f5268 -->
-  <path d="M 180 165 L 234 111 A 76 76 0 0 0 196 90 Z" fill="#2f5268" fill-opacity="0.14"/>
+  <path d="M 168 174 L 222 120 A 76 76 0 0 0 184 99 Z" fill="#2f5268" fill-opacity="0.14"/>
   <!-- Rotation arc from q_m to k_n -->
-  <path d="M 218 127 A 54 54 0 0 0 191 112" fill="none" stroke="#2f5268" stroke-width="1.8"/>
+  <path d="M 206 136 A 54 54 0 0 0 179 121" fill="none" stroke="#2f5268" stroke-width="1.8"/>
 
   <!-- q_m vector -->
-  <path d="M 180 165 L 234 111" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-acc)"/>
-  <text x="238" y="109" font-size="10.5" font-weight="600" fill="#2f5268">R(mθ)q</text>
+  <path d="M 168 174 L 222 120" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-acc)"/>
+  <text x="232" y="128" font-size="10.5" font-weight="600" fill="#2f5268">R(mθ)q</text>
 
   <!-- k_n vector -->
-  <path d="M 180 165 L 196 90" fill="none" stroke="#18181b" stroke-width="1.8" marker-end="url(#arr-dark)"/>
-  <text x="200" y="83" font-size="10.5" font-weight="600" fill="#18181b">R(nθ)k</text>
+  <path d="M 168 174 L 184 99" fill="none" stroke="#18181b" stroke-width="1.8" marker-end="url(#arr-dark)"/>
+  <text x="184" y="88" font-size="10.5" font-weight="600" fill="#18181b">R(nθ)k</text>
 
-  <!-- Angle annotation -->
-  <path d="M 210 116 L 288 86" fill="none" stroke="#2f5268" stroke-width="1" stroke-dasharray="2 2"/>
-  <text x="292" y="88" font-size="10.5" font-weight="600" fill="#2f5268">内积只取决于 (n−m)θ</text>
-  <text x="292" y="104" font-size="9.5" fill="#57575e">绝对位置相消，模长保持不变</text>
+  <!-- Clean leader routed around the right of R(nθ)k / above R(mθ)q without crossing either shaft -->
+  <path d="M 196 123 C 228 84, 246 68, 278 68" fill="none" stroke="#2f5268" stroke-width="1.1" stroke-dasharray="3 2"/>
+  <text x="284" y="68" font-size="10.5" font-weight="600" fill="#2f5268">内积只取决于 (n−m)θ</text>
+  <text x="284" y="84" font-size="9.5" fill="#57575e">绝对位置相消，模长不变</text>
 
   <!-- Divider -->
   <line x1="454" y1="26" x2="454" y2="246" stroke="#e4e2db" stroke-width="1"/>
@@ -48,18 +48,18 @@
   <!-- Right panel: Multi-frequency spectrum -->
   <text x="480" y="34" font-size="12.5" font-weight="600" fill="#18181b">多组频率从快到慢分工</text>
 
-  <!-- High freq wave (i = 0) -->
+  <!-- High freq wave (i = 0): exact span 480..760 (7 periods of 40px) -->
   <text x="480" y="72" font-size="10.5" fill="#2f5268" font-weight="600">i=0 高频（近距离变化敏感）</text>
-  <path d="M 480 96 Q 492 78 504 96 T 528 96 T 552 96 T 576 96 T 600 96 T 624 96 T 648 96 T 672 96 T 696 96 T 720 96 T 744 96" fill="none" stroke="#2f5268" stroke-width="1.6"/>
   <line x1="480" y1="96" x2="760" y2="96" stroke="#e4e2db" stroke-width="1"/>
+  <path d="M 480 96 Q 490 78 500 96 T 520 96 T 540 96 T 560 96 T 580 96 T 600 96 T 620 96 T 640 96 T 660 96 T 680 96 T 700 96 T 720 96 T 740 96 T 760 96" fill="none" stroke="#2f5268" stroke-width="1.6"/>
 
-  <!-- Mid freq wave (i = d/4) -->
+  <!-- Mid freq wave (i = d/4): exact span 480..760 -->
   <text x="480" y="142" font-size="10.5" fill="#18181b">i=d/4 中频（段落尺度关系）</text>
-  <path d="M 480 166 Q 515 144 550 166 T 620 166 T 690 166 T 760 166" fill="none" stroke="#57575e" stroke-width="1.4"/>
   <line x1="480" y1="166" x2="760" y2="166" stroke="#e4e2db" stroke-width="1"/>
+  <path d="M 480 166 Q 515 144 550 166 T 620 166 T 690 166 T 760 166" fill="none" stroke="#57575e" stroke-width="1.4"/>
 
-  <!-- Low freq wave (i = d/2 - 1) -->
+  <!-- Low freq wave (i = d/2 - 1): exact span 480..760 -->
   <text x="480" y="212" font-size="10.5" fill="#18181b">i=d/2-1 低频（长距离依赖）</text>
-  <path d="M 480 236 Q 620 208 760 236" fill="none" stroke="#71717a" stroke-width="1.4"/>
   <line x1="480" y1="236" x2="760" y2="236" stroke="#e4e2db" stroke-width="1"/>
+  <path d="M 480 236 Q 620 206 760 236" fill="none" stroke="#71717a" stroke-width="1.4"/>
 </svg>

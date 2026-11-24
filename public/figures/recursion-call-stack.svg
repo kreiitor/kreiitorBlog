@@ -18,65 +18,66 @@
   <path d="M 218 72 L 136 112 M 218 72 L 320 112" stroke="#57575e" stroke-width="1.3"/>
   <path d="M 136 112 L 88 158 M 136 112 L 184 158" stroke="#57575e" stroke-width="1.3"/>
   <path d="M 320 112 L 278 158 M 320 112 L 362 158" stroke="#57575e" stroke-width="1.3"/>
-  <path d="M 88 158 L 60 204 M 88 158 L 116 204" stroke="#2f5268" stroke-width="1.2"/>
+  <path d="M 88 158 L 62 204 M 88 158 L 114 204" stroke="#2f5268" stroke-width="1.2"/>
   <path d="M 184 158 L 160 204 M 184 158 L 208 204" stroke="#57575e" stroke-width="1.1"/>
   <path d="M 278 158 L 254 204 M 278 158 L 302 204" stroke="#57575e" stroke-width="1.1"/>
 
   <!-- Tree nodes -->
   <circle cx="218" cy="72" r="18" fill="#ffffff" stroke="#18181b" stroke-width="1.3"/>
-  <text x="204" y="76" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fib(5)</text>
+  <text x="218" y="76" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fib(5)</text>
 
   <circle cx="136" cy="112" r="17" fill="#ffffff" stroke="#57575e" stroke-width="1.2"/>
-  <text x="122" y="116" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fib(4)</text>
+  <text x="136" y="116" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fib(4)</text>
 
-  <!-- Repeated fib(3) highlighted on right -->
   <circle cx="320" cy="112" r="17" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.6"/>
-  <text x="306" y="116" font-size="9.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fib(3)</text>
+  <text x="320" y="116" text-anchor="middle" font-size="9.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fib(3)</text>
 
-  <!-- Repeated fib(3) highlighted on left -->
   <circle cx="88" cy="158" r="17" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.6"/>
-  <text x="74" y="162" font-size="9.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fib(3)</text>
+  <text x="88" y="162" text-anchor="middle" font-size="9.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fib(3)</text>
 
   <circle cx="184" cy="158" r="16" fill="#ffffff" stroke="#2f5268" stroke-width="1.3"/>
-  <text x="171" y="162" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2)</text>
+  <text x="184" y="162" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2)</text>
 
   <circle cx="278" cy="158" r="16" fill="#ffffff" stroke="#2f5268" stroke-width="1.3"/>
-  <text x="265" y="162" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2)</text>
+  <text x="278" y="162" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2)</text>
 
   <circle cx="362" cy="158" r="16" fill="#f4f3ef" stroke="#d4d1c8" stroke-width="1.1"/>
-  <text x="350" y="162" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">f(1)</text>
+  <text x="362" y="162" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">f(1)</text>
 
-  <!-- Leaves -->
-  <text x="48" y="218" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2) f(1)</text>
-  <text x="148" y="218" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">1   0</text>
-  <text x="242" y="218" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">1   0</text>
+  <!-- Leaves centered cleanly under each branch endpoint -->
+  <text x="62" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(2)</text>
+  <text x="114" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">f(1)</text>
+  <text x="160" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">1</text>
+  <text x="208" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">0</text>
+  <text x="254" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">1</text>
+  <text x="302" y="218" text-anchor="middle" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">0</text>
 
   <text x="28" y="248" font-size="9.5" fill="#2f5268">同一子问题被重复计算多次，呈指数级膨胀</text>
 
   <!-- Divider -->
   <line x1="428" y1="24" x2="428" y2="256" stroke="#e4e2db" stroke-width="1"/>
 
-  <!-- Right: Linear Call Stack for factorial(5) -->
+  <!-- Right: Linear Call Stack for factorial(4) -->
   <text x="454" y="34" font-size="12.5" font-weight="600" fill="#18181b">单支递去与归来（factorial(4)）</text>
 
   <!-- Downward call axis -->
-  <path d="M 476 74 L 476 226" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
+  <path d="M 484 74 L 484 226" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
   <text x="454" y="156" font-size="9.5" fill="#57575e">压栈</text>
 
   <!-- Upward return axis -->
-  <path d="M 730 226 L 730 74" fill="none" stroke="#2f5268" stroke-width="1.6" marker-end="url(#arr-a)"/>
-  <text x="738" y="156" font-size="9.5" font-weight="600" fill="#2f5268">回传</text>
+  <path d="M 734 226 L 734 74" fill="none" stroke="#2f5268" stroke-width="1.6" marker-end="url(#arr-a)"/>
+  <text x="744" y="156" font-size="9.5" font-weight="600" fill="#2f5268">回传</text>
 
-  <!-- 4 stack frames as horizontal bars -->
-  <rect x="498" y="64" width="212" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
-  <text x="510" y="84" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(4) = 4 × 6 → 24</text>
+  <!-- 4 stack frames aligned neatly between axes -->
+  <rect x="504" y="64" width="212" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="516" y="84" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(4) = 4 × 6 → 24</text>
 
-  <rect x="514" y="108" width="196" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
-  <text x="526" y="128" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(3) = 3 × 2 → 6</text>
+  <rect x="520" y="108" width="196" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="532" y="128" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(3) = 3 × 2 → 6</text>
 
-  <rect x="530" y="152" width="180" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
-  <text x="542" y="172" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(2) = 2 × 1 → 2</text>
+  <rect x="536" y="152" width="180" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="548" y="172" font-size="10.5" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">fact(2) = 2 × 1 → 2</text>
 
-  <rect x="546" y="196" width="164" height="32" rx="4" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
-  <text x="558" y="216" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fact(1) = 1（触底）</text>
+  <rect x="552" y="196" width="164" height="32" rx="4" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
+  <text x="564" y="216" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">fact(1) = 1（触底）</text>
 </svg>

@@ -65,6 +65,11 @@ featured: true
 
 这些资源都由脚本生成并提交，部署时不需要额外的图片服务或字体 CDN。
 
+<figure>
+  <img src="/figures/static-site-pipeline.svg" width="800" height="250" alt="静态博客在构建期完成编译、索引与字体裁切并在静态产物线与纯 CDN 分发边界隔离">
+  <figcaption>竖向虚线划出构建期与访问期的分工边界：编译、全文索引构建和路径重写都留在左侧，跨越虚线进入产物目录后只剩纯静态分发。</figcaption>
+</figure>
+
 ## 部署
 
 推送到 `main` 或 `master` 后，GitHub Actions 依次执行单元测试、Astro 类型检查和生产构建，再把 `dist/` 发布到 GitHub Pages。

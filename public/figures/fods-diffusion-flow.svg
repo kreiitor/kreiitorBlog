@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>OU 前向加噪过程与 Score 驱动的反向生成 SDE</title>
+  <desc>左侧为多峰真实数据分布 p0（t=0），右侧为标准高斯分布 N(0,I)（t=1）；上方展示前向 OU 加噪抹平结构的过程，下方蓝色轨迹展示以学得的 score 场 ∇log p_(1-t) 驱动的反向去噪采样流形。</desc>
+  <defs>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">前向加噪扩散（t: 0 → 1）与反向 Score 采样流形</text>
+
+  <!-- Left distribution: p_0 bimodal curve along vertical baseline x=156 -->
+  <line x1="156" y1="68" x2="156" y2="226" stroke="#d4d1c8" stroke-width="1.1"/>
+  <path d="M 156 76 C 152 94, 72 102, 72 114 C 72 126, 138 136, 138 148 C 138 160, 82 172, 82 184 C 82 196, 152 206, 156 220" fill="#2f5268" fill-opacity="0.12" stroke="#18181b" stroke-width="1.6"/>
+  <text x="58" y="64" font-size="10.5" font-weight="600" fill="#18181b">数据分布 p₀(x)</text>
+  <text x="58" y="242" font-size="9.5" fill="#57575e">t = 0（多峰结构）</text>
+
+  <!-- Right distribution: N(0, I) smooth Gaussian bell along vertical baseline x=644 -->
+  <line x1="644" y1="68" x2="644" y2="226" stroke="#d4d1c8" stroke-width="1.1"/>
+  <path d="M 644 74 C 654 102, 724 122, 724 148 C 724 174, 654 194, 644 220" fill="#57575e" fill-opacity="0.08" stroke="#57575e" stroke-width="1.5"/>
+  <text x="646" y="64" font-size="10.5" font-weight="600" fill="#57575e">先验噪声 N(0, I)</text>
+  <text x="646" y="242" font-size="9.5" fill="#57575e">t = 1（结构抹平）</text>
+
+  <!-- Forward noising SDE arrow top -->
+  <path d="M 188 88 Q 400 64 614 88" fill="none" stroke="#57575e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr-g)"/>
+  <text x="312" y="65" font-size="10.5" fill="#57575e">前向加噪：均值 (1−t)X₀ · 方差 t(2−t)I</text>
+
+  <!-- Fanning forward diffusion grey curves from twin modes into broad bell -->
+  <path d="M 176 112 C 300 108, 460 112, 626 116" fill="none" stroke="#d4d1c8" stroke-width="1.1" stroke-dasharray="3 2"/>
+  <path d="M 176 116 C 320 128, 460 142, 626 140" fill="none" stroke="#d4d1c8" stroke-width="1.1" stroke-dasharray="3 2"/>
+
+  <!-- Reverse SDE trajectories curving back cleanly from diffuse bell into BOTH twin peaks (#2f5268) -->
+  <path d="M 626 130 C 480 132, 310 126, 182 114" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-b)"/>
+  <path d="M 626 154 C 480 156, 330 132, 182 120" fill="none" stroke="#2f5268" stroke-width="1.4" stroke-opacity="0.65"/>
+  <path d="M 626 168 C 470 170, 320 176, 184 182" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-b)"/>
+  <path d="M 626 194 C 460 198, 300 192, 184 188" fill="none" stroke="#2f5268" stroke-width="1.4" stroke-opacity="0.65"/>
+
+  <!-- Local score field annotation completely clear in center band -->
+  <circle cx="404" cy="131" r="3" fill="#2f5268"/>
+  <circle cx="404" cy="173" r="3" fill="#2f5268"/>
+  <text x="404" y="154" font-size="9.5" font-weight="600" fill="#2f5268" text-anchor="middle">∇log p₁₋ₜ(X*ₜ) 拉回高密峰</text>
+
+  <!-- Reverse SDE arrow bottom lifted to y=234 (strictly <= 280 - 40 = 240) -->
+  <path d="M 614 206 Q 400 232 188 206" fill="none" stroke="#2f5268" stroke-width="1.9" marker-end="url(#arr-b)"/>
+  <text x="400" y="236" font-size="10.5" font-weight="600" fill="#2f5268" text-anchor="middle">反向生成 SDE：Euler–Maruyama 逐步去噪</text>
+</svg>

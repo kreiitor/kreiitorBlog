@@ -413,6 +413,11 @@ void foo()
 
 这个 `ShapeWrapper` 是一个**极简智能指针**的雏形，标准智能指针（如 `std::unique_ptr`）还需考虑拷贝、移动、所有权等细节。
 
+<figure>
+  <img src="/figures/cpp-raii-lifetime.svg" width="800" height="270" alt="裸指针手动管理与 RAII 句柄在提前返回和异常栈展开时的资源释放路径对比">
+  <figcaption>左侧手动 `delete` 依赖控制流一路走到底；右侧栈上局部对象在作用域左括号处划定生命周期，无论正常结束还是异常展开都必然汇入析构清理。</figcaption>
+</figure>
+
 ### 5. RAII 的通用应用场景
 RAII 的清理逻辑不限于释放内存，还可以管理各类系统资源：
 - 关闭文件（如 `std::fstream` 的析构函数）

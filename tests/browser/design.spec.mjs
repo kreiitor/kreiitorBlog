@@ -72,7 +72,17 @@ test('Home fits narrow and wide viewports without horizontal overflow', async ({
 
 test('Inline technical SVG diagrams load cleanly without overflow on narrow screens', async ({ page }) => {
  await page.setViewportSize({ width: 390, height: 844 });
- for (const route of ['blog/transformer-02-architecture/', 'blog/transformer-04-ffn/', 'blog/git-glossary/', 'blog/ssh-cli-agent-guide/']) {
+ for (const route of [
+  'blog/transformer-02-architecture/',
+  'blog/transformer-04-ffn/',
+  'blog/git-glossary/',
+  'blog/ssh-cli-agent-guide/',
+  'blog/algorithm-time-complexity/',
+  'blog/cpp-07-containers/',
+  'blog/fods-linear-models/',
+  'blog/llm-eval-pipeline/',
+  'blog/static-blog-architecture/',
+ ]) {
   await page.goto(route);
   const figureImg = page.locator('.article-body figure img[src$=".svg"]').first();
   await expect(figureImg).toBeVisible();

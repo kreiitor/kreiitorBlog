@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 270" width="800" height="270" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>裸指针与 RAII 句柄在函数退出与异常栈展开时的生命周期对比</title>
+  <desc>左侧展示手动 new/delete 在提前返回或抛出异常时会跳过尾部的 delete；右侧展示 RAII 将资源绑定到栈上局部对象，无论正常退出或异常栈展开都必触发析构释放。</desc>
+  <defs>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="268" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Left panel: Manual new/delete -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">裸指针 · 控制流分叉即可能泄漏</text>
+
+  <!-- Main spine -->
+  <path d="M 88 64 L 88 118" fill="none" stroke="#18181b" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <circle cx="88" cy="64" r="4" fill="#18181b"/>
+  <text x="102" y="68" font-size="10.5" font-weight="600" fill="#18181b">Shape* p = createShape(...)</text>
+  <text x="102" y="83" font-size="9.5" fill="#57575e">堆上分配内存，手动持锁或句柄</text>
+
+  <!-- Branch node -->
+  <circle cx="88" cy="128" r="5" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+  <text x="34" y="132" font-size="9.5" fill="#57575e">分支</text>
+
+  <!-- Normal fallthrough -->
+  <path d="M 88 134 L 88 194" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
+  <text x="100" y="170" font-size="9.5" fill="#57575e">无异常到底</text>
+  <rect x="34" y="198" width="132" height="32" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1"/>
+  <text x="46" y="218" font-size="10.5" fill="#18181b">delete p; 释放成功</text>
+
+  <!-- Leak bypass branch -->
+  <path d="M 94 128 L 222 128" fill="none" stroke="#57575e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr-g)"/>
+  <text x="120" y="120" font-size="9.5" fill="#57575e">return / throw</text>
+  <rect x="228" y="108" width="144" height="44" rx="6" fill="#ffffff" stroke="#57575e" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <text x="242" y="127" font-size="10.5" font-weight="600" fill="#18181b">直接跳过 delete p</text>
+  <text x="242" y="143" font-size="9.5" fill="#57575e">堆对象游离，资源泄漏</text>
+
+  <!-- Divider -->
+  <line x1="396" y1="26" x2="396" y2="244" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Right panel: RAII Guard -->
+  <text x="424" y="34" font-size="12.5" font-weight="600" fill="#2f5268">RAII 句柄 · 栈帧退出必触发析构</text>
+
+  <!-- Stack scope lifetime bracket -->
+  <path d="M 436 60 L 428 60 L 428 228 L 436 228" fill="none" stroke="#2f5268" stroke-width="1.4"/>
+  <text x="442" y="244" font-size="9.5" fill="#2f5268">作用域生命周期边界</text>
+
+  <!-- Constructor -->
+  <circle cx="468" cy="64" r="4.5" fill="#2f5268"/>
+  <text x="482" y="68" font-size="10.5" font-weight="600" fill="#18181b">ShapeWrapper w(createShape(...))</text>
+  <text x="482" y="83" font-size="9.5" fill="#57575e">构造时接管资源所有权</text>
+
+  <path d="M 468 70 L 468 118" fill="none" stroke="#18181b" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <circle cx="468" cy="128" r="5" fill="#ffffff" stroke="#2f5268" stroke-width="1.6"/>
+
+  <!-- Both normal exit AND throw converge cleanly into deterministic destructor -->
+  <path d="M 468 134 L 468 180" fill="none" stroke="#2f5268" stroke-width="1.6" marker-end="url(#arr-b)"/>
+  <text x="478" y="164" font-size="9.5" fill="#57575e">正常到达 }</text>
+
+  <path d="M 474 128 L 642 128 L 642 180" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arr-b)"/>
+  <text x="534" y="120" font-size="9.5" fill="#2f5268">提前 return 或异常栈展开</text>
+
+  <!-- Guaranteed Destructor sink -->
+  <rect x="444" y="186" width="320" height="44" rx="7" fill="#eef3f6" stroke="#2f5268" stroke-width="1.6"/>
+  <text x="462" y="205" font-size="10.5" font-weight="600" fill="#2f5268">~ShapeWrapper() 自动清理</text>
+  <text x="462" y="221" font-size="9.5" fill="#18181b">两路合流必调析构 · 自动 delete ptr_ 零泄漏</text>
+</svg>

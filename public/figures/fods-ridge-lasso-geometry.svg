@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>Lasso 菱形与 Ridge 圆盘正则化约束的几何切点对比</title>
+  <desc>在二维参数空间中，等高损失椭圆围绕无约束 OLS 解向外扩张：左图 Lasso 的菱形尖角恰好落在坐标轴上从而产生稀疏解 θ₁=0；右图 Ridge 的圆周边界通常在象限内部相切。</desc>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Left Panel: Lasso (L1 diamond) -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#2f5268">Lasso（ℓ₁ 菱形约束易撞上坐标轴）</text>
+
+  <line x1="68" y1="184" x2="296" y2="184" stroke="#d4d1c8" stroke-width="1.1"/>
+  <line x1="172" y1="74" x2="172" y2="254" stroke="#d4d1c8" stroke-width="1.1"/>
+  <text x="302" y="187" font-size="9.5" fill="#71717a">θ₁</text>
+  <text x="152" y="78" font-size="9.5" fill="#71717a">θ₂</text>
+
+  <!-- L1 Diamond |theta1| + |theta2| <= 56 centered at (172, 184) -->
+  <path d="M 172 128 L 228 184 L 172 240 L 116 184 Z" fill="#2f5268" fill-opacity="0.12" stroke="#2f5268" stroke-width="1.8"/>
+  <text x="172" y="188" font-size="9.5" fill="#2f5268" text-anchor="middle">‖θ‖₁ ≤ t</text>
+
+  <!-- OLS contours centered at (216, 100) tangent at top corner (172, 128) -->
+  <g transform="rotate(-25 216 100)">
+    <ellipse cx="216" cy="100" rx="16" ry="18" fill="none" stroke="#a1a1aa" stroke-width="1"/>
+    <ellipse cx="216" cy="100" rx="32" ry="36" fill="none" stroke="#71717a" stroke-width="1.1"/>
+    <ellipse cx="216" cy="100" rx="48" ry="54.2" fill="none" stroke="#18181b" stroke-width="1.5"/>
+  </g>
+  <circle cx="216" cy="100" r="4" fill="#18181b"/>
+  <!-- Callout placed completely OUTSIDE outer ellipse at (284, 80) -->
+  <path d="M 222 97 L 280 78" fill="none" stroke="#57575e" stroke-width="1"/>
+  <text x="284" y="76" font-size="10.5" font-weight="600" fill="#18181b">θ̂_OLS</text>
+  <text x="284" y="91" font-size="9.5" fill="#57575e">损失等高线</text>
+
+  <!-- Sparse corner touchpoint (172, 128) -->
+  <circle cx="172" cy="128" r="5" fill="#2f5268"/>
+  <text x="64" y="114" font-size="10.5" font-weight="600" fill="#2f5268">θ̂_L 落在轴上</text>
+  <text x="64" y="129" font-size="9.5" fill="#57575e">θ̂₁ = 0（稀疏解）</text>
+  <path d="M 150 121 L 166 126" fill="none" stroke="#2f5268" stroke-width="1.2"/>
+
+  <!-- Divider -->
+  <line x1="396" y1="26" x2="396" y2="252" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Right Panel: Ridge (L2 disk) -->
+  <text x="424" y="34" font-size="12.5" font-weight="600" fill="#18181b">Ridge（ℓ₂ 圆盘约束整体收缩而非归零）</text>
+
+  <line x1="464" y1="184" x2="694" y2="184" stroke="#d4d1c8" stroke-width="1.1"/>
+  <line x1="568" y1="74" x2="568" y2="254" stroke="#d4d1c8" stroke-width="1.1"/>
+  <text x="700" y="187" font-size="9.5" fill="#71717a">θ₁</text>
+  <text x="548" y="78" font-size="9.5" fill="#71717a">θ₂</text>
+
+  <!-- L2 Circle radius 56 centered at (568, 184) -->
+  <circle cx="568" cy="184" r="56" fill="#57575e" fill-opacity="0.06" stroke="#18181b" stroke-width="1.7"/>
+  <text x="568" y="188" font-size="9.5" fill="#57575e" text-anchor="middle">‖θ‖₂ ≤ t</text>
+
+  <!-- OLS contours centered at (612, 100) touching circle smoothly at (595, 135) -->
+  <g transform="rotate(-25 612 100)">
+    <ellipse cx="612" cy="100" rx="14" ry="16" fill="none" stroke="#a1a1aa" stroke-width="1"/>
+    <ellipse cx="612" cy="100" rx="28" ry="31" fill="none" stroke="#71717a" stroke-width="1.1"/>
+    <ellipse cx="612" cy="100" rx="35.5" ry="39.5" fill="none" stroke="#18181b" stroke-width="1.5"/>
+  </g>
+  <circle cx="612" cy="100" r="4" fill="#18181b"/>
+  <!-- Callout completely outside outer ellipse -->
+  <path d="M 618 97 L 672 78" fill="none" stroke="#57575e" stroke-width="1"/>
+  <text x="676" y="76" font-size="10.5" font-weight="600" fill="#18181b">θ̂_OLS</text>
+  <text x="676" y="91" font-size="9.5" fill="#57575e">损失等高线</text>
+
+  <!-- Non-sparse tangent point in Q1 -->
+  <circle cx="595" cy="135" r="5" fill="#18181b"/>
+  <text x="634" y="156" font-size="10.5" font-weight="600" fill="#18181b">切点 θ̂_r 在象限内</text>
+  <text x="634" y="171" font-size="9.5" fill="#57575e">θ̂₁ ≠ 0，各分量同步衰减</text>
+  <path d="M 601 138 L 629 151" fill="none" stroke="#57575e" stroke-width="1.1"/>
+</svg>

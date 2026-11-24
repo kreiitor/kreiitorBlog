@@ -3,60 +3,52 @@
   <desc>三组并排展示 8 个 Query 头如何分别对应 8 组、2 组与 1 组 Key-Value 缓存，揭示 KV Cache 占用比例从 100% 降至 25% 与 12.5% 的结构来源。</desc>
   <rect x="1" y="1" width="798" height="248" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
 
-  <!-- Column headers -->
   <text x="36" y="34" font-size="12.5" font-weight="600" fill="#18181b">MHA · 每头独享 KV</text>
   <text x="292" y="34" font-size="12.5" font-weight="600" fill="#2f5268">GQA · 分组共享 KV</text>
   <text x="548" y="34" font-size="12.5" font-weight="600" fill="#18181b">MQA · 全局共享 KV</text>
 
-  <!-- Vertical subtle dividers -->
   <line x1="270" y1="24" x2="270" y2="210" stroke="#e4e2db" stroke-width="1"/>
   <line x1="526" y1="24" x2="526" y2="210" stroke="#e4e2db" stroke-width="1"/>
 
-  <!-- Panel 1: MHA (8 Q -> 8 KV) -->
-  <text x="36" y="56" font-size="9.5" fill="#57575e">8 Q 头</text>
-  <g stroke="#d4d1c8" fill="#ffffff" stroke-width="1.2">
-    <rect x="36" y="64" width="22" height="18" rx="3"/><rect x="63" y="64" width="22" height="18" rx="3"/>
-    <rect x="90" y="64" width="22" height="18" rx="3"/><rect x="117" y="64" width="22" height="18" rx="3"/>
-    <rect x="144" y="64" width="22" height="18" rx="3"/><rect x="171" y="64" width="22" height="18" rx="3"/>
-    <rect x="198" y="64" width="22" height="18" rx="3"/><rect x="225" y="64" width="22" height="18" rx="3"/>
+  <!-- Panel 1: MHA (8 Q circles -> 8 KV bars) -->
+  <text x="36" y="56" font-size="9.5" fill="#57575e">8 个 Q 头</text>
+  <path d="M47 80V132M74 80V132M101 80V132M128 80V132M155 80V132M182 80V132M209 80V132M236 80V132" stroke="#57575e" stroke-width="1.2"/>
+  <g stroke="#57575e" fill="#ffffff" stroke-width="1.2">
+    <circle cx="47" cy="72" r="8"/><circle cx="74" cy="72" r="8"/><circle cx="101" cy="72" r="8"/><circle cx="128" cy="72" r="8"/>
+    <circle cx="155" cy="72" r="8"/><circle cx="182" cy="72" r="8"/><circle cx="209" cy="72" r="8"/><circle cx="236" cy="72" r="8"/>
   </g>
-  <path d="M47 82V132M74 82V132M101 82V132M128 82V132M155 82V132M182 82V132M209 82V132M236 82V132" stroke="#57575e" stroke-width="1.1"/>
   <g stroke="#57575e" fill="#f4f3ef" stroke-width="1.2">
-    <rect x="36" y="132" width="22" height="28" rx="3"/><rect x="63" y="132" width="22" height="28" rx="3"/>
-    <rect x="90" y="132" width="22" height="28" rx="3"/><rect x="117" y="132" width="22" height="28" rx="3"/>
-    <rect x="144" y="132" width="22" height="28" rx="3"/><rect x="171" y="132" width="22" height="28" rx="3"/>
-    <rect x="198" y="132" width="22" height="28" rx="3"/><rect x="225" y="132" width="22" height="28" rx="3"/>
+    <rect x="37" y="132" width="20" height="28" rx="3"/><rect x="64" y="132" width="20" height="28" rx="3"/>
+    <rect x="91" y="132" width="20" height="28" rx="3"/><rect x="118" y="132" width="20" height="28" rx="3"/>
+    <rect x="145" y="132" width="20" height="28" rx="3"/><rect x="172" y="132" width="20" height="28" rx="3"/>
+    <rect x="199" y="132" width="20" height="28" rx="3"/><rect x="226" y="132" width="20" height="28" rx="3"/>
   </g>
-  <text x="36" y="182" font-size="10.5" fill="#18181b">8 组 KV 头 · Cache 占比 100%</text>
+  <text x="36" y="182" font-size="10.5" fill="#18181b">8 组 KV · Cache 占比 100%</text>
   <text x="36" y="198" font-size="9.5" fill="#57575e">表达力高，长上下文显存开销大</text>
 
-  <!-- Panel 2: GQA (8 Q -> 2 KV, highlighted #2f5268) -->
-  <text x="292" y="56" font-size="9.5" fill="#2f5268">8 Q 头分为 2 组</text>
-  <g stroke="#2f5268" fill="#ffffff" stroke-width="1.2">
-    <rect x="292" y="64" width="22" height="18" rx="3"/><rect x="319" y="64" width="22" height="18" rx="3"/>
-    <rect x="346" y="64" width="22" height="18" rx="3"/><rect x="373" y="64" width="22" height="18" rx="3"/>
-    <rect x="400" y="64" width="22" height="18" rx="3"/><rect x="427" y="64" width="22" height="18" rx="3"/>
-    <rect x="454" y="64" width="22" height="18" rx="3"/><rect x="481" y="64" width="22" height="18" rx="3"/>
+  <!-- Panel 2: GQA (8 Q circles -> 2 KV blocks highlighted #2f5268) -->
+  <text x="292" y="56" font-size="9.5" fill="#2f5268">8 个 Q 头分为 2 组</text>
+  <path d="M303 80L343 132M330 80L343 132M357 80L343 132M384 80L343 132M411 80L451 132M438 80L451 132M465 80L451 132M492 80L451 132" stroke="#2f5268" stroke-width="1.3"/>
+  <g stroke="#2f5268" fill="#ffffff" stroke-width="1.3">
+    <circle cx="303" cy="72" r="8"/><circle cx="330" cy="72" r="8"/><circle cx="357" cy="72" r="8"/><circle cx="384" cy="72" r="8"/>
+    <circle cx="411" cy="72" r="8"/><circle cx="438" cy="72" r="8"/><circle cx="465" cy="72" r="8"/><circle cx="492" cy="72" r="8"/>
   </g>
-  <path d="M303 82L343 132M330 82L343 132M357 82L343 132M384 82L343 132M411 82L451 132M438 82L451 132M465 82L451 132M492 82L451 132" stroke="#2f5268" stroke-width="1.3"/>
   <rect x="328" y="132" width="30" height="28" rx="4" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
   <rect x="436" y="132" width="30" height="28" rx="4" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
-  <text x="335" y="150" font-size="9.5" font-weight="600" fill="#2f5268">KV1</text>
-  <text x="443" y="150" font-size="9.5" font-weight="600" fill="#2f5268">KV2</text>
-  <text x="292" y="182" font-size="10.5" font-weight="600" fill="#2f5268">2 组 KV 头 · Cache 占比 25%</text>
+  <text x="343" y="150" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2f5268">KV1</text>
+  <text x="451" y="150" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2f5268">KV2</text>
+  <text x="292" y="182" font-size="10.5" font-weight="600" fill="#2f5268">2 组 KV · Cache 占比 25%</text>
   <text x="292" y="198" font-size="9.5" fill="#57575e">质量接近 MHA，推理显存大幅下降</text>
 
-  <!-- Panel 3: MQA (8 Q -> 1 KV) -->
-  <text x="548" y="56" font-size="9.5" fill="#57575e">8 Q 头</text>
-  <g stroke="#d4d1c8" fill="#ffffff" stroke-width="1.2">
-    <rect x="548" y="64" width="22" height="18" rx="3"/><rect x="575" y="64" width="22" height="18" rx="3"/>
-    <rect x="602" y="64" width="22" height="18" rx="3"/><rect x="629" y="64" width="22" height="18" rx="3"/>
-    <rect x="656" y="64" width="22" height="18" rx="3"/><rect x="683" y="64" width="22" height="18" rx="3"/>
-    <rect x="710" y="64" width="22" height="18" rx="3"/><rect x="737" y="64" width="22" height="18" rx="3"/>
+  <!-- Panel 3: MQA (8 Q circles -> 1 KV block) -->
+  <text x="548" y="56" font-size="9.5" fill="#57575e">8 个 Q 头</text>
+  <path d="M559 80L653 132M586 80L653 132M613 80L653 132M640 80L653 132M667 80L653 132M694 80L653 132M721 80L653 132M748 80L653 132" stroke="#57575e" stroke-width="1.2"/>
+  <g stroke="#57575e" fill="#ffffff" stroke-width="1.2">
+    <circle cx="559" cy="72" r="8"/><circle cx="586" cy="72" r="8"/><circle cx="613" cy="72" r="8"/><circle cx="640" cy="72" r="8"/>
+    <circle cx="667" cy="72" r="8"/><circle cx="694" cy="72" r="8"/><circle cx="721" cy="72" r="8"/><circle cx="748" cy="72" r="8"/>
   </g>
-  <path d="M559 82L653 132M586 82L653 132M613 82L653 132M640 82L653 132M667 82L653 132M694 82L653 132M721 82L653 132M748 82L653 132" stroke="#57575e" stroke-width="1.1"/>
   <rect x="638" y="132" width="30" height="28" rx="4" fill="#f4f3ef" stroke="#57575e" stroke-width="1.2"/>
-  <text x="647" y="150" font-size="9.5" fill="#18181b">KV</text>
-  <text x="548" y="182" font-size="10.5" fill="#18181b">1 组 KV 头 · Cache 占比 12.5%</text>
+  <text x="653" y="150" text-anchor="middle" font-size="9.5" fill="#18181b">KV</text>
+  <text x="548" y="182" font-size="10.5" fill="#18181b">1 组 KV · Cache 占比 12.5%</text>
   <text x="548" y="198" font-size="9.5" fill="#57575e">缓存极小，各头特征多样性受限</text>
 </svg>

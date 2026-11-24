@@ -947,6 +947,11 @@ ages["Bob"] = 20;
 
 ---
 
+<figure>
+  <img src="/figures/cpp-container-memory.svg" width="800" height="310" alt="vector 连续缓冲区、deque 分块中控数组与 list/map 离散节点在内存中的排布对照">
+  <figcaption>自上而下依次对比整段连续、分段连续与指针散列三类内存形态：是否共享同一缓存行、头尾能否直接接块，都由这里的指针层级决定。</figcaption>
+</figure>
+
 ## 容器选择速查
 
 | 需求 | 优先考虑 |

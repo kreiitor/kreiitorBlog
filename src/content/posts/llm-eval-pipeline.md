@@ -25,6 +25,11 @@ featured: true
 
 分层的好处不在工程上更整洁，而在后续把这些材料改写成论文、报告或答辩文稿时，材料之间能直接对应。
 
+<figure>
+  <img src="/figures/llm-eval-gates.svg" width="800" height="250" alt="datasets、prompts、runs 与 analysis 四层评测流水线与样本编号回溯闭环">
+  <figcaption>主线沿正向固定输入、提示词与原始输出，底部的虚线回边标出典型错例如何顺着同一样本编号反馈给边界集与模板迭代。</figcaption>
+</figure>
+
 ## 一份够用的目录结构
 
 ```text

@@ -34,8 +34,8 @@
   <text x="460" y="162" font-size="12.5" font-weight="600" fill="#18181b" font-family="'JetBrains Mono Variable',monospace">prvalue 纯右值</text>
   <text x="460" y="184" font-size="10.5" fill="#57575e">字面量 42、临时运算 x + y、lambda</text>
 
-  <!-- glvalue span bracket (top edge across both columns) -->
-  <path d="M 152 46 L 750 46" fill="none" stroke="#18181b" stroke-width="1.1" stroke-dasharray="3 3"/>
-  <!-- rvalue span bracket (right edge across both rows) -->
-  <path d="M 766 56 L 766 208" fill="none" stroke="#2f5268" stroke-width="1.8"/>
+  <!-- glvalue span bracket (top edge across both columns with end ticks) -->
+  <path d="M 150 50 L 150 45 L 752 45 L 752 50" fill="none" stroke="#18181b" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <!-- rvalue span bracket (right edge across both rows with end ticks) -->
+  <path d="M 760 56 L 766 56 L 766 208 L 760 208" fill="none" stroke="#2f5268" stroke-width="1.8"/>
 </svg>

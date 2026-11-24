@@ -26,6 +26,11 @@ cover: /covers/post-code-algorithm.svg
 
 表中的数值按 C++、1 秒时限、单组数据估算，推导与用法见第五节。
 
+<figure>
+  <img src="/figures/algorithm-complexity-curves.svg" width="800" height="290" alt="七种时间复杂度随输入规模增长的曲线及一秒运算阈值对照图">
+  <figcaption>水平虚线对应单核 C++ 一秒约 10⁸ 步的操作预算；读图时沿着曲线向右找与虚线相交的横坐标，即该复杂度可稳妥通过的数据规模上限。</figcaption>
+</figure>
+
 ---
 
 ## 一、前言

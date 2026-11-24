@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 310" width="800" height="310" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>vector、deque 与节点型容器的底层内存布局对比</title>
+  <desc>展示 vector 的整块连续数组与备用容量、deque 的中控指针数组加分块缓冲、以及链表与红黑树容器在堆上分散排布节点的指针结构。</desc>
+  <defs>
+    <marker id="arr-p" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="308" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">三种典型的底层内存布局与缓存局部性</text>
+
+  <!-- Row 1: vector contiguous buffer -->
+  <text x="28" y="78" font-size="10.5" font-weight="600" fill="#2f5268">vector&lt;T&gt;</text>
+  <text x="28" y="94" font-size="9.5" fill="#57575e">整块连续地址</text>
+
+  <rect x="166" y="62" width="380" height="32" rx="4" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <rect x="166" y="62" width="260" height="32" rx="4" fill="#eef3f6" stroke="#2f5268" stroke-width="1.6"/>
+  <path d="M 218 62 L 218 94 M 270 62 L 270 94 M 322 62 L 322 94 M 374 62 L 374 94 M 486 62 L 486 94" fill="none" stroke="#2f5268" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="192" y="82" font-size="10.5" fill="#18181b" text-anchor="middle">a₀</text>
+  <text x="244" y="82" font-size="10.5" fill="#18181b" text-anchor="middle">a₁</text>
+  <text x="296" y="82" font-size="10.5" fill="#18181b" text-anchor="middle">a₂</text>
+  <text x="348" y="82" font-size="10.5" fill="#18181b" text-anchor="middle">a₃</text>
+  <text x="400" y="82" font-size="10.5" fill="#18181b" text-anchor="middle">a₄</text>
+  <text x="456" y="82" font-size="9.5" fill="#71717a" text-anchor="middle">预留</text>
+  <text x="516" y="82" font-size="9.5" fill="#71717a" text-anchor="middle">预留</text>
+  <path d="M 168 104 L 424 104" fill="none" stroke="#2f5268" stroke-width="1"/>
+  <text x="296" y="117" font-size="9.5" fill="#2f5268" text-anchor="middle">size = 5</text>
+  <path d="M 428 104 L 544 104" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+  <text x="486" y="117" font-size="9.5" fill="#71717a" text-anchor="middle">capacity 余量</text>
+
+  <text x="572" y="77" font-size="10.5" fill="#18181b">O(1) 随机寻址</text>
+  <text x="572" y="93" font-size="9.5" fill="#57575e">触及缓存行，扩容需整体迁移</text>
+
+  <line x1="28" y1="128" x2="772" y2="128" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Row 2: deque chunked map (all arrows fan cleanly from top, label sits cleanly BELOW) -->
+  <text x="28" y="168" font-size="10.5" font-weight="600" fill="#18181b">deque&lt;T&gt;</text>
+  <text x="28" y="184" font-size="9.5" fill="#57575e">中控 + 分块车厢</text>
+
+  <rect x="166" y="160" width="66" height="24" rx="4" fill="#ffffff" stroke="#57575e" stroke-width="1.3"/>
+  <path d="M 188 160 L 188 184 M 210 160 L 210 184" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+  <text x="199" y="198" font-size="9.5" fill="#71717a" text-anchor="middle">中控索引表</text>
+
+  <!-- Clean fanned top pointer arcs (no label crossings) -->
+  <path d="M 177 160 C 177 146, 286 146, 286 158" fill="none" stroke="#57575e" stroke-width="1.2" marker-end="url(#arr-p)"/>
+  <path d="M 199 160 C 199 138, 394 138, 394 158" fill="none" stroke="#57575e" stroke-width="1.2" marker-end="url(#arr-p)"/>
+  <path d="M 221 160 C 228 132, 498 132, 498 158" fill="none" stroke="#57575e" stroke-width="1.2" marker-end="url(#arr-p)"/>
+
+  <rect x="248" y="160" width="84" height="24" rx="4" fill="#ffffff" stroke="#18181b" stroke-width="1.2"/>
+  <path d="M 276 160 L 276 184 M 304 160 L 304 184" fill="none" stroke="#e4e2db" stroke-width="1"/>
+  <text x="290" y="176" font-size="9.5" fill="#18181b" text-anchor="middle">块 1（头）</text>
+
+  <rect x="352" y="160" width="84" height="24" rx="4" fill="#ffffff" stroke="#18181b" stroke-width="1.2"/>
+  <path d="M 380 160 L 380 184 M 408 160 L 408 184" fill="none" stroke="#e4e2db" stroke-width="1"/>
+  <text x="394" y="176" font-size="9.5" fill="#18181b" text-anchor="middle">块 2</text>
+
+  <rect x="456" y="160" width="84" height="24" rx="4" fill="#ffffff" stroke="#18181b" stroke-width="1.2"/>
+  <path d="M 484 160 L 484 184 M 512 160 L 512 184" fill="none" stroke="#e4e2db" stroke-width="1"/>
+  <text x="498" y="176" font-size="9.5" fill="#18181b" text-anchor="middle">块 3（尾）</text>
+
+  <text x="572" y="168" font-size="10.5" fill="#18181b">头尾接新块 O(1)</text>
+  <text x="572" y="184" font-size="9.5" fill="#57575e">块间不连续，多一层指针定位</text>
+
+  <line x1="28" y1="210" x2="772" y2="210" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Row 3: list / map scattered nodes (y kept <= 264, well above 310 - 40 = 270) -->
+  <text x="28" y="246" font-size="10.5" font-weight="600" fill="#18181b">list / map</text>
+  <text x="28" y="262" font-size="9.5" fill="#57575e">堆上离散节点</text>
+
+  <rect x="180" y="224" width="70" height="26" rx="5" fill="#ffffff" stroke="#57575e" stroke-width="1.2"/>
+  <text x="215" y="241" font-size="9.5" fill="#18181b" text-anchor="middle">节点 A</text>
+
+  <rect x="326" y="250" width="70" height="26" rx="5" fill="#ffffff" stroke="#57575e" stroke-width="1.2"/>
+  <text x="361" y="267" font-size="9.5" fill="#18181b" text-anchor="middle">节点 B</text>
+
+  <rect x="472" y="224" width="70" height="26" rx="5" fill="#ffffff" stroke="#57575e" stroke-width="1.2"/>
+  <text x="507" y="241" font-size="9.5" fill="#18181b" text-anchor="middle">节点 C</text>
+
+  <path d="M 250 234 Q 290 234 324 258" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arr-p)"/>
+  <path d="M 326 266 Q 282 266 246 250" fill="none" stroke="#a1a1aa" stroke-width="1.1" stroke-dasharray="3 2" marker-end="url(#arr-p)"/>
+  <path d="M 396 258 Q 436 256 470 238" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arr-p)"/>
+  <path d="M 472 228 Q 432 224 398 248" fill="none" stroke="#a1a1aa" stroke-width="1.1" stroke-dasharray="3 2" marker-end="url(#arr-p)"/>
+
+  <text x="572" y="245" font-size="10.5" fill="#18181b">增删无需搬迁节点</text>
+  <text x="572" y="261" font-size="9.5" fill="#57575e">额外指针开销，易跳出缓存</text>
+</svg>

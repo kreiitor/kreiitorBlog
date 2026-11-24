@@ -30,7 +30,7 @@
   <text x="292" y="128" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_down</text>
   <text x="294" y="148" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">4d → d</text>
 
-  <text x="28" y="212" font-size="9.5" fill="#57575e">2 次矩阵乘，固定形态激活函数统一过滤</text>
+  <text x="28" y="216" font-size="9.5" fill="#57575e">2 次矩阵乘，固定形态激活函数统一过滤</text>
 
   <!-- Divider -->
   <line x1="376" y1="24" x2="376" y2="232" stroke="#e4e2db" stroke-width="1"/>
@@ -54,13 +54,14 @@
   <text x="502" y="177" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_up</text>
   <text x="498" y="193" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">d → 8/3 d</text>
 
-  <!-- Converge to Hadamard Multiply circle -->
-  <path d="M 570 88 L 622 88 L 622 122" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
-  <path d="M 570 180 L 622 180 L 622 146" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
+  <!-- Converge cleanly to Hadamard Multiply circle -->
+  <path d="M 570 88 L 622 88 L 622 120" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
+  <path d="M 570 180 L 622 180 L 622 148" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-f)"/>
 
   <circle cx="622" cy="134" r="12" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.5"/>
   <path d="M 617 129 L 627 139 M 627 129 L 617 139" fill="none" stroke="#2f5268" stroke-width="1.5"/>
-  <text x="614" y="114" font-size="9.5" fill="#2f5268">逐维门控</text>
+  <!-- Placed in open space to the LEFT of the circle, away from arrows -->
+  <text x="568" y="138" font-size="9.5" font-weight="600" fill="#2f5268">逐维乘</text>
 
   <!-- Down projection -->
   <path d="M 634 134 L 664 134" fill="none" stroke="#2f5268" stroke-width="1.5" marker-end="url(#arr-fa)"/>
@@ -68,5 +69,5 @@
   <text x="684" y="130" font-size="10.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">W_down</text>
   <text x="684" y="148" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">8/3 d → d</text>
 
-  <text x="402" y="218" font-size="9.5" fill="#2f5268">3 次矩阵乘，中间维缩窄仍保持总参数量守恒</text>
+  <text x="402" y="216" font-size="9.5" fill="#2f5268">3 次矩阵乘，中间维缩窄仍保持总参数量守恒</text>
 </svg>

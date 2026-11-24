@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250" width="800" height="250" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>静态博客构建期与线上访问期的职责隔离</title>
+  <desc>展示全部公式排版、代码高亮、插图自检、Pagefind 索引与字体裁切都在构建期完成；跨越静态边界线之后，线上仅分发轻量的 HTML、样式与静态资源，不依赖运行时数据库或服务进程。</desc>
+  <defs>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="248" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">构建期（CI / 本地脚本）</text>
+  <text x="536" y="34" font-size="12.5" font-weight="600" fill="#2f5268">访问期（纯静态 CDN 分发）</text>
+
+  <!-- Vertical dashed architectural boundary stopping cleanly above label -->
+  <line x1="504" y1="24" x2="504" y2="202" stroke="#2f5268" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="504" y="218" font-size="9.5" fill="#2f5268" text-anchor="middle">产物界线</text>
+
+  <!-- Build source -->
+  <rect x="34" y="68" width="144" height="58" rx="7" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="46" y="88" font-size="10.5" font-weight="600" fill="#18181b">src/content/*.md</text>
+  <text x="46" y="105" font-size="9.5" fill="#57575e">Schema 校验 frontmatter</text>
+  <text x="46" y="119" font-size="9.5" fill="#71717a">SVG 附图与本地写真</text>
+
+  <rect x="34" y="144" width="144" height="44" rx="7" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="46" y="164" font-size="10.5" font-weight="600" fill="#18181b">语料裁切字体</text>
+  <text x="46" y="179" font-size="9.5" fill="#57575e">WOFF2 子集入库</text>
+
+  <!-- Build pipeline -->
+  <path d="M 180 97 L 222 97" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
+  <path d="M 180 166 L 246 166 L 246 146" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
+
+  <rect x="228" y="68" width="234" height="74" rx="8" fill="#ffffff" stroke="#18181b" stroke-width="1.4"/>
+  <text x="242" y="88" font-size="10.5" font-weight="600" fill="#18181b">Astro + KaTeX + Shiki 编译</text>
+  <text x="242" y="106" font-size="9.5" fill="#57575e">生成 Pagefind 倒排索引</text>
+  <text x="242" y="122" font-size="9.5" fill="#57575e">执行 BASE_PATH 路径重写与全站验链</text>
+
+  <!-- Handoff across boundary -->
+  <path d="M 464 105 L 534 105" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-b)"/>
+
+  <!-- Zero-JS runtime output (accented) -->
+  <rect x="540" y="68" width="224" height="118" rx="8" fill="#eef3f6" stroke="#2f5268" stroke-width="1.7"/>
+  <text x="556" y="92" font-size="10.5" font-weight="600" fill="#2f5268">dist/ 纯静态产物</text>
+  <text x="556" y="114" font-size="9.5" fill="#18181b">预渲染 HTML（零水合骨架）</text>
+  <text x="556" y="132" font-size="9.5" fill="#18181b">按需加载 Pagefind WASM 搜索分片</text>
+  <text x="556" y="150" font-size="9.5" fill="#57575e">无需数据库 · 无需外链字体 CDN</text>
+  <text x="556" y="168" font-size="9.5" fill="#57575e">支持根目录与仓库子路径同源部署</text>
+</svg>

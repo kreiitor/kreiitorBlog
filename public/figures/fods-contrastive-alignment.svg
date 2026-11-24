@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>自监督表征学习中对齐与二阶矩近似单位阵的几何分工</title>
+  <desc>对比表示空间在单位圆上的三种状态：常数塌缩使二阶矩退化为秩一；仅作对齐而缺分散力会落入低维线；对齐正样本对并约束跨视图二阶矩接近单位阵时，无需负样本即可均匀张开表示空间。</desc>
+  <defs>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Panel 1: Constant Collapse (circles moved up to cy=130 so labels sit cleanly at y=214/230 <= 240) -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">状态 A · 常数塌缩</text>
+  <circle cx="136" cy="130" r="56" fill="#ffffff" stroke="#e4e2db" stroke-width="1.1"/>
+  <path d="M 72 130 L 200 130 M 136 66 L 136 194" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+  <path d="M 136 130 L 174 92" fill="none" stroke="#18181b" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <circle cx="175" cy="91" r="4.5" fill="#18181b"/>
+  <circle cx="181" cy="96" r="4" fill="#ffffff" stroke="#18181b" stroke-width="1.4"/>
+  <circle cx="171" cy="85" r="3.5" fill="#57575e"/>
+  <text x="148" y="80" font-size="9.5" fill="#18181b">f(x) ≡ v</text>
+  <text x="28" y="214" font-size="10.5" fill="#18181b">二阶矩 C = vvᵀ 秩为一</text>
+  <text x="28" y="230" font-size="9.5" fill="#57575e">‖C − I‖_F² 大幅受罚</text>
+
+  <line x1="274" y1="26" x2="274" y2="250" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Panel 2: Low-rank subspace collapse -->
+  <text x="296" y="34" font-size="12.5" font-weight="600" fill="#18181b">状态 B · 低维共线</text>
+  <circle cx="400" cy="130" r="56" fill="#ffffff" stroke="#e4e2db" stroke-width="1.1"/>
+  <path d="M 336 130 L 464 130 M 400 66 L 400 194" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+  <line x1="356" y1="174" x2="444" y2="86" stroke="#71717a" stroke-width="1.3" stroke-dasharray="3 2"/>
+  <circle cx="439" cy="91" r="4" fill="#18181b"/>
+  <circle cx="434" cy="96" r="3.5" fill="#18181b"/>
+  <circle cx="361" cy="169" r="4" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="366" cy="164" r="3.5" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+  <text x="296" y="214" font-size="10.5" fill="#18181b">各坐标高度相关（未白化）</text>
+  <text x="296" y="230" font-size="9.5" fill="#57575e">表示塌缩进一维直线</text>
+
+  <line x1="534" y1="26" x2="534" y2="250" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Panel 3: Alignment + Uniform C ≈ I (accented #2f5268) -->
+  <text x="556" y="34" font-size="12.5" font-weight="600" fill="#2f5268">状态 C · 对齐 + 二阶矩 ≈ I</text>
+  <circle cx="662" cy="130" r="56" fill="#eef3f6" fill-opacity="0.45" stroke="#2f5268" stroke-width="1.6"/>
+  <path d="M 598 130 L 726 130 M 662 66 L 662 194" fill="none" stroke="#d4d1c8" stroke-width="1"/>
+
+  <circle cx="701" cy="89" r="4" fill="#2f5268"/>
+  <circle cx="708" cy="97" r="4" fill="#2f5268"/>
+  <text x="719" y="88" font-size="9.5" fill="#2f5268">f(x₁) ≈ f(x₂)</text>
+
+  <circle cx="622" cy="90" r="4" fill="#18181b"/>
+  <circle cx="615" cy="99" r="4" fill="#18181b"/>
+
+  <circle cx="703" cy="169" r="4" fill="#ffffff" stroke="#2f5268" stroke-width="1.6"/>
+  <circle cx="695" cy="176" r="4" fill="#ffffff" stroke="#2f5268" stroke-width="1.6"/>
+
+  <circle cx="622" cy="170" r="4" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="614" cy="163" r="4" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+
+  <text x="556" y="214" font-size="10.5" font-weight="600" fill="#2f5268">类内贴近，跨维正交张开</text>
+  <text x="556" y="230" font-size="9.5" fill="#57575e">零负样本即可防止塌缩</text>
+</svg>

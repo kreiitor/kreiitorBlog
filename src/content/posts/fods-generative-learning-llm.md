@@ -1486,6 +1486,11 @@ $$
 
 且 $X^*_1=\widetilde X_0=X_0\sim p$。训练时学 $\nabla\log p_t$，Euler–Maruyama 插进这条反向 SDE，即 Song et al. 2021。
 
+<figure>
+  <img src="/figures/fods-diffusion-flow.svg" width="800" height="280" alt="连续时间 OU 前向加噪扩散过程与反向 score 驱动的去噪采样流形示意">
+  <figcaption>上方虚线代表随时间推进从多峰数据分布滑向标准高斯；下方实线反向沿时间从右侧先验采样，在每个时刻顺着学得的对数密度梯度把样本推回高密度分支。</figcaption>
+</figure>
+
 ### 18.4 去噪 score matching 的等价形式（完整）
 
 总体目标

@@ -524,6 +524,11 @@ $$
 
 所以「对齐 + 二阶矩 $\approx I$」同时实现第 4.3 节的两个力，而且**不需要负样本**。
 
+<figure>
+  <img src="/figures/fods-contrastive-alignment.svg" width="800" height="280" alt="单位圆上常数塌缩、低维共线塌缩与对齐加各向同性二阶矩分布三种表征状态对比">
+  <figcaption>从左到右读出两股约束的合力：只压近正样本对会让点簇聚到单点或一条线上，加上二阶矩逼近单位阵后，不同语义簇才会沿正交方向张开。</figcaption>
+</figure>
+
 为什么还要写成 $\min\max$ 而不是直接罚 $\|A\|_F^2$？因为 $\|A\|_F^2=\sup_{\|G\|_F\le\|A\|_F}\langle A,G\rangle_F$ 是一种 IPM；经验过程、逼近与优化分析都可以直接沿用 GAN 分析框架（见[生成学习与 LLM](/blog/fods-generative-learning-llm/)，文献见 Huang–Jiao–Li–Liu–Wang–Yang, JMLR 2022；Jiao–Wang–Yang, ACHA 2023）。直接平方罚当然也能训练，但端到端误差界对这种 min-max 形式最为现成。
 
 ---
