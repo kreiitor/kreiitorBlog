@@ -8,6 +8,7 @@ tags:
   - 工具
 draft: false
 category: knowledge
+cover: /covers/post-reading-notes.svg
 ---
 
 ## 适用场景

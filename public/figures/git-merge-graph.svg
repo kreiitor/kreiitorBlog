@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>Git 分支修复与合并提交拓扑图</title>
+  <desc>主线在基线提交 A 处分出修复分支 B 和 C，而后通过拥有双父提交的 M 合并回主线并推进至固定提交 H；另标注 base 与 post 评测对照边界。</desc>
+  <defs>
+    <marker id="arr-git" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-git-acc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="218" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">主线历史（main）与修复分支（fix）</text>
+
+  <!-- Pin cutoff dashed vertical line behind H -->
+  <line x1="652" y1="54" x2="652" y2="152" stroke="#2f5268" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <text x="662" y="70" font-size="9.5" fill="#2f5268">pin 终点</text>
+
+  <!-- Mainline edges: A -> M -> H -->
+  <path d="M 142 86 L 456 86" fill="none" stroke="#57575e" stroke-width="1.6" marker-end="url(#arr-git)"/>
+  <path d="M 498 86 L 604 86" fill="none" stroke="#57575e" stroke-width="1.6" marker-end="url(#arr-git)"/>
+
+  <!-- Branch edges: A -> B -> C -> M (accented solution branch) -->
+  <path d="M 134 102 C 166 144, 186 150, 224 150" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-git-acc)"/>
+  <path d="M 266 150 L 352 150" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-git-acc)"/>
+  <path d="M 394 150 C 430 150, 446 138, 468 104" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-git-acc)"/>
+
+  <!-- Commit nodes on main -->
+  <circle cx="122" cy="86" r="19" fill="#ffffff" stroke="#18181b" stroke-width="1.6"/>
+  <text x="116" y="90" font-size="12.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">A</text>
+  <text x="62" y="58" font-size="10.5" fill="#18181b">基线 base（有 bug）</text>
+
+  <circle cx="478" cy="86" r="19" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.8"/>
+  <text x="472" y="90" font-size="12.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">M</text>
+  <text x="424" y="58" font-size="10.5" font-weight="600" fill="#2f5268">合并修复 post（双父提交）</text>
+
+  <circle cx="626" cy="86" r="19" fill="#ffffff" stroke="#57575e" stroke-width="1.4"/>
+  <text x="620" y="90" font-size="12.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#18181b">H</text>
+  <text x="588" y="122" font-size="9.5" fill="#57575e">后续提交历史</text>
+
+  <!-- Commit nodes on fix branch -->
+  <circle cx="246" cy="150" r="18" fill="#ffffff" stroke="#2f5268" stroke-width="1.4"/>
+  <text x="240" y="154" font-size="12.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">B</text>
+  <text x="220" y="182" font-size="9.5" fill="#57575e">改生产代码</text>
+
+  <circle cx="374" cy="150" r="18" fill="#ffffff" stroke="#2f5268" stroke-width="1.4"/>
+  <text x="368" y="154" font-size="12.5" font-weight="600" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">C</text>
+  <text x="348" y="182" font-size="9.5" fill="#57575e">补验证测试</text>
+</svg>

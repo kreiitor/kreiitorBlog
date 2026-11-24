@@ -47,6 +47,7 @@ import Icon from './Icon.astro';
  .back-to-top { position: fixed; bottom: 28px; right: 28px; z-index: 30; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--color-line-strong); border-radius: 50%; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-soft); opacity: 0; visibility: hidden; translate: 0 8px; transition: opacity var(--dur-base) var(--ease-smooth),visibility var(--dur-base) var(--ease-smooth),translate var(--dur-base) var(--ease-out-expo),background-color var(--dur-base) var(--ease-smooth),color var(--dur-base) var(--ease-smooth),border-color var(--dur-base) var(--ease-smooth); }
  .back-to-top[data-visible="true"] { opacity: 1; visibility: visible; translate: 0 0; }
  .back-to-top:is(:hover,:focus-visible) { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
+ @media (hover: hover) { .back-to-top[data-visible="true"]:hover { translate: 0 -2px; box-shadow: var(--shadow-lift); } }
  .back-to-top:active { translate: 0 1px; }
  @view-transition { navigation: auto; }
  ::view-transition-old(root),::view-transition-new(root) { animation-duration: var(--dur-base); }

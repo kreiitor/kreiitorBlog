@@ -20,3 +20,4 @@ main {
 }
 .gsc-main { font-family: "DM Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
 .gsc-comment-box, .gsc-comment { border-radius: 14px; }
+.gsc-main textarea:focus-visible, .gsc-main button:focus-visible { outline: 2px solid var(--color-accent-fg); outline-offset: 2px; }

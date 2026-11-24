@@ -29,6 +29,7 @@ Transformer 引入了 self-attention 机制：一个 token 直接和所有 token
 ## 2. 从原始 Transformer 到 LLM 家族
 
 原始 Transformer 采用 Encoder-Decoder 架构，适合 seq2seq 任务，最初用于机器翻译。后续研究衍生出多种结构变体：
+
 1. BERT（2018）：典型的 Encoder-only 架构，通过双向注意力（一个 token 可以看到它前后的所有 token）和掩码语言模型预训练，刷新了多项自然语言理解基准，也验证了「大规模预训练 + 下游任务微调」这一范式。
 2. GPT（2018-2023）：典型的 Decoder-only 架构，通过单向注意力（一个 token 只能看到它前面的 token）和自回归预训练在文本生成任务上不断突破：GPT-2 展示了 LLM 的长文本生成能力，GPT-3 验证了 Scaling Law，GPT-4 则将能力扩展到多模态和复杂推理。
 3. LLaMA（2023）：沿用 Decoder-only 架构，组合了 Pre-Norm、SwiGLU 激活函数和旋转位置编码（RoPE）等成熟组件。LLaMA 开源后，社区得以在统一架构基础上研究和优化，推动了 AI Infra 工具链的发展——vLLM、SGLang、Megatron-LM 等框架默认支持的对象首先就是 LLaMA 架构。

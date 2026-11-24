@@ -110,6 +110,7 @@ const titleParts = entry.data.title.match(/^(AI (?:Agent|Infra))\s+(.+)$/);
  .chapter-arrow { color: var(--color-ink-muted); transition: transform var(--dur-base) var(--ease-out-expo),color var(--dur-base); }
  .chapter-row:is(:hover,:focus-visible) h3 { color: var(--color-accent-strong); translate: 3px 0; }
  .chapter-row:is(:hover,:focus-visible) .chapter-arrow { color: var(--color-accent); transform: translate(3px,-3px); }
- @media (max-width: 900px) { .learning-layout { grid-template-columns: 260px minmax(0,1fr); gap: 30px; } .course-intro { padding: 24px; } }
- @media (max-width: 600px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } .chapter-row { padding: 18px 0; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; } .chapter-row::before { left: -10px; } }
+ @media (max-width: 900px) { .learning-layout { grid-template-columns: 240px minmax(0,1fr); gap: 30px; } .course-intro { padding: 24px; } }
+ @media (max-width: 760px) { .learning-layout { grid-template-columns: 1fr; gap: 30px; } .course-intro { position: static; } }
+ @media (max-width: 600px) { .chapter-row { padding: 18px 0; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; } .chapter-row::before { left: -10px; } }
 </style>

@@ -115,8 +115,10 @@ test('Copy announces its result without changing the host clipboard',async({page
  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copiedTestCode=value;}}}));
  await page.goto('blog/uv-package-manager-guide/');
  const expected=await page.locator('.rich-content pre code').first().textContent();
- await page.getByRole('button',{name:'复制代码'}).first().click();
+ const copyBtn = page.getByRole('button',{name:'复制代码'}).first();
+ await copyBtn.click();
  await expect(page.locator('[data-copy-status]')).toHaveText('代码已复制');
+ await expect(copyBtn).toHaveAttribute('data-copied', 'true');
  expect(await page.evaluate(()=>window.copiedTestCode)).toBe(expected);
 });
 test('Back to top reaches the document start',async({page})=>{

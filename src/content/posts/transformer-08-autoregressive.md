@@ -141,10 +141,10 @@ Step 2: 新 token 的 Q (1, 128) × 缓存的 1002 个 K → Attention → 生�
 
 Decode 阶段最核心的变化是：矩阵乘法退化为**矩阵-向量乘法**。
 
-```
-Prefill: Q (1000, 128) × K^T (128, 1000) = 矩阵 × 矩阵 → GPU 满载
-Decode:  Q (1, 128)    × K^T (128, 1001) = 向量 × 矩阵 → GPU 空转
-```
+<figure>
+  <img src="/figures/transformer-prefill-decode.svg" width="800" height="260" alt="Prefill 与 Decode 计算形态对比：Prefill 对完整 Prompt 做 N×d 与 d×N 稠密矩阵乘，Decode 每步用单行向量读写不断变长的 KV Cache" />
+  <figcaption>左右对比两个阶段的计算形状：左侧 Prefill 一次性处理 N × d 整块矩阵，计算密度高；右侧 Decode 每步只有 1 × d 单个查询向量，却要把不断变长的整块 KV Cache 从显存读入核心。</figcaption>
+</figure>
 
 矩阵-向量乘法的计算量很小，但需要从显存中搬运的数据量并没有按比例减少——整个 K 矩阵 `(1001, 128)` 和权重矩阵仍然需要从 HBM 搬到计算核心。GPU 的计算核心在等数据到来的过程中大部分时间处于空闲状态。
 
@@ -341,7 +341,7 @@ KV Cache 量化的挑战在于：Attention 计算对 Key 的数值精度比较�
 
 ### 6.5 Sliding Window Attention
 
-Mistral 模型引入了**滑动窗口注意力**：每个 token 只关注最近 W 个 token（如 W=4096），而非全部历史。这意味着 KV Cache 只需要保留最近 W 个 token 的 K、V，超出窗口的可以丢弃。
+Mistral 模型引入了**滑动窗口注意力**：每个 token 只关注最近 $W$ 个 token（如 $W=4096$），而非全部历史。KV Cache 于是只需保留最近 $W$ 个 token 的 K、V，超出窗口的可以丢弃。
 
 KV Cache 从 O(N) 变为 O(W)，对超长序列的显存节省巨大。但代价是模型无法直接访问窗口之外的远距离信息（需要依靠多层堆叠间接传递）。
 

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 250" width="800" height="250" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>C++11 值类别的双轴二维矩阵</title>
+  <desc>用是否有对象身份（纵轴）与资源是否可移动（横轴）两个正交维度交叉划分出 lvalue、xvalue 与 prvalue，其中 xvalue 同时落入 glvalue 与 rvalue。</desc>
+  <rect x="1" y="1" width="798" height="248" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Column labels (movability axis) -->
+  <text x="200" y="34" font-size="12.5" font-weight="600" fill="#18181b">资源不可移动</text>
+  <text x="486" y="34" font-size="12.5" font-weight="600" fill="#2f5268">资源可移动（rvalue）</text>
+
+  <!-- Row labels (identity axis) -->
+  <text x="28" y="96" font-size="12.5" font-weight="600" fill="#18181b">有身份</text>
+  <text x="28" y="114" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">glvalue</text>
+
+  <text x="28" y="182" font-size="12.5" font-weight="600" fill="#57575e">无身份</text>
+  <text x="28" y="200" font-size="9.5" fill="#71717a">纯临时结果</text>
+
+  <!-- 2x2 Matrix Grid -->
+  <!-- Top-left: lvalue -->
+  <rect x="148" y="54" width="290" height="78" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="170" y="84" font-size="12.5" font-weight="600" fill="#18181b" font-family="'JetBrains Mono Variable',monospace">lvalue 左值</text>
+  <text x="170" y="106" font-size="10.5" fill="#57575e">具名变量、数组元素、返回左值引用的调用</text>
+
+  <!-- Top-right: xvalue (intersection highlight #2f5268) -->
+  <rect x="438" y="54" width="316" height="78" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.8"/>
+  <text x="460" y="84" font-size="12.5" font-weight="600" fill="#2f5268" font-family="'JetBrains Mono Variable',monospace">xvalue 将亡值</text>
+  <text x="460" y="106" font-size="10.5" fill="#1e3a4c">glvalue 与 rvalue 交集，如 std::move(x)</text>
+
+  <!-- Bottom-left: empty -->
+  <rect x="148" y="132" width="290" height="78" fill="#f4f3ef" stroke="#e4e2db" stroke-width="1.1"/>
+  <text x="170" y="176" font-size="10.5" fill="#71717a">不存在（有源可寻即具身份）</text>
+
+  <!-- Bottom-right: prvalue -->
+  <rect x="438" y="132" width="316" height="78" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="460" y="162" font-size="12.5" font-weight="600" fill="#18181b" font-family="'JetBrains Mono Variable',monospace">prvalue 纯右值</text>
+  <text x="460" y="184" font-size="10.5" fill="#57575e">字面量 42、临时运算 x + y、lambda</text>
+
+  <!-- glvalue span bracket (top edge across both columns) -->
+  <path d="M 152 46 L 750 46" fill="none" stroke="#18181b" stroke-width="1.1" stroke-dasharray="3 3"/>
+  <!-- rvalue span bracket (right edge across both rows) -->
+  <path d="M 766 56 L 766 208" fill="none" stroke="#2f5268" stroke-width="1.8"/>
+</svg>

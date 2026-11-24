@@ -8,6 +8,7 @@ tags:
   - MCP
   - 工具
 draft: true
+cover: /covers/post-tools.svg
 ---
 
 ## 适用场景

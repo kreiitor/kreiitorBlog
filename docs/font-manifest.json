@@ -4,31 +4,31 @@
     400,
     600
   ],
-  "corpusGlyphCount": 1702,
+  "corpusGlyphCount": 1704,
   "files": {
     "journal-serif-sc-400-0.woff2": {
-      "bytes": 130624,
-      "sha256": "7113bfdde07083637cfefad81cab6ce669efad0fa229835e026c6c29498b11fa"
+      "bytes": 130728,
+      "sha256": "ac0136f2a3ba17ca5cda3b630dfad4d49827f5fa96a90cd995a728cc2ef5a43c"
     },
     "journal-serif-sc-400-1.woff2": {
-      "bytes": 147768,
-      "sha256": "5b8f7ed8e42714b9be01682e86456d46fff4ac52f7891e38b1c32df569900ee1"
+      "bytes": 147792,
+      "sha256": "9622e8bc586853749aee1ff35235480327215e8d6828a374f3d1fdf1d8f6c1fe"
     },
     "journal-serif-sc-400-2.woff2": {
-      "bytes": 44116,
-      "sha256": "a1804aa115f60509cefa7d84db3e98b0d7f523627ef261f1a6b1bfc76ab69581"
+      "bytes": 44544,
+      "sha256": "8a6f8a7184f233a6091f2d1e9fbe78f629e505be26cd31092250bc73462d799c"
     },
     "journal-serif-sc-600-0.woff2": {
-      "bytes": 132676,
-      "sha256": "c1cccf3b8bbef252f8e54d66c473cc932b30e2410ae982a9587f9b3dda2b5aa4"
+      "bytes": 132688,
+      "sha256": "c85d0a5ebca9fb5a59ec83dc193eea4a27f97955fe6010b674131fb0087835ef"
     },
     "journal-serif-sc-600-1.woff2": {
-      "bytes": 150000,
-      "sha256": "f70944c872457bb6b2c79ff20c9258af9f9d92b1f3eacb81429cacba22351a8e"
+      "bytes": 150056,
+      "sha256": "4fbd26c9304e3c9f0ff13c9310cc3ee4474a0fbbf7c0df93c44c89a29253fc33"
     },
     "journal-serif-sc-600-2.woff2": {
-      "bytes": 44780,
-      "sha256": "41ca3b4573efbc218067dfd75b7d38f6f8fce1fc91d22aab29dac56797a47b45"
+      "bytes": 45152,
+      "sha256": "df8694f0b7d02e3599c3a207b848470bb52d50ed33551ffdc99951b9f9d0fa31"
     },
     "journal-serif-latin-normal.woff2": {
       "bytes": 79452,

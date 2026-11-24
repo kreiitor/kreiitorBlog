@@ -8,6 +8,7 @@ tags:
   - CLI
 draft: false
 category: knowledge
+cover: /covers/post-cli-terminal.svg
 ---
 
 ## 这个方案解决什么问题

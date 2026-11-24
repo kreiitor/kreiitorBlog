@@ -59,7 +59,7 @@ $$
 
 其中 $E_{\mathrm{opt}}\le\tau$，$E_{\mathrm{gen}}:=2\sup_{f\in\mathcal{F}}|L(f)-\widehat L(f)|$。
 
-**直观理解：** $E_{\mathrm{gen}}$ 是「整个 $\mathcal{F}$ 上经验风险和总体风险差多远」的最坏偏差，通常只有 $\sqrt{(\log N)/n}$ 这种慢速率。$E_{\mathrm{sta}}$ 形式更绕，但中心化以后方差能跟超额风险成正比，Bernstein 可以给出 $(\log N)/n$。本节上半部分界定 $E_{\mathrm{sta}}$，下半部分把 $E_{\mathrm{gen}}$ 写成 Rademacher 复杂度。
+对照两项来看，$E_{\mathrm{gen}}$ 是「整个 $\mathcal{F}$ 上经验风险和总体风险差多远」的最坏偏差，通常只有 $\sqrt{(\log N)/n}$ 这种慢速率。$E_{\mathrm{sta}}$ 形式更绕，但中心化以后方差能跟超额风险成正比，Bernstein 可以给出 $(\log N)/n$。本节上半部分界定 $E_{\mathrm{sta}}$，下半部分把 $E_{\mathrm{gen}}$ 写成 Rademacher 复杂度。
 
 记号与前章一致：
 
@@ -383,7 +383,7 @@ $$
 E_{\mathrm{sta}}\;\lesssim\;\Bigl(\lambda B+\frac{\lambda^2}{c}\Bigr)\frac{\log N(\mathcal{F},\|\cdot\|_\infty,1/n)}{n}.
 $$
 
-**直观理解：** 复杂度只以对数进入；样本以 $1/n$ 进入。$\delta=1/n$ 不是唯一选择：$\log N(\delta)$ 通常随 $\delta\downarrow$ 变大，理论上应对 $\delta$ 做一点权衡，但 $3\lambda\delta$ 已经是 $O(1/n)$，对数项主导时不必纠结。
+式子读起来很干脆：复杂度只以对数进入；样本以 $1/n$ 进入。$\delta=1/n$ 不是唯一选择：$\log N(\delta)$ 通常随 $\delta\downarrow$ 变大，理论上应对 $\delta$ 做一点权衡，但 $3\lambda\delta$ 已经是 $O(1/n)$，对数项主导时不必纠结。
 
 **误区：** $N$ 是 $\delta=1/n$ 的覆盖数，不是 $|\mathcal{F}|$。有限类可以取 $\delta=0$、$N=|\mathcal{F}|$，扰动项 $3\lambda\delta$ 消失，只剩 $\kappa(\log|\mathcal{F}|+1)/n$。
 
@@ -452,7 +452,7 @@ $$
 
 $\varepsilon\ge 1$ 时左边 $\varepsilon^{-d}\le 1$，而 $N=1$（一个原点就盖住），不等式仍对。附录 B 还写过更粗的 $N(B_2,\varepsilon)\le(3/\varepsilon)^d$（$\varepsilon\le 1$ 时 $1+2/\varepsilon\le 3/\varepsilon$）。
 
-**直观理解：** $d$ 维单位球，精度 $\varepsilon$，大约 $(1/\varepsilon)^d$ 个点。指数在维度上，这就是「维数灾难」。函数类如果「有效维度」是 $d$，覆盖数就是这个样子。
+几何上，$d$ 维单位球以精度 $\varepsilon$ 离散需要大约 $(1/\varepsilon)^d$ 个点。指数在维度上，这就是「维数灾难」。函数类如果「有效维度」是 $d$，覆盖数就是这个样子。
 
 ---
 
@@ -597,7 +597,7 @@ $$
 \Bigl(\lambda B+\frac{\lambda^2}{c}\Bigr)\frac{SD\log(BWDn)}{n}.
 $$
 
-**直观理解：** 网络的「有效参数个数」是 $SD$ 而不是 $S$——深度在覆盖指数里又乘了一次，因为参数到函数的 Lipschitz 常数随深度按 $(BW)^D$ 指数增长。这是最粗的 $\infty$-覆盖估计；若改用经验 $L^2$ 覆盖或谱范数约束（如 Bartlett 等人）可得到更紧依赖。
+按这个估计，网络的「有效参数个数」是 $SD$ 而不是 $S$——深度在覆盖指数里又乘了一次，因为参数到函数的 Lipschitz 常数随深度按 $(BW)^D$ 指数增长。这是最粗的 $\infty$-覆盖估计；若改用经验 $L^2$ 覆盖或谱范数约束（如 Bartlett 等人）可得到更紧依赖。
 
 ---
 
@@ -730,7 +730,7 @@ $$
 
 带绝对值：$\sup_a|\langle\tau,a\rangle|=\sup_{a\in A\cup(-A)}\langle\tau,a\rangle$，$|A\cup(-A)|\le 2|A|$，同一套 $R$，故 $\sqrt{2R^2\log(2|A|)}$。$\square$
 
-**直观理解：** 有限个高斯或 Rademacher 随机变量最大值的期望量级是「半径 $\times\sqrt{\log\text{个数}}$」，而不是线性依赖于个数。这也正是统计误差上界里频繁出现 $\log N$ 而非 $N$ 的原因。
+这条引理表明，有限个高斯或 Rademacher 随机变量最大值的期望量级是「半径 $\times\sqrt{\log\text{个数}}$」，而不是线性依赖于个数。这也正是统计误差上界里频繁出现 $\log N$ 而非 $N$ 的原因。
 
 ---
 
@@ -1019,7 +1019,7 @@ $$
 \Biggr).
 $$
 
-**直观理解：** 不要用一张很细的网把整个类一次性并集（那会留下 $\sqrt{\log N(\delta_{\min})}$，$\delta_{\min}$ 太小时爆炸）。改成一层层网：粗网负责大尺度振荡，相邻两层的差很小，Massart 的半径跟着尺度走。把离散层求和变成积分，就是熵积分。
+核心思路是分级逼近：不要用一张很细的网把整个类一次性并集（那会留下 $\sqrt{\log N(\delta_{\min})}$，$\delta_{\min}$ 太小时爆炸）。改成一层层网：粗网负责大尺度振荡，相邻两层的差很小，Massart 的半径跟着尺度走。把离散层求和变成积分，就是熵积分。
 
 ---
 

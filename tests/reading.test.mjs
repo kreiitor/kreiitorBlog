@@ -13,11 +13,12 @@ function values(tree,tag) {
 function text(node){return node.type==='text'?node.value:(node.children??[]).map(text).join('');}
 test('Display equation numbers render, and heading-looking code remains code',async()=>{
  const renderer=await createMarkdownProcessor(markdownOptions('/journal/'));
- const source='## 公式\n\n$$\nW_i + K_i \\le C_i. \\tag{6-1}\n$$\n\n```python\n# This is not a document heading\nprint("$value$")\n```\n\n[继续阅读](/blog/lesson/)';
+ const source='## 公式\n\n$$\nW_i + K_i \\le C_i. \\tag{6-1}\n$$\n\n<figure><img src="/figures/sample.svg" width="800" height="260" alt="示例"><figcaption>图注</figcaption></figure>\n\n```python\n# This is not a document heading\nprint("$value$")\n```\n\n[继续阅读](/blog/lesson/)';
  const {code}=await renderer.render(source);
  assert.ok(code.includes('katex-display'));
  assert.ok(!code.includes('katex-error'));
  assert.ok(code.includes('/journal/blog/lesson/'));
+ assert.ok(code.includes('/journal/figures/sample.svg'));
  assert.equal(values(fromHtml(code,{fragment:true}),'h1').length,0);
  assert.ok(text(values(fromHtml(code,{fragment:true}),'pre')[0]).includes('# This is not a document heading'));
 });

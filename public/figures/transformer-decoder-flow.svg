@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="800" height="320" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>Decoder-only Transformer 端到端数据流</title>
+  <desc>从分词后的 Token ID 经过嵌入查找、多层带残差旁路的 Pre-Norm Decoder 模块、最终归一化与输出头，到自回归采样并拼回输入序列的数据流。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-acc" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Warm porcelain plate for light/dark readability -->
+  <rect x="1" y="1" width="798" height="318" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Section headers (left-aligned) -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">输入阶段</text>
+  <text x="190" y="34" font-size="12.5" font-weight="600" fill="#2f5268">L × Decoder Block（Pre-Norm + 残差）</text>
+  <text x="614" y="34" font-size="12.5" font-weight="600" fill="#18181b">输出阶段</text>
+
+  <!-- Enclosing block frame with dashed repeat border -->
+  <rect x="188" y="48" width="394" height="196" rx="10" fill="#ffffff" stroke="#2f5268" stroke-width="1.2" stroke-dasharray="5 4"/>
+
+  <!-- Step 1: Token IDs -> Embed -->
+  <rect x="28" y="96" width="124" height="44" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="40" y="115" font-size="10.5" font-weight="600" fill="#18181b">Tokenizer 分词</text>
+  <text x="40" y="131" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">token_ids: (B, n)</text>
+
+  <rect x="28" y="168" width="124" height="44" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="40" y="187" font-size="10.5" font-weight="600" fill="#18181b">Token Embedding</text>
+  <text x="40" y="203" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">X: (n, d_model)</text>
+
+  <path d="M 90 140 L 90 166" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M 152 190 L 204 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+  <!-- Inside Block: Sublayer 1 (RMSNorm -> Causal Attn + RoPE) -->
+  <rect x="206" y="168" width="70" height="44" rx="6" fill="#f4f3ef" stroke="#d4d1c8" stroke-width="1.1"/>
+  <text x="218" y="194" font-size="10.5" font-weight="500" fill="#18181b">RMSNorm</text>
+
+  <rect x="292" y="162" width="102" height="56" rx="6" fill="#eaf0f4" stroke="#2f5268" stroke-width="1.4"/>
+  <text x="304" y="184" font-size="10.5" font-weight="600" fill="#2f5268">Causal GQA</text>
+  <text x="304" y="200" font-size="9.5" fill="#1e3a4c">旋转编码 RoPE</text>
+  <text x="304" y="212" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#2f5268">KV Cache</text>
+
+  <circle cx="414" cy="190" r="10" fill="#ffffff" stroke="#2f5268" stroke-width="1.3"/>
+  <path d="M 410 190 L 418 190 M 414 186 L 414 194" fill="none" stroke="#2f5268" stroke-width="1.4"/>
+
+  <path d="M 276 190 L 290 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M 394 190 L 402 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+  <!-- Residual skip 1 (over Attention) -->
+  <path d="M 194 190 L 194 128 Q 194 120 202 120 L 406 120 Q 414 120 414 128 L 414 178" fill="none" stroke="#2f5268" stroke-width="1.3" marker-end="url(#arrow-acc)"/>
+  <text x="278" y="112" font-size="9.5" fill="#2f5268">残差直连 H = X + Attn</text>
+
+  <!-- Sublayer 2: RMSNorm -> SwiGLU FFN + Residual 2 -->
+  <path d="M 424 190 L 444 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <rect x="446" y="168" width="96" height="44" rx="6" fill="#f4f3ef" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="458" y="187" font-size="10.5" font-weight="500" fill="#18181b">RMSNorm</text>
+  <text x="458" y="203" font-size="9.5" fill="#57575e">+ SwiGLU FFN</text>
+
+  <circle cx="562" cy="190" r="10" fill="#ffffff" stroke="#2f5268" stroke-width="1.3"/>
+  <path d="M 558 190 L 566 190 M 562 186 L 562 194" fill="none" stroke="#2f5268" stroke-width="1.4"/>
+  <path d="M 542 190 L 550 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+  <!-- Residual skip 2 (over FFN) -->
+  <path d="M 434 190 L 434 128 Q 434 120 442 120 L 554 120 Q 562 120 562 128 L 562 178" fill="none" stroke="#2f5268" stroke-width="1.3" marker-end="url(#arrow-acc)"/>
+  <text x="466" y="112" font-size="9.5" fill="#2f5268">X = H + FFN</text>
+  <text x="206" y="232" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">各层维度保持不变: (n, d_model) — 连续堆叠 L 层</text>
+
+  <!-- Output Stage -->
+  <path d="M 572 190 L 612 190" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <rect x="614" y="168" width="156" height="44" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="626" y="187" font-size="10.5" font-weight="600" fill="#18181b">Final Norm + LM Head</text>
+  <text x="626" y="203" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">logits: (n, V)</text>
+
+  <path d="M 692 168 L 692 142" fill="none" stroke="#57575e" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <rect x="614" y="96" width="156" height="44" rx="6" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="626" y="115" font-size="10.5" font-weight="600" fill="#18181b">Softmax 采样下一词</text>
+  <text x="626" y="131" font-size="9.5" font-family="'JetBrains Mono Variable',monospace" fill="#57575e">x_{n+1} ~ P(logits[-1])</text>
+
+  <!-- Autoregressive feedback loop outside main row -->
+  <path d="M 692 212 L 692 272 Q 692 282 682 282 L 100 282 Q 90 282 90 272 L 90 214" fill="none" stroke="#71717a" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+  <text x="310" y="274" font-size="9.5" fill="#57575e">自回归循环：新生成 token 拼到序列末尾</text>
+</svg>

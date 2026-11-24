@@ -204,76 +204,14 @@ Decoder-only 砍掉了 Encoder、Cross-Attention、双向注意力，整个模�
 
 ### 5.1 端到端数据流
 
-以一次 LLM 推理为例，看数据从输入走到输出：
+一次典型 LLM 推理沿着「词表查找 → $L$ 层等维 Block → 词表投影」推进，形状始终围绕 $(B, n, d_{\text{model}})$ 流转，每生成一词就拼到输入末尾继续下一轮：
 
-```
-用户输入: "什么是注意力机制"
+<figure>
+  <img src="/figures/transformer-decoder-flow.svg" width="800" height="320" alt="Decoder-only Transformer 端到端数据流：Token ID 经嵌入层进入 L 个带残差旁路的 Pre-Norm Decoder Block，输出 logits 后采样并自回归接回末尾" />
+  <figcaption>沿主干从左向右读完单步前向传播：每个 Decoder Block 顶端的两条蓝线表示直接相加的残差通道，底部的虚线回环示意采样出的新 token 拼回输入末尾继续下一轮。</figcaption>
+</figure>
 
-Step 1: Tokenizer 分词
-────────────────────
-"什么是注意力机制" → [1234, 567, 89, 2345, 678]  (5 个 token ID)
-
-Step 2: Token Embedding
-────────────────────
-[1234, 567, 89, 2345, 678]
-    │
-    ▼
-W_embed: (vocab_size, d_model)   查表得到每个 token 的向量
-    │
-    ▼
-X: (5, d_model)                  5 个 d_model 维向量
-
-Step 3: L 层 Decoder Block
-────────────────────
-┌─ Block 1 ─────────────────────────────────────────────┐
-│                                                       │
-│  x_norm = RMSNorm(X)                                  │
-│  attn_out = MaskedSelfAttention(x_norm)  ← 含 RoPE    │
-│  H = X + attn_out                        ← 残差连接   │
-│                                                       │
-│  h_norm = RMSNorm(H)                                  │
-│  ffn_out = SwiGLU_FFN(h_norm)                         │
-│  X = H + ffn_out                         ← 残差连接   │
-│                                                       │
-└───────────────────────────────────────────────────────┘
-    │                          维度始终保持 (5, d_model)
-    ▼
-┌─ Block 2 ─────────── ... ───────── Block L ────────────┐
-│                                                        │
-│  完全相同的结构，重复 L 次                             │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-    │
-    ▼
-X_final: (5, d_model)
-
-Step 4: Final LayerNorm
-────────────────────
-X_norm = RMSNorm(X_final)        (5, d_model)
-
-Step 5: LM Head（语言模型头）
-────────────────────
-logits = X_norm @ W_lm_head      (5, d_model) × (d_model, vocab_size)
-                                 = (5, vocab_size)
-
-Step 6: 取最后一个位置，Softmax → 采样
-────────────────────
-logits[-1]: (vocab_size,)         最后一个 token 位置的输出
-    │
-    ▼
-probabilities = Softmax(logits[-1])
-    │
-    ▼
-next_token = Sample(probabilities)  → 比如采样到"注"
-
-Step 7: 自回归循环
-────────────────────
-将新 token 拼接到输入末尾，重复 Step 2-6
-"什么是注意力机制" + "注" → "什么是注意力机制注"
-继续生成... "意" → "力" → "机" → "制" → "是" → ...
-```
-
-整个过程的数学表达是：
+数学表达如下：
 $$
 P(\text{next\_token} \mid x_1, x_2, \dots, x_n) = \operatorname{Softmax}(\operatorname{RMSNorm}(\operatorname{DecoderBlocks}^{(L)}(\operatorname{Embed}(x))) W_{lm})
 $$

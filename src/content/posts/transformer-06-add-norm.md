@@ -183,6 +183,11 @@ Post-Norm 的连乘里多出一个系数项，数值稳定性较差，训练相�
 
 DeepNorm 在 Post-Norm 的基础上给残差连接的输入 $x$ 加上调节参数 $\alpha$，试图复现 Pre-Norm 的训练稳定性。但 Pre-Norm 本身训练稳定、社区实践多、实现也简洁，无需额外引入调节参数。
 
+<figure>
+  <img src="/figures/transformer-prenorm-postnorm.svg" width="800" height="272" alt="Post-Norm 与 Pre-Norm 反向梯度路径对比：Post-Norm 主干经过每层归一化截断，Pre-Norm 保留直通浅层的恒等残差通路" />
+  <figcaption>从右向左倒推梯度回传路径：上方 Post-Norm 每次累加后都要经过 Norm 变换，梯度连乘易受缩放影响；下方 Pre-Norm 让残差主干全程无阻碍直通，归一化与子层只以旁路汇入。</figcaption>
+</figure>
+
 ## 5. CUDA 优化视角
 
 LayerNorm 和残差连接的数学不难，难的是在 GPU 上高效实现。
@@ -195,12 +200,10 @@ LayerNorm 的数学不复杂，在 GPU 上高效实现却有讲究。它是一�
 
 最朴素的 LayerNorm 实现需要两遍扫描输入数据：
 
-```
-第一遍：遍历 d 个元素，计算 sum(x) 和 sum(x²)，进而得到 mean 和 variance
-第二遍：再次遍历 d 个元素，用 mean 和 variance 对每个元素做归一化
-```
+- **第一遍**：遍历 $d$ 个元素，计算 $\sum x$ 和 $\sum x^2$，进而得到均值与方差；
+- **第二遍**：再次遍历 $d$ 个元素，用均值和方差对每个元素做归一化。
 
-这意味着特征向量的数据要从 HBM（高带宽显存）读**两次**。$d_{model}=4096$ 甚至 8192 的大模型，每个 token 的特征向量有 4096-8192 个 float16 元素，绝对大小只有 8-16 KB。但 LayerNorm 在每个 Transformer Block 里调用两次（Attention 前一次，FFN 前一次），模型又有几十个 Block，再乘上 batch 和序列长度，累计的 HBM 访问量相当可观。
+特征向量的数据因此要从 HBM（高带宽显存）读**两次**。$d_{model}=4096$ 甚至 8192 的大模型，每个 token 的特征向量有 4096-8192 个 float16 元素，绝对大小只有 8-16 KB。但 LayerNorm 在每个 Transformer Block 里调用两次（Attention 前一次，FFN 前一次），模型又有几十个 Block，再乘上 batch 和序列长度，累计的 HBM 访问量相当可观。
 
 **Welford 算法与在线计算**
 

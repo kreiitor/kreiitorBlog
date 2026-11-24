@@ -118,17 +118,12 @@ C++ 表达式除了类型，还有**值类别**（value category）。值类别�
 
 ### 3.2.1 值类别分类
 
-现代 C++ 的值类别可概括为：
+现代 C++ 用「是否具对象身份」与「资源是否可被移动」两把正交标尺划分表达的值类别：
 
-```text
-expression
-├── glvalue 泛左值
-│   ├── lvalue 左值
-│   └── xvalue 将亡值
-└── rvalue 右值
-    ├── prvalue 纯右值
-    └── xvalue 将亡值
-```
+<figure>
+  <img src="/figures/cpp-value-categories.svg" width="800" height="250" alt="C++11 值类别的双轴二维矩阵：以有身份（glvalue）为纵轴、可移动（rvalue）为横轴交叉划分出 lvalue、xvalue 与 prvalue" />
+  <figcaption>横看行代表是否拥有对象身份（glvalue），竖看列代表能否移走内部资源（rvalue）；两道约束的交集正是将亡值 xvalue。</figcaption>
+</figure>
 
 | 术语        | 全称                 | 含义                          |
 | --------- | ------------------ | --------------------------- |

@@ -70,6 +70,27 @@ test('Home fits narrow and wide viewports without horizontal overflow', async ({
  }
 });
 
+test('Inline technical SVG diagrams load cleanly without overflow on narrow screens', async ({ page }) => {
+ await page.setViewportSize({ width: 390, height: 844 });
+ for (const route of ['blog/transformer-02-architecture/', 'blog/git-glossary/']) {
+  await page.goto(route);
+  const figureImg = page.locator('.article-body figure img[src$=".svg"]').first();
+  await expect(figureImg).toBeVisible();
+  expect(await figureImg.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
+ }
+});
+
+test('Secondary pages adapt cleanly across phone and narrow tablet widths without overflow', async ({ page }) => {
+ for (const width of [390, 680]) {
+  await page.setViewportSize({ width, height: 900 });
+  for (const route of ['notes/fods/', 'about/', 'archive/', 'projects/', 'search/']) {
+   await page.goto(route);
+   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), `${route} at ${width}px`).toBe(true);
+  }
+ }
+});
+
 test('Home entrance respects reduced motion without animations', async ({ page }) => {
  await page.emulateMedia({ reducedMotion: 'reduce' });
  await page.goto('');

@@ -330,11 +330,14 @@ const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
  const noteItems = Array.from(document.querySelectorAll<HTMLLIElement>('[data-home-note]'));
  if (filterGroup && noteItems.length) {
   const buttons = Array.from(filterGroup.querySelectorAll<HTMLButtonElement>('[data-home-tag]'));
-  const applyFilter = (tag: string) => {
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const applyFilter = (tag: string, animate = false) => {
    let shown = 0;
+   const revealed: HTMLLIElement[] = [];
    for (const item of noteItems) {
     const match = tag === 'all' || (item.dataset.tags ?? '').split('|').includes(tag);
     if (match && shown < 6) {
+     if (item.hidden) revealed.push(item);
      item.hidden = false;
      shown += 1;
     } else {
@@ -344,11 +347,19 @@ const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
    for (const btn of buttons) {
     btn.setAttribute('aria-pressed', String(btn.dataset.homeTag === tag));
    }
+   if (animate && !reducedMotion.matches) {
+    revealed.forEach((item, index) => {
+     item.animate(
+      [{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }],
+      { duration: 240, delay: index * 24, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'both' },
+     );
+    });
+   }
   };
   filterGroup.addEventListener('click', event => {
    const target = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-home-tag]');
    if (!target) return;
-   applyFilter(target.dataset.homeTag ?? 'all');
+   applyFilter(target.dataset.homeTag ?? 'all', true);
   });
  }
 </script>
@@ -525,9 +536,11 @@ const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
  :global(:root[data-welcomed]) .reveal { animation: none; }
  @keyframes bento-enter { from { opacity: 0; translate: 0 8px; } }
 
- /* ---------- Responsive Breakpoints (600 / 900 / 1100) ---------- */
+ /* ---------- Responsive Breakpoints (600 / 900 / 1100 + 420) ---------- */
  @media (max-width: 1100px) {
   .bento-hero { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+  .bento-mid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .monograph-card { padding: 20px 22px; }
   .outro-actions { grid-template-columns: minmax(0, 1fr); }
  }
  @media (max-width: 900px) {
@@ -545,6 +558,12 @@ const issueCode = `${now.getFullYear()}.${pad(now.getMonth() + 1)}`;
   .month { font-size: 11px; }
   .tip { display: none; }
   .outro-actions { grid-template-columns: minmax(0, 1fr); }
+ }
+ @media (max-width: 420px) {
+  .hero-main,.now-card,.notes-panel,.life-panel,.monograph-card,.home-project-card,.timeline-panel,.outro-panel { padding: 18px; }
+  .hero-foot { flex-direction: column; align-items: flex-start; }
+  .months { gap: 3px; height: 120px; }
+  .month { font-size: 10px; }
  }
  @media (pointer: coarse) {
   .home-tag-filters button { min-height: 36px; }

@@ -511,7 +511,7 @@ $$
 
 总体版把 $A(f)$ 换成 $\mathbb{E}_x\mathbb{E}_{x_1,x_2\in\mathcal{A}(x)}[f(x_1)f(x_2)^\top]-I_{d^*}$，同一套 Cauchy–Schwarz，$\max_{G\in\mathcal{G}(f)}L(f,G)$ 仍是对齐项 $+\lambda\|A_{\mathrm{pop}}(f)\|_F^2$。
 
-**直观理解。**
+目标函数里的两项各有分工：
 
 - 第一项：同一张图的两种增广，表示要近（类内拉近）；
 - 第二项：两种增广的**跨视图二阶矩**要接近单位阵。对角 $\approx 1$：每个坐标都有能量，不能整张图缩成 $0$；非对角 $\approx 0$：不同坐标别高度相关，不能所有质量塌进一条直线。这和 Barlow Twins / VICReg 的白化是亲戚，但写成 $\min\max$ 之后，均匀偏差可以用 GAN / IPM 的经验过程控制。

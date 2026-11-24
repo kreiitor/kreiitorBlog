@@ -296,6 +296,11 @@ GQA 是 MHA 和 MQA 的折中方案（Ainslie et al., 2023）。将 $h$ 个 Q �
 
 GQA 在模型质量和推理效率之间取得了更好的平衡。LLaMA-2-70B、Mistral-7B 等主流模型都采用了 GQA。
 
+<figure>
+  <img src="/figures/transformer-gqa-sharing.svg" width="800" height="250" alt="MHA、GQA 与 MQA 的键值头共享结构对比：8 个 Query 头在 MHA 中对应 8 组 KV，在 GQA 中分组共享 2 组 KV，在 MQA 中全部共享 1 组 KV" />
+  <figcaption>自上而下看连接线的归并方式：MHA 每头独占一组 KV，GQA 将多个 Q 头归并到同组 KV 上，MQA 则让全部 Q 头共用单组 KV；下方方块的相对面积对应缓存开销。</figcaption>
+</figure>
+
 ### 8.4 对比表格
 
 单 token 的 KV Cache 计算方式为 $K=XW_K, V=XW_V$，其中 $K, V$ 的形状为 $(B, N, \text{num\_kv\_heads}, \text{head\_dim})$。
