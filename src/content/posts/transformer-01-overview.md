@@ -35,6 +35,11 @@ Transformer 引入了 self-attention 机制：一个 token 直接和所有 token
 3. LLaMA（2023）：沿用 Decoder-only 架构，组合了 Pre-Norm、SwiGLU 激活函数和旋转位置编码（RoPE）等成熟组件。LLaMA 开源后，社区得以在统一架构基础上研究和优化，推动了 AI Infra 工具链的发展——vLLM、SGLang、Megatron-LM 等框架默认支持的对象首先就是 LLaMA 架构。
 4. 后续演进（Mistral、Qwen、DeepSeek 等）：这些模型在 LLaMA 的基础上引入了 GQA（Grouped-Query Attention）、MoE（混合专家模型）、MLA（Multi-head Latent Attention）等架构变种，核心骨架始终是 Transformer Decoder。
 
+<figure>
+  <img src="/figures/transformer-evolution-tree.svg" width="800" height="270" alt="原始 Transformer 分化为 BERT 双向编码器与 GPT/LLaMA 自回归解码器主干的演化路径">
+  <figcaption>从左侧最初的编码器-解码器分叉读起：上支采用全见式注意力专注文本理解；下支保留因果下三角掩码并定型出 Pre-Norm、RoPE、SwiGLU 与 GQA 组合的现代自回归基座。</figcaption>
+</figure>
+
 ## 3. AI Infra 和 Transformer 之间的关联
 
 AI Infra 的各项优化对应 Transformer 中的具体结构：

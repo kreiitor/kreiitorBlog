@@ -1301,6 +1301,11 @@ $$
 
 两端分界很清楚：偏差 $t$ 较小时尾部行为像次高斯（$e^{-n t^2}$），$t$ 较大时退化为指数尾（$e^{-nt}$）；Laplace 分布随机变量的均值正呈现这种两段行为。
 
+<figure>
+  <img src="/figures/fods-subg-sube-tails.svg" width="800" height="280" alt="次高斯平方衰减曲线与次指数 Bernstein 两段尾界在对数概率坐标下的对比">
+  <figcaption>读图时以竖向虚线 <code>t = λ</code> 为界：左半区两类分布都顺着二次抛物线快速下坠；越过分界点后，次指数实线折为缓斜直线尾，纯次高斯虚线继续以平方速率下沉。</figcaption>
+</figure>
+
 ### 15.5 Bernstein：有界 RV 的方差感知版
 
 设 $\mu=\mathbb{E}X$，$\mathrm{var}(X)=\sigma^2$，$|X-\mu|\le b$ a.s.。则对任意 $t>0$，

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>Minimax 下界证明中函数空间 Packing 与分布重叠度的对立张力</title>
+  <desc>左侧展示参数空间中以互不相交的 cξ/2 半径球隔开的真函数 f_i，估计器不能同时靠近两个球；右侧展示这些真函数诱导出的观测样本分布 P_i 与 P_j 高度重叠，使样本难以统计区分。</desc>
+  <defs>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Left: Separated L^2 packing balls in X -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">参数空间：两两隔开的互斥球（想分得开）</text>
+
+  <circle cx="118" cy="144" r="46" fill="#ffffff" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="118" cy="144" r="3.8" fill="#18181b"/>
+  <text x="118" y="132" font-size="10.5" font-weight="600" fill="#18181b" text-anchor="middle">f₁</text>
+  <text x="118" y="168" font-size="9.5" fill="#57575e" text-anchor="middle">互斥球 A₁</text>
+
+  <circle cx="256" cy="144" r="46" fill="#eef3f6" fill-opacity="0.65" stroke="#2f5268" stroke-width="1.5"/>
+  <circle cx="256" cy="144" r="3.8" fill="#2f5268"/>
+  <text x="256" y="132" font-size="10.5" font-weight="600" fill="#2f5268" text-anchor="middle">f₂</text>
+  <text x="256" y="168" font-size="9.5" fill="#2f5268" text-anchor="middle">互斥球 A₂</text>
+
+  <!-- Separation bar below centers -->
+  <path d="M 118 82 L 256 82 M 118 77 L 118 87 M 256 77 L 256 87" fill="none" stroke="#57575e" stroke-width="1.2"/>
+  <text x="187" y="72" font-size="9.5" fill="#18181b" text-anchor="middle">cξ ≤ ‖f₁ − f₂‖₂ ≤ Cξ</text>
+
+  <!-- f_hat dot in neither ball or picking only one -->
+  <circle cx="187" cy="144" r="4" fill="#18181b"/>
+  <text x="187" y="212" font-size="9.5" fill="#57575e" text-anchor="middle">任何 f̂ 最多只能落进一个球</text>
+  <text x="187" y="228" font-size="9.5" fill="#57575e" text-anchor="middle">猜错则损失至少 ≳ ξ²</text>
+
+  <!-- Center link arrow -->
+  <line x1="396" y1="26" x2="396" y2="254" stroke="#e4e2db" stroke-width="1"/>
+  <path d="M 326 144 L 444 144" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arr-b)"/>
+  <text x="384" y="128" font-size="9.5" font-weight="600" fill="#2f5268" text-anchor="middle">诱导采样分布</text>
+
+  <!-- Right: Overlapping distributions P1, P2 -->
+  <text x="424" y="34" font-size="12.5" font-weight="600" fill="#2f5268">样本分布空间：KL 极小 · 几乎混成一体</text>
+
+  <line x1="454" y1="196" x2="758" y2="196" stroke="#d4d1c8" stroke-width="1.2"/>
+
+  <!-- Overlap shaded intersection matching bell crossing closely -->
+  <path d="M 524 196 C 556 178, 584 128, 606 105 C 628 128, 656 178, 688 196 Z" fill="#2f5268" fill-opacity="0.18"/>
+
+  <!-- P_1 bell centered at 576 -->
+  <path d="M 464 196 C 510 196, 538 78, 576 78 C 614 78, 642 196, 688 196" fill="none" stroke="#18181b" stroke-width="1.7"/>
+  <text x="562" y="68" font-size="10.5" font-weight="600" fill="#18181b" text-anchor="middle">P₁ (Y | f₁)</text>
+
+  <!-- P_2 bell centered at 636 -->
+  <path d="M 524 196 C 570 196, 598 78, 636 78 C 674 78, 702 196, 748 196" fill="none" stroke="#2f5268" stroke-width="1.7"/>
+  <text x="650" y="68" font-size="10.5" font-weight="600" fill="#2f5268" text-anchor="middle">P₂ (Y | f₂)</text>
+
+  <text x="606" y="176" font-size="9.5" font-weight="600" fill="#2f5268" text-anchor="middle">大面积重叠区（难以辨别）</text>
+  <text x="606" y="216" font-size="9.5" fill="#57575e" text-anchor="middle">KL(P₁ⁿ, P₂ⁿ) ≲ nξ² ≤ log N 处</text>
+  <text x="606" y="232" font-size="9.5" fill="#2f5268" text-anchor="middle">由重合界定下确界最优速率 ξ*</text>
+</svg>

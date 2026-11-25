@@ -429,6 +429,11 @@ j - i
 - `array` 和 `vector` 的迭代器才满足连续迭代器要求；
 - `string` 的迭代器通常也可以看成满足这一要求。
 
+<figure>
+  <img src="/figures/cpp-iterator-hierarchy.svg" width="800" height="270" alt="输入、前向、双向、随机访问与连续五类 C++ 迭代器的递增能力阶梯与典型容器">
+  <figcaption>从左到右按台阶向上阅读：每一层都兼容左侧全部操作并解锁右侧新保证；<code>deque</code> 停在随机访问这一级，只有顶部连续台阶的容器能把迭代器差值直接对应到连续内存偏移。</figcaption>
+</figure>
+
 ### 随机访问与连续存储
 
 | 概念 | 含义 |

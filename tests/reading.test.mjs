@@ -4,6 +4,7 @@ import {createMarkdownProcessor} from '@astrojs/markdown-remark';
 import {fromHtml} from 'hast-util-from-html';
 import {markdownOptions} from '../src/utils/markdown.mjs';
 import {rankSearchEntries,titleMatchScore} from '../src/utils/search.mjs';
+import {estimateReadingTime} from '../src/utils/reading-stats.mjs';
 
 function values(tree,tag) {
  const result=[];
@@ -53,4 +54,14 @@ test('Search rejects normalized false positives and retains summary and body-onl
  assert.deepEqual(rankSearchEntries(rows,'论文阅读'),[rows[2]]);
  assert.deepEqual(rankSearchEntries(rows,'Courant Fischer'),[rows[1]]);
  assert.deepEqual(rankSearchEntries(rows,' '),[]);
+});
+
+test('estimateReadingTime excludes raw LaTeX command noise and weights code and equations sensibly',()=>{
+ const mathHeavy='证明。\n\n$$\n\\mathbb{E}_{X\\sim P}\\bigl[\\widehat{\\theta}_L - \\theta^*\\bigr] = \\mathcal{O}(\\sqrt{s\\log d / n})\n$$\n'.repeat(30);
+ const bareProse='证明。\n'.repeat(30);
+ assert.equal(estimateReadingTime('短句'),1);
+ assert.equal(estimateReadingTime(mathHeavy),2);
+ assert.ok(estimateReadingTime(mathHeavy)>estimateReadingTime(bareProse));
+ const codeHeavy='说明。\n\n```cpp\n'+Array.from({length:60},(_,i)=>`int x_${i} = ${i};`).join('\n')+'\n```';
+ assert.equal(estimateReadingTime(codeHeavy),2);
 });

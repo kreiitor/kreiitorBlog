@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 270" width="800" height="270" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>Transformer 架构向现代自回归基座的演化分支</title>
+  <desc>2017 原始架构分化为 BERT 双向编码器与 GPT/LLaMA 自回归解码器主干。</desc>
+  <defs>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#57575e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="268" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">Transformer 家族分流：从 seq2seq 到统一自回归基座</text>
+
+  <rect x="34" y="108" width="160" height="60" rx="8" fill="#ffffff" stroke="#18181b" stroke-width="1.4"/>
+  <text x="48" y="129" font-size="10.5" font-weight="600" fill="#18181b">2017 · Transformer</text>
+  <text x="48" y="146" font-size="9.5" fill="#57575e">Encoder + Decoder</text>
+  <text x="48" y="160" font-size="9.5" fill="#71717a">翻译 · seq2seq 范式</text>
+
+  <path d="M 196 124 C 234 124, 240 88, 276 88" fill="none" stroke="#57575e" stroke-width="1.4" marker-end="url(#arr-g)"/>
+  <path d="M 196 152 C 234 152, 240 184, 276 184" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-b)"/>
+
+  <rect x="282" y="58" width="214" height="58" rx="8" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <text x="296" y="79" font-size="10.5" font-weight="600" fill="#18181b">2018 · BERT（编码器）</text>
+  <text x="296" y="96" font-size="9.5" fill="#57575e">双向全注意力 · 掩码预测</text>
+  <text x="296" y="110" font-size="9.5" fill="#71717a">全矩阵 N×N 彼此可见</text>
+  <rect x="454" y="68" width="28" height="28" rx="3" fill="#57575e" fill-opacity="0.16" stroke="#71717a" stroke-width="1"/>
+  <path d="M 500 88 L 548 88" fill="none" stroke="#57575e" stroke-width="1.3" stroke-dasharray="3 2" marker-end="url(#arr-g)"/>
+  <text x="556" y="85" font-size="9.5" fill="#57575e">擅长文本理解微调</text>
+  <text x="556" y="99" font-size="9.5" fill="#71717a">不直接用于开放生成</text>
+
+  <rect x="282" y="152" width="194" height="64" rx="8" fill="#ffffff" stroke="#2f5268" stroke-width="1.5"/>
+  <text x="296" y="173" font-size="10.5" font-weight="600" fill="#18181b">2018–23 · GPT（解码器）</text>
+  <text x="296" y="190" font-size="9.5" fill="#2f5268">自回归因果掩码</text>
+  <text x="296" y="205" font-size="9.5" fill="#57575e">下三角矩阵 + Scaling Law</text>
+  <rect x="438" y="162" width="26" height="26" rx="2" fill="#ffffff" stroke="#d4d1c8" stroke-width="1"/>
+  <path d="M 438 162 L 438 188 L 464 188 Z" fill="#2f5268" fill-opacity="0.28"/>
+
+  <path d="M 478 184 L 516 184" fill="none" stroke="#2f5268" stroke-width="1.8" marker-end="url(#arr-b)"/>
+
+  <rect x="522" y="144" width="244" height="80" rx="8" fill="#eef3f6" stroke="#2f5268" stroke-width="1.7"/>
+  <text x="536" y="166" font-size="10.5" font-weight="600" fill="#2f5268">2023+ · LLaMA 标准基座</text>
+  <text x="536" y="184" font-size="9.5" fill="#18181b">Pre-Norm + RoPE + SwiGLU + GQA</text>
+  <text x="536" y="200" font-size="9.5" fill="#57575e">演进 MoE / MLA（Qwen · DeepSeek）</text>
+  <text x="536" y="214" font-size="9.5" fill="#57575e">推理与训练框架默认适配</text>
+</svg>

@@ -3,6 +3,7 @@ import type { APIContext } from 'astro';
 import { getCollection } from 'astro:content';
 import { siteConfig } from '../data/site';
 import { getPublishedPosts } from '../utils/content';
+import { canonicalTag } from '../utils/tags';
 import { withBase } from '../utils/url';
 
 export async function GET(context: APIContext) {
@@ -22,6 +23,7 @@ export async function GET(context: APIContext) {
 			title: post.data.title,
 			pubDate: post.data.pubDate,
 			description: post.data.description,
+			categories: [...new Set(post.data.tags.map(canonicalTag))],
 			link: withBase(`/blog/${post.id}/`),
 		})),
 	});

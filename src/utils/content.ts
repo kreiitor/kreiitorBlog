@@ -1,6 +1,9 @@
 import type { CollectionEntry } from 'astro:content';
 import { canonicalTag } from './tags';
 import { resolveCover } from './covers';
+import { countProseWords, estimateReadingTime } from './reading-stats.mjs';
+
+export { countProseWords, estimateReadingTime };
 
 export type PostEntry = CollectionEntry<'posts'>;
 export type ProjectEntry = CollectionEntry<'projects'>;
@@ -15,25 +18,6 @@ export function getPublishedPosts(posts: PostEntry[]) {
 
 export function getProjects(projects: ProjectEntry[]) {
 	return sortByPubDate(projects);
-}
-
-export function countProseWords(markdown: string) {
-	const cleaned = markdown
-		.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, ' ')
-		.replace(/<(code|pre)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
-		.replace(/`[^`\n]+`/g, ' ')
-		.replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-		.replace(/<[^>]+>/g, ' ');
-	const han = cleaned.match(/\p{Script=Han}/gu)?.length ?? 0;
-	const latin = cleaned.match(/\b[A-Za-z]+\b/g)?.length ?? 0;
-	return han + latin;
-}
-
-function estimateReadingTime(text: string) {
-	const hanCharacters = (text.match(/\p{Script=Han}/gu) ?? []).length;
-	const latinWords = (text.replace(/\p{Script=Han}/gu, ' ').match(/[A-Za-z0-9_]+/g) ?? []).length;
-	return Math.max(1, Math.ceil((hanCharacters + latinWords) / 300));
 }
 
 export function getReadingTime(post: PostEntry) {

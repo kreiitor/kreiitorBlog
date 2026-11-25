@@ -130,6 +130,11 @@ $c,C>0$ 只依赖函数类，不依赖 $n,\xi$。$\|f_i\|_{L^\infty}\le 1/2$ 是
 
 **直观几何：** $N$ 个函数两两在 $L^2$ 里隔开至少 $c\xi$。任何估计 $\widehat f$ 的 $c\xi/2$-球最多罩住其中一个，所以 $\widehat f$ 没法同时靠近两个 $f_i$。若数据又几乎分不清这些 $f_i$（KL 小），估计就不得不猜错。
 
+<figure>
+  <img src="/figures/fods-lecam-twopoint.svg" width="800" height="280" alt="函数空间中互不相交的 Packing 球与观测样本空间中高度重叠分布之间的对称张力">
+  <figcaption>左图用 <code>cξ</code> 间距保证估计误差无法兼顾两个备选函数；右图则把这对函数送进带噪采样里，深色重叠区域越大，检验器越容易误判，从而撑住最小最大风险下界。</figcaption>
+</figure>
+
 ### 1.4 两点分布 $P_i$
 
 对每个 packing 函数 $f_i$，造一个联合分布：$X\sim\mu$，给定 $X=x$，

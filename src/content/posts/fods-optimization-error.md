@@ -1194,6 +1194,11 @@ $$
 
 **条件数 $\kappa=L/m$。** 要让 $\bigl(1-m/L\bigr)^t\varepsilon_0\le\varepsilon$，需要 $t\asymp\kappa\log(1/\varepsilon)$ 次迭代。全梯度每次看 $n$ 个样本，总成本 $\asymp n\kappa\log(1/\varepsilon)$。这是第 15 节表格的 GD 一行。
 
+<figure>
+  <img src="/figures/fods-gd-condition-number.svg" width="800" height="280" alt="梯度下降在条件数接近 1 的圆形等高线与病态狭长山谷等高线上的收敛轨迹对比">
+  <figcaption>对比两侧等高线密度与步伐方向：左侧曲率各向同性，负梯度近似指向极小点；右侧长短轴悬殊，局部最速下降近乎垂直于长轴，导致步数大部分消耗在峡谷两岸的折返摆动上。</figcaption>
+</figure>
+
 ---
 
 ## 12. SGD：关键展开、基本不等式、平均迭代 $O(1/\sqrt t)$

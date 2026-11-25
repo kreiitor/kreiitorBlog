@@ -73,18 +73,26 @@ test('Home fits narrow and wide viewports without horizontal overflow', async ({
 test('Inline technical SVG diagrams load cleanly without overflow on narrow screens', async ({ page }) => {
  await page.setViewportSize({ width: 390, height: 844 });
  for (const route of [
+  'blog/transformer-01-overview/',
   'blog/transformer-02-architecture/',
   'blog/transformer-04-ffn/',
   'blog/git-glossary/',
   'blog/ssh-cli-agent-guide/',
   'blog/algorithm-time-complexity/',
+  'blog/cpp-04-templates-deduction/',
   'blog/cpp-07-containers/',
+  'blog/cpp-08-iterators/',
   'blog/fods-linear-models/',
+  'blog/fods-linear-algebra-calculus-convexity/',
+  'blog/fods-probability-concentration/',
+  'blog/fods-optimization-error/',
+  'blog/fods-minimax-supervised-learning/',
   'blog/llm-eval-pipeline/',
   'blog/static-blog-architecture/',
  ]) {
   await page.goto(route);
   const figureImg = page.locator('.article-body figure img[src$=".svg"]').first();
+  await figureImg.scrollIntoViewIfNeeded();
   await expect(figureImg).toBeVisible();
   expect(await figureImg.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
@@ -163,4 +171,43 @@ test('Home remains readable without JavaScript', async ({ browser, baseURL }) =>
  } finally {
   await context.close();
  }
+});
+
+test('Robots, sitemap link, and BlogPosting JSON-LD validate cleanly', async ({ page, request }) => {
+ const robots = await request.get('robots.txt');
+ expect(robots.ok()).toBe(true);
+ expect(await robots.text()).toContain('sitemap-index.xml');
+ await page.goto('blog/transformer-01-overview/');
+ const ld = await page.locator('head script[type="application/ld+json"]').textContent();
+ expect(ld).toBeTruthy();
+ const parsed = JSON.parse(ld ?? '{}');
+ expect(parsed['@type']).toBe('BlogPosting');
+ expect(parsed.headline).toContain('Transformer');
+});
+
+test('Long code blocks fold, expand, toggle wrap, and display equations copy TeX', async ({ page }) => {
+ await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: { writeText: async value => { window.copiedTeX = value; } } }));
+ await page.setViewportSize({ width: 390, height: 844 });
+ await page.goto('blog/hot100-algorithm-solutions/');
+ const toc = page.locator('.mobile-toc');
+ await toc.locator('summary').click();
+ const outlineBtn = toc.locator('.mobile-toc-mode');
+ await expect(outlineBtn).toBeVisible();
+ await outlineBtn.click();
+ await expect(outlineBtn).toHaveAttribute('aria-pressed', 'true');
+ await expect(toc.locator('a.toc-h3').first()).toBeHidden();
+ const expandBtn = page.locator('.code-expand').first();
+ await expect(expandBtn).toHaveAttribute('aria-expanded', 'false');
+ await expandBtn.click();
+ await expect(expandBtn).toHaveAttribute('aria-expanded', 'true');
+
+ await page.goto('blog/fods-optimization-error/');
+ const firstEq = page.locator('.article-body .katex-display').first();
+ await firstEq.scrollIntoViewIfNeeded();
+ await firstEq.hover();
+ const mathCopy = page.locator('.math-copy');
+ await expect(mathCopy).toBeVisible();
+ await mathCopy.click();
+ await expect(page.locator('[data-copy-status]')).toHaveText('公式 TeX 已复制');
+ expect(await page.evaluate(() => window.copiedTeX)).toBeTruthy();
 });

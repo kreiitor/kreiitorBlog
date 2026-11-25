@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>次高斯平方衰减与 Bernstein 次指数两段尾界对比</title>
+  <desc>横轴为均值偏差 t，纵轴为尾概率的对数尺度。蓝色折变曲线展示独立次指数平均的 Bernstein 界：在分界点 t 等于尺度参数 λ 左侧呈二次高斯衰减，越过该点后过渡为较慢的线性指数衰减。</desc>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">尾概率衰减：次高斯与 Bernstein（次指数）的两段机制</text>
+
+  <!-- Plot box -->
+  <rect x="78" y="58" width="516" height="172" rx="4" fill="#ffffff" stroke="#e4e2db" stroke-width="1"/>
+  <path d="M 78 58 L 78 230 L 594 230" fill="none" stroke="#18181b" stroke-width="1.2"/>
+  <text x="24" y="72" font-size="9.5" fill="#71717a">对数尾概率</text>
+  <text x="24" y="86" font-size="9.5" fill="#71717a">log P(X̄&gt;t)</text>
+
+  <!-- Crossover threshold x = 312 (t = lambda) -->
+  <line x1="312" y1="58" x2="312" y2="230" stroke="#2f5268" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="312" y="246" font-size="9.5" font-weight="600" fill="#2f5268" text-anchor="middle">分界阈值 t = λ</text>
+  <text x="195" y="246" font-size="9.5" fill="#57575e" text-anchor="middle">小偏差 · 高斯二次区</text>
+  <text x="452" y="246" font-size="9.5" fill="#57575e" text-anchor="middle">大偏差 · 线性指数区</text>
+
+  <!-- Regime 1 label in chart -->
+  <text x="195" y="78" font-size="9.5" fill="#57575e" text-anchor="middle">指数部分 ∝ −n t²/λ²</text>
+  <text x="452" y="78" font-size="9.5" fill="#2f5268" text-anchor="middle">指数部分 ∝ −n t/λ（更缓重尾）</text>
+
+  <!-- Sub-Gaussian baseline: pure quadratic downward parabola -->
+  <path d="M 86 92 Q 215 98, 312 138 T 520 226" fill="none" stroke="#57575e" stroke-width="1.5" stroke-dasharray="5 3"/>
+
+  <!-- Bernstein two-regime curve (#2f5268): coincides quadratically up to crossover dot (312, 138), then straight linear slope -->
+  <path d="M 86 92 Q 215 98, 312 138 L 586 198" fill="none" stroke="#2f5268" stroke-width="2.2"/>
+  <circle cx="312" cy="138" r="4.5" fill="#2f5268"/>
+
+  <!-- Direct curve annotations placed clear of both lines -->
+  <text x="366" y="136" font-size="9.5" font-weight="600" fill="#2f5268">切换拐点 (t = λ)</text>
+  <text x="346" y="212" font-size="9.5" fill="#57575e">纯次高斯持续下潜</text>
+
+  <!-- Right legend panel -->
+  <line x1="612" y1="98" x2="640" y2="98" stroke="#2f5268" stroke-width="2.2"/>
+  <text x="646" y="102" font-size="10.5" font-weight="600" fill="#2f5268">次指数 · Bernstein</text>
+  <text x="612" y="118" font-size="9.5" fill="#57575e">大偏差由线性项主导</text>
+
+  <line x1="612" y1="152" x2="640" y2="152" stroke="#57575e" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="646" y="156" font-size="10.5" fill="#18181b">次高斯 · subG</text>
+  <text x="612" y="172" font-size="9.5" fill="#57575e">全区间保持 e^(-nt²) 衰减</text>
+</svg>

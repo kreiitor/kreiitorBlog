@@ -415,7 +415,7 @@ void foo()
 
 <figure>
   <img src="/figures/cpp-raii-lifetime.svg" width="800" height="270" alt="裸指针手动管理与 RAII 句柄在提前返回和异常栈展开时的资源释放路径对比">
-  <figcaption>左侧手动 `delete` 依赖控制流一路走到底；右侧栈上局部对象在作用域左括号处划定生命周期，无论正常结束还是异常展开都必然汇入析构清理。</figcaption>
+  <figcaption>左侧手动 <code>delete</code> 依赖控制流一路走到底；右侧栈上局部对象在作用域左括号处划定生命周期，无论正常结束还是异常展开都必然汇入析构清理。</figcaption>
 </figure>
 
 ### 5. RAII 的通用应用场景

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 270" width="800" height="270" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>C++ 正向递进五类迭代器的能力阶梯与内存要求</title>
+  <desc>从左到右呈阶梯上升展示输入、前向、双向、随机访问与连续迭代器五级能力：每升高一级都在保留全部下方能力之上解锁更强的寻址操作，唯有顶层连续迭代器（vector/array/string）保证物理内存紧邻。</desc>
+  <rect x="1" y="1" width="798" height="268" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#18181b">迭代器的五级能力阶梯（每向右一步严格增强）</text>
+
+  <!-- Staircase silhouette built via geometric paths (zero box-heavy grid) -->
+  <path d="M 36 226 L 36 196 L 178 196 L 178 164 L 320 164 L 320 132 L 462 132 L 462 100 L 604 100 L 604 68 L 764 68 L 764 226 Z" fill="#ffffff" stroke="#d4d1c8" stroke-width="1.2"/>
+  <!-- Topmost contiguous step highlight band -->
+  <path d="M 604 68 L 764 68 L 764 226 L 604 226 Z" fill="#eef3f6" stroke="#2f5268" stroke-width="1.6"/>
+  <!-- Hairline risers between steps -->
+  <path d="M 178 196 L 178 226 M 320 164 L 320 226 M 462 132 L 462 226" fill="none" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Step 1: Input -->
+  <text x="48" y="180" font-size="10.5" font-weight="600" fill="#18181b">输入 input</text>
+  <text x="48" y="213" font-size="9.5" fill="#57575e">只读单趟 · ++it</text>
+
+  <!-- Step 2: Forward -->
+  <text x="190" y="148" font-size="10.5" font-weight="600" fill="#18181b">前向 forward</text>
+  <text x="190" y="182" font-size="9.5" fill="#57575e">可多趟重走</text>
+  <text x="190" y="198" font-size="9.5" fill="#71717a">forward_list / hash</text>
+
+  <!-- Step 3: Bidirectional -->
+  <text x="332" y="116" font-size="10.5" font-weight="600" fill="#18181b">双向 bidir</text>
+  <text x="332" y="150" font-size="9.5" fill="#57575e">+ --it 回退</text>
+  <text x="332" y="166" font-size="9.5" fill="#71717a">list / map / set</text>
+
+  <!-- Step 4: Random Access -->
+  <text x="474" y="84" font-size="10.5" font-weight="600" fill="#18181b">随机 random</text>
+  <text x="474" y="118" font-size="9.5" fill="#57575e">+ it+n, it[n], &lt;</text>
+  <text x="474" y="134" font-size="9.5" fill="#71717a">deque · std::sort 门槛</text>
+
+  <!-- Step 5: Contiguous (C++20, accented #2f5268) -->
+  <text x="618" y="88" font-size="10.5" font-weight="600" fill="#2f5268">连续 contiguous</text>
+  <text x="618" y="106" font-size="9.5" fill="#18181b">+ 物理内存紧邻</text>
+  <text x="618" y="122" font-size="9.5" fill="#2f5268">&amp;*(it+n) == &amp;*it + n</text>
+  <text x="618" y="140" font-size="9.5" fill="#57575e">vector / array / string</text>
+
+  <!-- Output iterator side note clear in open top-left sky -->
+  <text x="36" y="72" font-size="9.5" fill="#57575e">另支：输出迭代器（如 back_inserter）专司单向写入 *out++ = v</text>
+</svg>

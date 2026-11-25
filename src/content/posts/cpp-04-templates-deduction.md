@@ -273,6 +273,11 @@ f(0);  // T 推导为 int，形参类型为 int&&
 - 需要修改原对象：用 `auto&`；
 - 模板中需要完美转发：用 `T&&` + `std::forward<T>`。
 
+<figure>
+  <img src="/figures/cpp-reference-collapsing.svg" width="800" height="260" alt="转发引用在不同实参值类别下的模板类型推导、引用折叠规则及 std::forward 还原流向">
+  <figcaption>沿上下两条通路对比同一种模板签名 <code>wrapper(T&amp;&amp; x)</code>：上方传入左值时 <code>T</code> 带出 <code>&amp;</code> 并把形参折回左值引用；下方传入右值时保留 <code>int&amp;&amp;</code> 并由 <code>std::forward</code> 转回右值。</figcaption>
+</figure>
+
 ---
 
 ## 4.3 类模板

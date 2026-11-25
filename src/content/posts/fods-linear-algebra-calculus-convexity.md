@@ -207,6 +207,11 @@ $$
 
 几何上，在 $\mathbb{R}^m$ 中，$A$ 的值域（列空间）与被 $A^\top$ 映为零向量的子空间（左零空间）彼此正交并张成全空间。最小二乘残差 $b-A\widehat x$ 必然落在左零空间内，这就是法方程 $A^\top(b-A\widehat x)=0$ 的几何由来。
 
+<figure>
+  <img src="/figures/fods-svd-subspaces.svg" width="800" height="290" alt="矩阵 A 的行空间、零空间、列空间与左零空间的正交直和分解与映射关系">
+  <figcaption>左右分别沿输入与输出空间画出正交直和：上方行空间与列空间之间由 A 建立一一映射，下方零空间被整体压到原点，右下方左零空间则接住所有无法被列空间消去的残差。</figcaption>
+</figure>
+
 ---
 
 ## 3. 投影

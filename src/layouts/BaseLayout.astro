@@ -44,6 +44,33 @@ const siteUrl = Astro.site ?? new URL(siteConfig.siteUrl);
 const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl).toString();
 const shareImage = image.startsWith('/covers/research/') ? image.replace(/\.webp$/, '.png') : image.startsWith('/') ? image.replace(/\.svg$/, '.png') : image;
 const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(shareImage), siteUrl).toString();
+const homeUrl = new URL(withBase('/'), siteUrl).toString();
+const structuredData = type === 'article'
+	? {
+			'@context': 'https://schema.org',
+			'@type': 'BlogPosting',
+			headline: title,
+			description,
+			url: canonicalUrl,
+			image: imageUrl,
+			inLanguage: 'zh-CN',
+			...(publishedTime ? { datePublished: publishedTime.toISOString() } : {}),
+			...(updatedTime ?? publishedTime ? { dateModified: (updatedTime ?? publishedTime)!.toISOString() } : {}),
+			...(tags.length > 0 ? { keywords: tags } : {}),
+			author: { '@type': 'Person', name: siteConfig.author, url: homeUrl },
+			mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+		}
+	: currentPath === '/'
+		? {
+				'@context': 'https://schema.org',
+				'@type': 'WebSite',
+				name: siteConfig.title,
+				description: siteConfig.description,
+				url: homeUrl,
+				inLanguage: 'zh-CN',
+				author: { '@type': 'Person', name: siteConfig.author, url: homeUrl },
+			}
+		: undefined;
 ---
 
 <!doctype html>
@@ -124,6 +151,7 @@ const imageUrl = shareImage.startsWith('http') ? shareImage : new URL(withBase(s
 		{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 		{updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
 		{tags.map(tag => <meta property="article:tag" content={tag} />)}
+		{structuredData && <script type="application/ld+json" set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')} />}
 	</head>
 	<body id="top">
 		<a href="#main-content" class="skip-link">跳到主要内容</a>

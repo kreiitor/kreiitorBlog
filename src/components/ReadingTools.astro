@@ -170,33 +170,79 @@
   const summary=toc.querySelector('summary');summary?.setAttribute('aria-expanded',String(toc.open));
   toc.addEventListener('toggle',()=>summary?.setAttribute('aria-expanded',String(toc.open)));
   toc.addEventListener('keydown',event=>{if(event.key==='Escape'&&toc.open){toc.open=false;summary?.focus();}});
-  toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]').forEach(link=>enhanceAnchor(link,()=>{toc.open=false;}));
+  const tocLinks=Array.from(toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]'));
+  tocLinks.forEach(link=>enhanceAnchor(link,()=>{toc.open=false;}));
+  const nav=toc.querySelector('nav');
+  if(nav&&tocLinks.length>24&&tocLinks.some(link=>link.classList.contains('toc-h3'))){
+   const modeBtn=document.createElement('button');
+   modeBtn.type='button';modeBtn.className='mobile-toc-mode';modeBtn.setAttribute('aria-pressed','false');
+   modeBtn.textContent='只看大章标题';
+   modeBtn.addEventListener('click',()=>{
+    const compact=toc.dataset.outlineOnly!=='true';
+    if(compact)toc.dataset.outlineOnly='true';else delete toc.dataset.outlineOnly;
+    modeBtn.setAttribute('aria-pressed',String(compact));
+    modeBtn.textContent=compact?'显示全部分节':'只看大章标题';
+   });
+   nav.prepend(modeBtn);
+  }
  });
  desktopLinks.forEach(link=>enhanceAnchor(link));
 
  const live = document.querySelector<HTMLElement>('[data-copy-status]');
+ function announce(message: string) {
+  if (!live) return;
+  live.textContent = '';
+  live.textContent = message;
+ }
  document.querySelectorAll('.rich-content pre').forEach(pre => {
   const code = pre.querySelector('code'); if (!code) return;
+  const frame = document.createElement('div');
+  frame.className = 'code-frame';
+  const actions = document.createElement('div');
+  actions.className = 'code-actions';
+  const wrapBtn = document.createElement('button');
+  wrapBtn.type = 'button'; wrapBtn.className = 'code-wrap'; wrapBtn.textContent = '换行';
+  wrapBtn.setAttribute('aria-pressed', 'false'); wrapBtn.setAttribute('aria-label', '切换代码自动换行');
+  wrapBtn.hidden = true;
+  wrapBtn.addEventListener('click', () => {
+   const wrapped = pre.classList.toggle('is-wrapped');
+   wrapBtn.setAttribute('aria-pressed', String(wrapped));
+   syncScrollRegion(pre as HTMLElement);
+  });
   const button = document.createElement('button');
   button.type = 'button'; button.className = 'code-copy'; button.textContent = '复制'; button.setAttribute('aria-label','复制代码');
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
   button.addEventListener('click', async () => {
    clearTimeout(copyTimer);
-   if (live) live.textContent = '';
+   announce('');
    try {
     await navigator.clipboard.writeText(code.textContent ?? '');
     button.textContent = '已复制 ✓'; button.dataset.copied = 'true';
-    if (live) live.textContent = '代码已复制';
+    announce('代码已复制');
    } catch {
     delete button.dataset.copied; button.textContent = '请手动复制';
-    if (live) live.textContent = '复制未成功，请手动选择代码';
+    announce('复制未成功，请手动选择代码');
    }
    copyTimer = setTimeout(() => { delete button.dataset.copied; button.textContent = '复制'; }, 1800);
   });
-  const frame = document.createElement('div');
-  frame.className = 'code-frame';
+  actions.append(wrapBtn, button);
   pre.before(frame);
-  frame.append(pre, button);
+  frame.append(pre, actions);
+  const lineCount = (code.textContent ?? '').replace(/\n$/, '').split('\n').length;
+  if (lineCount >= 28) {
+   frame.classList.add('is-collapsible', 'is-collapsed');
+   const expandBtn = document.createElement('button');
+   expandBtn.type = 'button'; expandBtn.className = 'code-expand';
+   expandBtn.setAttribute('aria-expanded', 'false');
+   expandBtn.textContent = `展开全部（共 ${lineCount} 行）`;
+   expandBtn.addEventListener('click', () => {
+    const collapsed = frame.classList.toggle('is-collapsed');
+    expandBtn.setAttribute('aria-expanded', String(!collapsed));
+    expandBtn.textContent = collapsed ? `展开全部（共 ${lineCount} 行）` : '收起长代码';
+    scheduleMeasure();
+   });
+   frame.append(expandBtn);
+  }
  });
 
  // Make horizontally overflowing technical content discoverable and keyboard-scrollable.
@@ -204,6 +250,10 @@
  function syncScrollRegion(element: HTMLElement) {
   const scrollable = element.scrollWidth > element.clientWidth + 1;
   element.classList.toggle('is-scrollable', scrollable);
+  if (element.tagName === 'PRE') {
+   const wrapBtn = element.parentElement?.querySelector<HTMLButtonElement>('.code-wrap');
+   if (wrapBtn) wrapBtn.hidden = !(scrollable || element.classList.contains('is-wrapped'));
+  }
   if (scrollable) {
    element.tabIndex = 0;
    if (element.tagName === 'PRE') { element.setAttribute('role','region'); element.setAttribute('aria-label','代码块，可横向滚动查看'); }
@@ -347,6 +397,61 @@
    });
   }
  }
+
+ // 块级公式支持一键复制 TeX 源码：全局复用单个浮动按钮，避免在长文里包裹上百个公式节点。
+ if (body) {
+  const mathCopy = document.createElement('button');
+  mathCopy.type = 'button'; mathCopy.className = 'math-copy'; mathCopy.textContent = 'TeX';
+  mathCopy.setAttribute('aria-label', '复制公式 LaTeX 源码'); mathCopy.hidden = true;
+  document.body.append(mathCopy);
+  let activeMath: HTMLElement | null = null;
+  let activeTex = '';
+  let hideMathTimer: ReturnType<typeof setTimeout> | undefined;
+  let copyMathTimer: ReturnType<typeof setTimeout> | undefined;
+  function dockMath(display: HTMLElement) {
+   const tex = display.querySelector('annotation[encoding="application/x-tex"]')?.textContent?.trim();
+   if (!tex) return;
+   clearTimeout(hideMathTimer);
+   activeMath = display; activeTex = tex;
+   const rect = display.getBoundingClientRect();
+   mathCopy.style.top = `${Math.max(8, rect.top + scrollY + 4)}px`;
+   mathCopy.style.left = `${Math.max(8, rect.right + scrollX - 54)}px`;
+   mathCopy.hidden = false;
+  }
+  function scheduleHideMath() {
+   clearTimeout(hideMathTimer);
+   hideMathTimer = setTimeout(() => { mathCopy.hidden = true; activeMath = null; }, 160);
+  }
+  body.addEventListener('pointerover', event => {
+   const display = (event.target as Element | null)?.closest<HTMLElement>('.katex-display');
+   if (display) dockMath(display);
+  });
+  body.addEventListener('pointerout', event => {
+   if (!activeMath) return;
+   const related = event.relatedTarget as Node | null;
+   if (related === mathCopy || activeMath.contains(related)) return;
+   scheduleHideMath();
+  });
+  body.addEventListener('focusin', event => {
+   const display = (event.target as Element | null)?.closest<HTMLElement>('.katex-display');
+   if (display) dockMath(display);
+  });
+  mathCopy.addEventListener('pointerenter', () => clearTimeout(hideMathTimer));
+  mathCopy.addEventListener('pointerleave', scheduleHideMath);
+  mathCopy.addEventListener('click', async () => {
+   if (!activeTex) return;
+   clearTimeout(copyMathTimer);
+   announce('');
+   try {
+    await navigator.clipboard.writeText(activeTex);
+    mathCopy.textContent = '已复制'; mathCopy.dataset.copied = 'true';
+    announce('公式 TeX 已复制');
+   } catch {
+    delete mathCopy.dataset.copied; mathCopy.textContent = '重试';
+   }
+   copyMathTimer = setTimeout(() => { delete mathCopy.dataset.copied; mathCopy.textContent = 'TeX'; }, 1600);
+  });
+ }
 </script>
 <style is:global>
  /* 「继续阅读」浮在视口底部居中，不占正文排版；跳转或关闭后不再出现。 */
@@ -372,7 +477,10 @@
  @starting-style { .figure-viewer[open] { opacity: 0; scale: .97; } }
  .figure-viewer::backdrop { background: var(--color-overlay); backdrop-filter: blur(6px); }
  .figure-viewer img { min-height: 0; max-width: 100%; max-height: calc(94dvh - 120px); margin: 0 auto; object-fit: contain; cursor: zoom-out; }
- :root[data-theme="dark"] .figure-viewer img[src$=".svg"] { border-radius: 12px; border: 1px solid var(--color-line-strong); filter: brightness(.93) contrast(1.03); }
+ :root[data-theme="dark"] .figure-viewer img[src$=".svg"] { border-radius: 12px; border: 1px solid var(--color-line-strong); filter: invert(.915) hue-rotate(180deg) saturate(1.16) contrast(1.03); }
+ @media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .figure-viewer img[src$=".svg"] { border-radius: 12px; border: 1px solid var(--color-line-strong); filter: invert(.915) hue-rotate(180deg) saturate(1.16) contrast(1.03); }
+ }
  .figure-viewer p { color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 14px; line-height: 1.8; }
  .figure-viewer-close { align-self: flex-end; min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 14px; }
  .figure-viewer-close:hover { background: var(--color-accent-soft); }
@@ -387,11 +495,18 @@
  .rich-content .is-overflowing:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 3px; }
  .code-frame { position: relative; max-width: 100%; }
  .code-frame > pre { margin: 0; }
- .code-copy { position: absolute; top: 8px; right: 12px; z-index: 2; min-height: 32px; padding: 3px 12px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 999px; color: var(--color-ink-soft); background: var(--color-surface-soft); transition: color var(--dur-fast),background-color var(--dur-fast),border-color var(--dur-fast),transform var(--dur-press); }
- .code-copy:active { transform: scale(.96); }
- .code-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
- .code-copy[data-copied="true"] { color: var(--color-on-accent); background: var(--color-accent); border-color: var(--color-accent); }
+ .code-frame.is-collapsed > pre { max-height: 360px; overflow-y: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent); mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+ .code-actions { position: absolute; top: 8px; right: 12px; z-index: 2; display: flex; align-items: center; gap: 6px; }
+ .code-copy,.code-wrap { min-height: 32px; padding: 3px 12px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; border: 1px solid var(--color-line-strong); border-radius: 999px; color: var(--color-ink-soft); background: var(--color-surface-soft); transition: color var(--dur-fast),background-color var(--dur-fast),border-color var(--dur-fast),transform var(--dur-press); }
+ .code-copy:active,.code-wrap:active { transform: scale(.96); }
+ .code-copy:hover,.code-wrap:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
+ .code-copy[data-copied="true"],.code-wrap[aria-pressed="true"] { color: var(--color-on-accent); background: var(--color-accent); border-color: var(--color-accent); }
+ .code-expand { display: block; width: 100%; min-height: 36px; margin-top: 6px; padding: 6px 14px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); color: var(--color-ink-soft); font-family: var(--font-sans); font-size: 12.5px; font-weight: 500; text-align: center; transition: color var(--dur-fast),border-color var(--dur-fast),background-color var(--dur-fast); }
+ .code-expand:hover { color: var(--color-accent-strong); border-color: var(--color-accent); background: var(--color-accent-soft); }
+ .math-copy { position: absolute; z-index: 32; min-height: 28px; padding: 2px 10px; border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); box-shadow: var(--shadow-whisper); color: var(--color-ink-soft); font-family: var(--font-mono); font-size: 11px; line-height: 1.4; transition: color var(--dur-fast),background-color var(--dur-fast),border-color var(--dur-fast),opacity var(--dur-fast); }
+ .math-copy:hover { color: var(--color-accent-strong); background: var(--color-accent-soft); border-color: var(--color-accent); }
+ .math-copy[data-copied="true"] { color: var(--color-on-accent); background: var(--color-accent); border-color: var(--color-accent); }
  .rich-content :is(pre,table).is-scrollable { box-shadow: inset -18px 0 14px -14px var(--color-ink-muted); }
  .rich-content :is(pre,table).is-scrollable:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
- @media (pointer: coarse) { .code-copy { top: 0; right: 6px; min-height: 44px; padding-block: 4px; } }
+ @media (pointer: coarse) { .code-actions { top: 0; right: 6px; } .code-copy,.code-wrap { min-height: 44px; padding-block: 4px; } .math-copy { min-height: 36px; padding-inline: 10px; } }
 </style>

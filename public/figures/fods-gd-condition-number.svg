@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280" font-family="'DM Sans Variable','PingFang SC','Microsoft YaHei',sans-serif">
+  <title>强凸梯度下降在良态与病态条件数下的等高线轨迹对比</title>
+  <desc>左侧展示条件数 κ=L/m 接近 1 的近似圆形等高线，梯度方向直接指向极小点 x*；右侧展示 κ 很大的狭长山谷等高线，定步长梯度下降会在陡壁之间来回锯齿震荡，收敛 iter 数随 κ 成比例增加。</desc>
+  <defs>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#2f5268" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+      <path d="M 1 1.5 L 8.5 5 L 1 8.5" fill="none" stroke="#18181b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="1" y="1" width="798" height="278" rx="12" fill="#faf9f6" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Left panel: Well-conditioned (kappa ~ 1) -->
+  <text x="28" y="34" font-size="12.5" font-weight="600" fill="#2f5268">良态目标 κ = L/m ≈ 1 · 径直收敛</text>
+
+  <circle cx="196" cy="146" r="82" fill="none" stroke="#d4d1c8" stroke-width="1.1"/>
+  <circle cx="196" cy="146" r="56" fill="none" stroke="#a1a1aa" stroke-width="1.1"/>
+  <circle cx="196" cy="146" r="30" fill="#eef3f6" fill-opacity="0.7" stroke="#2f5268" stroke-width="1.2"/>
+  <circle cx="196" cy="146" r="4.5" fill="#2f5268"/>
+  <text x="206" y="152" font-size="10.5" font-weight="600" fill="#2f5268">x*</text>
+
+  <!-- Direct GD trajectory -->
+  <path d="M 96 102 L 136 120 L 166 133 L 188 142" fill="none" stroke="#2f5268" stroke-width="1.9" marker-end="url(#arr-b)"/>
+  <circle cx="96" cy="102" r="3.5" fill="#18181b"/>
+  <circle cx="136" cy="120" r="3" fill="#2f5268"/>
+  <circle cx="166" cy="133" r="3" fill="#2f5268"/>
+  <text x="82" y="92" font-size="9.5" fill="#18181b">x₀</text>
+
+  <text x="28" y="236" font-size="10.5" fill="#2f5268">负梯度直指极小点：步数少，因子 (1 − m/L)ᵗ 急剧收缩</text>
+
+  <!-- Divider -->
+  <line x1="396" y1="26" x2="396" y2="254" stroke="#e4e2db" stroke-width="1"/>
+
+  <!-- Right panel: Ill-conditioned (kappa >> 1) -->
+  <text x="424" y="34" font-size="12.5" font-weight="600" fill="#18181b">病态目标 κ = L/m ≫ 1 · 峡谷震荡</text>
+
+  <g transform="rotate(-12 606 148)">
+    <ellipse cx="606" cy="148" rx="148" ry="44" fill="none" stroke="#d4d1c8" stroke-width="1.1"/>
+    <ellipse cx="606" cy="148" rx="108" ry="29" fill="none" stroke="#a1a1aa" stroke-width="1.1"/>
+    <ellipse cx="606" cy="148" rx="64" ry="15" fill="none" stroke="#71717a" stroke-width="1.1"/>
+  </g>
+  <circle cx="606" cy="148" r="4.5" fill="#18181b"/>
+  <text x="618" y="152" font-size="10.5" font-weight="600" fill="#18181b">x*</text>
+
+  <!-- Sharp zig-zag trajectory across narrow valley -->
+  <path d="M 464 134 L 494 188 L 520 124 L 544 176 L 566 134 L 584 162 L 598 148" fill="none" stroke="#18181b" stroke-width="1.7" marker-end="url(#arr-g)"/>
+  <circle cx="464" cy="134" r="3.5" fill="#18181b"/>
+  <circle cx="494" cy="188" r="2.8" fill="#18181b"/>
+  <circle cx="520" cy="124" r="2.8" fill="#18181b"/>
+  <circle cx="544" cy="176" r="2.8" fill="#18181b"/>
+  <circle cx="566" cy="134" r="2.8" fill="#18181b"/>
+  <text x="454" y="124" font-size="9.5" fill="#18181b">x₀</text>
+
+  <text x="424" y="236" font-size="10.5" fill="#57575e">梯度主要耗在横越谷壁，沿谷底前进极慢（t ≍ κ log 1/ε）</text>
+</svg>
